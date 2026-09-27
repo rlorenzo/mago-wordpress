@@ -16,7 +16,7 @@ use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function in_array;
-use function ltrim;
+use function substr;
 
 use const PHP_INT_MAX;
 
@@ -59,7 +59,7 @@ final class GlobalVariablesOverrideRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/global-variables-override',
             name: 'Global variables override',
-            description: 'Reports assignments that overwrite WordPress-protected global variables such as $post, $wp_query, or $wpdb. An assignment is flagged in the top-level scope, or inside a function-like scope where the variable was imported with a global statement. Writes to $GLOBALS[...] with a protected key are flagged anywhere.',
+            description: 'Reports writes that overwrite WordPress-protected global variables such as $post, $wp_query, or $wpdb. This covers direct assignments (including compound assignments), foreach key/value bindings, and list/array destructuring targets, however deeply nested. A write is flagged in the top-level scope, or inside a function-like scope where the variable was imported with a global statement. Writes to $GLOBALS[...] with a protected key are flagged anywhere; the key is compared verbatim, so $GLOBALS[\'$post\'] is a different key from $GLOBALS[\'post\'].',
             defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::Program],
@@ -85,34 +85,81 @@ final class GlobalVariablesOverrideRule implements Rule
         }
 
         foreach ($file->getDescendants($context->node, NodeKind::Assignment) as $assignment) {
-            $this->checkAssignment($context, $file, $assignment, $importsByScope);
+            $lhsChild = $file->getChildren($assignment)[0] ?? $assignment;
+            $this->checkTarget($context, $file, $lhsChild, $importsByScope);
+        }
+
+        // `foreach ($x as $post)`: the value binds like an assignment.
+        foreach ($file->getDescendants($context->node, NodeKind::ForeachValueTarget) as $target) {
+            $value = $file->getChildren($target)[0] ?? $target;
+            $this->checkTarget($context, $file, $value, $importsByScope);
+        }
+
+        // `foreach ($x as $post => $item)`: both the key and the value bind.
+        foreach ($file->getDescendants($context->node, NodeKind::ForeachKeyValueTarget) as $target) {
+            foreach ($file->getChildren($target) as $child) {
+                $this->checkTarget($context, $file, $child, $importsByScope);
+            }
+        }
+    }
+
+    /**
+     * Checks a single write target: a plain variable, a `$GLOBALS[...]`
+     * write, or a list/array destructuring pattern, which is walked
+     * recursively since each of its elements is itself a write target.
+     *
+     * @param array<int, array<string, int>> $importsByScope
+     */
+    private function checkTarget(LintContext $context, SourceFile $file, Node $targetChild, array $importsByScope): void
+    {
+        $target = Values::unwrap($file, $targetChild);
+
+        if ($target->kind === NodeKind::Variable) {
+            $variable = $file->getChildren($target)[0] ?? $target;
+            if ($variable->kind !== NodeKind::DirectVariable) {
+                return;
+            }
+
+            $this->checkDirectAssignment($context, $file, $target, $variable, $importsByScope);
+            return;
+        }
+
+        if ($target->kind === NodeKind::ArrayAccess) {
+            $this->checkGlobalsWrite($context, $file, $target);
+            return;
+        }
+
+        if (in_array($target->kind, [NodeKind::Array, NodeKind::LegacyArray, NodeKind::List], strict: true)) {
+            foreach ($file->getChildren($target) as $element) {
+                $this->checkDestructuringElement($context, $file, $element, $importsByScope);
+            }
         }
     }
 
     /**
      * @param array<int, array<string, int>> $importsByScope
      */
-    private function checkAssignment(
+    private function checkDestructuringElement(
         LintContext $context,
         SourceFile $file,
-        Node $assignment,
+        Node $element,
         array $importsByScope,
     ): void {
-        $lhsChild = $file->getChildren($assignment)[0] ?? $assignment;
-        $lhs = Values::unwrap($file, $lhsChild);
-
-        if ($lhs->kind === NodeKind::Variable) {
-            $variable = $file->getChildren($lhs)[0] ?? $lhs;
-            if ($variable->kind !== NodeKind::DirectVariable) {
-                return;
-            }
-
-            $this->checkDirectAssignment($context, $file, $lhsChild, $variable, $importsByScope);
+        $wrapped = $file->getChildren($element)[0] ?? null;
+        if ($wrapped === null) {
             return;
         }
 
-        if ($lhs->kind === NodeKind::ArrayAccess) {
-            $this->checkGlobalsWrite($context, $file, $lhsChild, $lhs);
+        // A key-value element's target is its value; the key is a plain
+        // expression selecting the source offset, never a write target.
+        $valueChild = match ($wrapped->kind) {
+            NodeKind::KeyValueArrayElement => $file->getChildren($wrapped)[1] ?? null,
+            NodeKind::ValueArrayElement, NodeKind::VariadicArrayElement => $file->getChildren($wrapped)[0] ?? null,
+            default => null, // A missing (skipped) slot has nothing to check.
+        };
+
+        if ($valueChild !== null) {
+            $this->checkTarget($context, $file, $valueChild, $importsByScope);
         }
     }
 
@@ -127,7 +174,9 @@ final class GlobalVariablesOverrideRule implements Rule
         array $importsByScope,
     ): void {
         $text = $file->getText($variable);
-        $name = self::protectedGlobal($text);
+        // A DirectVariable's text is always the sigil plus the name (e.g. `$post`);
+        // strip exactly that one leading `$`, never more.
+        $name = self::protectedGlobal(substr($text, offset: 1));
         if ($name === null) {
             return;
         }
@@ -140,12 +189,8 @@ final class GlobalVariablesOverrideRule implements Rule
         $this->report($context, $lhsSpanNode, $name);
     }
 
-    private function checkGlobalsWrite(
-        LintContext $context,
-        SourceFile $file,
-        Node $lhsSpanNode,
-        Node $arrayAccess,
-    ): void {
+    private function checkGlobalsWrite(LintContext $context, SourceFile $file, Node $arrayAccess): void
+    {
         $children = $file->getChildren($arrayAccess);
 
         $base = Values::unwrap($file, $children[0] ?? $arrayAccess);
@@ -168,7 +213,7 @@ final class GlobalVariablesOverrideRule implements Rule
             return;
         }
 
-        $this->report($context, $lhsSpanNode, $name);
+        $this->report($context, $arrayAccess, $name);
     }
 
     private function report(LintContext $context, Node $lhsSpanNode, string $name): void
@@ -200,12 +245,13 @@ final class GlobalVariablesOverrideRule implements Rule
     }
 
     /**
-     * Accepts a variable name (`$post`) or a `$GLOBALS` key, with or without the `$` prefix.
+     * Accepts a bare name, already stripped of any variable sigil by the
+     * caller: a variable's name (`post`) or a `$GLOBALS` key compared
+     * verbatim (`$GLOBALS['$post']` and `$GLOBALS['post']` are distinct
+     * keys, and only the latter is the `$post` global).
      */
-    private static function protectedGlobal(string $name): ?string
+    private static function protectedGlobal(string $bare): ?string
     {
-        $bare = ltrim($name, characters: '$');
-
         if (in_array($bare, self::OVERRIDE_ALLOWED, strict: true)) {
             return null;
         }

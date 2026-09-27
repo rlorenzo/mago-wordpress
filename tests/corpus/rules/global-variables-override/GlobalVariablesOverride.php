@@ -11,8 +11,13 @@ namespace {
     // @mago-expect lint:wordpress/global-variables-override
     $wp_version .= '-modified';
 
-    // globals_array_write_with_dollar_key_is_flagged
+    // globals_array_write_with_bare_key_is_flagged
     // @mago-expect lint:wordpress/global-variables-override
+    $GLOBALS['wp_query'] = new \WP_Query();
+
+    // globals_array_write_with_dollar_prefixed_key_is_not_flagged
+    // `'$wp_query'` and `'wp_query'` are different $GLOBALS keys; only the
+    // latter is the actual $wp_query global.
     $GLOBALS['$wp_query'] = new \WP_Query();
 
     // nested_top_level_assignment_is_flagged
@@ -47,6 +52,45 @@ namespace {
 
     // list_destructuring_is_not_flagged
     [$post_pair, $page_pair] = my_plugin_get_pair();
+
+    // array_destructuring_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    [$post] = my_plugin_get_pair();
+
+    // list_construct_destructuring_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    list($unrelated, $post) = my_plugin_get_pair();
+
+    // key_value_destructuring_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    ['first' => $unrelated, 'second' => $post] = my_plugin_get_pair();
+
+    // nested_destructuring_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    [[$unrelated, $post]] = my_plugin_get_nested_pair();
+
+    // foreach_value_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    foreach (my_plugin_get_posts() as $post) {
+        echo $post;
+    }
+
+    // foreach_key_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    foreach (my_plugin_get_posts() as $post => $item) {
+        echo $item;
+    }
+
+    // foreach_destructured_value_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    foreach (my_plugin_get_pairs() as [$unrelated, $post]) {
+        echo $post;
+    }
+
+    // foreach_unrelated_target_is_not_flagged
+    foreach (my_plugin_get_posts() as $current_post) {
+        echo $current_post;
+    }
 
     // property_write_is_not_flagged
     global $post;
@@ -94,6 +138,32 @@ namespace {
     function my_plugin_render()
     {
         $post = get_post(123); // Local variable, not the global.
+    }
+
+    // foreach_value_target_without_import_is_not_flagged
+    function my_plugin_foreach_local()
+    {
+        foreach (my_plugin_get_posts() as $post) {
+            echo $post; // Local variable, not the global.
+        }
+    }
+
+    // foreach_value_target_after_global_import_is_flagged
+    function my_plugin_foreach_with_import()
+    {
+        global $post;
+        // @mago-expect lint:wordpress/global-variables-override
+        foreach (my_plugin_get_posts() as $post) {
+            echo $post;
+        }
+    }
+
+    // destructuring_target_after_global_import_is_flagged
+    function my_plugin_destructure_with_import()
+    {
+        global $post;
+        // @mago-expect lint:wordpress/global-variables-override
+        [$post] = my_plugin_get_pair();
     }
 
     // reading_a_global_is_not_flagged
