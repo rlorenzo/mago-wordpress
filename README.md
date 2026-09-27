@@ -79,27 +79,9 @@ Several extension factories may be passed to the same `Worker`. Standard output 
 
 ## Development
 
-Install dependencies and run every check:
-
 ```shell
-composer install
-just check
+composer install   # also points git at .githooks (pre-commit runs `just check`)
+just check         # composer validate, format-check, PHPUnit, mago lint + analyze, corpus
 ```
 
-Useful focused commands are:
-
-```shell
-just format
-just test
-just lint
-just analyze
-just test-corpus
-```
-
-The corpus starts the real worker and checks inline `@mago-expect` annotations. Keep small fixtures for positive, negative, and non-matching behavior. A larger extension may use Mago's strict baseline files for a representative fixture project.
-
-Read the [Mago extension documentation](https://mago.carthage.software/main/en/extensions/overview/) for the complete SDK, lifecycle, metadata, reporting, performance, and packaging contracts.
-
-## License
-
-The template uses the MIT License. Replace it if the new package uses another license.
+CI runs `just check` on PHP 8.1, 8.4 and 8.5 for every push and pull request. Skip the hook once with `git commit --no-verify`.

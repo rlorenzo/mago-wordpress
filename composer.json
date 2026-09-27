@@ -41,5 +41,15 @@
     "allow-plugins": false,
     "optimize-autoloader": true,
     "sort-packages": true
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "@hooks"
+    ],
+    "post-update-cmd": [
+      "@hooks"
+    ],
+    "hooks": "git config core.hooksPath .githooks || true",
+    "check": "just check"
   }
 }

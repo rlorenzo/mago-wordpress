@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# Runs the same checks as CI (`just check`) before every commit.
+# Skip once with: git commit --no-verify
+set -e
+cd "$(git rev-parse --show-toplevel)"
+if ! command -v just >/dev/null 2>&1; then
+    echo "pre-commit: 'just' is not installed (brew install just); skipping checks." >&2
+    exit 0
+fi
+just check
