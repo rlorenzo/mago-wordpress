@@ -1,12 +1,15 @@
 wordpress/assignment-in-ternary-condition
 wordpress/capital-p-dangit
 wordpress/cron-interval
+wordpress/discouraged-constants
 wordpress/discouraged-wp-functions
 wordpress/dont-extract
 wordpress/enqueued-resource-parameters
 wordpress/enqueued-resources
 wordpress/file-name
+wordpress/get-meta-single
 wordpress/global-variables-override
+wordpress/plugin-menu-slug
 wordpress/posts-per-page
 wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders
