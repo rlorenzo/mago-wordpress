@@ -85,12 +85,9 @@ jobs:
           cd "$work"
           composer init --no-interaction --name=mago-wordpress/consumer-smoke -q
           composer config repositories.local path "$GITHUB_WORKSPACE"
+          # A plain (non --dev) require: the smoke test runs with only the extension's declared
+          # runtime requires installed, as a consumer would.
           composer require --no-interaction carthage-software/mago 'rlorenzo/mago-wordpress:*@dev'
-
-          # Reinstall with --no-dev: proves the extension's declared runtime requires (e.g.
-          # ext-tokenizer for the phpcs-comment parser) are complete on their own, without
-          # phpunit or other require-dev packages coincidentally providing what it needs.
-          composer install --no-interaction --no-dev
 
           cat > mago.toml <<'EOF'
           extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"

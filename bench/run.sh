@@ -79,10 +79,10 @@ run_phpcs() {
 # output. That grep is a heuristic (mago's/phpcs's exact wording isn't a stable contract), not
 # a real parse of either tool's report.
 # Output goes to a file rather than a captured variable, so timed runs pay no subshell.
-run_checked() { # name, function, crash-pattern (grep -E, optional)
-    local name=$1 fn=$2 crash=${3:-} status=0
+run_checked() { # name, function, crash-pattern (grep -E)
+    local name=$1 fn=$2 crash=$3 status=0
     "$fn" > "$work/out" 2>&1 || status=$?
-    if (( status > 2 )) || { [[ -n "$crash" ]] && grep -qiE "$crash" "$work/out"; }; then
+    if (( status > 2 )) || grep -qiE "$crash" "$work/out"; then
         echo "error: $name exited with status $status:" >&2
         cat "$work/out" >&2
         exit 1
