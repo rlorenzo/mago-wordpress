@@ -109,7 +109,8 @@ jobs:
 
           # mago exits non-zero when it reports issues; the greps below are the assertion.
           # The last three are Mago core rules that ship disabled; wordpress.mago.toml enables them.
-          out=$(vendor/bin/mago lint 2>&1 || true)
+          # Pin the format: on GitHub Actions Mago otherwise emits ::warning annotations.
+          out=$(vendor/bin/mago lint --reporting-format short 2>&1 || true)
           echo "$out"
           for rule in wordpress/safe-redirect nonce-verification validated-sanitized-input prepared-sql; do
             echo "$out" | grep -q "\[$rule\]" || {
