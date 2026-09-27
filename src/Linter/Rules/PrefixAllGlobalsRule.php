@@ -14,15 +14,16 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
-use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\DocBlocks;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
 use Rlorenzo\MagoWordPress\Settings;
+use WeakMap;
 
 use function array_key_exists;
 use function array_map;
-use function explode;
 use function in_array;
 use function ltrim;
 use function mb_strlen;
@@ -34,7 +35,6 @@ use function rtrim;
 use function str_contains;
 use function str_starts_with;
 use function stripos;
-use function strspn;
 use function strtolower;
 use function substr;
 
@@ -102,12 +102,15 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var null|array<string, true> */
     private ?array $wantedCalls = null;
 
+    /** @var WeakMap<SourceFile, array<int, true>> `@deprecated` docblock ends per file. */
+    private readonly WeakMap $deprecatedStarts;
+
     public function __construct(Settings $settings)
     {
         $prefixes = [];
         $problems = [];
         foreach ($settings->prefixes as $prefix) {
-            if (in_array($prefix, self::FORBIDDEN_PREFIXES, strict: true)) {
+            if (in_array(strtolower($prefix), self::FORBIDDEN_PREFIXES, strict: true)) {
                 $problems[] = "The `{$prefix}` prefix is not allowed.";
                 continue;
             }
@@ -119,6 +122,7 @@ final class PrefixAllGlobalsRule implements Rule
 
             if (preg_match('`^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff\\\\]*$`', $prefix) !== 1) {
                 $problems[] = "The `{$prefix}` prefix is not a valid namespace/function/class/variable/constant prefix in PHP.";
+                continue;
             }
 
             $prefixes[] = $prefix;
@@ -127,6 +131,7 @@ final class PrefixAllGlobalsRule implements Rule
         $this->prefixes = $prefixes;
         $this->prefixProblems = $problems;
         $this->namespacePatterns = array_map(self::namespacePattern(...), $prefixes);
+        $this->deprecatedStarts = new WeakMap();
     }
 
     public function getDefinition(): RuleDefinition
@@ -286,15 +291,16 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
+        $isDefine = $name === 'define';
         $call = CallExpression::fromNode($context->file, $context->node);
-        $string = Calls::argument($context->file, $call, 0, $name === 'define' ? 'constant_name' : 'hook_name');
+        $string = Calls::argument($context->file, $call, 0, $isDefine ? 'constant_name' : 'hook_name');
         if ($string === null) {
             return;
         }
 
         $value = Values::literalString($context->file, $string);
         if ($value === null) {
-            $this->checkDynamicName($context, $name === 'define' ? 'constant' : 'hook', $string);
+            $this->checkDynamicName($context, $isDefine ? 'constant' : 'hook', $string);
 
             return;
         }
@@ -303,7 +309,7 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        if ($name === 'define') {
+        if ($isDefine) {
             // A leading backslash denotes the global namespace; any other
             // backslash means the constant is explicitly namespaced.
             $constant = str_starts_with($value, '\\') ? substr($value, offset: 1) : $value;
@@ -367,27 +373,25 @@ final class PrefixAllGlobalsRule implements Rule
      */
     private function leadingLiteral(SourceFile $file, Node $argument): ?string
     {
-        $node = $argument;
+        $node = Values::unparenthesize($file, $argument);
         while ($node->kind !== NodeKind::LiteralString && $node->kind !== NodeKind::CompositeString) {
             $child = $file->getChildren($node)[0] ?? null;
-            if ($child === null || $child->span->start !== $argument->span->start) {
+            if ($child === null || $child->span->start !== $node->span->start) {
                 return null;
             }
 
-            $node = $child;
+            $node = Values::unparenthesize($file, $child);
         }
 
         if ($node->kind === NodeKind::LiteralString) {
             return Values::literalString($file, $node);
         }
 
-        if (($file->getChildren($node)[0] ?? null)?->kind !== NodeKind::InterpolatedString) {
-            return null;
+        foreach (Strings::compositeParts($file, $node) as $text) {
+            return $text === '' ? null : $text;
         }
 
-        $leading = rtrim(explode('$', substr($file->getText($node), offset: 1))[0], characters: '{');
-
-        return $leading === '' ? null : $leading;
+        return null;
     }
 
     private function checkSymbol(LintContext $context, string $kind, string $name, Span $span): void
@@ -505,27 +509,14 @@ final class PrefixAllGlobalsRule implements Rule
      */
     private function isDeprecated(SourceFile $file, Node $function): bool
     {
-        $starts = [$function->span->start => true];
-        foreach ($file->getChildren($function) as $child) {
-            $starts[$child->span->start] = true;
+        $this->deprecatedStarts[$file] ??= DocBlocks::deprecatedStarts($file);
+        $deprecatedStarts = $this->deprecatedStarts[$file];
+        if ($deprecatedStarts[$function->span->start] ?? false) {
+            return true;
         }
 
-        foreach ($file->getTrivia() as $trivia) {
-            if ($trivia->kind !== TriviaKind::DocBlockComment) {
-                continue;
-            }
-
-            $end = $trivia->span->end;
-            $next = $end + strspn($file->contents, characters: " \t\r\n", offset: $end);
-            // PHPCS only tokenizes a tag at the start of a docblock line.
-            if (
-                ($starts[$next] ?? false)
-                && preg_match('~^[ \t]*(?:/\*\*|\*)?[ \t]*@deprecated(?:\s|$)~m', substr(
-                    $file->contents,
-                    $trivia->span->start,
-                    $trivia->span->length(),
-                )) === 1
-            ) {
+        foreach ($file->getChildren($function) as $child) {
+            if ($deprecatedStarts[$child->span->start] ?? false) {
                 return true;
             }
         }

@@ -11,17 +11,14 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
-use Mago\Sdk\Syntax\SourceFile;
-use Mago\Sdk\Syntax\TriviaKind;
+use Rlorenzo\MagoWordPress\Internal\DocBlocks;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function in_array;
 use function ltrim;
 use function preg_match;
 use function sprintf;
-use function strspn;
 use function strtolower;
-use function substr;
 
 /**
  * Ports `WordPress.NamingConventions.ValidFunctionName`.
@@ -82,7 +79,7 @@ final class ValidFunctionNameRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
-        $deprecatedStarts = self::deprecatedStarts($file);
+        $deprecatedStarts = DocBlocks::deprecatedStarts($file);
 
         foreach ([NodeKind::Function, NodeKind::Method] as $kind) {
             foreach ($file->getDescendants($context->node, $kind) as $function) {
@@ -192,31 +189,5 @@ final class ValidFunctionNameRule implements Rule
                 $identifier->span,
             )->withHelp(sprintf('Rename it to "%s".', $suggested)));
         }
-    }
-
-    /**
-     * Offsets of the first token after each `@deprecated` docblock, whitespace skipped.
-     *
-     * @return array<int, true>
-     */
-    private static function deprecatedStarts(SourceFile $file): array
-    {
-        $starts = [];
-        foreach ($file->getTrivia() as $trivia) {
-            if ($trivia->kind !== TriviaKind::DocBlockComment) {
-                continue;
-            }
-
-            $text = substr($file->contents, $trivia->span->start, $trivia->span->length());
-            // PHPCS only tokenizes a tag at the start of a docblock line.
-            if (preg_match('~^[ \t]*(?:/\*\*|\*)?[ \t]*@deprecated(?:\s|$)~m', $text) !== 1) {
-                continue;
-            }
-
-            $end = $trivia->span->end;
-            $starts[$end + strspn($file->contents, characters: " \t\r\n", offset: $end)] = true;
-        }
-
-        return $starts;
     }
 }

@@ -148,6 +148,10 @@ namespace {
     define('MYPLUGIN_' . $suffix, true);
     do_action(MYPLUGIN_HOOK);
     do_action(myplugin_hook_name());
+    do_action(('myplugin_' . $key) . '_suffix');
+    do_action(<<<EOT
+        myplugin_{$type}
+        EOT);
 
     // dynamic_namespaced_define_is_ignored
     define(__NAMESPACE__ . '\PLUGIN_DIR', '/tmp');
