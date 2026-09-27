@@ -12,6 +12,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -28,6 +29,8 @@ use function strtolower;
  */
 final class EnqueuedResourceParametersRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.EnqueuedResourceParameters';
+
     /**
      * Parameter slots shared by the four functions: `$handle`, `$src`, `$deps`, `$ver`, and the
      * fifth parameter (`$args`/`$in_footer` for scripts, `$media` for styles).
@@ -87,28 +90,38 @@ final class EnqueuedResourceParametersRule extends CallRule
         $this->checkVersion($context, $slots[self::VER_SLOT] ?? null);
 
         if ($isScript && !array_key_exists(self::FIFTH_SLOT, $slots)) {
-            $context->report(Issue::new(
-                'Enqueued script does not set `$in_footer` explicitly',
-                $context->node->span,
-                'No `$args`/`$in_footer` argument passed for this script',
-            )->withNote('By default, scripts are printed in the `<head>`, where they block page rendering.')->withHelp(
-                'Pass an explicit 5th argument: `true` (or `[\'in_footer\' => true]`) to load the script in the '
-                . 'footer, or `false` to keep it in the head deliberately.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Enqueued script does not set `$in_footer` explicitly',
+                    $context->node->span,
+                    'No `$args`/`$in_footer` argument passed for this script',
+                )->withNote(
+                    'By default, scripts are printed in the `<head>`, where they block page rendering.',
+                )->withHelp(
+                    'Pass an explicit 5th argument: `true` (or `[\'in_footer\' => true]`) to load the script in the '
+                    . 'footer, or `false` to keep it in the head deliberately.',
+                ),
+                [self::SNIFF . '.NotInFooter'],
+            );
         }
     }
 
     private function checkVersion(LintContext $context, ?Node $verNode): void
     {
         if ($verNode === null) {
-            $context->report(Issue::new(
-                'Enqueued resource is missing the `$ver` (version) parameter',
-                $context->node->span,
-                'No version passed for this resource',
-            )->withNote(
-                'Without a version, WordPress falls back to its core version, so browsers and CDNs are not '
-                . 'cache-busted when the asset itself changes.',
-            )->withHelp("Pass the asset's own version string as the 4th (`\$ver`) argument."));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Enqueued resource is missing the `$ver` (version) parameter',
+                    $context->node->span,
+                    'No version passed for this resource',
+                )->withNote(
+                    'Without a version, WordPress falls back to its core version, so browsers and CDNs are not '
+                    . 'cache-busted when the asset itself changes.',
+                )->withHelp("Pass the asset's own version string as the 4th (`\$ver`) argument."),
+                [self::SNIFF . '.MissingVersion'],
+            );
 
             return;
         }
@@ -123,13 +136,17 @@ final class EnqueuedResourceParametersRule extends CallRule
             ? ['`false`', 'WordPress falls back to its core version']
             : ['`null`', 'no version is added at all'];
 
-        $context->report(Issue::new(
-            "Enqueued resource version is explicitly {$what}",
-            $version->span,
-            "With {$what} as the version, {$effect}",
-        )->withNote(
-            'Browsers and CDNs use the version query string to cache-bust; it should change when the asset changes.',
-        )->withHelp("Pass the asset's own version string as the 4th (`\$ver`) argument."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Enqueued resource version is explicitly {$what}",
+                $version->span,
+                "With {$what} as the version, {$effect}",
+            )->withNote(
+                'Browsers and CDNs use the version query string to cache-bust; it should change when the asset changes.',
+            )->withHelp("Pass the asset's own version string as the 4th (`\$ver`) argument."),
+            [self::SNIFF . '.NoExplicitVersion'],
+        );
     }
 
     /**

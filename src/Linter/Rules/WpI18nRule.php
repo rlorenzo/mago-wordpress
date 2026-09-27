@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -39,6 +40,7 @@ use function strtolower;
 use function substr;
 use function substr_count;
 use function trim;
+use function ucfirst;
 
 /**
  * Ports `WordPress.WP.I18n`.
@@ -51,6 +53,8 @@ use function trim;
  */
 final class WpI18nRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.I18n';
+
     /**
      * WordPress's parameter names per Lists::I18N_FUNCTIONS kind, in position order.
      */
@@ -156,30 +160,41 @@ final class WpI18nRule extends CallRule
             $text = $this->literal($context, $argument);
             $texts[] = [$argument, $text];
             if ($text !== null) {
-                self::checkOrder($context, $argument, $text);
+                self::checkOrder($context, $argument, $parameter, $text);
                 continue;
             }
 
-            $context->report(Issue::new(
-                'Translatable text must be a literal string',
-                $argument->span,
-                sprintf('This argument to `%s()` is not a literal string', $name),
-            )->withNote(
-                'Translation tools statically extract translatable strings from the source code; variables, concatenations, and interpolations cannot be extracted.',
-            )->withHelp(
-                'Pass a single-quoted or double-quoted literal string without variables, and use `sprintf()` for dynamic values.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Translatable text must be a literal string',
+                    $argument->span,
+                    sprintf('This argument to `%s()` is not a literal string', $name),
+                )->withNote(
+                    'Translation tools statically extract translatable strings from the source code; variables, concatenations, and interpolations cannot be extracted.',
+                )->withHelp(
+                    'Pass a single-quoted or double-quoted literal string without variables, and use `sprintf()` for dynamic values.',
+                ),
+                [
+                    self::SNIFF . '.NonSingularStringLiteral' . ucfirst($parameter),
+                    self::SNIFF . '.InterpolatedVariable' . ucfirst($parameter),
+                ],
+            );
         }
 
         $gettextContext = $arguments['context'] ?? null;
         if ($gettextContext !== null && $this->literal($context, $gettextContext) === null) {
-            $context->report(Issue::new(
-                'Translation context must be a literal string',
-                $gettextContext->span,
-                sprintf('The context argument to `%s()` is not a literal string', $name),
-            )->withNote(
-                'The gettext context is extracted statically by translation tools and must be a literal string.',
-            )->withHelp("Pass the context as a literal string, e.g. `'noun'`."));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Translation context must be a literal string',
+                    $gettextContext->span,
+                    sprintf('The context argument to `%s()` is not a literal string', $name),
+                )->withNote(
+                    'The gettext context is extracted statically by translation tools and must be a literal string.',
+                )->withHelp("Pass the context as a literal string, e.g. `'noun'`."),
+                [self::SNIFF . '.NonSingularStringLiteralContext', self::SNIFF . '.InterpolatedVariableContext'],
+            );
         }
 
         $this->checkDomain($context, $name, $arguments['domain']);
@@ -198,7 +213,8 @@ final class WpI18nRule extends CallRule
             && $plural !== null
             && !self::compatible(self::placeholders($singular), self::placeholders($plural))
         ) {
-            $context->report(
+            Report::issue(
+                $context,
                 Issue::new(
                     'Mismatched placeholders between singular and plural strings',
                     $singularNode->span,
@@ -211,6 +227,7 @@ final class WpI18nRule extends CallRule
                     ->withHelp(
                         'Use the same placeholders in both strings, preferring numbered placeholders such as `%1$s` when there is more than one.',
                     ),
+                [self::SNIFF . '.MismatchedPlaceholders', self::SNIFF . '.MissingSingularPlaceholder'],
             );
         }
     }
@@ -218,26 +235,34 @@ final class WpI18nRule extends CallRule
     private function checkDomain(LintContext $context, string $name, ?Node $argument): void
     {
         if ($argument === null) {
-            $context->report(Issue::new(
-                'Missing text domain in translation function call',
-                $context->node->span,
-                sprintf('This call to `%s()` does not pass a text domain', $name),
-            )->withNote(
-                'Without a text domain, WordPress falls back to the `default` (core) domain and the string will not be translated with your plugin or theme.',
-            )->withHelp("Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`."));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Missing text domain in translation function call',
+                    $context->node->span,
+                    sprintf('This call to `%s()` does not pass a text domain', $name),
+                )->withNote(
+                    'Without a text domain, WordPress falls back to the `default` (core) domain and the string will not be translated with your plugin or theme.',
+                )->withHelp("Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`."),
+                [self::SNIFF . '.MissingArgDomain', self::SNIFF . '.MissingArgDomainDefault'],
+            );
 
             return;
         }
 
         $domain = $this->literal($context, $argument);
         if ($domain === null) {
-            $context->report(Issue::new(
-                'Text domain must be a literal string',
-                $argument->span,
-                sprintf('The text domain argument to `%s()` is not a literal string', $name),
-            )->withNote(
-                'Translation tools match strings to a text domain statically; a dynamic text domain cannot be resolved.',
-            )->withHelp("Pass the text domain as a literal string, e.g. `'my-plugin'`."));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Text domain must be a literal string',
+                    $argument->span,
+                    sprintf('The text domain argument to `%s()` is not a literal string', $name),
+                )->withNote(
+                    'Translation tools match strings to a text domain statically; a dynamic text domain cannot be resolved.',
+                )->withHelp("Pass the text domain as a literal string, e.g. `'my-plugin'`."),
+                [self::SNIFF . '.NonSingularStringLiteralDomain', self::SNIFF . '.InterpolatedVariableDomain'],
+            );
 
             return;
         }
@@ -247,22 +272,26 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        $context->report(Issue::new(
-            'Unexpected text domain in translation function call',
-            $argument->span,
-            sprintf('The text domain `%s` is not in the configured list', $domain),
-        )->withNote(
-            'The `text-domains` setting restricts which text domains may be used in this project.',
-        )->withHelp(sprintf('Use one of the configured text domains: %s.', implode(', ', array_map(
-            static fn(string $domain): string => "`{$domain}`",
-            $allowed,
-        )))));
+        Report::issue(
+            $context,
+            Issue::new(
+                'Unexpected text domain in translation function call',
+                $argument->span,
+                sprintf('The text domain `%s` is not in the configured list', $domain),
+            )->withNote(
+                'The `text-domains` setting restricts which text domains may be used in this project.',
+            )->withHelp(sprintf('Use one of the configured text domains: %s.', implode(', ', array_map(
+                static fn(string $domain): string => "`{$domain}`",
+                $allowed,
+            )))),
+            [self::SNIFF . '.TextDomainMismatch'],
+        );
     }
 
     /**
      * Reports a string with several placeholders that are not all numbered.
      */
-    private static function checkOrder(LintContext $context, Node $argument, string $text): void
+    private static function checkOrder(LintContext $context, Node $argument, string $parameter, string $text): void
     {
         $unordered = [];
         $unorderedCount = (int) preg_match_all(self::WPCS_UNORDERED_PLACEHOLDER, $text, $unordered);
@@ -270,11 +299,15 @@ final class WpI18nRule extends CallRule
         $allCount = (int) preg_match_all(self::WPCS_PLACEHOLDER, $text, $all);
 
         if ($unorderedCount > 0 && $unorderedCount !== $allCount && $allCount > 1) {
-            $context->report(Issue::new(
-                'Mix of ordered and unordered placeholders in translatable string',
-                $argument->span,
-                sprintf('Found %s', implode(', ', $all[0])),
-            )->withHelp('Number every placeholder, e.g. `%1$s` and `%2$s`, so translators can reorder them.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Mix of ordered and unordered placeholders in translatable string',
+                    $argument->span,
+                    sprintf('Found %s', implode(', ', $all[0])),
+                )->withHelp('Number every placeholder, e.g. `%1$s` and `%2$s`, so translators can reorder them.'),
+                [self::SNIFF . '.MixedOrderedPlaceholders' . ucfirst($parameter)],
+            );
 
             return;
         }
@@ -290,11 +323,18 @@ final class WpI18nRule extends CallRule
             $expected[] = '%' . ($index + 1) . '$' . substr($placeholder, offset: 1);
         }
 
-        $context->report(Issue::new(
-            'Multiple placeholders in translatable strings should be ordered',
-            $argument->span,
-            sprintf('Found %s', implode(', ', $found)),
-        )->withHelp(sprintf('Number the placeholders so translators can reorder them: %s.', implode(', ', $expected))));
+        Report::issue(
+            $context,
+            Issue::new(
+                'Multiple placeholders in translatable strings should be ordered',
+                $argument->span,
+                sprintf('Found %s', implode(', ', $found)),
+            )->withHelp(sprintf('Number the placeholders so translators can reorder them: %s.', implode(
+                ', ',
+                $expected,
+            ))),
+            [self::SNIFF . '.UnorderedPlaceholders' . ucfirst($parameter)],
+        );
     }
 
     /**
@@ -316,13 +356,17 @@ final class WpI18nRule extends CallRule
 
         $style = self::translatorsCommentBefore($context->file, $context->node->span->start);
         if ($style === TriviaKind::DocBlockComment) {
-            $context->report(Issue::new(
-                'A translators comment must be a `/* */` style comment',
-                $context->node->span,
-                'Preceded by a docblock `translators:` comment',
-            )->withNote('Tools that generate the .pot file do not pick up docblock comments.')->withHelp(
-                'Change `/**` to `/*`.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'A translators comment must be a `/* */` style comment',
+                    $context->node->span,
+                    'Preceded by a docblock `translators:` comment',
+                )->withNote('Tools that generate the .pot file do not pick up docblock comments.')->withHelp(
+                    'Change `/**` to `/*`.',
+                ),
+                [self::SNIFF . '.TranslatorsCommentWrongStyle'],
+            );
 
             return;
         }
@@ -331,13 +375,17 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        $context->report(Issue::new(
-            'Missing translators comment for a string with placeholders',
-            $context->node->span,
-            sprintf('This call to `%s()` has placeholders but no `translators:` comment on the line above', $name),
-        )->withHelp(
-            'Add a `/* translators: %s: What the placeholder stands for. */` comment directly before the call.',
-        ));
+        Report::issue(
+            $context,
+            Issue::new(
+                'Missing translators comment for a string with placeholders',
+                $context->node->span,
+                sprintf('This call to `%s()` has placeholders but no `translators:` comment on the line above', $name),
+            )->withHelp(
+                'Add a `/* translators: %s: What the placeholder stands for. */` comment directly before the call.',
+            ),
+            [self::SNIFF . '.MissingTranslatorsComment'],
+        );
     }
 
     /**

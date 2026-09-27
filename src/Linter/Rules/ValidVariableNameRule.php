@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function in_array;
@@ -30,6 +31,8 @@ use function substr;
  */
 final class ValidVariableNameRule implements Rule
 {
+    private const SNIFF = 'WordPress.NamingConventions.ValidVariableName';
+
     /**
      * PHPCSUtils `Variables::$phpReservedVars`.
      */
@@ -236,10 +239,14 @@ final class ValidVariableNameRule implements Rule
 
         // `$object->name` has no `$`; variables and `Foo::$name` do.
         $sigil = $node->kind === NodeKind::LocalIdentifier ? '' : '$';
-        $context->report(Issue::new(
-            sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, $name),
-            $node->span,
-        )->withHelp(sprintf('Rename it to "%s%s".', $sigil, $suggested)));
+        Report::issue(
+            $context,
+            Issue::new(
+                sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, $name),
+                $node->span,
+            )->withHelp(sprintf('Rename it to "%s%s".', $sigil, $suggested)),
+            [self::SNIFF],
+        );
     }
 
     /**

@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Settings;
@@ -31,6 +32,8 @@ use function strtolower;
  */
 final class WpDeprecatedClassesRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.DeprecatedClasses';
+
     private ?FileGate $gate = null;
 
     public function __construct(
@@ -116,9 +119,12 @@ final class WpDeprecatedClassesRule implements Rule
         }
 
         $name = $file->getText($identifier);
-        $context->report(Issue::new(
-            "Class `{$name}` has been deprecated since WordPress {$since}.",
-            $identifier->span,
-        )->withNote('Deprecated classes may be removed in a future WordPress release.'));
+        Report::issue(
+            $context,
+            Issue::new("Class `{$name}` has been deprecated since WordPress {$since}.", $identifier->span)->withNote(
+                'Deprecated classes may be removed in a future WordPress release.',
+            ),
+            [self::SNIFF],
+        );
     }
 }

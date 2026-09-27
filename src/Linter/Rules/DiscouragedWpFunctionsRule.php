@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
@@ -27,6 +28,8 @@ use function array_values;
  */
 final class DiscouragedWpFunctionsRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.DiscouragedFunctions';
+
     private const DISCOURAGED_FUNCTIONS = [
         'query_posts' => [
             'reason' => '`query_posts()` replaces and breaks the main query, causing pagination and conditional tag issues.',
@@ -109,11 +112,15 @@ final class DiscouragedWpFunctionsRule extends CallRule
     {
         $details = self::DISCOURAGED_FUNCTIONS[$name] ?? null;
         if ($details !== null) {
-            $context->report(Issue::new(
-                "Discouraged WordPress function `{$name}()`",
-                $context->node->span,
-                "`{$name}()` is discouraged",
-            )->withNote($details['reason'])->withHelp($details['alternative']));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Discouraged WordPress function `{$name}()`",
+                    $context->node->span,
+                    "`{$name}()` is discouraged",
+                )->withNote($details['reason'])->withHelp($details['alternative']),
+                [self::SNIFF],
+            );
 
             return;
         }
@@ -124,11 +131,15 @@ final class DiscouragedWpFunctionsRule extends CallRule
         }
 
         $messages = self::GROUP_MESSAGES[$group];
-        $context->report(Issue::new(
-            "Discouraged PHP function `{$name}()` ({$group})",
-            $context->node->span,
-            "`{$name}()` is discouraged by the WordPress Coding Standards \"{$group}\" function group",
-        )->withNote($messages['note'])->withHelp($messages['help']));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Discouraged PHP function `{$name}()` ({$group})",
+                $context->node->span,
+                "`{$name}()` is discouraged by the WordPress Coding Standards \"{$group}\" function group",
+            )->withNote($messages['note'])->withHelp($messages['help']),
+            [$group === 'development' ? 'WordPress.PHP.DevelopmentFunctions' : 'WordPress.PHP.DiscouragedPHPFunctions'],
+        );
     }
 
     /**

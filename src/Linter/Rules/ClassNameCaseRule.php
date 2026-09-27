@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\CoreClasses;
 
 use function array_combine;
@@ -37,6 +38,8 @@ use function strtolower;
  */
 final class ClassNameCaseRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.ClassNameCase';
+
     private ?FileGate $gate = null;
 
     /** @var array<string, string>|null lowercase name => properly cased name */
@@ -105,10 +108,14 @@ final class ClassNameCaseRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            "References the WordPress core class `{$name}` with the wrong case; expected `{$properCase}`.",
-            $identifier->span,
-        )->withHelp("Use the properly cased name: `{$properCase}`."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "References the WordPress core class `{$name}` with the wrong case; expected `{$properCase}`.",
+                $identifier->span,
+            )->withHelp("Use the properly cased name: `{$properCase}`."),
+            [self::SNIFF],
+        );
     }
 
     /**

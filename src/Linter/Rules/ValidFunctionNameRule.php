@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\DocBlocks;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function in_array;
@@ -31,6 +32,8 @@ use function strtolower;
  */
 final class ValidFunctionNameRule implements Rule
 {
+    private const SNIFF = 'WordPress.NamingConventions.ValidFunctionName';
+
     private const CODE = 'wordpress/valid-function-name';
 
     /**
@@ -176,18 +179,27 @@ final class ValidFunctionNameRule implements Rule
         string $subject,
     ): void {
         if (preg_match('`^__[^_]`', $name) === 1) {
-            $context->report(Issue::new(
-                $qualifiedSubject . ' is invalid; only PHP magic methods should be prefixed with a double underscore.',
-                $identifier->span,
-            )->withHelp('Remove the leading double underscore.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    $qualifiedSubject
+                    . ' is invalid; only PHP magic methods should be prefixed with a double underscore.',
+                    $identifier->span,
+                )->withHelp('Remove the leading double underscore.'),
+                [self::SNIFF],
+            );
         }
 
         $suggested = Strings::snakeCase($name);
         if ($suggested !== $name) {
-            $context->report(Issue::new(
-                $subject . ' is not in snake case format.',
-                $identifier->span,
-            )->withHelp(sprintf('Rename it to "%s".', $suggested)));
+            Report::issue(
+                $context,
+                Issue::new($subject . ' is not in snake case format.', $identifier->span)->withHelp(sprintf(
+                    'Rename it to "%s".',
+                    $suggested,
+                )),
+                [self::SNIFF],
+            );
         }
     }
 }

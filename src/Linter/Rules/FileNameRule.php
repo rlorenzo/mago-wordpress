@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 
 use function array_key_exists;
@@ -38,6 +39,8 @@ use function substr;
  */
 final class FileNameRule implements Rule
 {
+    private const SNIFF = 'WordPress.Files.FileName';
+
     /**
      * Historical exceptions to the hyphenation check, kept for WP core files
      * renamed in WP 6.1.0. WPCS also lists `.inc` variants for its own test
@@ -114,10 +117,14 @@ final class FileNameRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            "Filenames should be all lowercase with hyphens as word separators. Expected {$expected}, but found {$fileName}.",
-            $context->node->span,
-        )->withHelp("Rename the file to {$expected}."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Filenames should be all lowercase with hyphens as word separators. Expected {$expected}, but found {$fileName}.",
+                $context->node->span,
+            )->withHelp("Rename the file to {$expected}."),
+            [self::SNIFF . '.NotHyphenatedLowercase'],
+        );
     }
 
     /**
@@ -146,10 +153,14 @@ final class FileNameRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            "Class file names should be based on the class name with \"class-\" prepended. Expected {$expected}, but found {$fileName}.",
-            $context->node->span,
-        )->withHelp("Rename the file to {$expected}."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Class file names should be based on the class name with \"class-\" prepended. Expected {$expected}, but found {$fileName}.",
+                $context->node->span,
+            )->withHelp("Rename the file to {$expected}."),
+            [self::SNIFF . '.InvalidClassFileName'],
+        );
     }
 
     /**
@@ -167,9 +178,13 @@ final class FileNameRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            'Files containing template tags should have "-template" appended to the end of the file name.',
-            $context->node->span,
-        )->withHelp('Rename the file so it ends in "-template" before the extension.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                'Files containing template tags should have "-template" appended to the end of the file name.',
+                $context->node->span,
+            )->withHelp('Rename the file so it ends in "-template" before the extension.'),
+            [self::SNIFF . '.InvalidTemplateTagFileName'],
+        );
     }
 }

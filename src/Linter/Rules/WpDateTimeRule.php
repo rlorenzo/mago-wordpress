@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -26,6 +27,8 @@ use function trim;
  */
 final class WpDateTimeRule extends CallRule
 {
+    private const SNIFF = 'WordPress.DateTime.RestrictedFunctions';
+
     private const CURRENT_TIME_FUNCTION = 'current_time';
 
     /** @var array<string, array{reason: string, help: string}> */
@@ -77,22 +80,30 @@ final class WpDateTimeRule extends CallRule
             return;
         }
 
-        $context->report(Issue::new(
-            "`{$name}()` conflicts with how WordPress manages timezones.",
-            $context->node->span,
-            "`{$name}()` uses the runtime timezone, not the WordPress site timezone",
-        )->withNote($details['reason'])->withHelp($details['help']));
+        Report::issue(
+            $context,
+            Issue::new(
+                "`{$name}()` conflicts with how WordPress manages timezones.",
+                $context->node->span,
+                "`{$name}()` uses the runtime timezone, not the WordPress site timezone",
+            )->withNote($details['reason'])->withHelp($details['help']),
+            [self::SNIFF],
+        );
     }
 
     private function reportCurrentTimeTimestamp(LintContext $context): void
     {
-        $context->report(Issue::new(
-            '`current_time()` should not be used to retrieve a timestamp.',
-            $context->node->span,
-            'This returns a "local" pseudo-timestamp offset from UTC',
-        )->withNote(
-            "`current_time('timestamp')` returns a Unix timestamp shifted by the site's UTC offset, which corrupts date arithmetic.",
-        )->withHelp('Use `time()` for a true Unix timestamp, or `current_datetime()` for a timezone-aware object.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                '`current_time()` should not be used to retrieve a timestamp.',
+                $context->node->span,
+                'This returns a "local" pseudo-timestamp offset from UTC',
+            )->withNote(
+                "`current_time('timestamp')` returns a Unix timestamp shifted by the site's UTC offset, which corrupts date arithmetic.",
+            )->withHelp('Use `time()` for a true Unix timestamp, or `current_datetime()` for a timezone-aware object.'),
+            ['WordPress.DateTime.CurrentTimeTimestamp'],
+        );
     }
 
     /**

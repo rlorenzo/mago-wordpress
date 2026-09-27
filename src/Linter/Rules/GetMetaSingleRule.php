@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function array_keys;
@@ -23,6 +24,8 @@ use function array_keys;
  */
 final class GetMetaSingleRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.GetMetaSingle';
+
     /**
      * The `$key`/`$meta_key` parameter is at 0-indexed position 1, `$single` at position 2.
      */
@@ -83,12 +86,16 @@ final class GetMetaSingleRule extends CallRule
             return;
         }
 
-        $context->report(Issue::new(
-            "Call to {$name}() passes \${$conditionName} without \${$recommendedName}.",
-            $context->node->span,
-        )->withHelp(
-            "Pass the \${$recommendedName} parameter explicitly to indicate whether a single value or "
-            . 'multiple values are expected to be returned.',
-        ));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Call to {$name}() passes \${$conditionName} without \${$recommendedName}.",
+                $context->node->span,
+            )->withHelp(
+                "Pass the \${$recommendedName} parameter explicitly to indicate whether a single value or "
+                . 'multiple values are expected to be returned.',
+            ),
+            [self::SNIFF],
+        );
     }
 }

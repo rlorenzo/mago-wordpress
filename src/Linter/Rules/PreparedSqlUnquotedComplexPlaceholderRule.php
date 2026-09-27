@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
@@ -27,6 +28,8 @@ use function str_ends_with;
  */
 final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
 {
+    private const SNIFF = 'WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder';
+
     /**
      * WPCS `PREPARE_PLACEHOLDER_REGEX`, not preceded or followed by a quote.
      */
@@ -70,12 +73,16 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
         }
 
         $found = implode(', ', array_map(static fn(string $placeholder): string => "`{$placeholder}`", $complex));
-        $context->report(Issue::new(
-            "Complex placeholders in `\$wpdb->prepare()` are not quoted: {$found}",
-            $prepared->argument->value->span,
-            'Unquoted complex placeholder found in this SQL query',
-        )->withNote(
-            '`$wpdb->prepare()` quotes only the simple `%s`, `%d`, `%f` and `%F` placeholders; the value of a complex placeholder is inserted without quotes.',
-        )->withHelp("Quote the placeholder in the query (e.g. `'{$complex[0]}'`), or use a simple placeholder."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Complex placeholders in `\$wpdb->prepare()` are not quoted: {$found}",
+                $prepared->argument->value->span,
+                'Unquoted complex placeholder found in this SQL query',
+            )->withNote(
+                '`$wpdb->prepare()` quotes only the simple `%s`, `%d`, `%f` and `%F` placeholders; the value of a complex placeholder is inserted without quotes.',
+            )->withHelp("Quote the placeholder in the query (e.g. `'{$complex[0]}'`), or use a simple placeholder."),
+            [self::SNIFF],
+        );
     }
 }

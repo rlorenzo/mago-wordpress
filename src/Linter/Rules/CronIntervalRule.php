@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Settings;
 
@@ -32,6 +33,8 @@ use function trim;
  */
 final class CronIntervalRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.CronInterval';
+
     private const ADD_FILTER = 'add_filter';
 
     private const HOOK_NAME = 'cron_schedules';
@@ -163,13 +166,17 @@ final class CronIntervalRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            "Cron schedule interval of {$interval} seconds is below the minimum of {$this->minInterval} seconds.",
-            $value->span,
-            "This interval evaluates to {$interval} seconds",
-        )->withNote('Cron schedules that run too frequently can severely degrade site performance.')->withHelp(
-            "Use a longer interval ({$this->minInterval} seconds or more).",
-        ));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Cron schedule interval of {$interval} seconds is below the minimum of {$this->minInterval} seconds.",
+                $value->span,
+                "This interval evaluates to {$interval} seconds",
+            )->withNote('Cron schedules that run too frequently can severely degrade site performance.')->withHelp(
+                "Use a longer interval ({$this->minInterval} seconds or more).",
+            ),
+            [self::SNIFF],
+        );
     }
 
     /**

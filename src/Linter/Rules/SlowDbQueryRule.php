@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
@@ -24,6 +25,8 @@ use function in_array;
  */
 final class SlowDbQueryRule implements Rule
 {
+    private const SNIFF = 'WordPress.DB.SlowDBQuery';
+
     private const SET_QUERY_VAR = 'set_query_var';
 
     private readonly FileGate $gate;
@@ -111,14 +114,18 @@ final class SlowDbQueryRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            "Potentially slow database query using `{$value}`.",
-            $node->span,
-            'This query argument is slow at scale',
-        )->withNote(
-            'Meta and taxonomy queries run against unindexed columns, so they become very slow as the number of posts grows.',
-        )->withHelp(
-            'Prefer indexed alternatives: register a taxonomy for filterable values, use a dedicated table for complex lookups, or cache the query results.',
-        ));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Potentially slow database query using `{$value}`.",
+                $node->span,
+                'This query argument is slow at scale',
+            )->withNote(
+                'Meta and taxonomy queries run against unindexed columns, so they become very slow as the number of posts grows.',
+            )->withHelp(
+                'Prefer indexed alternatives: register a taxonomy for filterable values, use a dedicated table for complex lookups, or cache the query results.',
+            ),
+            [self::SNIFF],
+        );
     }
 }

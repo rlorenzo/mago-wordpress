@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function ord;
 use function strcspn;
@@ -28,6 +29,8 @@ use const PHP_INT_MAX;
  */
 final class CapitalPDangitRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.CapitalPDangit';
+
     private const CORRECT_SPELLING = 'WordPress';
 
     private const LOWERCASE_SPELLING = 'wordpress';
@@ -172,8 +175,12 @@ final class CapitalPDangitRule implements Rule
 
     private function report(LintContext $context, string $word, Span $span): void
     {
-        $context->report(Issue::new('Misspelled `WordPress`', $span, "`{$word}` should be `WordPress`")->withNote(
-            'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',
-        )->withHelp('Replace the misspelling with `WordPress`.'));
+        Report::issue(
+            $context,
+            Issue::new('Misspelled `WordPress`', $span, "`{$word}` should be `WordPress`")->withNote(
+                'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',
+            )->withHelp('Replace the misspelling with `WordPress`.'),
+            [self::SNIFF],
+        );
     }
 }

@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function strcasecmp;
@@ -32,6 +33,8 @@ use function strcasecmp;
  */
 final class DbRestrictedClassesRule implements Rule
 {
+    private const SNIFF = 'WordPress.DB.RestrictedClasses';
+
     private ?FileGate $gate = null;
 
     public function getDefinition(): RuleDefinition
@@ -92,10 +95,14 @@ final class DbRestrictedClassesRule implements Rule
                 continue;
             }
 
-            $context->report(Issue::new(
-                "Accessing the database directly through {$class} should be avoided.",
-                $identifier->span,
-            )->withHelp('Use the $wpdb object and its associated methods instead.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Accessing the database directly through {$class} should be avoided.",
+                    $identifier->span,
+                )->withHelp('Use the $wpdb object and its associated methods instead.'),
+                [self::SNIFF],
+            );
 
             return;
         }

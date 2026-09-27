@@ -13,6 +13,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
 use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
@@ -40,6 +41,8 @@ use const SORT_STRING;
  */
 final class PreparedSqlPlaceholdersRule extends CallRule
 {
+    private const SNIFF = 'WordPress.DB.PreparedSQLPlaceholders';
+
     /**
      * The sign, padding, alignment, width and precision a placeholder may
      * carry between `%` and its type, as in `%05d` or `%.2f`. WPCS: a
@@ -90,49 +93,65 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         $query = $prepared->argument;
         [$expected, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] = $this->scan($prepared->text);
         if ($quotedSimple) {
-            $context->report(Issue::new(
-                'Simple placeholders should not be quoted in the query string in `$wpdb->prepare()`',
-                $query->value->span,
-                'Quoted simple placeholder found in this SQL query',
-            )->withNote(
-                '`$wpdb->prepare()` quotes the values of the simple `%s`, `%d`, `%f` and `%F` placeholders itself; quoting the placeholder as well breaks the escaping.',
-            )->withHelp(
-                'Remove the quotes around the placeholder (e.g. use `WHERE name = %s` instead of `WHERE name = \'%s\'`).',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Simple placeholders should not be quoted in the query string in `$wpdb->prepare()`',
+                    $query->value->span,
+                    'Quoted simple placeholder found in this SQL query',
+                )->withNote(
+                    '`$wpdb->prepare()` quotes the values of the simple `%s`, `%d`, `%f` and `%F` placeholders itself; quoting the placeholder as well breaks the escaping.',
+                )->withHelp(
+                    'Remove the quotes around the placeholder (e.g. use `WHERE name = %s` instead of `WHERE name = \'%s\'`).',
+                ),
+                [self::SNIFF . '.QuotedSimplePlaceholder'],
+            );
         }
 
         if ($quotedIdentifier) {
-            $context->report(Issue::new(
-                'Placeholders used for identifiers (`%i`) in the query string in `$wpdb->prepare()` are always quoted automagically',
-                $query->value->span,
-                'Quoted identifier placeholder found in this SQL query',
-            )->withNote('`$wpdb->prepare()` wraps `%i` values in backticks itself.')->withHelp(
-                'Remove the quotes or backticks around the identifier placeholder (e.g. use `FROM %i` instead of `FROM \'%i\'`).',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Placeholders used for identifiers (`%i`) in the query string in `$wpdb->prepare()` are always quoted automagically',
+                    $query->value->span,
+                    'Quoted identifier placeholder found in this SQL query',
+                )->withNote('`$wpdb->prepare()` wraps `%i` values in backticks itself.')->withHelp(
+                    'Remove the quotes or backticks around the identifier placeholder (e.g. use `FROM %i` instead of `FROM \'%i\'`).',
+                ),
+                [self::SNIFF . '.QuotedIdentifierPlaceholder'],
+            );
         }
 
         if ($identifier && !$this->identifierSupported) {
-            $context->report(Issue::new(
-                'The `%i` modifier is only supported in WP 6.2 or higher',
-                $query->value->span,
-                'Identifier placeholder found in this SQL query',
-            )->withNote(
-                'The configured `minimum-wp-version` predates WordPress 6.2, where `$wpdb->prepare()` gained `%i`.',
-            )->withHelp(
-                'Raise `minimum-wp-version` to 6.2 or higher, or validate the identifier against an allowlist and interpolate it.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'The `%i` modifier is only supported in WP 6.2 or higher',
+                    $query->value->span,
+                    'Identifier placeholder found in this SQL query',
+                )->withNote(
+                    'The configured `minimum-wp-version` predates WordPress 6.2, where `$wpdb->prepare()` gained `%i`.',
+                )->withHelp(
+                    'Raise `minimum-wp-version` to 6.2 or higher, or validate the identifier against an allowlist and interpolate it.',
+                ),
+                [self::SNIFF . '.UnsupportedIdentifierPlaceholder'],
+            );
         }
 
         if ($unsupported !== '') {
-            $context->report(Issue::new(
-                "Unsupported placeholder in `\$wpdb->prepare()` query: {$unsupported}",
-                $query->value->span,
-                'Unsupported placeholder found in this SQL query',
-            )->withNote(
-                '`$wpdb->prepare()` only supports the `%s`, `%d`, `%f`, `%F`, and `%i` placeholders.',
-            )->withHelp(
-                'Use `%s` for strings, `%d` for integers, `%f` or `%F` for floats, or `%i` for identifiers (WP >= 6.2). Use `%%` for a literal percent sign.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Unsupported placeholder in `\$wpdb->prepare()` query: {$unsupported}",
+                    $query->value->span,
+                    'Unsupported placeholder found in this SQL query',
+                )->withNote(
+                    '`$wpdb->prepare()` only supports the `%s`, `%d`, `%f`, `%F`, and `%i` placeholders.',
+                )->withHelp(
+                    'Use `%s` for strings, `%d` for integers, `%f` or `%F` for floats, or `%i` for identifiers (WP >= 6.2). Use `%%` for a literal percent sign.',
+                ),
+                [self::SNIFF . '.UnsupportedPlaceholder'],
+            );
 
             return;
         }
@@ -157,15 +176,19 @@ final class PreparedSqlPlaceholdersRule extends CallRule
 
         $provided = count($replacements);
         if ($expected === 0 && $provided === 0) {
-            $context->report(Issue::new(
-                '`$wpdb->prepare()` called without any placeholders',
-                $context->node->span,
-                'This `prepare()` call has no placeholders to replace',
-            )->withNote(
-                'Calling `$wpdb->prepare()` on a fully-literal query with no placeholders is useless.',
-            )->withHelp(
-                'Pass the query directly to the query method (e.g. `$wpdb->query()`), or add placeholders for the dynamic values.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    '`$wpdb->prepare()` called without any placeholders',
+                    $context->node->span,
+                    'This `prepare()` call has no placeholders to replace',
+                )->withNote(
+                    'Calling `$wpdb->prepare()` on a fully-literal query with no placeholders is useless.',
+                )->withHelp(
+                    'Pass the query directly to the query method (e.g. `$wpdb->query()`), or add placeholders for the dynamic values.',
+                ),
+                [self::SNIFF . '.UnnecessaryPrepare'],
+            );
 
             return;
         }
@@ -180,13 +203,25 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($provided !== null && $provided !== $expected) {
-            $context->report(Issue::new(
-                "`\$wpdb->prepare()` placeholder count mismatch: {$expected} placeholder(s) but {$provided} replacement argument(s)",
-                $context->node->span,
-                "Query expects {$expected} replacement(s), {$provided} provided",
-            )->withNote('Each placeholder in the query must correspond to exactly one replacement argument.')->withHelp(
-                'Pass one replacement argument per placeholder (`%%` is a literal percent sign, not a placeholder).',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "`\$wpdb->prepare()` placeholder count mismatch: {$expected} placeholder(s) but {$provided} replacement argument(s)",
+                    $context->node->span,
+                    "Query expects {$expected} replacement(s), {$provided} provided",
+                )->withNote(
+                    'Each placeholder in the query must correspond to exactly one replacement argument.',
+                )->withHelp(
+                    'Pass one replacement argument per placeholder (`%%` is a literal percent sign, not a placeholder).',
+                ),
+                [
+                    self::SNIFF . match (true) {
+                        $provided === 0 => '.MissingReplacements',
+                        $expected === 0 => '.UnfinishedPrepare',
+                        default => '.ReplacementsWrongNumber',
+                    },
+                ],
+            );
         }
     }
 

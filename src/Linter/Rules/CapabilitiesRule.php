@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -29,6 +30,8 @@ use function in_array;
  */
 final class CapabilitiesRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.Capabilities';
+
     /**
      * Function name => [0-indexed position, parameter name] of the capability argument.
      *
@@ -91,28 +94,39 @@ final class CapabilitiesRule extends CallRule
             return;
         }
 
+        if (in_array($capability, $this->settings->customList('custom-capabilities'), strict: true)) {
+            return;
+        }
+
         $deprecatedSince = Lists::DEPRECATED_CAPABILITIES[$capability] ?? null;
-        $issue = match (true) {
-            $capability === '' => Issue::new(
-                "An empty string is not a valid capability in `{$name}()`.",
-                $value->span,
-            )->withHelp('Pass the capability the user needs.'),
-            in_array($capability, $this->settings->customList('custom-capabilities'), strict: true) => null,
-            $deprecatedSince !== null => Issue::new(
-                "The capability `{$capability}` in `{$name}()` has been deprecated since WordPress {$deprecatedSince}.",
-                $value->span,
-            )->withHelp('Use a named capability such as `manage_options` or `edit_posts` instead of a user level.'),
-            in_array($capability, Lists::CORE_ROLES, strict: true) => Issue::new(
-                "The role `{$capability}` is used as a capability in `{$name}()`.",
-                $value->span,
-            )->withHelp('Check for a capability the role grants instead of the role itself.'),
-            default => Issue::new("Unknown capability `{$capability}` in `{$name}()`.", $value->span)->withNote(
-                'A custom capability must be registered with WP_Role::add_cap().',
-            )->withHelp('Check the spelling, or add the capability to the `custom-capabilities` setting.'),
+        [$code, $issue] = match (true) {
+            $capability === '' => [
+                'Invalid',
+                Issue::new("An empty string is not a valid capability in `{$name}()`.", $value->span)->withHelp(
+                    'Pass the capability the user needs.',
+                ),
+            ],
+            $deprecatedSince !== null => [
+                'Deprecated',
+                Issue::new(
+                    "The capability `{$capability}` in `{$name}()` has been deprecated since WordPress {$deprecatedSince}.",
+                    $value->span,
+                )->withHelp('Use a named capability such as `manage_options` or `edit_posts` instead of a user level.'),
+            ],
+            in_array($capability, Lists::CORE_ROLES, strict: true) => [
+                'RoleFound',
+                Issue::new("The role `{$capability}` is used as a capability in `{$name}()`.", $value->span)->withHelp(
+                    'Check for a capability the role grants instead of the role itself.',
+                ),
+            ],
+            default => [
+                'Unknown',
+                Issue::new("Unknown capability `{$capability}` in `{$name}()`.", $value->span)->withNote(
+                    'A custom capability must be registered with WP_Role::add_cap().',
+                )->withHelp('Check the spelling, or add the capability to the `custom-capabilities` setting.'),
+            ],
         };
 
-        if ($issue !== null) {
-            $context->report($issue);
-        }
+        Report::issue($context, $issue, [self::SNIFF . '.' . $code]);
     }
 }

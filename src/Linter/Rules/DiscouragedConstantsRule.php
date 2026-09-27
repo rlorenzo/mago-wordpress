@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
@@ -39,6 +40,8 @@ use function substr;
  */
 final class DiscouragedConstantsRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.DiscouragedConstants';
+
     private ?FileGate $gate = null;
 
     /** @var null|array<string, true> */
@@ -194,16 +197,24 @@ final class DiscouragedConstantsRule implements Rule
 
     private function reportUsage(LintContext $context, Node $node, string $name): void
     {
-        $context->report(Issue::new("Found usage of constant `{$name}`.", $node->span)->withHelp(
-            "Use {$this->replacementFor($name)} instead.",
-        ));
+        Report::issue(
+            $context,
+            Issue::new("Found usage of constant `{$name}`.", $node->span)->withHelp(
+                "Use {$this->replacementFor($name)} instead.",
+            ),
+            [self::SNIFF . '.UsageFound'],
+        );
     }
 
     private function reportDeclaration(LintContext $context, Node $node, string $name): void
     {
-        $context->report(Issue::new("Found declaration of constant `{$name}`.", $node->span)->withHelp(
-            "Use {$this->replacementFor($name)} instead.",
-        ));
+        Report::issue(
+            $context,
+            Issue::new("Found declaration of constant `{$name}`.", $node->span)->withHelp(
+                "Use {$this->replacementFor($name)} instead.",
+            ),
+            [self::SNIFF . '.DeclarationFound'],
+        );
     }
 
     private function replacementFor(string $name): string

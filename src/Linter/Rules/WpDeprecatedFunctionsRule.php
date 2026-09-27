@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -25,6 +26,8 @@ use function array_keys;
  */
 final class WpDeprecatedFunctionsRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.DeprecatedFunctions';
+
     public function __construct(
         private readonly Settings $settings,
     ) {}
@@ -57,9 +60,13 @@ final class WpDeprecatedFunctionsRule extends CallRule
             ? 'There is no direct replacement; remove the call or implement the behavior manually.'
             : "Use `{$entry['alt']}` instead.";
 
-        $context->report(Issue::new(
-            "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
-            $context->node->span,
-        )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help));
+        Report::issue(
+            $context,
+            Issue::new(
+                "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
+                $context->node->span,
+            )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help),
+            [self::SNIFF],
+        );
     }
 }

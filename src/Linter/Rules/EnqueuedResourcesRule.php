@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function rtrim;
@@ -33,6 +34,8 @@ use function substr;
  */
 final class EnqueuedResourcesRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.EnqueuedResources';
+
     private ?FileGate $gate = null;
 
     public function getDefinition(): RuleDefinition
@@ -87,13 +90,17 @@ final class EnqueuedResourcesRule implements Rule
                 continue;
             }
 
-            $context->report(Issue::new(
-                'Hardcoded `<script>` tag with a `src` attribute',
-                new Span($span->start + $start, $span->start + $end),
-                'Script loaded outside the WordPress dependency API',
-            )->withNote(
-                'Hardcoded script tags bypass dependency resolution, versioning, and deduplication provided by WordPress.',
-            )->withHelp('Register the script with `wp_enqueue_script()` instead.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Hardcoded `<script>` tag with a `src` attribute',
+                    new Span($span->start + $start, $span->start + $end),
+                    'Script loaded outside the WordPress dependency API',
+                )->withNote(
+                    'Hardcoded script tags bypass dependency resolution, versioning, and deduplication provided by WordPress.',
+                )->withHelp('Register the script with `wp_enqueue_script()` instead.'),
+                [self::SNIFF . '.NonEnqueuedScript'],
+            );
         }
 
         foreach (self::tagOccurrences($lower, '<link') as [$start, $end, $tag]) {
@@ -101,13 +108,17 @@ final class EnqueuedResourcesRule implements Rule
                 continue;
             }
 
-            $context->report(Issue::new(
-                'Hardcoded stylesheet `<link>` tag',
-                new Span($span->start + $start, $span->start + $end),
-                'Stylesheet loaded outside the WordPress dependency API',
-            )->withNote(
-                'Hardcoded stylesheet tags bypass dependency resolution, versioning, and deduplication provided by WordPress.',
-            )->withHelp('Register the stylesheet with `wp_enqueue_style()` instead.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Hardcoded stylesheet `<link>` tag',
+                    new Span($span->start + $start, $span->start + $end),
+                    'Stylesheet loaded outside the WordPress dependency API',
+                )->withNote(
+                    'Hardcoded stylesheet tags bypass dependency resolution, versioning, and deduplication provided by WordPress.',
+                )->withHelp('Register the stylesheet with `wp_enqueue_style()` instead.'),
+                [self::SNIFF . '.NonEnqueuedStylesheet'],
+            );
         }
     }
 

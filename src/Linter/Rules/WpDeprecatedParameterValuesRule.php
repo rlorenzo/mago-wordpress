@@ -12,6 +12,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
@@ -38,6 +39,8 @@ use function strtolower;
  */
 final class WpDeprecatedParameterValuesRule extends CallRule
 {
+    private const SNIFF = 'WordPress.WP.DeprecatedParameterValues';
+
     public function __construct(
         private readonly Settings $settings,
     ) {}
@@ -105,7 +108,7 @@ final class WpDeprecatedParameterValuesRule extends CallRule
             $issue = $issue->withHelp("Use {$deprecation['alt']} instead.");
         }
 
-        $context->report($issue);
+        Report::issue($context, $issue, [self::SNIFF]);
     }
 
     /**

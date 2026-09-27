@@ -16,6 +16,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\DocBlocks;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
@@ -38,6 +39,7 @@ use function str_starts_with;
 use function stripos;
 use function strtolower;
 use function substr;
+use function ucfirst;
 
 /**
  * Ports `WordPress.NamingConventions.PrefixAllGlobals`.
@@ -48,6 +50,8 @@ use function substr;
  */
 final class PrefixAllGlobalsRule implements Rule
 {
+    private const SNIFF = 'WordPress.NamingConventions.PrefixAllGlobals';
+
     /** `define()` declares a constant; the rest declare a hook. */
     private const CHECKED_FUNCTIONS = [
         'define',
@@ -74,7 +78,7 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var list<string> Valid configured prefixes; invalid ones are dropped, as WPCS does. */
     private readonly array $prefixes;
 
-    /** @var list<string> Messages about configured prefixes, reported at the top of every file. */
+    /** @var list<array{string, string}> WPCS message code and message about each rejected prefix, reported at the top of every file. */
     private readonly array $prefixProblems;
 
     /** @var list<string> Regexes matching a namespace name that starts with a prefix. */
@@ -92,17 +96,23 @@ final class PrefixAllGlobalsRule implements Rule
         $problems = [];
         foreach ($settings->prefixes as $prefix) {
             if (in_array(strtolower($prefix), self::FORBIDDEN_PREFIXES, strict: true)) {
-                $problems[] = "The `{$prefix}` prefix is not allowed.";
+                $problems[] = ['ForbiddenPrefixPassed', "The `{$prefix}` prefix is not allowed."];
                 continue;
             }
 
             if (mb_strlen($prefix) < self::MIN_PREFIX_LENGTH) {
-                $problems[] = "The `{$prefix}` prefix is too short. Short prefixes are not unique enough and may cause name collisions with other code.";
+                $problems[] = [
+                    'ShortPrefixPassed',
+                    "The `{$prefix}` prefix is too short. Short prefixes are not unique enough and may cause name collisions with other code.",
+                ];
                 continue;
             }
 
             if (preg_match('`^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff\\\\]*$`', $prefix) !== 1) {
-                $problems[] = "The `{$prefix}` prefix is not a valid namespace/function/class/variable/constant prefix in PHP.";
+                $problems[] = [
+                    'InvalidPrefixPassed',
+                    "The `{$prefix}` prefix is not a valid namespace/function/class/variable/constant prefix in PHP.",
+                ];
                 continue;
             }
 
@@ -337,13 +347,17 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         $subject = $kind === 'constant' ? 'Constant' : 'Hook';
-        $context->report(Issue::new(
-            "{$subject} name `{$text}` is built dynamically, so its prefix cannot be verified.",
-            $argument->span,
-            "This {$kind} name does not start with a literal prefix.",
-        )->withNote(
-            'WordPress plugins and themes share a single global namespace; unprefixed global names can collide with WordPress core or other plugins.',
-        )->withHelp("Start the name with a literal prefix, e.g. `'{$this->prefixes[0]}_' . \$name`."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "{$subject} name `{$text}` is built dynamically, so its prefix cannot be verified.",
+                $argument->span,
+                "This {$kind} name does not start with a literal prefix.",
+            )->withNote(
+                'WordPress plugins and themes share a single global namespace; unprefixed global names can collide with WordPress core or other plugins.',
+            )->withHelp("Start the name with a literal prefix, e.g. `'{$this->prefixes[0]}_' . \$name`."),
+            [self::SNIFF . ($kind === 'constant' ? '.VariableConstantNameFound' : '.DynamicHooknameFound')],
+        );
     }
 
     /**
@@ -386,22 +400,30 @@ final class PrefixAllGlobalsRule implements Rule
             : rtrim($this->prefixes[0], characters: '_') . '_' . ltrim($name, characters: '_');
         $subject = $kind === 'namespace' ? 'Namespace' : "Global {$kind}";
 
-        $context->report(Issue::new(
-            "{$subject} `{$name}` is not prefixed.",
-            $span,
-            "This {$kind} name lacks a plugin/theme prefix.",
-        )->withNote(
-            'WordPress plugins and themes share a single global namespace; unprefixed global symbols can collide with WordPress core or other plugins.',
-        )->withHelp("Rename it to start with your prefix, e.g. `{$example}`."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "{$subject} `{$name}` is not prefixed.",
+                $span,
+                "This {$kind} name lacks a plugin/theme prefix.",
+            )->withNote(
+                'WordPress plugins and themes share a single global namespace; unprefixed global symbols can collide with WordPress core or other plugins.',
+            )->withHelp("Rename it to start with your prefix, e.g. `{$example}`."),
+            [self::SNIFF . '.NonPrefixed' . ($kind === 'hook' ? 'Hookname' : ucfirst($kind)) . 'Found'],
+        );
     }
 
     private function reportPrefixProblems(LintContext $context): void
     {
         $span = ($context->file->getChildren($context->node)[0] ?? $context->node)->span;
-        foreach ($this->prefixProblems as $problem) {
-            $context->report(Issue::new($problem, $span, 'Invalid `prefixes` setting.')->withHelp(
-                'Configure a distinctive prefix of at least three characters for your plugin or theme.',
-            ));
+        foreach ($this->prefixProblems as [$code, $problem]) {
+            Report::issue(
+                $context,
+                Issue::new($problem, $span, 'Invalid `prefixes` setting.')->withHelp(
+                    'Configure a distinctive prefix of at least three characters for your plugin or theme.',
+                ),
+                [self::SNIFF . '.' . $code],
+            );
         }
     }
 

@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
@@ -28,6 +29,8 @@ use function count;
  */
 final class EscapedNotTranslatedRule extends CallRule
 {
+    private const SNIFF = 'WordPress.CodeAnalysis.EscapedNotTranslated';
+
     /**
      * Key is the function actually called; value is the sister function
      * the sniff suggests instead.
@@ -65,9 +68,13 @@ final class EscapedNotTranslatedRule extends CallRule
 
         $alternative = self::ALTERNATIVES[$name];
 
-        $context->report(Issue::new(
-            "{$name}() expects only a \$text parameter. Did you mean to use {$alternative}()?",
-            $context->node->span,
-        )->withHelp("Use {$alternative}() to translate and escape the text in one call."));
+        Report::issue(
+            $context,
+            Issue::new(
+                "{$name}() expects only a \$text parameter. Did you mean to use {$alternative}()?",
+                $context->node->span,
+            )->withHelp("Use {$alternative}() to translate and escape the text in one call."),
+            [self::SNIFF],
+        );
     }
 }

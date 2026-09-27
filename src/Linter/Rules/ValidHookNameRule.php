@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
@@ -35,6 +36,8 @@ use function preg_quote;
  */
 final class ValidHookNameRule extends CallRule
 {
+    private const SNIFF = 'WordPress.NamingConventions.ValidHookName';
+
     private const SKIPPED = ['do_action_deprecated', 'apply_filters_deprecated'];
 
     /**
@@ -102,13 +105,17 @@ final class ValidHookNameRule extends CallRule
     private function validate(LintContext $context, string $name, Span $span): void
     {
         if (preg_match('/[A-Z]/', $name) === 1) {
-            $context->report(Issue::new(
-                'Hook names should be lowercase.',
-                $span,
-                'This hook name contains uppercase characters',
-            )->withNote('WordPress hook names conventionally use only lowercase letters.')->withHelp(
-                'Use lowercase letters in the hook name.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Hook names should be lowercase.',
+                    $span,
+                    'This hook name contains uppercase characters',
+                )->withNote('WordPress hook names conventionally use only lowercase letters.')->withHelp(
+                    'Use lowercase letters in the hook name.',
+                ),
+                [self::SNIFF . '.NotLowercase'],
+            );
         }
 
         $matches = [];
@@ -119,13 +126,17 @@ final class ValidHookNameRule extends CallRule
                 array_unique($matches[0]),
             ));
 
-            $context->report(Issue::new(
-                'Words in hook names should be separated by underscores.',
-                $span,
-                "This hook name uses {$characters} as a word separator",
-            )->withNote('WordPress hook names conventionally use underscores between words.')->withHelp(
-                'Replace the punctuation with underscores, or allow specific delimiters via the `additional-word-delimiters` option.',
-            ));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Words in hook names should be separated by underscores.',
+                    $span,
+                    "This hook name uses {$characters} as a word separator",
+                )->withNote('WordPress hook names conventionally use underscores between words.')->withHelp(
+                    'Replace the punctuation with underscores, or allow specific delimiters via the `additional-word-delimiters` option.',
+                ),
+                [self::SNIFF . '.UseUnderscores'],
+            );
         }
     }
 }

@@ -12,6 +12,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function array_keys;
@@ -25,6 +26,8 @@ use function strtolower;
  */
 final class PluginMenuSlugRule extends CallRule
 {
+    private const SNIFF = 'WordPress.Security.PluginMenuSlug';
+
     /**
      * Function name => [0-indexed parameter position => parameter name] for
      * every slot the sniff checks.
@@ -79,10 +82,14 @@ final class PluginMenuSlugRule extends CallRule
                 continue;
             }
 
-            $context->report(Issue::new(
-                'Using __FILE__ for menu slugs risks exposing filesystem structure.',
-                $constant->span,
-            )->withHelp('Pass a plugin-specific slug string instead of __FILE__.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Using __FILE__ for menu slugs risks exposing filesystem structure.',
+                    $constant->span,
+                )->withHelp('Pass a plugin-specific slug string instead of __FILE__.'),
+                [self::SNIFF],
+            );
         }
     }
 

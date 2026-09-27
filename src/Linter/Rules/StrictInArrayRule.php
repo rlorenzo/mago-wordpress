@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
@@ -20,6 +21,8 @@ use function strtolower;
  */
 final class StrictInArrayRule extends CallRule
 {
+    private const SNIFF = 'WordPress.PHP.StrictInArray';
+
     /**
      * Keyed by function name. `position` and `parameter` locate the
      * `$strict` argument; `alwaysNeeded` is false only for `array_keys()`,
@@ -67,9 +70,13 @@ final class StrictInArrayRule extends CallRule
             return;
         }
 
-        $context->report(Issue::new(
-            "Not using strict comparison for {$name}(); supply true for \$strict argument.",
-            $context->node->span,
-        )->withHelp('Pass true as the $strict argument so the comparison also checks type.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Not using strict comparison for {$name}(); supply true for \$strict argument.",
+                $context->node->span,
+            )->withHelp('Pass true as the $strict argument so the comparison also checks type.'),
+            [self::SNIFF],
+        );
     }
 }

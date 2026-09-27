@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
@@ -33,6 +34,8 @@ use const PHP_INT_MAX;
  */
 final class GlobalVariablesOverrideRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.GlobalVariablesOverride';
+
     /**
      * Function-like scopes. An assignment outside all of these is top-level.
      */
@@ -230,13 +233,17 @@ final class GlobalVariablesOverrideRule implements Rule
 
     private function report(LintContext $context, Node $spanNode, string $name): void
     {
-        $context->report(Issue::new(
-            "Assignment overwrites the WordPress global variable \${$name}.",
-            $spanNode->span,
-            "\${$name} is a WordPress global and must not be overwritten",
-        )->withNote(
-            'WordPress core and other plugins rely on this global; overwriting it can break them in unpredictable ways.',
-        )->withHelp('Use a differently named local variable, or the appropriate WordPress API instead.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                "Assignment overwrites the WordPress global variable \${$name}.",
+                $spanNode->span,
+                "\${$name} is a WordPress global and must not be overwritten",
+            )->withNote(
+                'WordPress core and other plugins rely on this global; overwriting it can break them in unpredictable ways.',
+            )->withHelp('Use a differently named local variable, or the appropriate WordPress API instead.'),
+            [self::SNIFF],
+        );
     }
 
     /**

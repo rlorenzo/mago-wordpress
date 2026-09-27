@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function in_array;
 use function preg_replace;
@@ -36,6 +37,8 @@ use function substr;
  */
 final class TypeCastsRule implements Rule
 {
+    private const SNIFF = 'WordPress.PHP.TypeCasts';
+
     private const DOUBLE_CAST_SPELLINGS = ['(double)', '(real)'];
 
     private ?FileGate $gate = null;
@@ -79,28 +82,37 @@ final class TypeCastsRule implements Rule
         $normalized = strtolower(preg_replace('/\s+/', replacement: '', subject: $written) ?? $written);
 
         if (in_array($normalized, self::DOUBLE_CAST_SPELLINGS, strict: true)) {
-            $context->report(Issue::new(
-                "Normalized type keywords must be used; expected \"(float)\" but found \"{$written}\".",
-                $operator->span,
-            )->withEdit(TextEdit::replace($operator->span, '(float)')));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Normalized type keywords must be used; expected \"(float)\" but found \"{$written}\".",
+                    $operator->span,
+                )->withEdit(TextEdit::replace($operator->span, '(float)')),
+                [self::SNIFF . '.DoubleRealFound'],
+            );
 
             return;
         }
 
         if ($normalized === '(unset)') {
-            $context->report(Issue::new(
-                'Using the "(unset)" cast is forbidden as the cast was removed in PHP 8.0.',
-                $operator->span,
-            )->withHelp('Use the unset() language construct instead.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Using the "(unset)" cast is forbidden as the cast was removed in PHP 8.0.',
+                    $operator->span,
+                )->withHelp('Use the unset() language construct instead.'),
+                [self::SNIFF . '.UnsetFound'],
+            );
 
             return;
         }
 
         if ($normalized === '(binary)') {
-            $context->report(Issue::new(
-                "Using binary casting is strongly discouraged. Found: \"{$written}\".",
-                $operator->span,
-            ));
+            Report::issue(
+                $context,
+                Issue::new("Using binary casting is strongly discouraged. Found: \"{$written}\".", $operator->span),
+                [self::SNIFF . '.BinaryFound'],
+            );
         }
     }
 
@@ -111,9 +123,10 @@ final class TypeCastsRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            "Using binary casting is strongly discouraged. Found: \"{$text}\".",
-            $context->node->span,
-        ));
+        Report::issue(
+            $context,
+            Issue::new("Using binary casting is strongly discouraged. Found: \"{$text}\".", $context->node->span),
+            [self::SNIFF . '.BinaryFound'],
+        );
     }
 }

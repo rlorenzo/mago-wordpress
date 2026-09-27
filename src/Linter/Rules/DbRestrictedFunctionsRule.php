@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function array_map;
@@ -31,6 +32,8 @@ use function str_starts_with;
  */
 final class DbRestrictedFunctionsRule implements Rule
 {
+    private const SNIFF = 'WordPress.DB.RestrictedFunctions';
+
     private const ALLOWED = ['mysql_to_rfc3339'];
 
     private ?FileGate $gate = null;
@@ -72,10 +75,14 @@ final class DbRestrictedFunctionsRule implements Rule
                 continue;
             }
 
-            $context->report(Issue::new(
-                "Accessing the database directly through {$name}() should be avoided.",
-                $context->node->span,
-            )->withHelp('Use the $wpdb object and its associated methods instead.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Accessing the database directly through {$name}() should be avoided.",
+                    $context->node->span,
+                )->withHelp('Use the $wpdb object and its associated methods instead.'),
+                [self::SNIFF],
+            );
 
             return;
         }

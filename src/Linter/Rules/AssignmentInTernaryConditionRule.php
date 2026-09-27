@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 
 use function in_array;
@@ -30,6 +31,8 @@ use function in_array;
  */
 final class AssignmentInTernaryConditionRule implements Rule
 {
+    private const SNIFF = 'WordPress.CodeAnalysis.AssignmentInTernaryCondition';
+
     private const ASSIGNABLE_KINDS = [
         NodeKind::Variable,
         NodeKind::ArrayAccess,
@@ -75,10 +78,14 @@ final class AssignmentInTernaryConditionRule implements Rule
                 continue;
             }
 
-            $context->report(Issue::new(
-                'Variable assignment found within a condition. Did you mean to do a comparison?',
-                $assignment->span,
-            )->withHelp('Use a comparison operator (e.g. `==`), or move the assignment outside the ternary.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Variable assignment found within a condition. Did you mean to do a comparison?',
+                    $assignment->span,
+                )->withHelp('Use a comparison operator (e.g. `==`), or move the assignment outside the ternary.'),
+                [self::SNIFF],
+            );
         }
     }
 

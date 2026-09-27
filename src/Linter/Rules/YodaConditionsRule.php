@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 
 use function in_array;
@@ -34,6 +35,8 @@ use function trim;
  */
 final class YodaConditionsRule implements Rule
 {
+    private const SNIFF = 'WordPress.PHP.YodaConditions';
+
     private const COMPARISON_OPERATORS = ['==', '!=', '<>', '===', '!=='];
 
     private const CAST_KEYWORDS = [
@@ -85,10 +88,14 @@ final class YodaConditionsRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            'Comparison has the variable on the left and the literal or constant on the right.',
-            $context->node->span,
-        )->withHelp('Swap the operands so the constant or literal comes first, e.g. `true === $foo`.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                'Comparison has the variable on the left and the literal or constant on the right.',
+                $context->node->span,
+            )->withHelp('Swap the operands so the constant or literal comes first, e.g. `true === $foo`.'),
+            [self::SNIFF],
+        );
     }
 
     /**

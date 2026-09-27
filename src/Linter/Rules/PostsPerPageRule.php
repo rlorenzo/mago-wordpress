@@ -13,6 +13,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Settings;
@@ -29,6 +30,8 @@ use function trim;
  */
 final class PostsPerPageRule implements Rule
 {
+    private const SNIFF = 'WordPress.WP.PostsPerPage';
+
     private const NOPAGING_KEY = 'nopaging';
 
     private readonly FileGate $gate;
@@ -112,25 +115,33 @@ final class PostsPerPageRule implements Rule
     {
         $number = $this->numericValue($context->file, $value);
         if ($number === -1) {
-            $context->report(Issue::new(
-                "Unbounded query: `{$key}` is set to `-1`.",
-                $element->span,
-                'This query fetches every matching post',
-            )->withNote(
-                'Unbounded queries load every matching row into memory and degrade badly as content grows.',
-            )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Unbounded query: `{$key}` is set to `-1`.",
+                    $element->span,
+                    'This query fetches every matching post',
+                )->withNote(
+                    'Unbounded queries load every matching row into memory and degrade badly as content grows.',
+                )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'),
+                [self::SNIFF],
+            );
 
             return;
         }
 
         if ($number !== null && $number > $this->max) {
-            $context->report(Issue::new(
-                "Excessively large query: `{$key}` exceeds the maximum of {$this->max}.",
-                $element->span,
-                'This query fetches too many posts',
-            )->withNote(
-                'Huge result sets load every matching row into memory and degrade badly as content grows.',
-            )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "Excessively large query: `{$key}` exceeds the maximum of {$this->max}.",
+                    $element->span,
+                    'This query fetches too many posts',
+                )->withNote(
+                    'Huge result sets load every matching row into memory and degrade badly as content grows.',
+                )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'),
+                [self::SNIFF],
+            );
         }
     }
 
@@ -143,13 +154,17 @@ final class PostsPerPageRule implements Rule
             return;
         }
 
-        $context->report(Issue::new(
-            'Unbounded query: `nopaging` is set to `true`.',
-            $element->span,
-            'This query fetches every matching post',
-        )->withNote(
-            'Disabling pagination loads every matching row into memory and degrades badly as content grows.',
-        )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                'Unbounded query: `nopaging` is set to `true`.',
+                $element->span,
+                'This query fetches every matching post',
+            )->withNote(
+                'Disabling pagination loads every matching row into memory and degrades badly as content grows.',
+            )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'),
+            [self::SNIFF],
+        );
     }
 
     /**

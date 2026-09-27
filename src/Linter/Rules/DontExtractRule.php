@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 /**
@@ -17,6 +18,8 @@ use Rlorenzo\MagoWordPress\Linter\CallRule;
  */
 final class DontExtractRule extends CallRule
 {
+    private const SNIFF = 'WordPress.PHP.DontExtract';
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -36,12 +39,12 @@ final class DontExtractRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        $context->report(Issue::new(
-            'Do not use `extract()`',
-            $context->node->span,
-            '`extract()` call detected',
-        )->withNote(
-            '`extract()` creates variables from arbitrary array keys, obscuring where variables come from and enabling variable clobbering.',
-        )->withHelp('Access array elements explicitly, or use `wp_parse_args()` for defaults merging.'));
+        Report::issue(
+            $context,
+            Issue::new('Do not use `extract()`', $context->node->span, '`extract()` call detected')->withNote(
+                '`extract()` creates variables from arbitrary array keys, obscuring where variables come from and enabling variable clobbering.',
+            )->withHelp('Access array elements explicitly, or use `wp_parse_args()` for defaults merging.'),
+            [self::SNIFF],
+        );
     }
 }

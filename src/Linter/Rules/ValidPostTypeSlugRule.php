@@ -12,6 +12,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -35,6 +36,8 @@ use function strtolower;
  */
 final class ValidPostTypeSlugRule extends CallRule
 {
+    private const SNIFF = 'WordPress.NamingConventions.ValidPostTypeSlug';
+
     private const MAX_LENGTH = 20;
 
     private const VALID_CHARACTERS = '/^[a-z0-9_-]+$/';
@@ -101,22 +104,30 @@ final class ValidPostTypeSlugRule extends CallRule
 
         $literal = $this->literal($context->file, $argument);
         if ($literal === null) {
-            $context->report(Issue::new(
-                "register_post_type() called with a post type slug that is not a string literal: {$context->file->getText(
-                    $argument,
-                )}.",
-                $argument->span,
-            )->withHelp('It is not possible to automatically determine the validity of a dynamic post type slug.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "register_post_type() called with a post type slug that is not a string literal: {$context->file->getText(
+                        $argument,
+                    )}.",
+                    $argument->span,
+                )->withHelp('It is not possible to automatically determine the validity of a dynamic post type slug.'),
+                [self::SNIFF . '.NotStringLiteral'],
+            );
 
             return;
         }
 
         [$postType, $dynamic] = $literal;
         if ($dynamic) {
-            $context->report(Issue::new(
-                "The post type slug may, or may not, get too long with dynamic contents and could contain invalid characters. Found: \"{$postType}\".",
-                $argument->span,
-            )->withHelp('Prefer a fully static post type slug so its validity can be checked.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "The post type slug may, or may not, get too long with dynamic contents and could contain invalid characters. Found: \"{$postType}\".",
+                    $argument->span,
+                )->withHelp('Prefer a fully static post type slug so its validity can be checked.'),
+                [self::SNIFF . '.PartiallyDynamic'],
+            );
         }
 
         if ($postType === '') {
@@ -129,46 +140,66 @@ final class ValidPostTypeSlugRule extends CallRule
         }
 
         if (preg_match(self::VALID_CHARACTERS, $postType) !== 1) {
-            $context->report(Issue::new(
-                "register_post_type() called with invalid post type \"{$postType}\". Only lowercase alphanumeric characters, dashes, and underscores are allowed.",
-                $argument->span,
-            )->withHelp('Use only lowercase letters, digits, dashes and underscores in the post type slug.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "register_post_type() called with invalid post type \"{$postType}\". Only lowercase alphanumeric characters, dashes, and underscores are allowed.",
+                    $argument->span,
+                )->withHelp('Use only lowercase letters, digits, dashes and underscores in the post type slug.'),
+                [self::SNIFF . '.InvalidCharacters'],
+            );
         }
 
         // register_post_type() runs the slug through sanitize_key(), which lowercases it.
         $reserved = array_key_exists(strtolower($postType), self::RESERVED_NAMES);
         if ($reserved) {
-            $context->report(Issue::new(
-                "register_post_type() called with reserved post type \"{$postType}\". Reserved post types interfere with the functioning of WordPress itself.",
-                $argument->span,
-            )->withHelp('Choose a post type slug that is not reserved by WordPress core.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "register_post_type() called with reserved post type \"{$postType}\". Reserved post types interfere with the functioning of WordPress itself.",
+                    $argument->span,
+                )->withHelp('Choose a post type slug that is not reserved by WordPress core.'),
+                [self::SNIFF . '.Reserved'],
+            );
         }
 
         if (!$reserved && str_starts_with(strtolower($postType), 'wp_')) {
-            $context->report(Issue::new(
-                "The post type passed to register_post_type() uses a prefix reserved for WordPress itself. Found: \"{$postType}\".",
-                $argument->span,
-            )->withHelp('Do not prefix a plugin or theme post type slug with "wp_".'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    "The post type passed to register_post_type() uses a prefix reserved for WordPress itself. Found: \"{$postType}\".",
+                    $argument->span,
+                )->withHelp('Do not prefix a plugin or theme post type slug with "wp_".'),
+                [self::SNIFF . '.ReservedPrefix'],
+            );
         }
 
         if (strlen($postType) > self::MAX_LENGTH) {
-            $context->report(Issue::new(
-                'A post type slug must not exceed '
-                . self::MAX_LENGTH
-                . " characters. Found: \"{$postType}\" ("
-                . strlen($postType)
-                . ' characters).',
-                $argument->span,
-            )->withHelp('Shorten the post type slug to 20 characters or fewer.'));
+            Report::issue(
+                $context,
+                Issue::new(
+                    'A post type slug must not exceed '
+                    . self::MAX_LENGTH
+                    . " characters. Found: \"{$postType}\" ("
+                    . strlen($postType)
+                    . ' characters).',
+                    $argument->span,
+                )->withHelp('Shorten the post type slug to 20 characters or fewer.'),
+                [self::SNIFF . '.TooLong'],
+            );
         }
     }
 
     private function reportEmpty(LintContext $context): void
     {
-        $context->report(Issue::new(
-            'register_post_type() called without a post type slug. The slug must be a non-empty string.',
-            $context->node->span,
-        )->withHelp('Pass a non-empty post type slug as the first argument.'));
+        Report::issue(
+            $context,
+            Issue::new(
+                'register_post_type() called without a post type slug. The slug must be a non-empty string.',
+                $context->node->span,
+            )->withHelp('Pass a non-empty post type slug as the first argument.'),
+            [self::SNIFF . '.Empty'],
+        );
     }
 
     /**

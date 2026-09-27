@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 /**
@@ -17,6 +18,8 @@ use Rlorenzo\MagoWordPress\Linter\CallRule;
  */
 final class SafeRedirectRule extends CallRule
 {
+    private const SNIFF = 'WordPress.Security.SafeRedirect';
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -36,9 +39,12 @@ final class SafeRedirectRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        $context->report(Issue::new(
-            'wp_redirect() does not validate the redirect target.',
-            $context->node->span,
-        )->withHelp('Use wp_safe_redirect(), and add hosts through the allowed_redirect_hosts filter when needed.'));
+        Report::issue(
+            $context,
+            Issue::new('wp_redirect() does not validate the redirect target.', $context->node->span)->withHelp(
+                'Use wp_safe_redirect(), and add hosts through the allowed_redirect_hosts filter when needed.',
+            ),
+            [self::SNIFF],
+        );
     }
 }
