@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
-use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
