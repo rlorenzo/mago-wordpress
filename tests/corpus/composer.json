@@ -2,7 +2,7 @@
     "extra": {
         "mago-wordpress": {
             "text-domains": ["my-plugin"],
-            "prefixes": ["myplugin", "example"]
+            "prefixes": ["myplugin", "example", "my_plugin", "acme\\tools", "vendor_pkg_"]
         }
     }
 }

@@ -195,3 +195,28 @@ namespace MyPlugin\Admin {
 namespace Example {
     class Admin {}
 }
+
+// separator_in_prefix_matches_namespace_backslash
+namespace My\Plugin\Admin {
+    class Screen {}
+}
+
+// backslash_prefix_matches_literally
+namespace Acme\Tools\Admin {
+    class Screen {}
+}
+
+// @mago-expect lint:wordpress/prefix-all-globals
+namespace Acme\Other {
+    class Screen {}
+}
+
+// trailing_separator_prefix_matches_root_namespace
+namespace Vendor_Pkg {
+    class Screen {}
+}
+
+// @mago-expect lint:wordpress/prefix-all-globals
+namespace Vendor_Pkgx {
+    class Screen {}
+}

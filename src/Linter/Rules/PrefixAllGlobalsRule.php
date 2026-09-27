@@ -20,6 +20,7 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_key_exists;
+use function array_map;
 use function ltrim;
 use function preg_match;
 use function preg_quote;
@@ -51,12 +52,16 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var list<string> */
     private readonly array $prefixes;
 
+    /** @var list<string> Regexes matching a namespace name that starts with a prefix. */
+    private readonly array $namespacePatterns;
+
     /** @var null|array<string, true> */
     private ?array $wantedCalls = null;
 
     public function __construct(Settings $settings)
     {
         $this->prefixes = $settings->prefixes;
+        $this->namespacePatterns = array_map(self::namespacePattern(...), $settings->prefixes);
     }
 
     public function getDefinition(): RuleDefinition
@@ -151,27 +156,29 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         $name = $context->file->getText($identifier);
-        foreach ($this->prefixes as $prefix) {
-            if (str_contains($prefix, '\\') || preg_match('`[_\W]`', $prefix) !== 1) {
-                if (stripos($name, $prefix) === 0) {
-                    return;
-                }
-
-                continue;
-            }
-
-            $pattern =
-                preg_replace_callback(
-                    '`[_\W]`',
-                    static fn(array $match): string => '[\\\\' . preg_quote($match[0], delimiter: '`') . ']',
-                    $prefix,
-                ) ?? $prefix;
-            if (preg_match('`^' . $pattern . '`i', $name) === 1) {
+        foreach ($this->namespacePatterns as $pattern) {
+            if (preg_match($pattern, $name) === 1) {
                 return;
             }
         }
 
         $this->checkSymbol($context, 'namespace', $name, $identifier->span);
+    }
+
+    private static function namespacePattern(string $prefix): string
+    {
+        // A trailing separator (`my_plugin_`, `acme\tools\`) must still match the root namespace itself.
+        $trimmed = rtrim($prefix, '_\\');
+        $boundary = $trimmed !== $prefix ? '(?:[\\\\_]|$)' : '';
+        $quoted = str_contains($trimmed, '\\')
+            ? preg_quote($trimmed, delimiter: '`')
+            : preg_replace_callback(
+                '`[_\W]`',
+                static fn(array $match): string => '[\\\\' . preg_quote($match[0], delimiter: '`') . ']',
+                $trimmed,
+            ) ?? preg_quote($trimmed, delimiter: '`');
+
+        return '`^' . $quoted . $boundary . '`i';
     }
 
     /**
