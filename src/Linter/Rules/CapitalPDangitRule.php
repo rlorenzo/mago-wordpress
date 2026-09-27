@@ -97,28 +97,39 @@ final class CapitalPDangitRule implements Rule
 
     /**
      * The match is standalone when the characters directly before and after
-     * it are non-word bytes or the edge of the text.
+     * it are non-word bytes or the edge of the text. A `.` joins the match
+     * only when a word byte sits on its far side, so `Wordpress.org` is
+     * part of a domain while a sentence-ending `Wordpress.` is standalone.
      */
     private static function isStandaloneWord(string $text, int $start, int $end): bool
     {
-        $beforeOk = $start === 0 || !self::isWordByte($text[$start - 1]);
-        $afterOk = $end === strlen($text) || !self::isWordByte($text[$end]);
+        $beforeOk = $start === 0 || !self::joinsWord($text, $start - 1, $start - 2);
+        $afterOk = $end === strlen($text) || !self::joinsWord($text, $end, $end + 1);
 
         return $beforeOk && $afterOk;
     }
 
-    /**
-     * Whether a URL scheme separator (`://`) appears before the match in the
-     * same (lowercased) text.
-     */
-    private static function isInsideUrl(string $lower, int $start): bool
+    private static function joinsWord(string $text, int $adjacent, int $beyond): bool
     {
-        return str_contains(haystack: substr($lower, offset: 0, length: $start), needle: '://');
+        if ($text[$adjacent] !== '.') {
+            return self::isWordByte($text[$adjacent]);
+        }
+
+        return $beyond >= 0 && $beyond < strlen($text) && self::isWordByte($text[$beyond]);
     }
 
     /**
-     * Besides alphanumerics, `_`, `-`, `.`, `/` and `=` count as word bytes,
-     * so slugs, URLs, file paths, query strings and class-like tokens
+     * Whether a URL scheme separator (`://`) appears earlier in the same
+     * whitespace-delimited token as the match.
+     */
+    private static function isInsideUrl(string $lower, int $start): bool
+    {
+        return preg_match('#://\S*$#', substr($lower, offset: 0, length: $start)) === 1;
+    }
+
+    /**
+     * Besides alphanumerics, `_`, `-`, `/` and `=` count as word bytes, so
+     * slugs, URLs, file paths, query strings and class-like tokens
      * (e.g. `Wordpress_Plugin`) are never flagged.
      */
     private static function isWordByte(string $byte): bool
@@ -134,7 +145,6 @@ final class CapitalPDangitRule implements Rule
             && $code <= 0x7a
             || $byte === '_'
             || $byte === '-'
-            || $byte === '.'
             || $byte === '/'
             || $byte === '='
         );

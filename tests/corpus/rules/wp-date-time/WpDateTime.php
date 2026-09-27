@@ -35,6 +35,10 @@ namespace {
     // @mago-expect lint:wordpress/wp-date-time
     $timestamp = current_time('timestamp', 0);
 
+    // current_time_named_type_argument_is_flagged
+    // @mago-expect lint:wordpress/wp-date-time
+    $timestamp = current_time(type: 'timestamp');
+
     // gmdate_and_wp_date_are_not_flagged
     $utc = gmdate('Y-m-d H:i:s');
     $local = wp_date('Y-m-d H:i:s');
@@ -54,6 +58,7 @@ namespace {
     // current_time_timestamp_with_gmt_true_is_not_flagged
     $timestamp3 = current_time('timestamp', true);
     $timestamp4 = current_time('timestamp', $gmt);
+    $timestamp5 = current_time('timestamp', gmt: true);
 }
 
 namespace App {

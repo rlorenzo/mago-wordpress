@@ -31,6 +31,18 @@ $message = "Hello $name, welcome to Wordpress";
 // @mago-expect lint:wordpress/capital-p-dangit
 $message = 'Wordpress';
 
+// misspelling_after_url_in_same_comment_is_flagged
+// @mago-expect lint:wordpress/capital-p-dangit
+/**
+ * @link https://example.com/docs
+ * Integrates with Wordpress core.
+ */
+$x = 2;
+
+// sentence_ending_misspelling_is_flagged
+// @mago-expect lint:wordpress/capital-p-dangit
+$message = 'Thank you for choosing Wordpress.';
+
 // correct_spelling_is_not_flagged
 // WordPress is spelled correctly.
 $message = 'Welcome to WordPress!';
@@ -41,6 +53,9 @@ $note = 'installing wordpress here';
 
 // url_with_scheme_is_not_flagged
 $url = 'See https://Wordpress.org for details';
+
+// domain_like_token_is_not_flagged
+$domain = 'Wordpress.org';
 
 // path_adjacent_occurrence_is_not_flagged
 $path = 'visit /Wordpress/ now';

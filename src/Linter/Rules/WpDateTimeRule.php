@@ -102,7 +102,7 @@ final class WpDateTimeRule extends CallRule
      */
     private function isTimestampRetrieval(LintContext $context, CallExpression $call): bool
     {
-        $format = $this->argument($context, $call, 0);
+        $format = $this->argument($context, $call, 0, 'type');
         if ($format === null) {
             return false;
         }
@@ -112,7 +112,7 @@ final class WpDateTimeRule extends CallRule
             return false;
         }
 
-        $gmt = $this->argument($context, $call, 1);
+        $gmt = $this->argument($context, $call, 1, 'gmt');
         if ($gmt === null) {
             return true;
         }
