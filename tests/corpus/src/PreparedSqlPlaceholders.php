@@ -28,6 +28,22 @@ $wpdb->prepare('SELECT * FROM my_table WHERE name = "%1$s"', $name);
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE name = '" . "%s'", $name);
 
+// escaped_quotes_around_placeholder
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare('SELECT * FROM my_table WHERE name = \'%s\'', $name);
+
+// quoted_placeholder_in_heredoc
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare(<<<SQL
+    SELECT * FROM {$wpdb->posts} WHERE post_title = '%s'
+    SQL, $title);
+
+// nowdoc_count_mismatch
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare(<<<'SQL'
+    SELECT * FROM my_table WHERE a = %s AND b = %d AND c = %s
+    SQL, $a, $b);
+
 // unsupported_placeholder
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE flags = %x AND name = %s", $flags, $name);
@@ -128,3 +144,22 @@ $wpdb->prepare("SELECT * FROM %i WHERE ID = %d", $table, $id);
 // named_query_argument_is_checked
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare(query: "SELECT * FROM my_table WHERE name = '%s'", args: $name);
+
+// no_placeholders_with_single_variable_argument_is_mismatch
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE status = 'publish'", $status);
+
+// modified_placeholders_are_counted
+$wpdb->prepare("SELECT * FROM my_table WHERE a = %05d AND b = %-10s AND c = %.2f AND d = %F", $a, $b, $c, $d);
+
+// modified_placeholder_count_mismatch
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE a = %05d AND b = %.2f", $a, $b, $c);
+
+// modified_unsupported_placeholder
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE flags = %05x", $flags);
+
+// null_safe_prepare_is_checked
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb?->prepare("SELECT * FROM my_table WHERE name = '%s'", $name);

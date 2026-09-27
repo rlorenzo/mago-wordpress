@@ -9,6 +9,11 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
 use function array_pop;
+use function ltrim;
+use function str_starts_with;
+use function stripcslashes;
+use function strtr;
+use function substr;
 use function trim;
 
 /**
@@ -23,8 +28,9 @@ final class Values
     /**
      * Returns the decoded value of a literal-string node.
      *
-     * If the snapshot sends a raw literal, the result is the text without
-     * its quotes.
+     * If the snapshot sends a raw literal, the text is decoded here.
+     * stripcslashes() approximates PHP's double-quoted escapes; it misses
+     * `\u{...}`.
      */
     public static function literalString(SourceFile $file, Node $node): ?string
     {
@@ -32,7 +38,16 @@ final class Values
             return null;
         }
 
-        return $file->getLiteralString($node) ?? trim($file->getText($node), characters: '\'"');
+        $decoded = $file->getLiteralString($node);
+        if ($decoded !== null) {
+            return $decoded;
+        }
+
+        // A binary string literal carries a `b` prefix before its quote.
+        $literal = ltrim($file->getText($node), characters: 'bB');
+        $body = substr($literal, offset: 1, length: -1);
+
+        return str_starts_with($literal, "'") ? strtr($body, ["\\'" => "'", '\\\\' => '\\']) : stripcslashes($body);
     }
 
     /**

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress\Linter\Rules;
 
 use Mago\Sdk\Linter\LintContext;
-use Mago\Sdk\Linter\Rule;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
@@ -14,13 +13,13 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
-use Rlorenzo\MagoWordPress\Internal\Calls;
-use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\Values;
+use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function array_keys;
 use function count;
 use function implode;
+use function is_string;
 use function ksort;
 use function max;
 use function preg_match;
@@ -28,9 +27,6 @@ use function preg_match_all;
 use function str_contains;
 use function str_starts_with;
 use function stripcslashes;
-use function strtolower;
-use function strtr;
-use function substr;
 
 use const PREG_SET_ORDER;
 use const PREG_UNMATCHED_AS_NULL;
@@ -43,7 +39,7 @@ use const SORT_STRING;
  * @mago-expect lint:kan-defect
  * @mago-expect lint:too-many-methods
  */
-final class PreparedSqlPlaceholdersRule implements Rule
+final class PreparedSqlPlaceholdersRule extends CallRule
 {
     /**
      * Stands in for a dynamic part of the query. A placeholder never
@@ -51,58 +47,53 @@ final class PreparedSqlPlaceholdersRule implements Rule
      */
     private const GAP = "\0";
 
-    private ?FileGate $gate = null;
-
-    private string $text = '';
-
-    private bool $fullyLiteral = true;
-
-    private bool $sawLiteralText = false;
+    /**
+     * The sign, padding, alignment, width and precision a placeholder may
+     * carry between `%` and its type, as in `%05d` or `%.2f`. WPCS: a
+     * space pads only together with a width.
+     *
+     * ponytail: omits WPCS's `'x` custom padding, because it reads the
+     * `%' AND` after a LIKE wildcard as a placeholder; add it with WPCS's
+     * LIKE-content stripping if needed.
+     */
+    private const MODIFIERS = '[+-]?(?:0?-?\d*(?:\.[ 0]?\d+)?|[ ]?-?\d+(?:\.[ 0]?\d+)?)';
 
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             code: 'wordpress/prepared-sql-placeholders',
             name: 'Prepared SQL placeholders',
-            description: 'Validates placeholder usage in $wpdb->prepare() calls: quoted placeholders, placeholders other than %s, %d, %f and %i, a placeholder count that differs from the replacement arguments, and prepare() calls with no placeholders at all.',
+            description: 'Validates placeholder usage in $wpdb->prepare() calls: quoted placeholders, placeholders other than %s, %d, %f, %F and %i, a placeholder count that differs from the replacement arguments, and prepare() calls with no placeholders at all.',
             defaultLevel: Level::Error,
             defaultEnabled: true,
-            targets: [NodeKind::MethodCall],
+            targets: [NodeKind::MethodCall, NodeKind::NullSafeMethodCall],
         );
     }
 
-    public function lint(LintContext $context): void
+    protected function names(): array
+    {
+        return ['prepare'];
+    }
+
+    protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
         $file = $context->file;
-        $this->gate ??= new FileGate(pattern: '/\$wpdb\s*->\s*prepare\s*\(/i');
-        if (!$this->gate->passes($file)) {
+        if ($call->receiver === null || !$this->isWpdb($file, $call->receiver)) {
             return;
         }
 
-        $object = $file->getChildren($context->node)[0] ?? null;
-        if (
-            $object === null
-            || !$this->isWpdb($file, $object)
-            || strtolower(Calls::name($file, $context->node) ?? '') !== 'prepare'
-        ) {
-            return;
-        }
-
-        $call = CallExpression::fromNode($file, $context->node);
         $query = $this->queryArgument($call);
         if ($query === null) {
             return;
         }
 
-        $this->text = '';
-        $this->fullyLiteral = true;
-        $this->sawLiteralText = false;
-        $this->walk($file, $query->value);
-        if (!$this->sawLiteralText) {
+        $flattened = $this->flatten($file, $query->value);
+        if ($flattened === null) {
             return;
         }
 
-        [$expected, $quoted, $unsupported] = $this->scan($this->text);
+        [$text, $fullyLiteral] = $flattened;
+        [$expected, $quoted, $unsupported] = $this->scan($text);
         if ($quoted) {
             $context->report(Issue::new(
                 'Placeholder in `$wpdb->prepare()` query must not be quoted',
@@ -120,14 +111,16 @@ final class PreparedSqlPlaceholdersRule implements Rule
                 "Unsupported placeholder in `\$wpdb->prepare()` query: {$unsupported}",
                 $query->value->span,
                 'Unsupported placeholder found in this SQL query',
-            )->withNote('`$wpdb->prepare()` only supports the `%s`, `%d`, `%f`, and `%i` placeholders.')->withHelp(
-                'Use `%s` for strings, `%d` for integers, `%f` for floats, or `%i` for identifiers (WP >= 6.2). Use `%%` for a literal percent sign.',
+            )->withNote(
+                '`$wpdb->prepare()` only supports the `%s`, `%d`, `%f`, `%F`, and `%i` placeholders.',
+            )->withHelp(
+                'Use `%s` for strings, `%d` for integers, `%f` or `%F` for floats, or `%i` for identifiers (WP >= 6.2). Use `%%` for a literal percent sign.',
             ));
 
             return;
         }
 
-        if ($this->fullyLiteral) {
+        if ($fullyLiteral) {
             $this->checkCount($context, $call, $query, $expected);
         }
     }
@@ -135,7 +128,7 @@ final class PreparedSqlPlaceholdersRule implements Rule
     private function queryArgument(CallExpression $call): ?CallArgument
     {
         foreach ($call->arguments as $argument) {
-            if ($argument->name !== null && strtolower($argument->name) === 'query') {
+            if ($argument->name === 'query') {
                 return $argument;
             }
         }
@@ -147,20 +140,18 @@ final class PreparedSqlPlaceholdersRule implements Rule
 
     private function checkCount(LintContext $context, CallExpression $call, CallArgument $query, int $expected): void
     {
-        $extra = null;
+        $replacements = [];
         foreach ($call->arguments as $argument) {
-            if ($argument === $query) {
-                continue;
-            }
-
             if ($argument->unpacked) {
                 return;
             }
 
-            $extra = $argument->value;
+            if ($argument !== $query) {
+                $replacements[] = $argument->value;
+            }
         }
 
-        $provided = count($call->arguments) - 1;
+        $provided = count($replacements);
         if ($expected === 0 && $provided === 0) {
             $context->report(Issue::new(
                 '`$wpdb->prepare()` called without any placeholders',
@@ -175,8 +166,10 @@ final class PreparedSqlPlaceholdersRule implements Rule
             return;
         }
 
-        if ($provided === 1 && $extra !== null && $extra->kind !== NodeKind::Literal) {
-            $provided = $this->countArrayValues($context->file, $extra);
+        // A single non-literal replacement may be an array of all the values.
+        // With no placeholders, any replacement is a mismatch.
+        if ($expected > 0 && $provided === 1 && $replacements[0]->kind !== NodeKind::Literal) {
+            $provided = $this->countArrayValues($context->file, $replacements[0]);
         }
 
         if ($provided !== null && $provided !== $expected) {
@@ -245,74 +238,87 @@ final class PreparedSqlPlaceholdersRule implements Rule
     }
 
     /**
-     * Collects the literal text of a query into $text, with a gap for
-     * every dynamic part.
+     * Flattens a query into its literal text, with a gap for every dynamic
+     * part. A `$wpdb` table property is a static identifier, so it keeps
+     * the query fully literal.
+     *
+     * @return null|array{string, bool} The text and whether the query is
+     *     fully literal, or NULL when the query has no literal text at all.
      */
-    private function walk(SourceFile $file, Node $node): void
+    private function flatten(SourceFile $file, Node $query): ?array
+    {
+        $text = '';
+        $fullyLiteral = true;
+        $sawLiteralText = false;
+        foreach ($this->parts($file, $query) as $part) {
+            if (is_string($part)) {
+                $sawLiteralText = true;
+                $text .= $part;
+                continue;
+            }
+
+            $fullyLiteral = $fullyLiteral && $this->isStaticWpdbProperty($file, $part);
+            $text .= self::GAP;
+        }
+
+        return $sawLiteralText ? [$text, $fullyLiteral] : null;
+    }
+
+    /**
+     * Yields the parts of a query in source order: the decoded text of a
+     * literal part, or the node of a dynamic part.
+     *
+     * @return iterable<string|Node>
+     */
+    private function parts(SourceFile $file, Node $node): iterable
     {
         $node = Values::unwrap($file, $node);
         $children = $file->getChildren($node);
 
         if ($node->kind === NodeKind::LiteralString) {
-            $this->sawLiteralText = true;
-            $this->text .= $this->unquote($file->getText($node));
+            yield Values::literalString($file, $node) ?? '';
 
             return;
         }
 
         if ($node->kind === NodeKind::CompositeString) {
-            $this->walkParts($file, $children[0] ?? $node);
+            yield from $this->compositeParts($file, $children[0] ?? $node);
 
             return;
         }
 
         if ($node->kind === NodeKind::Binary && count($children) === 3 && $file->getText($children[1]) === '.') {
-            $this->walk($file, $children[0]);
-            $this->walk($file, $children[2]);
+            yield from $this->parts($file, $children[0]);
+            yield from $this->parts($file, $children[2]);
 
             return;
         }
 
         if ($node->kind === NodeKind::Parenthesized && $children !== []) {
-            $this->walk($file, $children[0]);
+            yield from $this->parts($file, $children[0]);
 
             return;
         }
 
-        $this->gap($file, $node);
+        yield $node;
     }
 
-    private function walkParts(SourceFile $file, Node $string): void
+    /**
+     * @return iterable<string|Node>
+     */
+    private function compositeParts(SourceFile $file, Node $string): iterable
     {
         $nowdoc = str_starts_with($file->getText($string), "<<<'");
         foreach ($file->getChildren($string) as $part) {
             $part = $file->getChildren($part)[0] ?? $part;
             if ($part->kind !== NodeKind::LiteralStringPart) {
-                $this->gap($file, $file->getChildren($part)[0] ?? $part);
+                yield $file->getChildren($part)[0] ?? $part;
                 continue;
             }
 
-            $this->sawLiteralText = true;
             $text = $file->getText($part);
-            $this->text .= $nowdoc ? $text : stripcslashes($text);
+            yield $nowdoc ? $text : stripcslashes($text);
         }
-    }
-
-    /**
-     * Ends the literal run at a dynamic part. A `$wpdb` table property is a
-     * static identifier, so it keeps the query fully literal.
-     */
-    private function gap(SourceFile $file, Node $node): void
-    {
-        $this->fullyLiteral = $this->fullyLiteral && $this->isStaticWpdbProperty($file, $node);
-        $this->text .= self::GAP;
-    }
-
-    private function unquote(string $literal): string
-    {
-        $body = substr($literal, offset: 1, length: -1);
-
-        return str_starts_with($literal, "'") ? strtr($body, ["\\'" => "'", '\\\\' => '\\']) : stripcslashes($body);
     }
 
     /**
@@ -325,7 +331,7 @@ final class PreparedSqlPlaceholdersRule implements Rule
     {
         $matches = [];
         preg_match_all(
-            '/%(?:%|(?:(\d+)\$)?([a-zA-Z]))/',
+            '/%(?:%|(?:(\d+)\$)?' . self::MODIFIERS . '([a-zA-Z]))/',
             $text,
             $matches,
             flags: PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL,
@@ -340,7 +346,7 @@ final class PreparedSqlPlaceholdersRule implements Rule
                 continue;
             }
 
-            if (!str_contains('sdfi', $letter)) {
+            if (!str_contains('sdfFi', $letter)) {
                 $unsupported["`%{$letter}`"] = true;
                 continue;
             }
@@ -351,8 +357,10 @@ final class PreparedSqlPlaceholdersRule implements Rule
         }
 
         ksort($unsupported, SORT_STRING);
-        $quoted = preg_match('/([\'"])%(?:\d+\$)?[sdfi]\1/', $text) === 1;
+        $quoted = preg_match('/([\'"])%(?:\d+\$)?' . self::MODIFIERS . '[sdfFi]\1/', $text) === 1;
 
+        // WPCS: `%1$s` reuses a replacement, so numbered placeholders need
+        // only as many as the highest number; unnumbered ones need one each.
         return [max($unnumbered, $maxArgnum), $quoted, implode(', ', array_keys($unsupported))];
     }
 }
