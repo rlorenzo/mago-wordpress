@@ -201,3 +201,6 @@ $wpdb->prepare("SELECT * FROM my_table WHERE a LIKE '%foo%' AND b = %d", 5);
 // quoted_placeholder_after_like_is_still_reported
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE a LIKE '%s'", $a);
+
+// dollar_precision_padding_is_not_an_argnum
+$wpdb->prepare("SELECT '%5.'\$3s'", 'abc');

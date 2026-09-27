@@ -264,9 +264,10 @@ final class PreparedSqlPlaceholdersRule extends CallRule
      * Scans query text for placeholders.
      *
      * @return array{int, int, bool, bool, bool, string} The placeholder
-     *     count, the highest argument number, whether a simple value placeholder is quoted, whether an
-     *     identifier placeholder is quoted, whether any identifier
-     *     placeholder is used, and the formatted unsupported specifiers.
+     *     count, the highest argument number, whether a simple value
+     *     placeholder is quoted, whether an identifier placeholder is
+     *     quoted, whether any identifier placeholder is used, and the
+     *     formatted unsupported specifiers.
      */
     private function scan(string $text): array
     {
@@ -278,7 +279,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         $highest = 0;
         foreach ($placeholders[0] as $placeholder) {
             $argnum = [];
-            if (preg_match('`^%([0-9]+)`', $placeholder, $argnum) === 1 && str_contains($placeholder, '$')) {
+            if (preg_match('`^%([0-9]+)\\\\?\$`', $placeholder, $argnum) === 1) {
                 $highest = max($highest, (int) $argnum[1]);
             }
         }
