@@ -128,6 +128,37 @@ final class PhpcsSuppressionsTest extends TestCase
         self::assertFalse($suppressions->isSuppressedAt(27, self::CODES));
     }
 
+    /**
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function fileDisables(): iterable
+    {
+        yield 'no disable' => ["<?php\nf();\n", false];
+        yield 'bare disable' => ["<?php\nf();\n// phpcs:disable\n", true];
+        yield 'disable of the category' => ["<?php\n// phpcs:disable WordPress.Files -- note\n", true];
+        yield 'disable of another sniff' => ["<?php\n// phpcs:disable WordPress.Files.Other\n", false];
+        yield 'disable of a message code' => ["<?php\n// phpcs:disable WordPress.Files.FileName.Foo\n", false];
+        yield 'enable of the standard' => [
+            "<?php\n// phpcs:disable WordPress.Files.FileName\n// phpcs:enable WordPress\n",
+            false,
+        ];
+        yield 'enable of another sniff' => ["<?php\n// phpcs:disable\n// phpcs:enable Generic\n", true];
+        yield 'second disable after an enable' => [
+            "<?php\n// phpcs:disable\n// phpcs:enable\n// phpcs:disable WordPress\n",
+            true,
+        ];
+        yield 'legacy region' => ["<?php\n// @codingStandardsIgnoreStart\n", false];
+    }
+
+    #[DataProvider('fileDisables')]
+    public function testDisablesToEnd(string $source, bool $disabled): void
+    {
+        self::assertSame(
+            $disabled,
+            PhpcsSuppressions::fromSource($source)->disablesToEnd(['WordPress.Files.FileName.NotHyphenatedLowercase']),
+        );
+    }
+
     public function testMessageCodeMustMatchAMessageCode(): void
     {
         $suppressions = PhpcsSuppressions::fromSource(

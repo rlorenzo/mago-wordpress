@@ -48,23 +48,38 @@ final class Report
     }
 
     /**
+     * Reports an issue about the whole file, which a phpcs:disable of its
+     * sniff also silences when no phpcs:enable follows, as in
+     * `WordPress.Files.FileName`.
+     *
+     * @param non-empty-list<string> $sniffCodes
+     */
+    public static function fileIssue(LintContext $context, Issue $issue, array $sniffCodes): void
+    {
+        if (self::$honorPhpcsComments && self::suppressions($context->file)->disablesToEnd($sniffCodes)) {
+            return;
+        }
+
+        self::issue($context, $issue, $sniffCodes);
+    }
+
+    /**
      * @param list<string> $sniffCodes
      */
     private static function isSuppressed(SourceFile $file, Issue $issue, array $sniffCodes): bool
     {
+        $suppressions = self::suppressions($file);
+
+        return !$suppressions->isEmpty()
+        && $suppressions->isSuppressedAt($issue->annotations[0]->span->start, $sniffCodes);
+    }
+
+    private static function suppressions(SourceFile $file): PhpcsSuppressions
+    {
         self::$suppressions ??= new WeakMap();
         /** @var WeakMap<SourceFile, PhpcsSuppressions> $cache */
         $cache = self::$suppressions;
-        $suppressions = $cache[$file] ?? null;
-        if ($suppressions === null) {
-            $suppressions = PhpcsSuppressions::fromSource($file->contents);
-            $cache[$file] = $suppressions;
-        }
 
-        if ($suppressions->isEmpty()) {
-            return false;
-        }
-
-        return $suppressions->isSuppressedAt($issue->annotations[0]->span->start, $sniffCodes);
+        return $cache[$file] ??= PhpcsSuppressions::fromSource($file->contents);
     }
 }

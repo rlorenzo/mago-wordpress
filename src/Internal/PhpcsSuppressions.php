@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress\Internal;
 
 use function array_filter;
+use function array_intersect;
 use function array_key_exists;
 use function array_slice;
 use function count;
@@ -70,6 +71,14 @@ final class PhpcsSuppressions
 
     /** @var null|Rules */
     private ?array $ignoring = null;
+
+    /**
+     * Each phpcs:disable (true) and phpcs:enable (false) in order, with its
+     * codes; an enable outside a region has none, as in phpcs.
+     *
+     * @var list<array{bool, list<string>}>
+     */
+    private array $toggles = [];
 
     private function __construct(
         private readonly string $source,
@@ -144,6 +153,36 @@ final class PhpcsSuppressions
         }
 
         return false;
+    }
+
+    /**
+     * Whether a phpcs:disable of a code's sniff, category or standard has no
+     * later phpcs:enable of one of those. `WordPress.Files.FileName` checks
+     * this itself, because its reports concern the whole file.
+     *
+     * @param list<string> $codes
+     */
+    public function disablesToEnd(array $codes): bool
+    {
+        $names = [];
+        foreach ($codes as $code) {
+            $parts = explode('.', $code);
+            for ($length = 1; $length <= 3 && $length <= count($parts); $length++) {
+                $names[] = implode('.', array_slice($parts, offset: 0, length: $length));
+            }
+        }
+
+        $disabled = false;
+        foreach ($this->toggles as [$disable, $toggled]) {
+            // Inside a disable only an enable counts, and outside one only a disable.
+            if ($disable === $disabled || $toggled !== [] && array_intersect($names, $toggled) === []) {
+                continue;
+            }
+
+            $disabled = $disable;
+        }
+
+        return $disabled;
     }
 
     /**
@@ -336,7 +375,9 @@ final class PhpcsSuppressions
         }
 
         if (str_starts_with($lower, 'phpcs:disable')) {
-            $this->disable(self::codes(substr($text, offset: 14)));
+            $codes = self::codes(substr($text, offset: 14));
+            $this->toggles[] = [true, $codes];
+            $this->disable($codes);
             if ($ownLine) {
                 $this->lines[$line] = self::rules([self::ALL]);
             }
@@ -345,8 +386,10 @@ final class PhpcsSuppressions
         }
 
         if (str_starts_with($lower, 'phpcs:enable')) {
+            $codes = $this->ignoring === null ? [] : self::codes(substr($text, offset: 13));
+            $this->toggles[] = [false, $codes];
             if ($this->ignoring !== null) {
-                $this->enable(self::codes(substr($text, offset: 13)));
+                $this->enable($codes);
                 $this->lines[$line] = $ownLine ? self::rules([self::ALL]) : $this->ignoring;
             }
 
