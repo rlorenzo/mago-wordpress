@@ -1,10 +1,25 @@
 # mago-wordpress
 
+[![CI](https://github.com/rlorenzo/mago-wordpress/actions/workflows/ci.yml/badge.svg)](https://github.com/rlorenzo/mago-wordpress/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/rlorenzo/mago-wordpress)](https://github.com/rlorenzo/mago-wordpress/releases)
+[![PHP 8.1+](https://img.shields.io/badge/php-%5E8.1-777bb4)](composer.json)
+[![Mago 1.47+](https://img.shields.io/badge/mago-%5E1.47-0f766e)](https://github.com/carthage-software/mago)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 WordPress Coding Standards for [Mago](https://github.com/carthage-software/mago), as a Mago extension.
 It ports the WPCS lint sniffs (the `WordPress.*` rules phpcs runs) to Mago's linter, so a WordPress
 plugin or theme can be checked in a fraction of a second instead of minutes.
 
 Formatting sniffs (whitespace, alignment, braces) are not ported: that is `mago format`'s job.
+
+## 4–7× faster than phpcs
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/benchmarks-dark.svg">
+  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on Elementor (16.7 s vs 3.6 s), Yoast SEO (12.5 s vs 2.9 s) and WooCommerce (66.7 s vs 9.7 s)" src="docs/benchmarks-light.svg" width="760">
+</picture>
+
+Same machine, same code, mean of three runs; details and the reproducible script are in [Benchmarks](#benchmarks).
 
 ## Install
 
