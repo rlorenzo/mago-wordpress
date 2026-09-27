@@ -50,7 +50,12 @@ takes as sniff properties from your project instead. Put them in `composer.json`
 
 If there is no `extra.mago-wordpress` block, the worker reads the same values from your existing
 `phpcs.xml` (`text_domain`, `prefixes`, `minimum_supported_wp_version`, `customEscapingFunctions`,
-`posts_per_page`, `min_interval`, `additional_word_delimiters`, ...), so a project migrating from phpcs needs no new configuration.
+`posts_per_page`, `min_interval`, `additional_word_delimiters`, ...), so a project migrating from phpcs needs no new configuration. An explicitly present but empty `extra.mago-wordpress` block
+(`{"extra": {"mago-wordpress": {}}}`) means "use the defaults" and does not fall back to `phpcs.xml`.
+
+Properties are read only when set directly on the sniff's own `<rule ref="WordPress.WP.I18n">` (and
+similar); a `<rule ref="WordPress-Extra">` or other ruleset that merely *includes* that sniff is not
+followed, so set properties on the sniff ref itself, as phpcs recommends.
 
 The five `custom-*` lists (`custom-escaping-functions`, `custom-auto-escaped-functions`,
 `custom-sanitizing-functions`, `custom-unslashing-sanitizing-functions`, `custom-capabilities`) are

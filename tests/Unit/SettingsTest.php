@@ -119,4 +119,45 @@ final class SettingsTest extends TestCase
     {
         self::assertSame([], PhpcsRuleset::values('not xml'));
     }
+
+    public function testPhpcsPropertiesAreScopedToTheirOwningRule(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="Example">
+              <rule ref="Some.Unrelated.Sniff">
+                <properties>
+                  <property name="text_domain" type="array"><element value="wrong"/></property>
+                  <property name="prefixes" type="array"><element value="wrong"/></property>
+                </properties>
+              </rule>
+              <rule ref="WordPress.WP.I18n">
+                <properties>
+                  <property name="text_domain" type="array"><element value="right"/></property>
+                </properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        $settings = Settings::fromArray(PhpcsRuleset::values($xml));
+
+        self::assertSame(['right'], $settings->textDomains);
+        self::assertSame([], $settings->prefixes);
+    }
+
+    public function testPhpcsPropertiesDoNotFollowIncludedRulesets(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="Example">
+              <rule ref="WordPress-Extra">
+                <properties>
+                  <property name="text_domain" type="array"><element value="ignored"/></property>
+                </properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        self::assertSame([], Settings::fromArray(PhpcsRuleset::values($xml))->textDomains);
+    }
 }

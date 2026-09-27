@@ -73,6 +73,14 @@ final class SettingsDiscoveryTest extends TestCase
         self::assertSame('6.0', $settings->minimumWpVersion);
     }
 
+    public function testEmptyComposerExtraDoesNotFallBackToPhpcs(): void
+    {
+        file_put_contents($this->directory . '/composer.json', data: '{"extra": {"mago-wordpress": {}}}');
+        file_put_contents($this->directory . '/phpcs.xml', self::ruleset('from_phpcs'));
+
+        self::assertSame([], SettingsDiscovery::in($this->directory)->prefixes);
+    }
+
     private static function ruleset(string $prefix): string
     {
         return <<<XML

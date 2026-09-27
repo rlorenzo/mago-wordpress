@@ -11,6 +11,7 @@ use DOMXPath;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function count;
+use function in_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
 
@@ -18,11 +19,43 @@ use function libxml_use_internal_errors;
  * Reads the WPCS properties a `phpcs.xml` ruleset sets on its sniffs, in the shape
  * `Settings::fromArray()` accepts.
  *
+ * Only properties set directly on one of the sniff refs below are read, and only the
+ * property names that sniff actually accepts. A `<rule ref="SomeGroup">` that merely
+ * *includes* one of these sniffs (a custom or third-party ruleset, or a WPCS group like
+ * `WordPress-Extra`) is not followed, so properties set on it are not picked up; set them
+ * directly on the sniff ref instead, as phpcs itself recommends.
+ *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class PhpcsRuleset
 {
+    /**
+     * WPCS sniff refs, mapped to the property names each one accepts. Scoping by ref
+     * keeps an unrelated sniff (or a project's own custom one) from feeding the wrong
+     * setting just because it happens to declare a same-named property.
+     *
+     * @var array<string, list<string>>
+     */
+    private const OWNED_PROPERTIES = [
+        'WordPress.WP.I18n' => ['text_domain'],
+        'WordPress.NamingConventions.PrefixAllGlobals' => ['prefixes'],
+        'WordPress.Security.EscapeOutput' => ['customEscapingFunctions', 'customAutoEscapedFunctions'],
+        'WordPress.Security.NonceVerification' => [
+            'customSanitizingFunctions',
+            'customUnslashingSanitizingFunctions',
+        ],
+        'WordPress.Security.ValidatedSanitizedInput' => [
+            'customSanitizingFunctions',
+            'customUnslashingSanitizingFunctions',
+        ],
+        'WordPress.WP.Capabilities' => ['custom_capabilities'],
+        'WordPress.WP.PostsPerPage' => ['posts_per_page'],
+        'WordPress.WP.CronInterval' => ['min_interval'],
+        'WordPress.NamingConventions.ValidHookName' => ['additional_word_delimiters'],
+    ];
+
     private function __construct() {}
 
     /**
@@ -63,12 +96,23 @@ final class PhpcsRuleset
     private static function properties(DOMXPath $xpath): array
     {
         $properties = [];
-        foreach (self::elements($xpath, '//property') as $property) {
-            $name = $property->getAttribute('name');
-            $values = $property->getAttribute('type') === 'array'
-                ? self::elementValues($xpath, $property)
-                : [$property->getAttribute('value')];
-            $properties[$name] = [...($properties[$name] ?? []), ...$values];
+        foreach (self::elements($xpath, '//rule[@ref]') as $rule) {
+            $owned = self::OWNED_PROPERTIES[$rule->getAttribute('ref')] ?? null;
+            if ($owned === null) {
+                continue;
+            }
+
+            foreach (self::elements($xpath, 'properties/property', $rule) as $property) {
+                $name = $property->getAttribute('name');
+                if (!in_array($name, $owned, strict: true)) {
+                    continue;
+                }
+
+                $values = $property->getAttribute('type') === 'array'
+                    ? self::elementValues($xpath, $property)
+                    : [$property->getAttribute('value')];
+                $properties[$name] = [...($properties[$name] ?? []), ...$values];
+            }
         }
 
         return $properties;
