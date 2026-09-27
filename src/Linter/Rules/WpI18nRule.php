@@ -20,12 +20,10 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
-use function array_count_values;
 use function array_diff;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
-use function array_slice;
 use function array_values;
 use function count;
 use function explode;
@@ -34,6 +32,7 @@ use function in_array;
 use function ltrim;
 use function preg_match;
 use function preg_match_all;
+use function sort;
 use function sprintf;
 use function str_contains;
 use function strtolower;
@@ -41,6 +40,8 @@ use function substr;
 use function substr_count;
 use function trim;
 use function ucfirst;
+
+use const SORT_NATURAL;
 
 /**
  * Ports `WordPress.WP.I18n`.
@@ -78,12 +79,7 @@ final class WpI18nRule extends CallRule
     private const SKIPPED = 'translate_with_gettext_context';
 
     /**
-     * printf-style placeholders. The space flag is deliberately absent, so `100% off` is not a `% o`.
-     */
-    private const PLACEHOLDER = "/%(?:%|(?:\\d+\\$)?(?:[-+0]|'.)*+\\d*+(?:\\.\\d*+)?+[bcdeEfFgGhHosuxX])/s";
-
-    /**
-     * WPCS's `SPRINTF_PLACEHOLDER_REGEX`, which decides whether a string needs a translators comment.
+     * WPCS's `SPRINTF_PLACEHOLDER_REGEX`, which finds the placeholders for the translators comment and the singular/plural comparison.
      */
     private const WPCS_PLACEHOLDER = '/(?<!%)%(?:\d+\$)?[+-]?(?:(?:0|\'.)?-?\d*(?:\.(?:[ 0]|\'.)?\d+)?|[ ]?-?\d+(?:\.(?:[ 0]|\'.)?\d+)?)[bcdeEfFgGhHosuxX]/';
 
@@ -208,11 +204,38 @@ final class WpI18nRule extends CallRule
             [$singularNode, $singular],
             [$pluralNode,   $plural],
         ] = $texts;
-        if (
-            $singular !== null
-            && $plural !== null
-            && !self::compatible(self::placeholders($singular), self::placeholders($plural))
-        ) {
+        if ($singular === null || $plural === null) {
+            return;
+        }
+
+        $singularPlaceholders = self::placeholders($singular);
+        $pluralPlaceholders = self::placeholders($plural);
+
+        // English conflates "singular" with "only one", but some languages use the
+        // singular form for other counts too, so it needs the placeholders as well.
+        if (count($singularPlaceholders) < count($pluralPlaceholders)) {
+            Report::issue(
+                $context,
+                Issue::new(
+                    'Missing singular placeholder, needed for some languages',
+                    $singularNode->span,
+                    'The singular string has fewer placeholders',
+                )
+                    ->withSecondaryAnnotation($pluralNode->span, '...than the plural string')
+                    ->withNote(
+                        'Some languages use the singular form for counts other than one, so it must show the number too.',
+                    )
+                    ->withHelp('Use the same placeholders in the singular string as in the plural string.'),
+                [self::SNIFF . '.MissingSingularPlaceholder'],
+            );
+
+            return;
+        }
+
+        // Reordering is fine, but mismatched placeholders are probably wrong.
+        sort($singularPlaceholders, SORT_NATURAL);
+        sort($pluralPlaceholders, SORT_NATURAL);
+        if ($singularPlaceholders !== $pluralPlaceholders) {
             Report::issue(
                 $context,
                 Issue::new(
@@ -227,7 +250,7 @@ final class WpI18nRule extends CallRule
                     ->withHelp(
                         'Use the same placeholders in both strings, preferring numbered placeholders such as `%1$s` when there is more than one.',
                     ),
-                [self::SNIFF . '.MismatchedPlaceholders', self::SNIFF . '.MissingSingularPlaceholder'],
+                [self::SNIFF . '.MismatchedPlaceholders'],
             );
         }
     }
@@ -472,37 +495,8 @@ final class WpI18nRule extends CallRule
     private static function placeholders(string $text): array
     {
         $matches = [];
-        preg_match_all(self::PLACEHOLDER, $text, $matches);
+        preg_match_all(self::WPCS_PLACEHOLDER, $text, $matches);
 
-        return array_values(array_diff($matches[0], ['%%']));
-    }
-
-    /**
-     * The singular may omit at most one placeholder (the count). Numbered placeholders may be reordered;
-     * unnumbered ones are consumed in order, so the singular ones must be a prefix of the plural ones.
-     *
-     * @param list<string> $singular
-     * @param list<string> $plural
-     */
-    private static function compatible(array $singular, array $plural): bool
-    {
-        if (count($plural) !== count($singular) && count($plural) !== (count($singular) + 1)) {
-            return false;
-        }
-
-        foreach ([...$singular, ...$plural] as $placeholder) {
-            if (!str_contains($placeholder, '$')) {
-                return array_slice($plural, offset: 0, length: count($singular)) === $singular;
-            }
-        }
-
-        $available = array_count_values($plural);
-        foreach (array_count_values($singular) as $placeholder => $count) {
-            if ($count > ($available[$placeholder] ?? 0)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_values($matches[0]);
     }
 }

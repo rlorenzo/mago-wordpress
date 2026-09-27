@@ -20,7 +20,8 @@ namespace {
     /* translators: %s: Count. */
     $ctx = _nx('%1$s file', '%1$s files', $count, 'uploads', 'my-plugin');
 
-    // singular_without_placeholder_is_allowed
+    // singular_without_placeholder_is_flagged (some languages use the singular for other counts)
+    // @mago-expect lint:wordpress/wp-i18n
     /* translators: %s: Count. */
     $text = _n('One item', '%d items', $count, 'my-plugin');
 
@@ -80,14 +81,17 @@ namespace {
     /* translators: %s: Count. */
     $text = _n('%s item', '%d %s items', $count, 'my-plugin');
 
-    // reordered_unnumbered_placeholders_are_flagged
-    // @mago-expect lint:wordpress/wp-i18n(3)
+    // reordered_unnumbered_placeholders_need_numbering_but_match (WPCS compares sorted placeholders)
+    // @mago-expect lint:wordpress/wp-i18n(2)
     /* translators: %s: Count. */
     $text = _n('%s: %d item', '%d items: %s', $count, 'my-plugin');
 
     // reordered_numbered_placeholders_are_allowed
     /* translators: %s: Count. */
     $text = _n('%1$s: %2$d item', '%2$d items: %1$s', $count, 'my-plugin');
+
+    // singular_omitting_the_count_is_flagged
+    // @mago-expect lint:wordpress/wp-i18n
     /* translators: %s: Count. */
     $core = _n('One thought on %2$s', '%1$s thoughts on %2$s', $count, 'my-plugin');
 
@@ -324,6 +328,20 @@ namespace {
 
     /* translators: 1: number, 2: place. */
     _n('There is %1$d monkey in the %2$s', 'In the %2$s there are %1$d monkeys', $number, 'my-plugin');
+
+    // The singular form should use placeholders if the plural does.
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    _n('I have a cat.', 'I have %d cats.', $number, 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    _n_noop('I have a cat.', 'I have %d cats.', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    _nx('I have a cat.', 'I have %d cats.', $number, 'Not really.', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    _nx_noop('I have a cat.', 'I have %d cats.', 'Not really.', 'my-plugin');
 
     // @mago-expect lint:wordpress/wp-i18n
     /* translators: 1: number, 2: place. */
