@@ -14,12 +14,12 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
+use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
 use function strtolower;
-use function version_compare;
 
 /**
  * Ports `WordPress.WP.DeprecatedParameterValues`.
@@ -88,7 +88,10 @@ final class WpDeprecatedParameterValuesRule extends CallRule
         }
 
         $deprecation = $parameter['values'][$value] ?? null;
-        if ($deprecation === null || !$this->isReportable($deprecation['version'])) {
+        if (
+            $deprecation === null
+            || !WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $deprecation['version'])
+        ) {
             return;
         }
 
@@ -118,19 +121,5 @@ final class WpDeprecatedParameterValuesRule extends CallRule
             NodeKind::Keyword => strtolower($file->getText($node)),
             default => null,
         };
-    }
-
-    /**
-     * Whether a deprecation at $deprecatedSince should be reported under the
-     * project's configured minimum WordPress version.
-     *
-     * An empty or unparsable `minimum-wp-version` reports everything,
-     * matching the ported sniff.
-     */
-    private function isReportable(string $deprecatedSince): bool
-    {
-        $minimum = $this->settings->normalizedMinimumWpVersion();
-
-        return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
     }
 }

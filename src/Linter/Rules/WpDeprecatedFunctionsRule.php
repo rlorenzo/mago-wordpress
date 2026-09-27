@@ -11,11 +11,11 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
+use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
-use function version_compare;
 
 /**
  * Ports `WordPress.WP.DeprecatedFunctions`.
@@ -49,7 +49,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
         $entry = Lists::DEPRECATED_FUNCTIONS[$name];
-        if (!$this->isReportable($entry['version'])) {
+        if (!WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $entry['version'])) {
             return;
         }
 
@@ -61,19 +61,5 @@ final class WpDeprecatedFunctionsRule extends CallRule
             "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
             $context->node->span,
         )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help));
-    }
-
-    /**
-     * Whether a function deprecated since $deprecatedSince should be
-     * reported under the project's configured minimum WordPress version.
-     *
-     * An empty or unparsable `minimum-wp-version` reports every function in
-     * the table, matching the ported sniff.
-     */
-    private function isReportable(string $deprecatedSince): bool
-    {
-        $minimum = $this->settings->normalizedMinimumWpVersion();
-
-        return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
     }
 }

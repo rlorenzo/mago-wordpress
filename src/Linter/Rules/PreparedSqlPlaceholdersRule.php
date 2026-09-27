@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
+use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
@@ -26,7 +27,6 @@ use function max;
 use function preg_match;
 use function preg_match_all;
 use function str_contains;
-use function version_compare;
 
 use const PREG_SET_ORDER;
 use const PREG_UNMATCHED_AS_NULL;
@@ -60,8 +60,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
 
     public function __construct(Settings $settings)
     {
-        $minimum = $settings->normalizedMinimumWpVersion();
-        $this->identifierSupported = $minimum === null || version_compare($minimum, version2: '6.2.0', operator: '>=');
+        $this->identifierSupported = WpVersion::reached($settings->normalizedMinimumWpVersion(), '6.2.0');
     }
 
     public function getDefinition(): RuleDefinition

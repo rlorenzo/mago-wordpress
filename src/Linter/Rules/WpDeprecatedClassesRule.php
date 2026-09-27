@@ -15,11 +15,11 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
+use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
 use function strtolower;
-use function version_compare;
 
 /**
  * Ports `WordPress.WP.DeprecatedClasses`.
@@ -111,7 +111,7 @@ final class WpDeprecatedClassesRule implements Rule
         }
 
         $since = Lists::DEPRECATED_CLASSES[strtolower($normalized)] ?? null;
-        if ($since === null || !$this->isReportable($since)) {
+        if ($since === null || !WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $since)) {
             return;
         }
 
@@ -120,19 +120,5 @@ final class WpDeprecatedClassesRule implements Rule
             "Class `{$name}` has been deprecated since WordPress {$since}.",
             $identifier->span,
         )->withNote('Deprecated classes may be removed in a future WordPress release.'));
-    }
-
-    /**
-     * Whether a class deprecated since $deprecatedSince should be reported
-     * under the project's configured minimum WordPress version.
-     *
-     * An empty or unparsable `minimum-wp-version` reports every class in
-     * the table, matching the ported sniff.
-     */
-    private function isReportable(string $deprecatedSince): bool
-    {
-        $minimum = $this->settings->normalizedMinimumWpVersion();
-
-        return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
     }
 }
