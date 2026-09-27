@@ -138,7 +138,7 @@ final class CapitalPDangitRule implements Rule
     {
         $ranges = [];
         $offset = 0;
-        while (($separator = strpos($lower, '://', $offset)) !== false) {
+        while (($separator = strpos($lower, needle: '://', offset: $offset)) !== false) {
             $start = $separator + 3;
             $offset = $start + strcspn($lower, characters: " \t\n\v\f\r", offset: $start);
             $ranges[] = [$start, $offset];

@@ -54,6 +54,10 @@ $note = 'installing wordpress here';
 // url_with_scheme_is_not_flagged
 $url = 'See https://Wordpress.org for details';
 
+// occurrence_after_urls_is_flagged
+// @mago-expect lint:wordpress/capital-p-dangit
+$urls = 'See https://Wordpress.org and http://x.test/Wordpress then Wordpress';
+
 // domain_like_token_is_not_flagged
 $domain = 'Wordpress.org';
 
