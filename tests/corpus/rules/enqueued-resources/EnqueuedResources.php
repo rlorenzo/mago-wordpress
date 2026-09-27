@@ -84,3 +84,15 @@ $enqueued_resources_title = 'y';
 ?>
 <link rel=stylesheet href="/css/app.css">
 <?php
+
+// escaped_double_quoted_rel
+// @mago-expect lint:wordpress/enqueued-resources
+echo "<link rel=\"stylesheet\" href=\"style.css\">";
+
+// escaped_single_quoted_rel
+// @mago-expect lint:wordpress/enqueued-resources
+echo '<link rel=\'stylesheet\' href=\'style.css\'>';
+
+// quoted_greater_than_before_src
+// @mago-expect lint:wordpress/enqueued-resources
+echo '<script data-query="a > b" src="app.js"></script>';

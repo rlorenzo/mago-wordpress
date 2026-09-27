@@ -175,10 +175,22 @@ final class EnqueuedResourceParametersRule extends CallRule
             $lower === 'src' => self::SRC_SLOT,
             $lower === 'deps' => self::DEPS_SLOT,
             $lower === 'ver' => self::VER_SLOT,
-            $isScript && ($lower === 'args' || $lower === 'in_footer') || !$isScript && $lower === 'media'
-                => self::FIFTH_SLOT,
+            self::isFifthSlotName($lower, $isScript) => self::FIFTH_SLOT,
             default => null,
         };
+    }
+
+    /**
+     * Whether `$lower` is the fifth positional parameter's name for the given function kind:
+     * `$args`/`$in_footer` for scripts, `$media` for styles.
+     */
+    private static function isFifthSlotName(string $lower, bool $isScript): bool
+    {
+        if ($isScript) {
+            return $lower === 'args' || $lower === 'in_footer';
+        }
+
+        return $lower === 'media';
     }
 
     /**

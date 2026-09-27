@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 
 use function str_contains;
+use function str_starts_with;
 use function strlen;
 use function strpos;
 use function strtolower;
@@ -25,6 +26,7 @@ use function substr;
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
  * @mago-expect lint:halstead
+ * @mago-expect lint:too-many-methods
  */
 final class EnqueuedResourcesRule implements Rule
 {
@@ -114,11 +116,44 @@ final class EnqueuedResourcesRule implements Rule
                 continue;
             }
 
-            $closeAt = strpos($lower, needle: '>', offset: $nameEnd);
+            $closeAt = self::findTagClosingBracket($lower, $nameEnd);
             $end = $closeAt === false ? $length : $closeAt + 1;
 
             yield [$start, $end, substr($lower, $start, $end - $start)];
         }
+    }
+
+    /**
+     * Finds the `>` that closes an HTML tag starting at `$offset`, ignoring any `>` that falls
+     * inside a quoted attribute value (e.g. `data-query="a > b"`).
+     */
+    private static function findTagClosingBracket(string $lower, int $offset): int|false
+    {
+        $length = strlen($lower);
+        $quote = null;
+
+        for ($index = $offset; $index < $length; ++$index) {
+            $byte = $lower[$index];
+
+            if ($quote !== null) {
+                if ($byte === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+
+            if ($byte === "'" || $byte === '"') {
+                $quote = $byte;
+                continue;
+            }
+
+            if ($byte === '>') {
+                return $index;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -209,12 +244,18 @@ final class EnqueuedResourcesRule implements Rule
      */
     private static function relTokenText(string $value): string
     {
+        if (str_starts_with($value, '\\"') || str_starts_with($value, "\\'")) {
+            $value = substr($value, offset: 1);
+        }
+
         $first = $value === '' ? null : $value[0];
         if ($first === "'" || $first === '"') {
             $rest = substr($value, offset: 1);
             $end = strpos($rest, $first);
 
-            return $end === false ? $rest : substr($rest, offset: 0, length: $end);
+            $token = $end === false ? $rest : substr($rest, offset: 0, length: $end);
+
+            return rtrim($token, characters: '\\');
         }
 
         $length = strlen($value);
