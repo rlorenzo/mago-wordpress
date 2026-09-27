@@ -72,12 +72,12 @@ run_phpcs() {
         --parallel=8 -d memory_limit=2G --report=summary "$project"
 }
 
-# A linter that finds issues exits 1; only that or 0 (clean) are acceptable outcomes.
+# A linter that finds issues exits 1 (phpcs: 2 when some are auto-fixable); only those or 0 (clean) are acceptable.
 # Output goes to a file rather than a captured variable, so timed runs pay no subshell.
 run_checked() { # name, function
     local name=$1 fn=$2 status=0
     "$fn" > "$work/out" 2>&1 || status=$?
-    if (( status != 0 && status != 1 )); then
+    if (( status > 2 )); then
         echo "error: $name exited with status $status:" >&2
         cat "$work/out" >&2
         exit 1
