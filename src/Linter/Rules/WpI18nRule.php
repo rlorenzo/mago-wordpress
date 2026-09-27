@@ -11,6 +11,8 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
+use Mago\Sdk\Syntax\SourceFile;
+use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
@@ -25,12 +27,18 @@ use function array_map;
 use function array_slice;
 use function array_values;
 use function count;
+use function explode;
 use function implode;
 use function in_array;
+use function ltrim;
+use function preg_match;
 use function preg_match_all;
 use function sprintf;
 use function str_contains;
 use function strtolower;
+use function substr;
+use function substr_count;
+use function trim;
 
 /**
  * Ports `WordPress.WP.I18n`.
@@ -39,6 +47,7 @@ use function strtolower;
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class WpI18nRule extends CallRule
 {
@@ -68,6 +77,18 @@ final class WpI18nRule extends CallRule
      * printf-style placeholders. The space flag is deliberately absent, so `100% off` is not a `% o`.
      */
     private const PLACEHOLDER = "/%(?:%|(?:\\d+\\$)?(?:[-+0]|'.)*+\\d*+(?:\\.\\d*+)?+[bcdeEfFgGhHosuxX])/s";
+
+    /**
+     * WPCS's `SPRINTF_PLACEHOLDER_REGEX`, which decides whether a string needs a translators comment.
+     */
+    private const WPCS_PLACEHOLDER = '/(?<!%)%(?:\d+\$)?[+-]?(?:(?:0|\'.)?-?\d*(?:\.(?:[ 0]|\'.)?\d+)?|[ ]?-?\d+(?:\.(?:[ 0]|\'.)?\d+)?)[bcdeEfFgGhHosuxX]/';
+
+    /**
+     * WPCS's `UNORDERED_SPRINTF_PLACEHOLDER_REGEX`: a placeholder without a position specifier.
+     */
+    private const WPCS_UNORDERED_PLACEHOLDER = '/(?<!%)%[+-]?(?:(?:0|\'.)?-?\d*(?:\.(?:[ 0]|\'.)?\d+)?|[ ]?-?\d+(?:\.(?:[ 0]|\'.)?\d+)?)[bcdeEfFgGhHosuxX]/';
+
+    private const TRANSLATORS_COMMENT = '`^(?:(?://|/\*{1,2}) )?translators:`i';
 
     public function __construct(
         private readonly Settings $settings,
@@ -134,6 +155,10 @@ final class WpI18nRule extends CallRule
 
             $text = $this->literal($context, $argument);
             $texts[] = [$argument, $text];
+            if ($text !== null) {
+                self::checkOrder($context, $argument, $text);
+            }
+
             if ($text === null) {
                 $context->report(Issue::new(
                     'Translatable text must be a literal string',
@@ -159,6 +184,7 @@ final class WpI18nRule extends CallRule
         }
 
         $this->checkDomain($context, $name, $arguments['domain']);
+        self::checkTranslatorsComment($context, $name, $texts);
 
         if (count($texts) !== 2) {
             return;
@@ -232,6 +258,127 @@ final class WpI18nRule extends CallRule
             static fn(string $domain): string => "`{$domain}`",
             $allowed,
         )))));
+    }
+
+    /**
+     * Reports a string with several placeholders that are not all numbered.
+     */
+    private static function checkOrder(LintContext $context, Node $argument, string $text): void
+    {
+        $unordered = [];
+        $unorderedCount = (int) preg_match_all(self::WPCS_UNORDERED_PLACEHOLDER, $text, $unordered);
+        $all = [];
+        $allCount = (int) preg_match_all(self::WPCS_PLACEHOLDER, $text, $all);
+
+        if ($unorderedCount > 0 && $unorderedCount !== $allCount && $allCount > 1) {
+            $context->report(Issue::new(
+                'Mix of ordered and unordered placeholders in translatable string',
+                $argument->span,
+                sprintf('Found %s', implode(', ', $all[0])),
+            )->withHelp('Number every placeholder, e.g. `%1$s` and `%2$s`, so translators can reorder them.'));
+
+            return;
+        }
+
+        if ($unorderedCount < 2) {
+            return;
+        }
+
+        $expected = [];
+        /** @var list<string> $found */
+        $found = $unordered[0];
+        foreach ($found as $index => $placeholder) {
+            $expected[] = '%' . ($index + 1) . '$' . substr($placeholder, offset: 1);
+        }
+
+        $context->report(Issue::new(
+            'Multiple placeholders in translatable strings should be ordered',
+            $argument->span,
+            sprintf('Found %s', implode(', ', $found)),
+        )->withHelp(sprintf('Number the placeholders so translators can reorder them: %s.', implode(', ', $expected))));
+    }
+
+    /**
+     * Requires a `translators:` comment before a call whose literal text has a placeholder, placed as WPCS expects:
+     * the last comment before the call ends on the line above it, or only whitespace or same-line code separates them.
+     *
+     * @param list<array{Node, ?string}> $texts
+     */
+    private static function checkTranslatorsComment(LintContext $context, string $name, array $texts): void
+    {
+        $needsComment = false;
+        foreach ($texts as [, $text]) {
+            $needsComment = $needsComment || $text !== null && preg_match(self::WPCS_PLACEHOLDER, $text) === 1;
+        }
+
+        if (!$needsComment) {
+            return;
+        }
+
+        $style = self::translatorsCommentBefore($context->file, $context->node->span->start);
+        if ($style === TriviaKind::DocBlockComment) {
+            $context->report(Issue::new(
+                'A translators comment must be a `/* */` style comment',
+                $context->node->span,
+                'Preceded by a docblock `translators:` comment',
+            )->withNote('Tools that generate the .pot file do not pick up docblock comments.')->withHelp(
+                'Change `/**` to `/*`.',
+            ));
+
+            return;
+        }
+
+        if ($style !== null) {
+            return;
+        }
+
+        $context->report(Issue::new(
+            'Missing translators comment for a string with placeholders',
+            $context->node->span,
+            sprintf('This call to `%s()` has placeholders but no `translators:` comment on the line above', $name),
+        )->withHelp(
+            'Add a `/* translators: %s: What the placeholder stands for. */` comment directly before the call.',
+        ));
+    }
+
+    /**
+     * The kind of the `translators:` comment WPCS accepts for a call at $start, or NULL: the last comment
+     * before the call must end on the line above it, or be followed only by whitespace or same-line code.
+     * PHPCS reads a docblock from its first text line and joins the trimmed lines of any other comment.
+     */
+    private static function translatorsCommentBefore(SourceFile $file, int $start): ?TriviaKind
+    {
+        $comment = null;
+        foreach ($file->getTrivia() as $trivia) {
+            if ($trivia->span->end > $start || $comment !== null && $trivia->span->end <= $comment->span->end) {
+                continue;
+            }
+
+            $comment = $trivia;
+        }
+
+        if ($comment === null) {
+            return null;
+        }
+
+        $end = $comment->span->end;
+        $between = substr($file->contents, $end, $start - $end);
+        $commentLine = substr_count($file->contents, needle: "\n", offset: 0, length: $end - 1);
+        $callLine = substr_count($file->contents, needle: "\n", offset: 0, length: $start);
+        if (str_contains(ltrim($between), needle: "\n") && $callLine !== ($commentLine + 1)) {
+            return null;
+        }
+
+        $lines = array_map(trim(...), explode("\n", trim($file->getText($comment->span))));
+        $text = implode('', $lines);
+        if ($comment->kind === TriviaKind::DocBlockComment) {
+            $text = '';
+            foreach (explode("\n", substr(implode("\n", $lines), offset: 3, length: -2)) as $line) {
+                $text = $text !== '' ? $text : trim(ltrim(trim($line), characters: '*'));
+            }
+        }
+
+        return preg_match(self::TRANSLATORS_COMMENT, $text) === 1 ? $comment->kind : null;
     }
 
     private function literal(LintContext $context, Node $node): ?string
