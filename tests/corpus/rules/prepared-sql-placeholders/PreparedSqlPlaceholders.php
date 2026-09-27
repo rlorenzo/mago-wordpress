@@ -20,9 +20,9 @@ $wpdb->prepare("SELECT * FROM my_table WHERE name = '%s'", $name);
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare('SELECT * FROM my_table WHERE ID = "%d"', $id);
 
-// quoted_numbered_placeholder
-// @mago-expect lint:wordpress/prepared-sql-placeholders
-$wpdb->prepare('SELECT * FROM my_table WHERE name = "%1$s"', $name);
+// quoted_complex_placeholders_are_allowed
+$wpdb->prepare('SELECT * FROM my_table WHERE name = "%1$s" AND slug = \'%2$s\'', $name, $slug);
+$wpdb->prepare("SELECT * FROM my_table WHERE slug = '%5s'", $slug);
 
 // quoted_placeholder_in_concatenated_literals
 // @mago-expect lint:wordpress/prepared-sql-placeholders
@@ -138,8 +138,14 @@ final class PreparedSqlPlaceholdersParams
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE name = '%s' AND ID = %d", $name, $id, $extra);
 
-// identifier_placeholder_is_supported
+// identifier_placeholder_before_wp_6_2
+// @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM %i WHERE ID = %d", $table, $id);
+
+// quoted_identifier_placeholder_before_wp_6_2
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare('SELECT * FROM `%1$i` WHERE ID = %2$d', $table, $id);
 
 // named_query_argument_is_checked
 // @mago-expect lint:wordpress/prepared-sql-placeholders
@@ -163,3 +169,8 @@ $wpdb->prepare("SELECT * FROM my_table WHERE flags = %05x", $flags);
 // null_safe_prepare_is_checked
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb?->prepare("SELECT * FROM my_table WHERE name = '%s'", $name);
+
+// parenthesized_array_argument_is_counted
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE a = %s AND b = %d", (['a']));
+$wpdb->prepare("SELECT * FROM my_table WHERE a = %s AND b = %d", (['a', 2]));

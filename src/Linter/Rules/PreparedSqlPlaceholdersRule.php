@@ -16,6 +16,7 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
+use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
 use function count;
@@ -26,6 +27,8 @@ use function max;
 use function preg_match;
 use function preg_match_all;
 use function str_contains;
+use function trim;
+use function version_compare;
 
 use const PREG_SET_ORDER;
 use const PREG_UNMATCHED_AS_NULL;
@@ -56,6 +59,21 @@ final class PreparedSqlPlaceholdersRule extends CallRule
      * LIKE-content stripping if needed.
      */
     private const MODIFIERS = '[+-]?(?:0?-?\d*(?:\.[ 0]?\d+)?|[ ]?-?\d+(?:\.[ 0]?\d+)?)';
+
+    /**
+     * Whether the configured minimum WordPress version supports `%i`,
+     * which arrived in 6.2. WPCS: an unparsable minimum falls back to its
+     * current default, which does.
+     */
+    private readonly bool $identifierSupported;
+
+    public function __construct(Settings $settings)
+    {
+        $parts = [];
+        $this->identifierSupported =
+            preg_match('/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/', trim($settings->minimumWpVersion), $parts) !== 1
+            || version_compare(($parts[1] ?? '0') . '.' . ($parts[2] ?? '0'), version2: '6.2', operator: '>=');
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -92,16 +110,38 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         [$text, $fullyLiteral] = $flattened;
-        [$expected, $quoted, $unsupported] = $this->scan($text);
-        if ($quoted) {
+        [$expected, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] = $this->scan($text);
+        if ($quotedSimple) {
             $context->report(Issue::new(
-                'Placeholder in `$wpdb->prepare()` query must not be quoted',
+                'Simple placeholders should not be quoted in the query string in `$wpdb->prepare()`',
                 $query->value->span,
-                'Quoted placeholder found in this SQL query',
+                'Quoted simple placeholder found in this SQL query',
             )->withNote(
-                '`$wpdb->prepare()` adds quoting to replaced values itself; quoting the placeholder breaks the escaping.',
+                '`$wpdb->prepare()` quotes the values of the simple `%s`, `%d`, `%f` and `%F` placeholders itself; quoting the placeholder as well breaks the escaping.',
             )->withHelp(
                 'Remove the quotes around the placeholder (e.g. use `WHERE name = %s` instead of `WHERE name = \'%s\'`).',
+            ));
+        }
+
+        if ($quotedIdentifier) {
+            $context->report(Issue::new(
+                'Placeholders used for identifiers (`%i`) in the query string in `$wpdb->prepare()` are always quoted automagically',
+                $query->value->span,
+                'Quoted identifier placeholder found in this SQL query',
+            )->withNote('`$wpdb->prepare()` wraps `%i` values in backticks itself.')->withHelp(
+                'Remove the quotes or backticks around the identifier placeholder (e.g. use `FROM %i` instead of `FROM \'%i\'`).',
+            ));
+        }
+
+        if ($identifier && !$this->identifierSupported) {
+            $context->report(Issue::new(
+                'The `%i` modifier is only supported in WP 6.2 or higher',
+                $query->value->span,
+                'Identifier placeholder found in this SQL query',
+            )->withNote(
+                'The configured `minimum-wp-version` predates WordPress 6.2, where `$wpdb->prepare()` gained `%i`.',
+            )->withHelp(
+                'Raise `minimum-wp-version` to 6.2 or higher, or validate the identifier against an allowlist and interpolate it.',
             ));
         }
 
@@ -168,7 +208,10 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         // A single non-literal replacement may be an array of all the values.
         // With no placeholders, any replacement is a mismatch.
         if ($expected > 0 && $provided === 1 && $replacements[0]->kind !== NodeKind::Literal) {
-            $provided = $this->countArrayValues($context->file, $replacements[0]);
+            $provided = $this->countArrayValues(
+                $context->file,
+                $this->unparenthesize($context->file, $replacements[0]),
+            );
         }
 
         if ($provided !== null && $provided !== $expected) {
@@ -211,6 +254,22 @@ final class PreparedSqlPlaceholdersRule extends CallRule
             && $this->isWpdb($file, $children[0])
             && ($file->getChildren($selector)[0] ?? null)?->kind === NodeKind::LocalIdentifier
         );
+    }
+
+    /**
+     * Unwraps a value and any parentheses around it.
+     *
+     * ponytail: `Values::unwrap()` does not strip `Parenthesized` yet;
+     * drop this once it does.
+     */
+    private function unparenthesize(SourceFile $file, Node $node): Node
+    {
+        $node = Values::unwrap($file, $node);
+        $inner = $file->getChildren($node)[0] ?? null;
+
+        return $node->kind === NodeKind::Parenthesized && $inner !== null
+            ? $this->unparenthesize($file, $inner)
+            : $node;
     }
 
     /**
@@ -307,8 +366,10 @@ final class PreparedSqlPlaceholdersRule extends CallRule
     /**
      * Scans query text for placeholders.
      *
-     * @return array{int, bool, string} The expected replacement count, whether a
-     *     placeholder is quoted, and the formatted unsupported specifiers.
+     * @return array{int, bool, bool, bool, string} The expected replacement
+     *     count, whether a simple value placeholder is quoted, whether an
+     *     identifier placeholder is quoted, whether any identifier
+     *     placeholder is used, and the formatted unsupported specifiers.
      */
     private function scan(string $text): array
     {
@@ -323,6 +384,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         $unnumbered = 0;
         $maxArgnum = 0;
         $unsupported = [];
+        $identifier = false;
         foreach ($matches as $match) {
             $letter = $match[2] ?? null;
             if ($letter === null) {
@@ -334,16 +396,30 @@ final class PreparedSqlPlaceholdersRule extends CallRule
                 continue;
             }
 
+            if ($letter === 'i') {
+                $identifier = true;
+            }
+
             $argnum = $match[1] ?? null;
             $unnumbered += $argnum === null ? 1 : 0;
             $maxArgnum = max($maxArgnum, (int) $argnum);
         }
 
         ksort($unsupported, SORT_STRING);
-        $quoted = preg_match('/([\'"])%(?:\d+\$)?' . self::MODIFIERS . '[sdfFi]\1/', $text) === 1;
+        // WPCS: WordPress quotes only the simple `%s`, `%d`, `%f` and `%F`,
+        // so a quoted complex value placeholder like `'%1$s'` is correct.
+        // `%i` in any form is always backtick-quoted.
+        $quotedSimple = preg_match('/([\'"])%[sdfF]\1/', $text) === 1;
+        $quotedIdentifier = preg_match('/([\'"`])%(?:\d+\$)?' . self::MODIFIERS . 'i\1/', $text) === 1;
 
         // WPCS: `%1$s` reuses a replacement, so numbered placeholders need
         // only as many as the highest number; unnumbered ones need one each.
-        return [max($unnumbered, $maxArgnum), $quoted, implode(', ', array_keys($unsupported))];
+        return [
+            max($unnumbered, $maxArgnum),
+            $quotedSimple,
+            $quotedIdentifier,
+            $identifier,
+            implode(', ', array_keys($unsupported)),
+        ];
     }
 }

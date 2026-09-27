@@ -94,6 +94,24 @@ final class RuleSettingsTest extends TestCase
             "add_filter('cron_schedules', function (\$s) { \$s['h'] = ['interval' => 1800, 'display' => 'H']; return \$s; });",
             1,
         ];
+        yield 'identifier_placeholder_is_supported_from_wp_6_2' => [
+            'wordpress/prepared-sql-placeholders',
+            ['minimum-wp-version' => '6.2'],
+            "\$wpdb->prepare('SELECT * FROM %i WHERE %1\$i = %d', \$table, \$id);",
+            0,
+        ];
+        yield 'quoted_identifier_placeholder_is_flagged_from_wp_6_2' => [
+            'wordpress/prepared-sql-placeholders',
+            ['minimum-wp-version' => '6.2.1'],
+            "\$wpdb->prepare('SELECT * FROM `%i` WHERE ID = %d', \$table, \$id);",
+            1,
+        ];
+        yield 'identifier_placeholder_is_unsupported_before_wp_6_2' => [
+            'wordpress/prepared-sql-placeholders',
+            ['minimum-wp-version' => '6.1'],
+            "\$wpdb->prepare('SELECT * FROM %i WHERE ID = %d', \$table, \$id);",
+            1,
+        ];
         yield 'additional_word_delimiters_are_allowed' => [
             'wordpress/valid-hook-name',
             ['additional-word-delimiters' => '/.'],

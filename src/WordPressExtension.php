@@ -46,7 +46,7 @@ final class WordPressExtension
                 new GlobalVariablesOverrideRule(),
                 new EnqueuedResourceParametersRule(),
                 new EnqueuedResourcesRule(),
-                new PreparedSqlPlaceholdersRule(),
+                new PreparedSqlPlaceholdersRule($settings),
                 new SafeRedirectRule(),
                 new ValidHookNameRule($settings),
                 new WpI18nRule($settings),
