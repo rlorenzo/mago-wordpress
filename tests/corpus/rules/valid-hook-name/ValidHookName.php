@@ -79,4 +79,26 @@ namespace {
     // bad_delimiter_next_to_escapes_is_still_flagged
     // @mago-expect lint:wordpress/valid-hook-name
     do_action("\u{1F600}-hook_{$type}");
+
+    // binary_prefixed_literal_is_checked
+    // @mago-expect lint:wordpress/valid-hook-name
+    do_action(b'MyPlugin_Loaded');
+
+    // unknown_escape_keeps_its_backslash
+    // @mago-expect lint:wordpress/valid-hook-name
+    do_action("myplugin\d_{$type}");
+
+    // heredoc_literal_parts_are_validated
+    // @mago-expect lint:wordpress/valid-hook-name
+    do_action(<<<HOOK
+        MyPlugin_{$type}
+        HOOK);
+
+    // lowercase_heredoc_is_valid
+    do_action(<<<'HOOK'
+        myplugin_loaded
+        HOOK);
+
+    // deprecated_dispatchers_are_not_checked
+    do_action_deprecated('MyPlugin-Old', [], '1.0');
 }

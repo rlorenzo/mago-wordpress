@@ -13,6 +13,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
@@ -25,8 +26,6 @@ use function max;
 use function preg_match;
 use function preg_match_all;
 use function str_contains;
-use function str_starts_with;
-use function stripcslashes;
 
 use const PREG_SET_ORDER;
 use const PREG_UNMATCHED_AS_NULL;
@@ -282,7 +281,9 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($node->kind === NodeKind::CompositeString) {
-            yield from $this->compositeParts($file, $children[0] ?? $node);
+            foreach (Strings::compositeParts($file, $node) as $part => $text) {
+                yield $text ?? $file->getChildren($part)[0] ?? $part;
+            }
 
             return;
         }
@@ -301,24 +302,6 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         yield $node;
-    }
-
-    /**
-     * @return iterable<string|Node>
-     */
-    private function compositeParts(SourceFile $file, Node $string): iterable
-    {
-        $nowdoc = str_starts_with($file->getText($string), "<<<'");
-        foreach ($file->getChildren($string) as $part) {
-            $part = $file->getChildren($part)[0] ?? $part;
-            if ($part->kind !== NodeKind::LiteralStringPart) {
-                yield $file->getChildren($part)[0] ?? $part;
-                continue;
-            }
-
-            $text = $file->getText($part);
-            yield $nowdoc ? $text : stripcslashes($text);
-        }
     }
 
     /**
