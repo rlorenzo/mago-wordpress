@@ -1,3 +1,5 @@
+wordpress/enqueued-resource-parameters
+wordpress/enqueued-resources
 wordpress/global-variables-override
 wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders

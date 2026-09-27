@@ -6,6 +6,8 @@ namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
@@ -33,6 +35,8 @@ final class WordPressExtension
             version: self::VERSION,
             linterRules: [
                 new GlobalVariablesOverrideRule(),
+                new EnqueuedResourceParametersRule(),
+                new EnqueuedResourcesRule(),
                 new PreparedSqlPlaceholdersRule(),
                 new SafeRedirectRule(),
                 new ValidHookNameRule(),
