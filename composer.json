@@ -1,7 +1,7 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
   "name": "rlorenzo/mago-wordpress",
-  "description": "Mago extension for WordPress: WPCS-equivalent linter rules and analyzer plugins.",
+  "description": "Mago extension for WordPress: WPCS-equivalent linter rules.",
   "type": "library",
   "license": "MIT",
   "authors": [
