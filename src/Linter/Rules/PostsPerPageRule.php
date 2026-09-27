@@ -88,19 +88,19 @@ final class PostsPerPageRule implements Rule
             return;
         }
 
-        $key = Values::literalString($file, Values::unwrap($file, $keyNode));
+        $key = Values::literalString($file, Values::unparenthesize($file, $keyNode));
         if ($key === null) {
             return;
         }
 
         if (in_array($key, Lists::POSTS_PER_PAGE_KEYS, strict: true)) {
-            $this->checkLimit($context, $key, $element, Values::unwrap($file, $valueNode));
+            $this->checkLimit($context, $key, $element, Values::unparenthesize($file, $valueNode));
 
             return;
         }
 
         if ($key === self::NOPAGING_KEY) {
-            $this->checkNopaging($context, $element, Values::unwrap($file, $valueNode));
+            $this->checkNopaging($context, $element, Values::unparenthesize($file, $valueNode));
         }
     }
 
@@ -166,7 +166,7 @@ final class PostsPerPageRule implements Rule
                 return null;
             }
 
-            $magnitude = Values::literalInteger($file, Values::unwrap($file, $operand));
+            $magnitude = Values::literalInteger($file, Values::unparenthesize($file, $operand));
 
             return $magnitude === null ? null : -$magnitude;
         }

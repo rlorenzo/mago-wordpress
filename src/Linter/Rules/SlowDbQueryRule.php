@@ -101,7 +101,7 @@ final class SlowDbQueryRule implements Rule
     private function checkKey(LintContext $context, Node $node): void
     {
         $file = $context->file;
-        $key = Values::unwrap($file, $node);
+        $key = Values::unparenthesize($file, $node);
         if ($key->kind !== NodeKind::LiteralString) {
             return;
         }

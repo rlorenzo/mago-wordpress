@@ -65,8 +65,7 @@ final class Values
      * An argument that is itself a call arrives as `Expression -> Call ->
      * FunctionCall`, so `Call` must come off too. Without that, every
      * check against a call kind misses. Property accesses likewise sit
-     * under an `Access` wrapper. Parentheses come off as well, so `('x')`
-     * reads the same as `'x'`.
+     * under an `Access` wrapper.
      */
     public static function unwrap(SourceFile $file, Node $node): Node
     {
@@ -75,7 +74,6 @@ final class Values
             || $node->kind === NodeKind::Literal
             || $node->kind === NodeKind::Call
             || $node->kind === NodeKind::Access
-            || $node->kind === NodeKind::Parenthesized
         ) {
             $child = $file->getChildren($node)[0] ?? null;
             if ($child === null) {

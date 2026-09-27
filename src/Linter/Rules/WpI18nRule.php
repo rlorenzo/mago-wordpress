@@ -254,7 +254,7 @@ final class WpI18nRule extends CallRule
 
     private function literal(LintContext $context, Node $node): ?string
     {
-        return Values::literalString($context->file, Values::unwrap($context->file, $node));
+        return Values::literalString($context->file, Values::unparenthesize($context->file, $node));
     }
 
     /**

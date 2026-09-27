@@ -34,10 +34,6 @@ use function version_compare;
  * it reports (at a single `Warning` level) only usages whose deprecation is
  * at or before the configured `minimum-wp-version`, and stays silent
  * otherwise.
- *
- * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect
- * @mago-expect lint:too-many-methods
  */
 final class WpDeprecatedParametersRule extends CallRule
 {
