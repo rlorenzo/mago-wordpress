@@ -34,8 +34,8 @@ extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
 ```
 
 That starts the extension worker and enables Mago's own `wordpress` integration: eight core
-WordPress rules (see [Mago's own WordPress rules](#magos-own-wordpress-rules) below), including the
-three Mago ships switched off, plus this package's rules. Run `mago lint` as usual.
+WordPress rules (see [Mago's own WordPress rules](#magos-own-wordpress-rules) below) plus this
+package's rules. Run `mago lint` as usual.
 
 ## Configuration
 
@@ -144,9 +144,9 @@ them on so a project keeps the security checks WPCS gave it.
 
 | Mago rule | Covers | Mago default |
 |:---|:---|:---|
-| `nonce-verification` | `WordPress.Security.NonceVerification` | off (on via this package's config) |
-| `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput` | off (on via this package's config) |
-| `prepared-sql` | `WordPress.DB.PreparedSQL` | off (on via this package's config) |
+| `nonce-verification` | `WordPress.Security.NonceVerification` | off |
+| `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput` | off |
+| `prepared-sql` | `WordPress.DB.PreparedSQL` | off |
 | `no-unescaped-output` | `WordPress.Security.EscapeOutput` | on |
 | `use-wp-functions` | `WordPress.WP.AlternativeFunctions` | on |
 | `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) | on |

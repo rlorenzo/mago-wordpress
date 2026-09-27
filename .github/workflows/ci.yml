@@ -100,13 +100,21 @@ jobs:
 
           $url = 'https://example.com';
           wp_redirect($url);
+
+          function smoke_lookup(wpdb $wpdb): void
+          {
+              $wpdb->query('SELECT * FROM t WHERE id = ' . $_POST['id']);
+          }
           EOF
 
-          # mago exits non-zero when it reports issues; the grep below is the assertion.
+          # mago exits non-zero when it reports issues; the greps below are the assertion.
+          # The last three are Mago core rules that ship disabled; wordpress.mago.toml enables them.
           out=$(vendor/bin/mago lint 2>&1 || true)
           echo "$out"
-          echo "$out" | grep -q 'wordpress/safe-redirect' || {
-            echo "error: wordpress/safe-redirect was not reported for wp_redirect()" >&2
-            exit 1
-          }
+          for rule in wordpress/safe-redirect nonce-verification validated-sanitized-input prepared-sql; do
+            echo "$out" | grep -q "\[$rule\]" || {
+              echo "error: $rule was not reported" >&2
+              exit 1
+            }
+          done
 
