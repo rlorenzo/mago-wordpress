@@ -77,6 +77,19 @@ foo($a = 'on' ? 'on' : 'off');
 if ($a = 'on' ? true : false) {
 }
 
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+while ($a = 'on' ? true : false) {
+}
+
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = match ($a = 'on' ? 1 : 2) {
+    default => 'x',
+};
+
+// whole_ternary_as_only_named_argument_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+foo(mode: $a = 'on' ? 'on' : 'off');
+
 // whole_ternary_among_several_call_arguments_is_not_checked
 foo($a = 'on' ? 'on' : 'off', 1);
 
