@@ -37,6 +37,12 @@ That starts the extension worker and enables Mago's own `wordpress` integration:
 WordPress rules (see [Mago's own WordPress rules](#magos-own-wordpress-rules) below) plus this
 package's rules. Run `mago lint` as usual.
 
+### Security
+
+The extension worker runs as PHP inside your project and loads your Composer autoloader,
+including any `autoload.files` your project or its dependencies declare — the same trust model
+as PHPUnit, PHPStan or any other Composer-installed dev tool. Only lint projects you trust.
+
 ## Configuration
 
 Mago does not pass custom options to extension rules, so this package reads the settings WPCS
