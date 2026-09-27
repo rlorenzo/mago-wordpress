@@ -13,11 +13,13 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 
 use function ord;
-use function preg_match;
+use function strcspn;
 use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
+
+use const PHP_INT_MAX;
 
 /**
  * Ports `WordPress.WP.CapitalPDangit`.
@@ -78,6 +80,8 @@ final class CapitalPDangitRule implements Rule
 
         $length = strlen($needle);
         $offset = 0;
+        $urls = self::urlRanges($lower);
+        $url = 0;
         while (($start = strpos($lower, $needle, $offset)) !== false) {
             $end = $start + $length;
             $offset = $end;
@@ -87,7 +91,13 @@ final class CapitalPDangitRule implements Rule
                 continue;
             }
 
-            if (!self::isStandaloneWord($text, $start, $end) || self::isInsideUrl($lower, $start)) {
+            // Matches arrive in order, so the URL cursor only moves forward.
+            while (($urls[$url][1] ?? PHP_INT_MAX) <= $start) {
+                ++$url;
+            }
+
+            $insideUrl = ($urls[$url][0] ?? PHP_INT_MAX) <= $start;
+            if ($insideUrl || !self::isStandaloneWord($text, $start, $end)) {
                 continue;
             }
 
@@ -119,12 +129,22 @@ final class CapitalPDangitRule implements Rule
     }
 
     /**
-     * Whether a URL scheme separator (`://`) appears earlier in the same
-     * whitespace-delimited token as the match.
+     * Returns the `[start, end)` ranges that follow a URL scheme separator
+     * (`://`) up to the end of its whitespace-delimited token.
+     *
+     * @return list<array{int, int}>
      */
-    private static function isInsideUrl(string $lower, int $start): bool
+    private static function urlRanges(string $lower): array
     {
-        return preg_match('#://\S*$#', substr($lower, offset: 0, length: $start)) === 1;
+        $ranges = [];
+        $offset = 0;
+        while (($separator = strpos($lower, '://', $offset)) !== false) {
+            $start = $separator + 3;
+            $offset = $start + strcspn($lower, characters: " \t\n\v\f\r", offset: $start);
+            $ranges[] = [$start, $offset];
+        }
+
+        return $ranges;
     }
 
     /**

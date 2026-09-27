@@ -58,6 +58,17 @@ echo '<link rel=stylesheet/>';
 // @mago-expect lint:wordpress/enqueued-resources
 echo "<script src='{$url}'></script>";
 
+// interpolation_before_script_src
+// @mago-expect lint:wordpress/enqueued-resources
+echo "<script type='$type' src='app.js'></script>";
+
+// interpolation_before_stylesheet_rel
+// @mago-expect lint:wordpress/enqueued-resources
+echo "<link href='{$url}' rel='stylesheet' />";
+
+// interpolated_src_name_is_not_flagged
+echo "<script {$attr}='app.js'></script>";
+
 // heredoc_with_stylesheet_link
 // @mago-expect lint:wordpress/enqueued-resources
 $html = <<<HTML

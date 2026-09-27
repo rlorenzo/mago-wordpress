@@ -23,8 +23,7 @@ namespace {
     // @mago-expect lint:wordpress/wp-date-time
     $timestamp = current_time('U');
 
-    // current_time_timestamp_uppercase_is_flagged
-    // @mago-expect lint:wordpress/wp-date-time
+    // current_time_timestamp_mode_is_case_sensitive_so_uppercase_is_a_date_format
     $timestamp = current_time('TIMESTAMP');
 
     // current_time_timestamp_with_explicit_false_is_flagged

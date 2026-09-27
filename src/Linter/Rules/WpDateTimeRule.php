@@ -108,7 +108,7 @@ final class WpDateTimeRule extends CallRule
         }
 
         $formatValue = Values::literalString($context->file, $format);
-        if ($formatValue === null || strtolower($formatValue) !== 'timestamp' && $formatValue !== 'U') {
+        if ($formatValue === null || $formatValue !== 'timestamp' && $formatValue !== 'U') {
             return false;
         }
 

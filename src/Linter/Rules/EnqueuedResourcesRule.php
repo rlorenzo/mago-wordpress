@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function rtrim;
 use function str_contains;
@@ -45,7 +46,7 @@ final class EnqueuedResourcesRule implements Rule
             . 'concatenation, and deduplication work correctly.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
-            targets: [NodeKind::LiteralString, NodeKind::LiteralStringPart, NodeKind::Inline],
+            targets: [NodeKind::LiteralString, NodeKind::CompositeString, NodeKind::Inline],
         );
     }
 
@@ -59,6 +60,21 @@ final class EnqueuedResourcesRule implements Rule
         $text = $context->getText();
         if (!str_contains($text, '<')) {
             return;
+        }
+
+        // An interpolated string is scanned whole, so a tag split across parts is still seen. Each
+        // dynamic part becomes NUL bytes of the same length, which keeps every offset in place.
+        if ($context->node->kind === NodeKind::CompositeString) {
+            $base = $context->node->span->start;
+            foreach (Strings::compositeParts($context->file, $context->node) as $part => $value) {
+                if ($value !== null) {
+                    continue;
+                }
+
+                for ($index = $part->span->start - $base; $index < ($part->span->end - $base); ++$index) {
+                    $text[$index] = "\0";
+                }
+            }
         }
 
         $this->scanText($context, strtolower($text), $context->node->span);

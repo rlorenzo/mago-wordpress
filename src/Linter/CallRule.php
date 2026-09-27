@@ -72,14 +72,12 @@ abstract class CallRule implements Rule
     /**
      * Builds the file gate from the rule's call names.
      *
-     * Every match puts a wanted name in the source directly before an
-     * opening parenthesis. This holds for a plain call, a method selector
-     * and a fully qualified call. The one exception is a call through an
-     * aliased `use function` import. The second branch keeps that case in,
-     * because it passes every file with a function import. The anchor on
-     * the parenthesis lets a one-letter name such as `l` gate its files. A
-     * comment between the callee and its parenthesis defeats the anchor,
-     * but nothing writes that.
+     * Every match puts a wanted name in the source as a whole word. This
+     * holds for a plain call, a method selector and a fully qualified call,
+     * whatever trivia sits before the parenthesis. The one exception is a
+     * call through an aliased `use function` import. The second branch
+     * keeps that case in, because it passes every file with a function
+     * import.
      *
      * @param list<string> $names
      */
@@ -90,6 +88,6 @@ abstract class CallRule implements Rule
             delimiter: '/',
         ), $names));
 
-        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})\\s*\\(|\\buse\\s[^;]*\\bfunction\\b/i");
+        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)|\\buse\\s[^;]*\\bfunction\\b/i");
     }
 }
