@@ -64,10 +64,17 @@ $wpdb->prepare("SELECT * FROM my_table WHERE a = %s AND b = %d AND c = %s", $a, 
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE ID = %d", $id, $extra);
 
-// numbered_placeholders_counted_by_highest_argnum
+// numbered_placeholders_counted_by_occurrence
+$wpdb->prepare('SELECT %1$d, %1$d', 123, 123);
+$wpdb->prepare('SELECT * FROM my_table WHERE a = %1$s AND b = %2$d AND c = %1$s', $a, $b, $a);
+
+// repeated_numbered_placeholder_needs_one_replacement_each
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare('SELECT %1$d, %1$d', 123);
+// @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare('SELECT * FROM my_table WHERE a = %1$s AND b = %2$d AND c = %1$s', $a, $b);
 
-// numbered_placeholders_with_too_few_arguments
+// numbered_placeholder_beyond_replacements
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare('SELECT * FROM my_table WHERE a = %1$s AND b = %3$d', $a, $b);
 

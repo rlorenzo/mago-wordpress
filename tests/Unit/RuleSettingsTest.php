@@ -97,7 +97,7 @@ final class RuleSettingsTest extends TestCase
         yield 'identifier_placeholder_is_supported_from_wp_6_2' => [
             'wordpress/prepared-sql-placeholders',
             ['minimum-wp-version' => '6.2'],
-            "\$wpdb->prepare('SELECT * FROM %i WHERE %1\$i = %d', \$table, \$id);",
+            "\$wpdb->prepare('SELECT * FROM %i WHERE %2\$i = %3\$d', \$table, \$column, \$id);",
             0,
         ];
         yield 'quoted_identifier_placeholder_is_flagged_from_wp_6_2' => [

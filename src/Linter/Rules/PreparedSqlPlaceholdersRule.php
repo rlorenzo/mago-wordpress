@@ -91,7 +91,8 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         $query = $prepared->argument;
-        [$expected, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] = $this->scan($prepared->text);
+        [$expected, $highest, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] =
+            $this->scan($prepared->text);
         if ($quotedSimple) {
             Report::issue(
                 $context,
@@ -157,12 +158,17 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($prepared->fullyLiteral) {
-            $this->checkCount($context, $call, $query, $expected);
+            $this->checkCount($context, $call, $query, $expected, $highest);
         }
     }
 
-    private function checkCount(LintContext $context, CallExpression $call, CallArgument $query, int $expected): void
-    {
+    private function checkCount(
+        LintContext $context,
+        CallExpression $call,
+        CallArgument $query,
+        int $expected,
+        int $highest,
+    ): void {
         $replacements = [];
         foreach ($call->arguments as $argument) {
             if ($argument->unpacked) {
@@ -222,6 +228,23 @@ final class PreparedSqlPlaceholdersRule extends CallRule
                     },
                 ],
             );
+
+            return;
+        }
+
+        // `%3$s` needs a third replacement even when the counts match.
+        if ($provided !== null && $highest > $provided) {
+            Report::issue(
+                $context,
+                Issue::new(
+                    "`\$wpdb->prepare()` placeholder `%{$highest}\$` refers to a missing replacement argument",
+                    $context->node->span,
+                    "Query refers to replacement {$highest}, {$provided} provided",
+                )->withNote(
+                    'A numbered placeholder such as `%2$s` reads the replacement argument at that position.',
+                )->withHelp('Renumber the placeholders, or pass the missing replacement arguments.'),
+                [self::SNIFF . '.ReplacementsWrongNumber'],
+            );
         }
     }
 
@@ -251,8 +274,8 @@ final class PreparedSqlPlaceholdersRule extends CallRule
     /**
      * Scans query text for placeholders.
      *
-     * @return array{int, bool, bool, bool, string} The expected replacement
-     *     count, whether a simple value placeholder is quoted, whether an
+     * @return array{int, int, bool, bool, bool, string} The placeholder
+     *     count, the highest argument number, whether a simple value placeholder is quoted, whether an
      *     identifier placeholder is quoted, whether any identifier
      *     placeholder is used, and the formatted unsupported specifiers.
      */
@@ -266,8 +289,8 @@ final class PreparedSqlPlaceholdersRule extends CallRule
             flags: PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL,
         );
 
-        $unnumbered = 0;
-        $maxArgnum = 0;
+        $count = 0;
+        $highest = 0;
         $unsupported = [];
         $identifier = false;
         foreach ($matches as $match) {
@@ -285,9 +308,8 @@ final class PreparedSqlPlaceholdersRule extends CallRule
                 $identifier = true;
             }
 
-            $argnum = $match[1] ?? null;
-            $unnumbered += $argnum === null ? 1 : 0;
-            $maxArgnum = max($maxArgnum, (int) $argnum);
+            ++$count;
+            $highest = max($highest, (int) ($match[1] ?? 0));
         }
 
         ksort($unsupported, SORT_STRING);
@@ -297,10 +319,11 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         $quotedSimple = preg_match('/([\'"])%[sdfF]\1/', $text) === 1;
         $quotedIdentifier = preg_match('/([\'"`])%(?:\d+\$)?' . self::MODIFIERS . 'i\1/', $text) === 1;
 
-        // WPCS: `%1$s` reuses a replacement, so numbered placeholders need
-        // only as many as the highest number; unnumbered ones need one each.
+        // WPCS and `wpdb::prepare()` expect one replacement per placeholder
+        // occurrence, even when `%1$s` repeats a number.
         return [
-            max($unnumbered, $maxArgnum),
+            $count,
+            $highest,
             $quotedSimple,
             $quotedIdentifier,
             $identifier,
