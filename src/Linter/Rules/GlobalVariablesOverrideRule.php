@@ -49,6 +49,11 @@ final class GlobalVariablesOverrideRule implements Rule
      */
     private const OVERRIDE_ALLOWED = ['content_width', 'wp_cockneyreplace'];
 
+    /**
+     * Globals WordPress core sets that WPCS's generated list lacks.
+     */
+    private const EXTRA_GLOBALS = ['query_string'];
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -205,6 +210,9 @@ final class GlobalVariablesOverrideRule implements Rule
             return null;
         }
 
-        return in_array($bare, Lists::WP_GLOBAL_VARIABLES, strict: true) ? $bare : null;
+        return in_array($bare, Lists::WP_GLOBAL_VARIABLES, strict: true)
+        || in_array($bare, self::EXTRA_GLOBALS, strict: true)
+            ? $bare
+            : null;
     }
 }

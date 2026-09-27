@@ -21,6 +21,10 @@ namespace {
         $pagenow = 'index.php';
     }
 
+    // query_string_global_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $query_string = 'p=1';
+
     // mixed_case_global_is_flagged
     // @mago-expect lint:wordpress/global-variables-override
     $is_IE = false;
