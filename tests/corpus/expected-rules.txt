@@ -1,3 +1,4 @@
+wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders
 wordpress/safe-redirect
 wordpress/wp-i18n

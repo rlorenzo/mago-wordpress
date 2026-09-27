@@ -1,7 +1,8 @@
 {
     "extra": {
         "mago-wordpress": {
-            "text-domains": ["my-plugin"]
+            "text-domains": ["my-plugin"],
+            "prefixes": ["myplugin", "example"]
         }
     }
 }
