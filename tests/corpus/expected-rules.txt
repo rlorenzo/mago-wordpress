@@ -1,8 +1,11 @@
+wordpress/cron-interval
 wordpress/enqueued-resource-parameters
 wordpress/enqueued-resources
 wordpress/global-variables-override
+wordpress/posts-per-page
 wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders
 wordpress/safe-redirect
+wordpress/slow-db-query
 wordpress/valid-hook-name
 wordpress/wp-i18n
