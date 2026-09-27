@@ -6,7 +6,10 @@ namespace Rlorenzo\MagoWordPress\Internal;
 
 use Mago\Sdk\Syntax\SourceFile;
 
+use function array_map;
+use function implode;
 use function preg_match;
+use function preg_quote;
 
 /**
  * A per-file text screen that decides whether a rule can match at all.
@@ -31,6 +34,22 @@ final class FileGate
     public function __construct(
         private readonly string $pattern,
     ) {}
+
+    /**
+     * A gate that passes a file mentioning any of the words, case-insensitively
+     * and as a whole word.
+     *
+     * @param list<string> $words
+     */
+    public static function forWords(array $words): self
+    {
+        $alternation = implode('|', array_map(static fn(string $word): string => preg_quote(
+            $word,
+            delimiter: '/',
+        ), $words));
+
+        return new self(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)/i");
+    }
 
     public function passes(SourceFile $file): bool
     {

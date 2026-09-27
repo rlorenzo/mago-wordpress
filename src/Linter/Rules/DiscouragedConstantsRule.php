@@ -20,11 +20,8 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function array_key_exists;
 use function array_keys;
-use function array_map;
-use function implode;
 use function ltrim;
 use function preg_match;
-use function preg_quote;
 use function str_contains;
 use function str_starts_with;
 use function substr;
@@ -63,7 +60,9 @@ final class DiscouragedConstantsRule implements Rule
     {
         $file = $context->file;
 
-        $this->gate ??= self::buildGate();
+        // Every check needs a discouraged name in the source as a whole word:
+        // `define()` only reads a literal string and `use const` names it.
+        $this->gate ??= FileGate::forWords(array_keys(Lists::DISCOURAGED_CONSTANTS));
         if (!$this->gate->passes($file)) {
             return;
         }
@@ -263,20 +262,5 @@ final class DiscouragedConstantsRule implements Rule
         }
 
         return false;
-    }
-
-    /**
-     * Every check needs a discouraged name in the source as a whole word:
-     * `define()` only reads a literal string and `use const` names it.
-     */
-    private static function buildGate(): FileGate
-    {
-        $names = array_keys(Lists::DISCOURAGED_CONSTANTS);
-        $alternation = implode('|', array_map(static fn(string $name): string => preg_quote(
-            $name,
-            delimiter: '/',
-        ), $names));
-
-        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)/i");
     }
 }

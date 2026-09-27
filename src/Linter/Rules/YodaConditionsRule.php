@@ -100,8 +100,12 @@ final class YodaConditionsRule implements Rule
      * literal or constant never reaches a variable token at all. Both
      * fall through to `false` here, since neither needs a report.
      */
-    private function leftIsVariableSide(SourceFile $file, Node $node): bool
+    private function leftIsVariableSide(SourceFile $file, ?Node $node): bool
     {
+        if ($node === null) {
+            return false;
+        }
+
         $node = Values::unwrap($file, $node);
 
         return match ($node->kind) {
@@ -110,9 +114,9 @@ final class YodaConditionsRule implements Rule
                 $file,
                 $node,
             ),
-            NodeKind::ClassConstantAccess => $this->leftIsVariableSide($file, $file->getChildren($node)[0] ?? $node),
-            NodeKind::UnaryPrefix => $this->leftIsVariableSide($file, $file->getChildren($node)[1] ?? $node),
-            NodeKind::UnaryPostfix => $this->leftIsVariableSide($file, $file->getChildren($node)[0] ?? $node),
+            NodeKind::ClassConstantAccess => $this->leftIsVariableSide($file, $file->getChildren($node)[0] ?? null),
+            NodeKind::UnaryPrefix => $this->leftIsVariableSide($file, $file->getChildren($node)[1] ?? null),
+            NodeKind::UnaryPostfix => $this->leftIsVariableSide($file, $file->getChildren($node)[0] ?? null),
             default => false,
         };
     }
@@ -132,7 +136,7 @@ final class YodaConditionsRule implements Rule
             return true;
         }
 
-        return $this->leftIsVariableSide($file, $children[0] ?? $node);
+        return $this->leftIsVariableSide($file, $children[0] ?? null);
     }
 
     /**
@@ -163,49 +167,48 @@ final class YodaConditionsRule implements Rule
      * because WPCS only recognizes the hierarchy keywords, not an
      * arbitrary class name or expression.
      */
-    private function headIsVariable(SourceFile $file, Node $node): bool
+    private function headIsVariable(SourceFile $file, ?Node $node): bool
     {
+        if ($node === null) {
+            return false;
+        }
+
         $node = Values::unwrap($file, $node);
 
-        if ($node->kind === NodeKind::Variable) {
-            return true;
+        return match ($node->kind) {
+            NodeKind::Variable => true,
+            NodeKind::StaticPropertyAccess,
+            NodeKind::StaticMethodCall,
+            NodeKind::ClassConstantAccess,
+                => $this->staticHeadIsVariable($file, $node),
+            NodeKind::ArrayAccess,
+            NodeKind::PropertyAccess,
+            NodeKind::NullSafePropertyAccess,
+            NodeKind::FunctionCall,
+            NodeKind::MethodCall,
+            NodeKind::NullSafeMethodCall,
+                => $this->headIsVariable($file, $file->getChildren($node)[0] ?? null),
+            default => false,
+        };
+    }
+
+    private function staticHeadIsVariable(SourceFile $file, Node $node): bool
+    {
+        $children = $file->getChildren($node);
+        $classPart = $children[0] ?? null;
+        if ($classPart === null) {
+            return false;
         }
 
-        if (in_array(
-            $node->kind,
-            [NodeKind::StaticPropertyAccess, NodeKind::StaticMethodCall, NodeKind::ClassConstantAccess],
-            strict: true,
-        )) {
-            $children = $file->getChildren($node);
-            $classPart = Values::unwrap($file, $children[0] ?? $node);
+        $classPart = Values::unwrap($file, $classPart);
 
-            if (
-                $classPart->kind === NodeKind::Keyword
-                && in_array(strtolower($file->getText($classPart)), self::HIERARCHY_KEYWORDS, strict: true)
-            ) {
-                $selector = Values::unwrap($file, $children[1] ?? $node);
-
-                return $selector->kind === NodeKind::Variable;
-            }
-
-            return $this->headIsVariable($file, $classPart);
+        if (
+            $classPart->kind === NodeKind::Keyword
+            && in_array(strtolower($file->getText($classPart)), self::HIERARCHY_KEYWORDS, strict: true)
+        ) {
+            return Values::unwrap($file, $children[1] ?? $node)->kind === NodeKind::Variable;
         }
 
-        if (in_array(
-            $node->kind,
-            [
-                NodeKind::ArrayAccess,
-                NodeKind::PropertyAccess,
-                NodeKind::NullSafePropertyAccess,
-                NodeKind::FunctionCall,
-                NodeKind::MethodCall,
-                NodeKind::NullSafeMethodCall,
-            ],
-            strict: true,
-        )) {
-            return $this->headIsVariable($file, $file->getChildren($node)[0] ?? $node);
-        }
-
-        return false;
+        return $this->headIsVariable($file, $classPart);
     }
 }

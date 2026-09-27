@@ -12,17 +12,12 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
-use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\CoreClasses;
 
 use function array_combine;
 use function array_map;
-use function implode;
-use function in_array;
-use function ltrim;
-use function preg_quote;
-use function str_contains;
 use function strtolower;
 
 /**
@@ -42,17 +37,6 @@ use function strtolower;
  */
 final class ClassNameCaseRule implements Rule
 {
-    /**
-     * Node kinds a class name can arrive as, once unwrapped from its
-     * `Expression` wrapper.
-     */
-    private const IDENTIFIER_KINDS = [
-        NodeKind::Identifier,
-        NodeKind::LocalIdentifier,
-        NodeKind::QualifiedIdentifier,
-        NodeKind::FullyQualifiedIdentifier,
-    ];
-
     private ?FileGate $gate = null;
 
     /** @var array<string, string>|null lowercase name => properly cased name */
@@ -79,7 +63,8 @@ final class ClassNameCaseRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= self::buildGate();
+        // Every match puts a core class name directly in the source.
+        $this->gate ??= FileGate::forWords(CoreClasses::NAMES);
         if (!$this->gate->passes($context->file)) {
             return;
         }
@@ -97,83 +82,31 @@ final class ClassNameCaseRule implements Rule
     private function candidates(SourceFile $file, Node $node): array
     {
         return match ($node->kind) {
-            NodeKind::Instantiation => self::single(self::classExpression($file, $file->getChildren($node)[1] ?? null)),
+            NodeKind::Instantiation => ClassReferences::identifier($file, $file->getChildren($node)[1] ?? null),
             NodeKind::StaticMethodCall,
             NodeKind::StaticPropertyAccess,
             NodeKind::ClassConstantAccess,
-                => self::single(self::classExpression($file, $file->getChildren($node)[0] ?? null)),
-            NodeKind::Extends, NodeKind::Implements => self::heritageIdentifiers($file, $node),
+                => ClassReferences::identifier($file, $file->getChildren($node)[0] ?? null),
+            NodeKind::Extends, NodeKind::Implements => ClassReferences::heritage($file, $node),
             default => [],
         };
     }
 
-    /**
-     * @return list<Node>
-     */
-    private static function single(?Node $node): array
-    {
-        return $node === null ? [] : [$node];
-    }
-
-    /**
-     * Unwraps an `Expression` down to a class-name identifier, or NULL for
-     * any other expression shape (a variable class, `self`/`parent`/`static`,
-     * an anonymous class...).
-     */
-    private static function classExpression(SourceFile $file, ?Node $node): ?Node
-    {
-        if ($node === null) {
-            return null;
-        }
-
-        $node = Values::unwrap($file, $node);
-
-        return in_array($node->kind, self::IDENTIFIER_KINDS, strict: true) ? $node : null;
-    }
-
-    /**
-     * @return list<Node>
-     */
-    private static function heritageIdentifiers(SourceFile $file, Node $node): array
-    {
-        $identifiers = [];
-        foreach ($file->getChildren($node) as $child) {
-            if ($child->kind === NodeKind::Keyword) {
-                continue;
-            }
-
-            $identifiers[] = $child;
-        }
-
-        return $identifiers;
-    }
-
     private function checkIdentifier(LintContext $context, Node $identifier): void
     {
-        $file = $context->file;
-
-        // The resolved name is fully qualified: a class inside a namespace
-        // resolves to `Some\Namespace\ClassName`, which never matches a
-        // bare WordPress core class name.
-        $resolved = $file->getResolvedName($identifier)?->name;
-        if ($resolved === null) {
+        $name = ClassReferences::globalName($context->file, $identifier);
+        if ($name === null) {
             return;
         }
 
-        $normalized = ltrim($resolved, characters: '\\');
-        if (str_contains($normalized, '\\')) {
-            return;
-        }
-
-        $properCase = self::properCaseMap()[strtolower($normalized)] ?? null;
-        if ($properCase === null || $properCase === $normalized) {
+        $properCase = self::properCaseMap()[strtolower($name)] ?? null;
+        if ($properCase === null || $properCase === $name) {
             // Not a WP core class, or already using the proper case.
             return;
         }
 
-        $name = $file->getText($identifier);
         $context->report(Issue::new(
-            "References the WordPress core class `{$normalized}` with the wrong case; expected `{$properCase}`.",
+            "References the WordPress core class `{$name}` with the wrong case; expected `{$properCase}`.",
             $identifier->span,
         )->withHelp("Use the properly cased name: `{$properCase}`."));
     }
@@ -184,22 +117,5 @@ final class ClassNameCaseRule implements Rule
     private static function properCaseMap(): array
     {
         return self::$properCase ??= array_combine(array_map(strtolower(...), CoreClasses::NAMES), CoreClasses::NAMES);
-    }
-
-    /**
-     * Builds the file gate from the core class list.
-     *
-     * Every match puts a wanted class name directly in the source, so a
-     * text screen can skip the node walk for a file that mentions none of
-     * them.
-     */
-    private static function buildGate(): FileGate
-    {
-        $alternation = implode('|', array_map(static fn(string $name): string => preg_quote(
-            $name,
-            delimiter: '/',
-        ), CoreClasses::NAMES));
-
-        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)/i");
     }
 }

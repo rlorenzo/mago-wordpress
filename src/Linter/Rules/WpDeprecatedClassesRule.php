@@ -12,18 +12,12 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
-use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
-use function array_map;
-use function implode;
-use function in_array;
-use function ltrim;
-use function preg_quote;
-use function str_contains;
 use function strtolower;
 use function version_compare;
 
@@ -34,23 +28,9 @@ use function version_compare;
  * `extends` clause, and an `instanceof` check that reference a deprecated
  * WordPress core class. The `minimum-wp-version` setting restricts reports
  * to classes already deprecated in the project's oldest supported version.
- *
- * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:too-many-methods
  */
 final class WpDeprecatedClassesRule implements Rule
 {
-    /**
-     * Node kinds a class name can arrive as, once unwrapped from its
-     * `Expression` wrapper.
-     */
-    private const IDENTIFIER_KINDS = [
-        NodeKind::Identifier,
-        NodeKind::LocalIdentifier,
-        NodeKind::QualifiedIdentifier,
-        NodeKind::FullyQualifiedIdentifier,
-    ];
-
     private ?FileGate $gate = null;
 
     public function __construct(
@@ -77,7 +57,8 @@ final class WpDeprecatedClassesRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= self::buildGate();
+        // Every match puts a deprecated class name directly in the source.
+        $this->gate ??= FileGate::forWords(array_keys(Lists::DEPRECATED_CLASSES));
         if (!$this->gate->passes($context->file)) {
             return;
         }
@@ -95,55 +76,15 @@ final class WpDeprecatedClassesRule implements Rule
     private function candidates(SourceFile $file, Node $node): array
     {
         return match ($node->kind) {
-            NodeKind::Instantiation => self::single(self::classExpression($file, $file->getChildren($node)[1] ?? null)),
-            NodeKind::StaticMethodCall, NodeKind::ClassConstantAccess => self::single(self::classExpression(
+            NodeKind::Instantiation => ClassReferences::identifier($file, $file->getChildren($node)[1] ?? null),
+            NodeKind::StaticMethodCall, NodeKind::ClassConstantAccess => ClassReferences::identifier(
                 $file,
                 $file->getChildren($node)[0] ?? null,
-            )),
-            NodeKind::Extends => self::extendsIdentifiers($file, $node),
+            ),
+            NodeKind::Extends => ClassReferences::heritage($file, $node),
             NodeKind::Binary => self::instanceofRhs($file, $node),
             default => [],
         };
-    }
-
-    /**
-     * @return list<Node>
-     */
-    private static function single(?Node $node): array
-    {
-        return $node === null ? [] : [$node];
-    }
-
-    /**
-     * Unwraps an `Expression` down to a class-name identifier, or NULL for
-     * any other expression shape (a variable class, an anonymous class...).
-     */
-    private static function classExpression(SourceFile $file, ?Node $node): ?Node
-    {
-        if ($node === null) {
-            return null;
-        }
-
-        $node = Values::unwrap($file, $node);
-
-        return in_array($node->kind, self::IDENTIFIER_KINDS, strict: true) ? $node : null;
-    }
-
-    /**
-     * @return list<Node>
-     */
-    private static function extendsIdentifiers(SourceFile $file, Node $node): array
-    {
-        $identifiers = [];
-        foreach ($file->getChildren($node) as $child) {
-            if ($child->kind === NodeKind::Keyword) {
-                continue;
-            }
-
-            $identifiers[] = $child;
-        }
-
-        return $identifiers;
     }
 
     /**
@@ -157,23 +98,15 @@ final class WpDeprecatedClassesRule implements Rule
             return [];
         }
 
-        return self::single(self::classExpression($file, $children[2] ?? null));
+        return ClassReferences::identifier($file, $children[2] ?? null);
     }
 
     private function checkIdentifier(LintContext $context, Node $identifier): void
     {
         $file = $context->file;
 
-        // The resolved name is fully qualified: a class inside a namespace
-        // resolves to `Some\Namespace\ClassName`, which never matches the
-        // global WordPress class names in the lookup table.
-        $resolved = $file->getResolvedName($identifier)?->name;
-        if ($resolved === null) {
-            return;
-        }
-
-        $normalized = ltrim($resolved, characters: '\\');
-        if (str_contains($normalized, '\\')) {
+        $normalized = ClassReferences::globalName($file, $identifier);
+        if ($normalized === null) {
             return;
         }
 
@@ -201,22 +134,5 @@ final class WpDeprecatedClassesRule implements Rule
         $minimum = $this->settings->normalizedMinimumWpVersion();
 
         return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
-    }
-
-    /**
-     * Builds the file gate from the table's class names.
-     *
-     * Every match puts a wanted class name directly in the source, so a
-     * text screen can skip the node walk for a file that mentions none of
-     * them.
-     */
-    private static function buildGate(): FileGate
-    {
-        $alternation = implode('|', array_map(static fn(string $name): string => preg_quote(
-            $name,
-            delimiter: '/',
-        ), array_keys(Lists::DEPRECATED_CLASSES)));
-
-        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)/i");
     }
 }
