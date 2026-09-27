@@ -23,6 +23,8 @@ final class WordPressExtension
      */
     public static function create(?Settings $settings = null): Extension
     {
+        $settings ??= new Settings();
+
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',
             name: 'WordPress',
