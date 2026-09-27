@@ -10,6 +10,8 @@ use DOMNodeList;
 use DOMXPath;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function count;
+use function libxml_clear_errors;
 use function libxml_use_internal_errors;
 
 /**
@@ -27,9 +29,12 @@ final class PhpcsRuleset
      */
     public static function values(string $xml): array
     {
-        libxml_use_internal_errors(true);
+        $previous = libxml_use_internal_errors(true);
         $document = new DOMDocument();
-        if ($xml === '' || !$document->loadXML($xml)) {
+        $loaded = $xml !== '' && $document->loadXML($xml);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+        if (!$loaded) {
             return [];
         }
 
@@ -78,14 +83,11 @@ final class PhpcsRuleset
         return $values;
     }
 
-    private static function minimumVersion(DOMXPath $xpath): string
+    private static function minimumVersion(DOMXPath $xpath): ?string
     {
-        $version = '6.0';
-        foreach (self::elements($xpath, '//config[@name="minimum_supported_wp_version"]') as $config) {
-            $version = $config->getAttribute('value');
-        }
+        $configs = self::elements($xpath, '//config[@name="minimum_supported_wp_version"]');
 
-        return $version;
+        return $configs === [] ? null : $configs[count($configs) - 1]->getAttribute('value');
     }
 
     /**
@@ -93,16 +95,18 @@ final class PhpcsRuleset
      */
     private static function elements(DOMXPath $xpath, string $query, ?DOMElement $context = null): array
     {
-        $elements = [];
         $nodes = $xpath->query($query, $context);
         if (!$nodes instanceof DOMNodeList) {
             return [];
         }
 
+        $elements = [];
         foreach ($nodes as $node) {
-            if ($node instanceof DOMElement) {
-                $elements[] = $node;
+            if (!$node instanceof DOMElement) {
+                continue;
             }
+
+            $elements[] = $node;
         }
 
         return $elements;

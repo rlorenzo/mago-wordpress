@@ -8,11 +8,7 @@ use Rlorenzo\MagoWordPress\Settings;
 
 use function file_exists;
 use function file_get_contents;
-use function is_array;
-use function is_string;
 use function json_decode;
-
-use const JSON_THROW_ON_ERROR;
 
 /**
  * Finds the project's settings: composer.json `extra.mago-wordpress` first, then the
@@ -44,7 +40,9 @@ final class SettingsDiscovery
     }
 
     /**
-     * @return null|array<string, mixed>
+     * Malformed JSON (e.g. a half-saved file) decodes to null and counts as no settings.
+     *
+     * @return null|array<array-key, mixed>
      */
     private static function composerExtra(string $path): ?array
     {
@@ -52,23 +50,12 @@ final class SettingsDiscovery
             return null;
         }
 
-        $decoded = json_decode((string) file_get_contents($path), associative: true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($decoded) || !is_array($decoded['extra'] ?? null)) {
-            return null;
-        }
+        $settings = Shape::arrayAt(
+            json_decode((string) file_get_contents($path), associative: true),
+            'extra',
+            'mago-wordpress',
+        );
 
-        $settings = $decoded['extra']['mago-wordpress'] ?? null;
-        if (!is_array($settings)) {
-            return null;
-        }
-
-        $typed = [];
-        foreach ($settings as $key => $value) {
-            if (is_string($key)) {
-                $typed[$key] = $value;
-            }
-        }
-
-        return $typed;
+        return $settings === [] ? null : $settings;
     }
 }

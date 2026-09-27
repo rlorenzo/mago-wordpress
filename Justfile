@@ -25,7 +25,7 @@ format-check:
 # The first step pins the registered rule codes to tests/corpus/expected-rules.txt, because
 # `--only` silently drops expectations for a rule that lost its registration.
 test-corpus:
-    {{mago}} --workspace tests/corpus extension list --json | php -r '$registered = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR); $actual = []; foreach ($registered["extensions"] as $extension) { foreach ($extension["linter-rules"] as $rule) { $actual[] = $rule["code"]; } } sort($actual); $expected = array_map("trim", file("tests/corpus/expected-rules.txt")); sort($expected); if ($actual === $expected) { exit(0); } fwrite(STDERR, "Registered rules drifted from tests/corpus/expected-rules.txt\n"); foreach (array_diff($expected, $actual) as $code) { fwrite(STDERR, "  no longer registered: $code\n"); } foreach (array_diff($actual, $expected) as $code) { fwrite(STDERR, "  not pinned: $code\n"); } exit(1);'
+    {{mago}} --workspace tests/corpus extension list --json | php tests/check-registered-rules.php
     {{mago}} --workspace tests/corpus lint --only "$(paste -sd, - < tests/corpus/expected-rules.txt)"
 
 check: validate format-check test lint analyze test-corpus

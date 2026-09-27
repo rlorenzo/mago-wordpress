@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e95391011c8a9b809c95566ffc90b282",
+    "content-hash": "c4b1e80f268e9de18a0bf5ac8d9104b4",
     "packages": [
         {
             "name": "carthage-software/mago",
@@ -1843,7 +1843,9 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.1"
+        "php": "^8.1",
+        "ext-dom": "*",
+        "ext-libxml": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

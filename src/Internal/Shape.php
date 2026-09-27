@@ -6,7 +6,6 @@ namespace Rlorenzo\MagoWordPress\Internal;
 
 use function array_key_exists;
 use function is_array;
-use function is_int;
 use function is_string;
 
 /**
@@ -28,37 +27,11 @@ final class Shape
     }
 
     /**
-     * @return non-empty-string|null
-     */
-    public static function nonEmptyString(mixed $value): ?string
-    {
-        return is_string($value) && $value !== '' ? $value : null;
-    }
-
-    public static function int(mixed $value): ?int
-    {
-        return is_int($value) ? $value : null;
-    }
-
-    /**
      * @return array<array-key, mixed>|null
      */
     public static function array(mixed $value): ?array
     {
         return is_array($value) ? $value : null;
-    }
-
-    /**
-     * Returns the string at the path that the keys make through nested
-     * arrays.
-     */
-    public static function stringAt(mixed $value, string $key, string ...$rest): ?string
-    {
-        if (!is_array($value) || !array_key_exists($key, $value)) {
-            return null;
-        }
-
-        return $rest === [] ? self::string($value[$key]) : self::stringAt($value[$key], ...$rest);
     }
 
     /**

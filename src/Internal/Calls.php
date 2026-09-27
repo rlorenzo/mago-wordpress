@@ -50,8 +50,7 @@ final class Calls
     /**
      * Returns the first call to any of the named functions inside a subtree.
      *
-     * The match includes `t()` and `$this->t()`. Drupal's sniffs treat
-     * translation calls the same way.
+     * The match includes method calls as well as plain function calls.
      *
      * @param list<string> $names
      */
@@ -83,7 +82,7 @@ final class Calls
      * Finds plain function calls to any of the named functions in a subtree.
      *
      * Method calls are excluded. A rule about procedural functions must not
-     * match `$this->t()`. That call has the same callee name as `t()`.
+     * match `$this->foo()`. That call has the same callee name as `foo()`.
      *
      * @param list<string> $names
      * @return array<string, list<Node>> Matched calls grouped by normalized name.
@@ -124,22 +123,21 @@ final class Calls
      * The result is memoized per node. Several call rules subscribe to the
      * same call kinds, so the worker dispatches each of them for the same
      * node. Without the cache, each of them derives the same name again. The
-     * cache has one slot per file, and a change of path clears it.
-     * `DrupalFile::fromSource()` and `Docblocks::lines()` use the same
-     * pattern.
+     * cache has one slot per file, and a change of contents clears it, so
+     * a file re-analyzed at the same path after an edit starts fresh.
      *
      * @param array<string, true> $wanted
      */
     public static function matchWanted(SourceFile $file, Node $node, array $wanted): ?string
     {
-        static $path = '';
+        static $contents = null;
         /** @var array<int, string|null> $names */
         static $names = [];
         /** @var array<int, true> $resolved */
         static $resolved = [];
 
-        if ($path !== $file->path) {
-            $path = $file->path;
+        if ($contents !== $file->contents) {
+            $contents = $file->contents;
             $names = [];
             $resolved = [];
         }

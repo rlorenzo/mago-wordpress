@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress;
 
+use Rlorenzo\MagoWordPress\Internal\Shape;
+
+use function array_map;
+use function array_unique;
+use function array_values;
 use function is_array;
 use function is_string;
 use function strtolower;
@@ -19,6 +24,8 @@ use function strtolower;
  */
 final class Settings
 {
+    private const DEFAULT_MINIMUM_WP_VERSION = '6.0';
+
     /**
      * Keys accepted in composer.json `extra.mago-wordpress` for the custom function lists,
      * mapped to the WPCS property they mirror.
@@ -39,7 +46,7 @@ final class Settings
     public function __construct(
         public readonly array $textDomains = [],
         public readonly array $prefixes = [],
-        public readonly string $minimumWpVersion = '6.0',
+        public readonly string $minimumWpVersion = self::DEFAULT_MINIMUM_WP_VERSION,
         public readonly array $customLists = [],
     ) {}
 
@@ -52,21 +59,21 @@ final class Settings
     }
 
     /**
-     * @param array<string, mixed> $values
+     * @param array<array-key, mixed> $values
      */
     public static function fromArray(array $values): self
     {
         $customLists = [];
         foreach (self::CUSTOM_LISTS as $option => $_property) {
-            $customLists[$option] = self::stringList($values[$option] ?? []);
+            // Capability names are case-sensitive in WordPress; function names are not.
+            $list = self::stringList($values[$option] ?? []);
+            $customLists[$option] = $option === 'custom-capabilities' ? $list : self::lowercased($list);
         }
 
-        $version = $values['minimum-wp-version'] ?? null;
-
         return new self(
-            textDomains: self::stringList($values['text-domains'] ?? []),
-            prefixes: self::stringList($values['prefixes'] ?? []),
-            minimumWpVersion: is_string($version) ? $version : '6.0',
+            textDomains: self::lowercased(self::stringList($values['text-domains'] ?? [])),
+            prefixes: self::lowercased(self::stringList($values['prefixes'] ?? [])),
+            minimumWpVersion: Shape::string($values['minimum-wp-version'] ?? null) ?? self::DEFAULT_MINIMUM_WP_VERSION,
             customLists: $customLists,
         );
     }
@@ -90,9 +97,18 @@ final class Settings
                 continue;
             }
 
-            $strings[] = strtolower($item);
+            $strings[] = $item;
         }
 
-        return $strings;
+        return array_values(array_unique($strings));
+    }
+
+    /**
+     * @param list<string> $list
+     * @return list<string>
+     */
+    private static function lowercased(array $list): array
+    {
+        return array_values(array_unique(array_map(strtolower(...), $list)));
     }
 }

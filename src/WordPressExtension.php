@@ -18,10 +18,11 @@ final class WordPressExtension
 
     private function __construct() {}
 
+    /**
+     * No rule reads $settings yet; the worker already passes the discovered settings in.
+     */
     public static function create(?Settings $settings = null): Extension
     {
-        $settings ??= new Settings();
-
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',
             name: 'WordPress',

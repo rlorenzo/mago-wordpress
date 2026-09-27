@@ -20,6 +20,17 @@ final class SettingsTest extends TestCase
         self::assertSame([], $settings->customList('custom-escaping-functions'));
     }
 
+    public function testListsAreDeduplicatedAndCapabilitiesKeepCase(): void
+    {
+        $settings = Settings::fromArray([
+            'prefixes' => ['MP', 'mp'],
+            'custom-capabilities' => ['Edit_Things', 'Edit_Things'],
+        ]);
+
+        self::assertSame(['mp'], $settings->prefixes);
+        self::assertSame(['Edit_Things'], $settings->customList('custom-capabilities'));
+    }
+
     public function testPhpcsRulesetPropertiesAreRead(): void
     {
         $xml = <<<'XML'
