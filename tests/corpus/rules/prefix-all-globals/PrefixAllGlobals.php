@@ -116,8 +116,8 @@ namespace {
     apply_filters_deprecated('content', [$content], '1.0.0');
 
     // methods_and_closures_are_not_flagged
-    $callback = function () {};
-    $mapper = fn($x) => $x;
+    $myplugin_callback = function () {};
+    $myplugin_mapper = fn($x) => $x;
 
     // dynamic_names_without_a_literal_start_are_flagged (DynamicHooknameFound, VariableConstantNameFound)
     // @mago-expect lint:wordpress/prefix-all-globals
@@ -187,7 +187,7 @@ namespace {
     }
     class Unit_Test extends \PHPUnit\Framework\TestCase {}
     class WP_UnitTestCase {}
-    $test = new class extends TestCase {
+    $myplugin_test = new class extends TestCase {
         public function test_boot() {
             do_action('booted');
         }

@@ -19,6 +19,7 @@ use Rlorenzo\MagoWordPress\Internal\DocBlocks;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
+use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 use Rlorenzo\MagoWordPress\Settings;
@@ -26,6 +27,7 @@ use WeakMap;
 
 use function array_key_exists;
 use function array_map;
+use function function_exists;
 use function in_array;
 use function ltrim;
 use function mb_strlen;
@@ -37,9 +39,12 @@ use function rtrim;
 use function str_contains;
 use function str_starts_with;
 use function stripos;
+use function strlen;
 use function strtolower;
 use function substr;
 use function ucfirst;
+
+use const PHP_INT_MAX;
 
 /**
  * Ports `WordPress.NamingConventions.PrefixAllGlobals`.
@@ -75,6 +80,27 @@ final class PrefixAllGlobalsRule implements Rule
         NodeKind::AnonymousClass,
     ];
 
+    /** Scopes whose variables are local; an arrow function's are skipped entirely, as WPCS does. */
+    private const SCOPE_KINDS = [
+        NodeKind::Function,
+        NodeKind::Method,
+        NodeKind::Closure,
+        NodeKind::ArrowFunction,
+        NodeKind::PropertyHook,
+    ];
+
+    private const SUPERGLOBALS = [
+        'GLOBALS',
+        '_COOKIE',
+        '_ENV',
+        '_FILES',
+        '_GET',
+        '_POST',
+        '_REQUEST',
+        '_SERVER',
+        '_SESSION',
+    ];
+
     /** @var list<string> Valid configured prefixes; invalid ones are dropped, as WPCS does. */
     private readonly array $prefixes;
 
@@ -100,7 +126,7 @@ final class PrefixAllGlobalsRule implements Rule
                 continue;
             }
 
-            if (mb_strlen($prefix) < self::MIN_PREFIX_LENGTH) {
+            if ((function_exists('mb_strlen') ? mb_strlen($prefix) : strlen($prefix)) < self::MIN_PREFIX_LENGTH) {
                 $problems[] = [
                     'ShortPrefixPassed',
                     "The `{$prefix}` prefix is too short. Short prefixes are not unique enough and may cause name collisions with other code.",
@@ -130,7 +156,7 @@ final class PrefixAllGlobalsRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/prefix-all-globals',
             name: 'Prefix all globals',
-            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured; the prefixes `wordpress`, `wp`, `_` and `php` and prefixes shorter than three characters are reported at the top of each file and ignored. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. A constant or hook name built dynamically is reported unless its leading literal part is prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks, PHP built-in names, functions documented as @deprecated and unit test classes are exempt.',
+            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants, global variables and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured; the prefixes `wordpress`, `wp`, `_` and `php` and prefixes shorter than three characters are reported at the top of each file and ignored. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. Global variable writes are checked in the top-level scope, in functions that import the variable with `global`, and through `$GLOBALS[...]` anywhere; superglobals and WordPress core globals are exempt. A constant or hook name built dynamically is reported unless its leading literal part is prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks, PHP built-in names, functions documented as @deprecated and unit test classes are exempt.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [
@@ -144,7 +170,8 @@ final class PrefixAllGlobalsRule implements Rule
                 NodeKind::Namespace,
                 // Only so test classes show up in a call's ancestors.
                 NodeKind::AnonymousClass,
-                ...($this->prefixProblems === [] ? [] : [NodeKind::Program]),
+                // Also gives every node its parent chain for the variable scope walks.
+                ...($this->prefixProblems === [] && $this->prefixes === [] ? [] : [NodeKind::Program]),
             ],
         );
     }
@@ -154,6 +181,9 @@ final class PrefixAllGlobalsRule implements Rule
         $kind = $context->node->kind;
         if ($kind === NodeKind::Program) {
             $this->reportPrefixProblems($context);
+            if ($this->prefixes !== []) {
+                $this->checkVariables($context);
+            }
 
             return;
         }
@@ -267,6 +297,241 @@ final class PrefixAllGlobalsRule implements Rule
                 $this->checkSymbol($context, 'constant', $name, $identifier->span);
             }
         }
+    }
+
+    /**
+     * Checks global variable writes: assignments, foreach bindings and
+     * destructuring targets in the top-level scope, writes to variables a
+     * function imported with `global`, and `$GLOBALS[...]` writes anywhere.
+     */
+    private function checkVariables(LintContext $context): void
+    {
+        $file = $context->file;
+        $nodes = $file->getDescendants($context->node);
+
+        /** @var array<int, array<string, int>> $imports scope node id => variable => earliest `global` statement start */
+        $imports = [];
+        foreach ($nodes as $global) {
+            if ($global->kind !== NodeKind::Global) {
+                continue;
+            }
+
+            $scope = $this->nearestScope($file, $global);
+            if ($scope === null) {
+                continue;
+            }
+
+            // A variable variable may resolve to any imported name.
+            $imports[$scope->id]['$$'] ??= $global->span->start;
+            foreach ($file->getDescendants($global, NodeKind::DirectVariable) as $variable) {
+                $imports[$scope->id][$file->getText($variable)] ??= $global->span->start;
+            }
+        }
+
+        foreach ($nodes as $node) {
+            $targets = match ($node->kind) {
+                NodeKind::Assignment, NodeKind::ForeachValueTarget => [$file->getChildren($node)[0] ?? $node],
+                NodeKind::ForeachKeyValueTarget => $file->getChildren($node),
+                default => [],
+            };
+
+            foreach ($targets as $target) {
+                $this->checkWrite($context, $target, $imports);
+            }
+        }
+    }
+
+    /**
+     * Checks one write target. An array element write counts as a write to
+     * its base variable; a destructuring pattern is walked element by element.
+     *
+     * @param array<int, array<string, int>> $imports
+     */
+    private function checkWrite(LintContext $context, Node $target, array $imports): void
+    {
+        $file = $context->file;
+        $target = Values::unwrap($file, $target);
+        $children = $file->getChildren($target);
+
+        if ($target->kind === NodeKind::UnaryPrefix) {
+            if (($children[1] ?? null) !== null && $file->getText($children[0]) === '&') {
+                $this->checkWrite($context, $children[1], $imports);
+            }
+
+            return;
+        }
+
+        if (in_array($target->kind, [NodeKind::Array, NodeKind::LegacyArray, NodeKind::List], strict: true)) {
+            $this->checkDestructuring($context, $children, $imports);
+
+            return;
+        }
+
+        $this->checkVariableWrite($context, $target, $imports);
+    }
+
+    /**
+     * @param array<int, array<string, int>> $imports
+     */
+    private function checkVariableWrite(LintContext $context, Node $target, array $imports): void
+    {
+        $file = $context->file;
+        $key = null;
+        while ($target->kind === NodeKind::ArrayAccess || $target->kind === NodeKind::ArrayAppend) {
+            $parts = $file->getChildren($target);
+            $key = $target->kind === NodeKind::ArrayAccess ? $parts[1] ?? null : null;
+            $target = Values::unwrap($file, $parts[0] ?? $target);
+        }
+
+        $variable = $file->getChildren($target)[0] ?? null;
+        if ($target->kind !== NodeKind::Variable || $variable === null) {
+            return;
+        }
+
+        $scope = $this->nearestScope($file, $variable);
+        if ($scope?->kind === NodeKind::ArrowFunction) {
+            return;
+        }
+
+        $name = $file->getText($variable);
+        if ($name === '$GLOBALS') {
+            if ($key !== null) {
+                $this->checkGlobalsKey($context, $key);
+            }
+
+            return;
+        }
+
+        $isDynamic = $variable->kind !== NodeKind::DirectVariable;
+        if (!$isDynamic && $this->isAllowedVariable(substr($name, offset: 1))) {
+            return;
+        }
+
+        // A function's variables are local unless imported with `global` before the write.
+        if (
+            $scope !== null
+            && ($imports[$scope->id][$isDynamic ? '$$' : $name] ?? PHP_INT_MAX) >= $variable->span->start
+        ) {
+            return;
+        }
+
+        if ($isDynamic) {
+            $this->reportDynamicVariable($context, $name, $variable);
+
+            return;
+        }
+
+        $this->reportVariable($context, $name, $variable);
+    }
+
+    /**
+     * @param list<Node> $elements
+     * @param array<int, array<string, int>> $imports
+     */
+    private function checkDestructuring(LintContext $context, array $elements, array $imports): void
+    {
+        $file = $context->file;
+        foreach ($elements as $element) {
+            $wrapped = $file->getChildren($element)[0] ?? null;
+            // A key-value element writes to its value; the key only selects the source offset.
+            $value = match ($wrapped?->kind) {
+                NodeKind::KeyValueArrayElement => $file->getChildren($wrapped)[1] ?? null,
+                NodeKind::ValueArrayElement => $file->getChildren($wrapped)[0] ?? null,
+                default => null,
+            };
+            if ($value !== null) {
+                $this->checkWrite($context, $value, $imports);
+            }
+        }
+    }
+
+    /**
+     * Checks a `$GLOBALS[...]` key by its leading literal text; a key that
+     * does not start with a literal cannot be verified.
+     */
+    private function checkGlobalsKey(LintContext $context, Node $key): void
+    {
+        $leading = $this->leadingLiteral($context->file, $key);
+        if ($leading !== null && $this->isAllowedVariable($leading)) {
+            return;
+        }
+
+        if ($leading === null) {
+            $this->reportDynamicVariable($context, $context->file->getText($key), $key);
+
+            return;
+        }
+
+        $this->reportVariable($context, '$' . $leading, $key);
+    }
+
+    private function isAllowedVariable(string $name): bool
+    {
+        return (
+            in_array($name, self::SUPERGLOBALS, strict: true)
+            || in_array($name, Lists::WP_GLOBAL_VARIABLES, strict: true)
+            || $this->isPrefixed($name)
+        );
+    }
+
+    private function reportVariable(LintContext $context, string $name, Node $node): void
+    {
+        $this->reportVariableIssue(
+            $context,
+            $node,
+            Issue::new(
+                "Global variable `{$name}` is not prefixed.",
+                $node->span,
+                'This global variable lacks a plugin/theme prefix.',
+            ),
+        );
+    }
+
+    private function reportDynamicVariable(LintContext $context, string $name, Node $node): void
+    {
+        $this->reportVariableIssue(
+            $context,
+            $node,
+            Issue::new(
+                "Global variable name `{$name}` is built dynamically, so its prefix cannot be verified.",
+                $node->span,
+                'This global variable name does not start with a literal prefix.',
+            ),
+        );
+    }
+
+    /**
+     * Reports a write unless it sits in a test class.
+     */
+    private function reportVariableIssue(LintContext $context, Node $node, Issue $issue): void
+    {
+        if ($this->isExempt($context, $node)) {
+            return;
+        }
+
+        Report::issue(
+            $context,
+            $issue
+                ->withNote(
+                    'WordPress plugins and themes share a single global namespace; unprefixed global variables can collide with WordPress core or other plugins.',
+                )
+                ->withHelp("Rename it to start with your prefix, e.g. `\${$this->prefixes[0]}_name`."),
+            [self::SNIFF . '.NonPrefixedVariableFound'],
+        );
+    }
+
+    /**
+     * Returns the nearest enclosing function-like scope, or null in the top-level scope.
+     */
+    private function nearestScope(SourceFile $file, Node $node): ?Node
+    {
+        foreach ($file->getAncestors($node) as $ancestor) {
+            if (in_array($ancestor->kind, self::SCOPE_KINDS, strict: true)) {
+                return $ancestor;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -432,10 +697,10 @@ final class PrefixAllGlobalsRule implements Rule
      * or sits in (or is) a unit test class. Only asked once a name is
      * known to be unprefixed, since both lookups walk the file.
      */
-    private function isExempt(LintContext $context): bool
+    private function isExempt(LintContext $context, ?Node $node = null): bool
     {
         $file = $context->file;
-        $node = $context->node;
+        $node ??= $context->node;
         if ($node->kind === NodeKind::Function && $this->isDeprecated($file, $node)) {
             return true;
         }
