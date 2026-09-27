@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Acme\Mago;
+namespace Rlorenzo\MagoWordPress;
 
-use Acme\Mago\Analyzer\AcmePlugin;
-use Acme\Mago\Linter\Rules\NoLegacyHelperRule;
 use Mago\Sdk\Extension;
+use Rlorenzo\MagoWordPress\Analyzer\WordPressPlugin;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoLegacyHelperRule;
 
 /**
  * Constructs the complete extension advertised by each worker process.
  *
  * @api
  */
-final class AcmeExtension
+final class WordPressExtension
 {
     private const VERSION = '0.1.0';
 
@@ -22,11 +22,11 @@ final class AcmeExtension
     public static function create(): Extension
     {
         return new Extension(
-            identifier: 'acme/mago-extension',
-            name: 'Acme Mago Extension',
+            identifier: 'rlorenzo/mago-wordpress',
+            name: 'Mago WordPress Extension',
             version: self::VERSION,
             linterRules: [new NoLegacyHelperRule()],
-            analyzerPlugins: [new AcmePlugin()],
+            analyzerPlugins: [new WordPressPlugin()],
         );
     }
 }

@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Acme\Mago\Analyzer;
+namespace Rlorenzo\MagoWordPress\Analyzer;
 
-use Acme\Mago\Analyzer\Providers\ContainerReturnTypeProvider;
 use Mago\Sdk\Analyzer\Plugin;
 use Mago\Sdk\Analyzer\PluginDefinition;
 use Mago\Sdk\Analyzer\PluginRegistry;
+use Rlorenzo\MagoWordPress\Analyzer\Providers\ContainerReturnTypeProvider;
 
 /**
  * @internal
  */
-final class AcmePlugin implements Plugin
+final class WordPressPlugin implements Plugin
 {
     public function getDefinition(): PluginDefinition
     {
         return new PluginDefinition(
-            identifier: 'acme/framework',
+            identifier: 'wordpress/framework',
             name: 'Acme Framework',
             description: 'Understands Acme framework conventions.',
         );

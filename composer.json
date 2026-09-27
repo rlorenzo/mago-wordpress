@@ -1,19 +1,22 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
-  "name": "acme/mago-extension",
-  "description": "A project or framework extension for Mago.",
+  "name": "rlorenzo/mago-wordpress",
+  "description": "Mago extension for WordPress: WPCS-equivalent linter rules and analyzer plugins.",
   "type": "library",
   "license": "MIT",
   "authors": [
     {
-      "name": "Your Name",
-      "email": "you@example.com"
+      "name": "Rex Lorenzo",
+      "email": "rexlorenzo@gmail.com"
     }
   ],
   "keywords": [
     "mago",
     "static-analysis",
-    "linter"
+    "linter",
+    "wordpress",
+    "wpcs",
+    "coding-standards"
   ],
   "require": {
     "php": "^8.1",
@@ -24,12 +27,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Acme\\Mago\\": "src/"
+      "Rlorenzo\\MagoWordPress\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Acme\\Mago\\Tests\\": "tests/Unit/"
+      "Rlorenzo\\MagoWordPress\\Tests\\": "tests/Unit/"
     }
   },
   "config": {

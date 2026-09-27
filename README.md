@@ -14,9 +14,9 @@ The example extension contains:
 
 Create a repository from this template, then replace the example identity before writing new capabilities:
 
-1. Rename `acme/mago-extension` in `composer.json`.
-2. Replace the `Acme\Mago` namespace and PSR-4 mappings.
-3. Rename `AcmeExtension` and update its identifier, name, and version.
+1. Rename `rlorenzo/mago-wordpress` in `composer.json`.
+2. Replace the `Rlorenzo\MagoWordPress` namespace and PSR-4 mappings.
+3. Rename `WordPressExtension` and update its identifier, name, and version.
 4. Rename the analyzer plugin identifier and every linter issue code.
 5. Replace or remove the example rule, provider, fixtures, and corpus expectations.
 6. Set the package author, description, keywords, and license.
@@ -27,9 +27,9 @@ Keep the package-owned extension factory as the only registration API consumers 
 
 ```text
 src/
-├── AcmeExtension.php
+├── WordPressExtension.php
 ├── Analyzer/
-│   ├── AcmePlugin.php
+│   ├── WordPressPlugin.php
 │   └── Providers/
 │       └── ContainerReturnTypeProvider.php
 └── Linter/
@@ -50,7 +50,7 @@ Put lifecycle callbacks under `src/Analyzer/Hooks/`, semantic providers under `s
 Applications install Mago and the finished extension together:
 
 ```shell
-composer require --dev carthage-software/mago acme/mago-extension
+composer require --dev carthage-software/mago rlorenzo/mago-wordpress
 ```
 
 The application owns its worker entrypoint. Create `.mago/extensions.php`:
@@ -60,18 +60,18 @@ The application owns its worker entrypoint. Create `.mago/extensions.php`:
 
 declare(strict_types=1);
 
-use Acme\Mago\AcmeExtension;
+use Rlorenzo\MagoWordPress\WordPressExtension;
 use Mago\Sdk\Worker;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-new Worker(AcmeExtension::create())->run();
+new Worker(WordPressExtension::create())->run();
 ```
 
 Register it in `mago.toml`:
 
 ```toml
-[extension-hosts.acme]
+[extension-hosts.wordpress]
 command = ["php", ".mago/extensions.php"]
 ```
 

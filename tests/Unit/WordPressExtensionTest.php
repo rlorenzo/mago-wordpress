@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Acme\Mago\Tests;
+namespace Rlorenzo\MagoWordPress\Tests;
 
-use Acme\Mago\AcmeExtension;
 use PHPUnit\Framework\TestCase;
+use Rlorenzo\MagoWordPress\WordPressExtension;
 
-final class AcmeExtensionTest extends TestCase
+final class WordPressExtensionTest extends TestCase
 {
     public function testFactoryOwnsStableRegistration(): void
     {
-        $extension = AcmeExtension::create();
+        $extension = WordPressExtension::create();
 
-        self::assertSame('acme/mago-extension', $extension->identifier);
-        self::assertSame('Acme Mago Extension', $extension->name);
+        self::assertSame('rlorenzo/mago-wordpress', $extension->identifier);
+        self::assertSame('Mago WordPress Extension', $extension->name);
         self::assertSame('0.1.0', $extension->version);
         self::assertCount(1, $extension->linterRules);
         self::assertCount(1, $extension->analyzerPlugins);

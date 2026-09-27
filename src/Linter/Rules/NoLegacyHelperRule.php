@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Acme\Mago\Linter\Rules;
+namespace Rlorenzo\MagoWordPress\Linter\Rules;
 
 use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\Rule;
@@ -26,7 +26,7 @@ final class NoLegacyHelperRule implements Rule
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            code: 'acme/no-legacy-helper',
+            code: 'wordpress/no-legacy-helper',
             name: 'No legacy helper',
             description: 'Replaces the legacy Acme value helper with its supported equivalent.',
             defaultLevel: Level::Warning,

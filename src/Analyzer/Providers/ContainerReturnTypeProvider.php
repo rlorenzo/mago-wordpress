@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Acme\Mago\Analyzer\Providers;
+namespace Rlorenzo\MagoWordPress\Analyzer\Providers;
 
 use Mago\Sdk\Analyzer\MethodReturnTypeProvider;
 use Mago\Sdk\Analyzer\MethodTarget;

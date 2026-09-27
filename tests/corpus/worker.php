@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Acme\Mago\AcmeExtension;
+use Rlorenzo\MagoWordPress\WordPressExtension;
 use Mago\Sdk\Worker;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-(new Worker(AcmeExtension::create()))->run();
+(new Worker(WordPressExtension::create()))->run();
