@@ -72,17 +72,24 @@ run_phpcs() {
         --parallel=8 -d memory_limit=2G --report=summary "$project"
 }
 
-# A linter that finds issues exits 1 (phpcs: 2 when some are auto-fixable); only those or 0 (clean) are acceptable.
+# A linter that finds issues exits 1 (phpcs: 2 when some are auto-fixable); only those or 0
+# (clean) are acceptable. But phpcs also exits 2 on some runtime errors, and mago's worker can
+# crash mid-run while mago itself still exits its "found issues" code (1) — exit status alone
+# doesn't prove the run was clean, so callers also pass a crash pattern to grep for in the
+# output. That grep is a heuristic (mago's/phpcs's exact wording isn't a stable contract), not
+# a real parse of either tool's report.
 # Output goes to a file rather than a captured variable, so timed runs pay no subshell.
-run_checked() { # name, function
-    local name=$1 fn=$2 status=0
+run_checked() { # name, function, crash-pattern (grep -E, optional)
+    local name=$1 fn=$2 crash=${3:-} status=0
     "$fn" > "$work/out" 2>&1 || status=$?
-    if (( status > 2 )); then
+    if (( status > 2 )) || { [[ -n "$crash" ]] && grep -qiE "$crash" "$work/out"; }; then
         echo "error: $name exited with status $status:" >&2
         cat "$work/out" >&2
         exit 1
     fi
 }
+mago_crash='extension host|worker (crashed|panicked|failed|exited unexpectedly)'
+phpcs_crash='PHP Fatal error|Uncaught (Error|Exception)'
 
 files=$(find "$project" -name '*.php' -not -path '*/vendor/*' -not -path '*/vendor_prefixed/*' -not -path '*/node_modules/*' -not -path '*/tests/*' | wc -l | tr -d ' ')
 mago_version=$("$mago" --version 2>&1 | tail -1)
@@ -93,18 +100,18 @@ echo
 echo "$mago_version / $phpcs_version"
 echo
 echo "mago issue counts by rule:"
-run_checked mago run_mago
+run_checked mago run_mago "$mago_crash"
 cat "$work/out"
 echo
 
 # Mean of 3 timed runs after 1 warm-up (hyperfine hangs on mago's worker protocol). Each
 # run is re-checked so a crash mid-benchmark fails the script instead of skewing the mean.
-timed() { # name, function
-    local name=$1 fn=$2 total=0 t0 t1
-    run_checked "$name" "$fn"
+timed() { # name, function, crash-pattern
+    local name=$1 fn=$2 crash=$3 total=0 t0 t1
+    run_checked "$name" "$fn" "$crash"
     for _ in 1 2 3; do
         t0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time')
-        run_checked "$name" "$fn"
+        run_checked "$name" "$fn" "$crash"
         t1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time')
         total=$(perl -e "print $total + ($t1 - $t0)")
     done
@@ -112,5 +119,5 @@ timed() { # name, function
 }
 echo "| Tool | Mean of 3 runs |"
 echo "|:---|---:|"
-timed "phpcs WordPress-Extra (WPCS 3.4.1, --parallel=8)" run_phpcs
-timed "mago + mago-wordpress" run_mago
+timed "phpcs WordPress-Extra (WPCS 3.4.1, --parallel=8)" run_phpcs "$phpcs_crash"
+timed "mago + mago-wordpress" run_mago "$mago_crash"
