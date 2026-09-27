@@ -1,4 +1,5 @@
 wordpress/assignment-in-ternary-condition
+wordpress/capabilities
 wordpress/capital-p-dangit
 wordpress/cron-interval
 wordpress/discouraged-constants

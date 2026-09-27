@@ -2,7 +2,8 @@
     "extra": {
         "mago-wordpress": {
             "text-domains": ["my-plugin"],
-            "prefixes": ["myplugin", "example", "my_plugin", "acme\\tools", "vendor_pkg_"]
+            "prefixes": ["myplugin", "example", "my_plugin", "acme\\tools", "vendor_pkg_"],
+            "custom-capabilities": ["custom_cap", "foo_bar"]
         }
     }
 }

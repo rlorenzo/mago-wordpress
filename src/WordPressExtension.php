@@ -6,6 +6,7 @@ namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
@@ -82,6 +83,7 @@ final class WordPressExtension
                 new DiscouragedConstantsRule(),
                 new GetMetaSingleRule(),
                 new PluginMenuSlugRule(),
+                new CapabilitiesRule($settings),
             ],
         );
     }
