@@ -109,13 +109,23 @@ final class PhpcsRuleset
      */
     private static function elements(DOMXPath $xpath, string $query, ?DOMElement $context = null): array
     {
-        $nodes = $xpath->query($query, $context);
+        return self::elementsIn($xpath->query($query, $context));
+    }
+
+    /**
+     * `DOMXPath::query()` returns false for a malformed expression.
+     *
+     * @return list<DOMElement>
+     */
+    private static function elementsIn(mixed $nodes): array
+    {
         if (!$nodes instanceof DOMNodeList) {
             return [];
         }
 
         $elements = [];
-        foreach ($nodes as $node) {
+        for ($index = 0; $index < $nodes->length; $index++) {
+            $node = $nodes->item($index);
             if (!$node instanceof DOMElement) {
                 continue;
             }

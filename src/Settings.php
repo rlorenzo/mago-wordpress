@@ -6,6 +6,7 @@ namespace Rlorenzo\MagoWordPress;
 
 use Rlorenzo\MagoWordPress\Internal\Shape;
 
+use function array_filter;
 use function array_map;
 use function array_unique;
 use function array_values;
@@ -121,18 +122,10 @@ final class Settings
             return [];
         }
 
-        $strings = [];
-        foreach ($value as $item) {
-            // A whitespace-only entry would otherwise match every name as a prefix.
-            $item = is_string($item) ? trim($item) : '';
-            if ($item === '') {
-                continue;
-            }
+        // A whitespace-only entry would otherwise match every name as a prefix.
+        $strings = array_map(trim(...), array_filter($value, is_string(...)));
 
-            $strings[] = $item;
-        }
-
-        return array_values(array_unique($strings));
+        return array_values(array_unique(array_filter($strings, static fn(string $item): bool => $item !== '')));
     }
 
     /**

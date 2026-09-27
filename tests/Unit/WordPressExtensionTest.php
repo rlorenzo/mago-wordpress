@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Tests;
 
+use Mago\Sdk\Linter\Rule;
 use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\WordPressExtension;
 
@@ -30,7 +31,7 @@ final class WordPressExtensionTest extends TestCase
     public function testRegisteredRulesMatchThePinnedList(): void
     {
         $registered = array_map(
-            static fn(object $rule): string => $rule->getDefinition()->code,
+            static fn(Rule $rule): string => $rule->getDefinition()->code,
             WordPressExtension::create()->linterRules,
         );
         $expected = file(__DIR__ . '/../corpus/expected-rules.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
