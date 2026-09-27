@@ -263,3 +263,12 @@ $anon_class = new class() {
     protected function __something() {} // Bad.
     private function snake_case() {} // Ok.
 };
+
+/** @deprecated 2.3.4 */
+function singleLineDeprecated() {} // OK.
+
+/**
+ * Replaces the @deprecated old_function().
+ */
+// @mago-expect lint:wordpress/valid-function-name
+function proseMentionsDeprecated() {} // Bad, `@deprecated` is not a tag here.

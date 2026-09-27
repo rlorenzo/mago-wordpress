@@ -44,4 +44,23 @@ final class StringsTest extends TestCase
     {
         self::assertSame($expected, Strings::unquote($raw));
     }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function snakeCaseNames(): iterable
+    {
+        yield 'already snake case' => ['var_name', 'var_name'];
+        yield 'camel case' => ['varName', 'var_name'];
+        yield 'leading underscore kept single' => ['_varName', '_var_name'];
+        yield 'leading capital' => ['VarName', 'var_name'];
+        yield 'acronym' => ['getID', 'get_i_d'];
+        yield 'multibyte capitals are lowercased, not split' => ['lÄhtÖaika', 'lähtöaika'];
+    }
+
+    #[DataProvider('snakeCaseNames')]
+    public function testSnakeCase(string $name, string $expected): void
+    {
+        self::assertSame($expected, Strings::snakeCase($name));
+    }
 }

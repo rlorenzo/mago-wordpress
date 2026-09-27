@@ -9,8 +9,10 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
 use function chr;
+use function function_exists;
 use function hexdec;
 use function ltrim;
+use function mb_strtolower;
 use function octdec;
 use function preg_match;
 use function preg_match_all;
@@ -20,14 +22,16 @@ use function preg_replace_callback;
 use function str_ends_with;
 use function str_starts_with;
 use function strlen;
+use function strtolower;
 use function strtr;
 use function substr;
 
 /**
- * Decodes the text of quoted, heredoc and nowdoc strings.
+ * Decodes the text of quoted, heredoc and nowdoc strings, and other string helpers.
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class Strings
 {
@@ -146,6 +150,22 @@ final class Strings
         );
 
         return $decoded ?? $text;
+    }
+
+    /**
+     * WPCS `SnakeCaseHelper::get_suggestion()`.
+     */
+    public static function snakeCase(string $name): string
+    {
+        $suggested = (string) preg_replace('`(?<!_|^)([A-Z])`', replacement: '_$1', subject: $name);
+
+        if (preg_match('`^[a-z0-9_]+$`i', $suggested) === 1) {
+            return strtolower($suggested);
+        }
+
+        return function_exists('mb_strtolower')
+            ? mb_strtolower($suggested, encoding: 'UTF-8')
+            : strtr($suggested, from: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', to: 'abcdefghijklmnopqrstuvwxyz');
     }
 
     private static function codepointToUtf8(int $codepoint): string

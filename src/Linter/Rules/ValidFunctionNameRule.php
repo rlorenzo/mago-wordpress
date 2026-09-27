@@ -13,17 +13,14 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Mago\Sdk\Syntax\TriviaKind;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
-use function function_exists;
 use function in_array;
 use function ltrim;
-use function mb_strtolower;
 use function preg_match;
-use function preg_replace;
 use function sprintf;
 use function strspn;
 use function strtolower;
-use function strtr;
 use function substr;
 
 /**
@@ -92,24 +89,6 @@ final class ValidFunctionNameRule implements Rule
                 $this->check($context, $function, $deprecatedStarts);
             }
         }
-    }
-
-    /**
-     * WPCS `SnakeCaseHelper::get_suggestion()`.
-     *
-     * @internal shared with ValidVariableNameRule
-     */
-    public static function snakeCase(string $name): string
-    {
-        $suggested = (string) preg_replace('`(?<!_|^)([A-Z])`', replacement: '_$1', subject: $name);
-
-        if (preg_match('`^[a-z0-9_]+$`i', $suggested) === 1) {
-            return strtolower($suggested);
-        }
-
-        return function_exists('mb_strtolower')
-            ? mb_strtolower($suggested, encoding: 'UTF-8')
-            : strtr($suggested, from: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', to: 'abcdefghijklmnopqrstuvwxyz');
     }
 
     /**
@@ -206,7 +185,7 @@ final class ValidFunctionNameRule implements Rule
             )->withHelp('Remove the leading double underscore.'));
         }
 
-        $suggested = self::snakeCase($name);
+        $suggested = Strings::snakeCase($name);
         if ($suggested !== $name) {
             $context->report(Issue::new(
                 $subject . ' is not in snake case format.',
@@ -229,7 +208,8 @@ final class ValidFunctionNameRule implements Rule
             }
 
             $text = substr($file->contents, $trivia->span->start, $trivia->span->length());
-            if (preg_match('/(?:^|\s)@deprecated(?:\s|$)/', $text) !== 1) {
+            // PHPCS only tokenizes a tag at the start of a docblock line.
+            if (preg_match('~^[ \t]*(?:/\*\*|\*)?[ \t]*@deprecated(?:\s|$)~m', $text) !== 1) {
                 continue;
             }
 

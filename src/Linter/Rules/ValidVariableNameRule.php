@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function in_array;
 use function sprintf;
@@ -85,6 +86,9 @@ final class ValidVariableNameRule implements Rule
         'post_ID',
     ];
 
+    /**
+     * Enums cannot declare properties.
+     */
     private const PROPERTY_OWNERS = [NodeKind::Class_, NodeKind::AnonymousClass, NodeKind::Trait, NodeKind::Interface];
 
     private const PROPERTY_ITEM_KINDS = [NodeKind::PropertyAbstractItem, NodeKind::PropertyConcreteItem];
@@ -113,9 +117,10 @@ final class ValidVariableNameRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
+        $inString = self::nodesInStrings($file, $context->node);
 
         foreach ($file->getDescendants($context->node, NodeKind::DirectVariable) as $variable) {
-            $this->check($context, $variable, substr($file->getText($variable), offset: 1));
+            $this->check($context, $variable, substr($file->getText($variable), offset: 1), $inString);
         }
 
         foreach ($file->getDescendants($context->node, NodeKind::IndirectVariable) as $variable) {
@@ -124,7 +129,7 @@ final class ValidVariableNameRule implements Rule
             if (
                 $identifier === null
                 || $identifier->kind !== NodeKind::Identifier
-                || !self::inString($file, $variable)
+                || !($inString[$variable->id] ?? false)
             ) {
                 continue;
             }
@@ -136,7 +141,10 @@ final class ValidVariableNameRule implements Rule
         }
     }
 
-    private function check(LintContext $context, Node $variable, string $name): void
+    /**
+     * @param array<int, true> $inString
+     */
+    private function check(LintContext $context, Node $variable, string $name, array $inString): void
     {
         $file = $context->file;
         $parent = $file->getParent($variable);
@@ -150,7 +158,7 @@ final class ValidVariableNameRule implements Rule
             return;
         }
 
-        if (self::inString($file, $variable)) {
+        if ($inString[$variable->id] ?? false) {
             $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name);
             return;
         }
@@ -171,21 +179,18 @@ final class ValidVariableNameRule implements Rule
 
     private function checkMemberVar(LintContext $context, Node $variable, Node $item, string $name): void
     {
-        $file = $context->file;
-        $node = $item;
-        for ($i = 0; $i < 5 && $node !== null; $i++) {
-            $node = $file->getParent($node);
-        }
-
-        if ($node === null || !in_array($node->kind, self::PROPERTY_OWNERS, strict: true)) {
-            return;
-        }
-
         if (in_array($name, self::ALLOWED_MEMBER_NAMES, strict: true)) {
             return;
         }
 
-        $this->reportIfNotSnakeCase($context, $variable, 'Member variable', $name);
+        foreach ($context->file->getAncestors($item) as $ancestor) {
+            if (!in_array($ancestor->kind, self::PROPERTY_OWNERS, strict: true)) {
+                continue;
+            }
+
+            $this->reportIfNotSnakeCase($context, $variable, 'Member variable', $name);
+            return;
+        }
     }
 
     /**
@@ -224,25 +229,35 @@ final class ValidVariableNameRule implements Rule
 
     private function reportIfNotSnakeCase(LintContext $context, Node $node, string $what, string $name): void
     {
-        $suggested = ValidFunctionNameRule::snakeCase($name);
+        $suggested = Strings::snakeCase($name);
         if ($suggested === $name) {
             return;
         }
 
+        // `$object->name` has no `$`; variables and `Foo::$name` do.
+        $sigil = $node->kind === NodeKind::LocalIdentifier ? '' : '$';
         $context->report(Issue::new(
-            sprintf('%s "$%s" is not in valid snake_case format.', $what, $name),
+            sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, $name),
             $node->span,
-        )->withHelp(sprintf('Rename it to "$%s".', $suggested)));
+        )->withHelp(sprintf('Rename it to "%s%s".', $sigil, $suggested)));
     }
 
-    private static function inString(SourceFile $file, Node $node): bool
+    /**
+     * IDs of every node inside an interpolated string or heredoc.
+     *
+     * @return array<int, true>
+     */
+    private static function nodesInStrings(SourceFile $file, Node $root): array
     {
-        foreach ($file->getAncestors($node) as $ancestor) {
-            if (in_array($ancestor->kind, self::STRING_KINDS, strict: true)) {
-                return true;
+        $ids = [];
+        foreach (self::STRING_KINDS as $kind) {
+            foreach ($file->getDescendants($root, $kind) as $string) {
+                foreach ($file->getDescendants($string) as $node) {
+                    $ids[$node->id] = true;
+                }
             }
         }
 
-        return false;
+        return $ids;
     }
 }
