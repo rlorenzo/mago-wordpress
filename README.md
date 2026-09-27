@@ -33,10 +33,9 @@ Then extend the shipped configuration from your `mago.toml`:
 extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
 ```
 
-That starts the extension worker and enables Mago's own `wordpress` integration (its eight core
-WordPress rules: `nonce-verification`, `prepared-sql`, `validated-sanitized-input`,
-`no-unescaped-output`, `use-wp-functions`, `no-direct-db-query`, `no-db-schema-change`,
-`no-roles-as-capabilities`). Run `mago lint` as usual.
+That starts the extension worker and enables Mago's own `wordpress` integration, five core
+WordPress rules (see [Mago's own WordPress rules](#magos-own-wordpress-rules) below) plus this
+package's rules. Run `mago lint` as usual.
 
 ## Configuration
 
@@ -75,9 +74,10 @@ followed, so set properties on the sniff ref itself, as phpcs recommends.
 `custom-capabilities` lists capabilities `wordpress/capabilities` accepts. The other four `custom-*`
 lists (`custom-escaping-functions`, `custom-auto-escaped-functions`, `custom-sanitizing-functions`,
 `custom-unslashing-sanitizing-functions`) are parsed and stored but currently have no effect: no rule
-in this package reads them yet. They exist for Mago's own core `wordpress` rules
-(`no-unescaped-output`, `validated-sanitized-input`, ...), which cannot yet receive per-project
-options. They are reserved for a planned port of those core rules into this package.
+in this package reads them yet. They exist for Mago's own core `wordpress` rule `no-unescaped-output`
+(see [Mago's own WordPress rules](#magos-own-wordpress-rules)) and for the nonce-verification and
+input-sanitization rules Mago's core does not have yet, none of which can currently receive
+per-project options. They are reserved for a planned port of that behavior into this package.
 
 Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 
@@ -91,27 +91,143 @@ Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 
 | Rule | Ports | Checks |
 |:---|:---|:---|
-| `wordpress/capabilities` | `WordPress.WP.Capabilities` | roles, deprecated user levels and unknown capabilities passed to `current_user_can()`, `add_menu_page()` and the other capability checks; accepts `custom-capabilities` |
+| `wordpress/assignment-in-ternary-condition` | `WordPress.CodeAnalysis.AssignmentInTernaryCondition` | a variable, array element or property assignment inside a parenthesized ternary condition |
+| `wordpress/capabilities` | `WordPress.WP.Capabilities` | roles, deprecated capabilities and unknown capabilities passed to `current_user_can()`, `add_menu_page()` and the other capability checks; accepts `custom-capabilities` |
 | `wordpress/capital-p-dangit` | `WordPress.WP.CapitalPDangit` | "Wordpress"/"word press" misspellings in strings and comments |
+| `wordpress/class-name-case` | `WordPress.WP.ClassNameCase` | a WordPress core class referenced with the wrong case (instantiation, static call, class constant, `extends`, `implements`) |
 | `wordpress/cron-interval` | `WordPress.WP.CronInterval` | `cron_schedules` intervals under `min-cron-interval` (default 900 seconds); only inline callbacks (closures and arrow functions) are inspected |
+| `wordpress/db-restricted-classes` | `WordPress.DB.RestrictedClasses` | `mysqli`, `PDO` and `PDOStatement` usage |
+| `wordpress/db-restricted-functions` | `WordPress.DB.RestrictedFunctions` | raw `mysql`/`mysqli`/`mysqlnd`/`maxdb` extension function calls |
+| `wordpress/discouraged-constants` | `WordPress.WP.DiscouragedConstants` | usage and (re-)declaration of discouraged WordPress constants such as `STYLESHEETPATH` or `PLUGINDIR` |
 | `wordpress/discouraged-wp-functions` | `WordPress.WP.DiscouragedFunctions`, `WordPress.PHP.DiscouragedPHPFunctions`, `WordPress.PHP.DevelopmentFunctions` | `query_posts()`, `wp_reset_query()`, serialization, obfuscation, system calls, debug output |
 | `wordpress/dont-extract` | `WordPress.PHP.DontExtract` | `extract()` |
 | `wordpress/enqueued-resource-parameters` | `WordPress.WP.EnqueuedResourceParameters` | missing `$ver` / `$in_footer` on enqueue and register calls |
 | `wordpress/enqueued-resources` | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
-| `wordpress/global-variables-override` | `WordPress.WP.GlobalVariablesOverride` | assignments to WordPress's protected globals (243 names) |
+| `wordpress/escaped-not-translated` | `WordPress.CodeAnalysis.EscapedNotTranslated` | `esc_html()`/`esc_attr()` called with more than one argument, which likely should be `esc_html__()`/`esc_attr__()` |
+| `wordpress/file-name` | `WordPress.Files.FileName` | file names not lowercase and hyphenated, a class file missing its `class-` prefix, a templated `wp-includes` file missing its `-template` suffix |
+| `wordpress/get-meta-single` | `WordPress.WP.GetMetaSingle` | `get_*meta()`/`get_metadata*()` calls that pass the key parameter without also passing `$single` |
+| `wordpress/global-variables-override` | `WordPress.WP.GlobalVariablesOverride` | assignments, foreach bindings, destructuring and `$GLOBALS[...]` writes to WordPress's protected globals (243 names) |
+| `wordpress/plugin-menu-slug` | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` of `-1` or over `max-posts-per-page` (default 100), `nopaging => true`, in any array literal (it does not follow `$args` variables into `WP_Query`) |
-| `wordpress/prefix-all-globals` | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants and hook names |
+| `wordpress/prefix-all-globals` | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants and hook names; inert until `prefixes` is configured |
 | `wordpress/prepared-sql-placeholders` | `WordPress.DB.PreparedSQLPlaceholders` | quoted or unsupported placeholders and count mismatches in `$wpdb->prepare()` |
+| `wordpress/prepared-sql-unquoted-complex-placeholder` | `WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder` | unquoted complex placeholders (`%1$s`, `%05s`, `%'.10s`) in `$wpdb->prepare()` queries |
+| `wordpress/restricted-php-functions` | `WordPress.PHP.RestrictedPHPFunctions` | `create_function()` |
 | `wordpress/safe-redirect` | `WordPress.Security.SafeRedirect` | `wp_redirect()` instead of `wp_safe_redirect()` |
 | `wordpress/slow-db-query` | `WordPress.DB.SlowDBQuery` | `meta_query`, `tax_query`, `meta_key`, `meta_value` in any array literal (it does not follow `$args` variables into `WP_Query`) or passed to `set_query_var()` |
+| `wordpress/strict-in-array` | `WordPress.PHP.StrictInArray` | `in_array()`, `array_search()` and `array_keys()` called without `true` as the `$strict` argument |
+| `wordpress/type-casts` | `WordPress.PHP.TypeCasts` | `(double)`/`(real)` normalized to `(float)`, `(unset)` forbidden, `(binary)` and binary string literals discouraged |
+| `wordpress/valid-function-name` | `WordPress.NamingConventions.ValidFunctionName` | function and method names not in snake_case, and double-underscore names that are not PHP magic methods |
 | `wordpress/valid-hook-name` | `WordPress.NamingConventions.ValidHookName` | hook names with uppercase letters or separators other than `_` and `additional-word-delimiters` |
+| `wordpress/valid-post-type-slug` | `WordPress.NamingConventions.ValidPostTypeSlug` | invalid characters, reserved names, a reserved prefix, or a slug over 20 characters in `register_post_type()` |
+| `wordpress/valid-variable-name` | `WordPress.NamingConventions.ValidVariableName` | variables, properties and object property accesses not in snake_case, including interpolated variables |
 | `wordpress/wp-date-time` | `WordPress.DateTime.RestrictedFunctions`, `WordPress.DateTime.CurrentTimeTimestamp` | `date()`, `date_default_timezone_set()`, `current_time('timestamp')` |
 | `wordpress/wp-deprecated-classes` | `WordPress.WP.DeprecatedClasses` | deprecated core classes, gated by `minimum-wp-version` |
 | `wordpress/wp-deprecated-functions` | `WordPress.WP.DeprecatedFunctions` | 386 deprecated core functions with their replacements, gated by `minimum-wp-version` |
+| `wordpress/wp-deprecated-parameter-values` | `WordPress.WP.DeprecatedParameterValues` | calls passing a deprecated value for a still-valid parameter (e.g. `bloginfo('home')`), gated by `minimum-wp-version` |
+| `wordpress/wp-deprecated-parameters` | `WordPress.WP.DeprecatedParameters` | calls passing a non-default value for a now-ignored deprecated parameter, gated by `minimum-wp-version` |
 | `wordpress/wp-i18n` | `WordPress.WP.I18n` | wrong or missing text domains, non-literal strings, placeholder mismatches in `_n()`, unordered placeholders, missing `translators:` comments |
+| `wordpress/yoda-conditions` | `WordPress.PHP.YodaConditions` | a comparison with a variable, array element or property on the left and a literal or constant on the right |
 
-All rules are enabled by default when the extension is installed. Function, class, constant and
-capability lists come from WPCS 3.4.1 (`src/Internal/WordPress/Lists.php`).
+All 37 rules are enabled by default when the extension is installed, and report at `Warning`
+except `wordpress/capital-p-dangit` (`Note`) and eleven rules that report at `Error`:
+`db-restricted-classes`, `db-restricted-functions`, `dont-extract`, `file-name`,
+`global-variables-override`, `prepared-sql-placeholders`, `restricted-php-functions`,
+`type-casts`, `valid-function-name`, `valid-post-type-slug`, `valid-variable-name`. Function,
+class, constant and capability lists come from WPCS 3.4.1 (`src/Internal/WordPress/Lists.php`).
+
+## Mago's own WordPress rules
+
+Mago's core linter has its own `wordpress` integration, five rules enabled by the
+`extends` in [Install](#install) above, independent of this package's `wordpress/*` rules:
+
+| Mago rule | Covers |
+|:---|:---|
+| `use-wp-functions` | `WordPress.WP.AlternativeFunctions` |
+| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) |
+| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` |
+| `no-unescaped-output` | `WordPress.Security.EscapeOutput` |
+| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part; overlaps `wordpress/capabilities` above) |
+
+Mago 1.50.0 does not yet have core rules for `WordPress.Security.NonceVerification` or
+`WordPress.Security.ValidatedSanitizedInput`; the `custom-sanitizing-functions` and
+`custom-unslashing-sanitizing-functions` settings are read and stored for when it does (see
+[Configuration](#configuration)).
+
+## Coming from WPCS
+
+`WordPress-Extra` and `WordPress-Core` also pull in generic (non-`WordPress.*`) sniffs from
+`Generic`, `PEAR`, `PSR2`, `Squiz` and `Universal`. Some of those are already covered by one of
+Mago's own core lint rules, which run on every PHP project regardless of the `wordpress`
+integration:
+
+| WPCS sniff | Mago rule |
+|:---|:---|
+| `Generic.CodeAnalysis.AssignmentInCondition` | `no-assign-in-condition` |
+| `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` |
+| `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | `prefer-while-loop` |
+| `Generic.CodeAnalysis.UnconditionalIfStatement` | `constant-condition` |
+| `Generic.CodeAnalysis.UnnecessaryFinalModifier` | `no-redundant-final` |
+| `Generic.CodeAnalysis.UselessOverridingMethod` | `no-redundant-method-override` |
+| `Generic.Files.OneObjectStructurePerFile` | `single-class-per-file` |
+| `Generic.NamingConventions.UpperCaseConstantName` | `constant-name` |
+| `Generic.PHP.BacktickOperator` | `no-shell-execute-string` |
+| `Generic.PHP.DisallowShortOpenTag` | `no-short-opening-tag` |
+| `Generic.PHP.DiscourageGoto` | `no-goto` |
+| `Generic.PHP.ForbiddenFunctions` | `disallowed-functions` |
+| `Generic.PHP.LowerCaseConstant` | `lowercase-keyword` |
+| `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` |
+| `Generic.PHP.LowerCaseType` | `lowercase-type-hint` |
+| `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` |
+| `PEAR.NamingConventions.ValidClassName` | `class-name` |
+| `PSR2.Files.ClosingTag` | `no-closing-tag` |
+| `Squiz.PHP.DisallowMultipleAssignments` | `no-multi-assignments` |
+| `Squiz.PHP.Eval.Discouraged` | `no-eval` |
+| `Universal.Arrays.DisallowShortArraySyntax` | `array-style` |
+| `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` |
+
+Enable these (and the rest of Mago's ~100 core rules) the normal way, in `mago.toml`:
+
+```toml
+[linter.rules]
+"no-assign-in-condition" = { enabled = true }
+```
+
+## Not ported
+
+Formatting sniffs (whitespace, alignment, braces, quote style, keyword and tag casing not listed
+above) are not ported: that is `mago format`'s job.
+
+<details>
+<summary>Remaining WPCS sniffs with no Mago equivalent</summary>
+
+Generic/PHP correctness sniffs with nothing similar in Mago's core rule set: `Generic.Classes.DuplicateClassName`,
+`Generic.CodeAnalysis.EmptyStatement`, `Generic.CodeAnalysis.ForLoopWithTestFunctionCall`,
+`Generic.CodeAnalysis.JumbledIncrementer`, `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence`,
+`Generic.CodeAnalysis.UnusedFunctionParameter`, `Generic.Files.ByteOrderMark`, `Generic.PHP.DeprecatedFunctions`,
+`Generic.PHP.DisallowAlternativePHPTags`, `Generic.PHP.Syntax`, `Generic.VersionControl.GitMergeConflict`,
+`Squiz.Functions.FunctionDuplicateArgument`, `Squiz.PHP.CommentedOutCode`, `Squiz.PHP.DisallowSizeFunctionsInLoops`,
+`Squiz.PHP.NonExecutableCode`, `Squiz.Scope.MethodScope`, `Universal.Arrays.DuplicateArrayKey`,
+`Universal.CodeAnalysis.ConstructorDestructorReturn`, `Universal.CodeAnalysis.ForeachUniqueAssignment`,
+`Universal.CodeAnalysis.NoDoubleNegative`, `Universal.Namespaces.DisallowDeclarationWithoutName`,
+`Universal.Namespaces.OneDeclarationPerFile`, `Universal.NamingConventions.NoReservedKeywordParameterNames`,
+`Universal.UseStatements.NoUselessAliases`.
+
+Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
+`Generic.Commenting.DocComment`, `Generic.Strings.UnnecessaryHeredoc`, `Modernize.FunctionCalls.Dirname`,
+`Modernize.FunctionCalls.Dirname.Nested`, `PEAR.Files.IncludingFile`, `PSR12.Files.FileHeader`,
+`PSR12.Keywords.ShortFormTypeKeywords`, `PSR2.Classes.PropertyDeclaration`, `PSR2.ControlStructures.ElseIfDeclaration`,
+`PSR2.Methods.MethodDeclaration`, `Squiz.Classes.SelfMemberReference`, `Squiz.Commenting`,
+`Squiz.Operators.IncrementDecrementUsage`, `Squiz.Operators.ValidLogicalOperators`, `Squiz.Strings.DoubleQuoteUsage`,
+`Universal.Attributes.DisallowAttributeParentheses`, `Universal.Classes.ModifierKeywordOrder`,
+`Universal.CodeAnalysis.NoEchoSprintf`, `Universal.CodeAnalysis.StaticInFinalClass`,
+`Universal.Constants.LowercaseClassResolutionKeyword`, `Universal.Constants.ModifierKeywordOrder`,
+`Universal.Constants.UppercaseMagicConstants`, `Universal.ControlStructures.DisallowLonelyIf`,
+`Universal.Files.SeparateFunctionsFromOO`, `Universal.Operators.DisallowStandalonePostIncrementDecrement`,
+`Universal.PHP.LowercasePHPTag`, `Universal.UseStatements.DisallowMixedGroupUse`,
+`Universal.UseStatements.LowercaseFunctionConst`, `Universal.UseStatements.NoLeadingBackslash`.
+
+</details>
 
 ## Benchmarks
 
