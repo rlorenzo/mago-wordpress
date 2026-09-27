@@ -1,3 +1,4 @@
+wordpress/global-variables-override
 wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders
 wordpress/safe-redirect
