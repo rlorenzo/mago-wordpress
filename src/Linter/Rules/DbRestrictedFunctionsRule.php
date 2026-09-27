@@ -106,6 +106,6 @@ final class DbRestrictedFunctionsRule implements Rule
             delimiter: '/',
         ), $this->prefixes()));
 
-        return "/(?<!\\w)(?:{$alternation})\\w*\\s*\\(/i";
+        return "/(?<!\\w)(?:{$alternation})/i";
     }
 }
