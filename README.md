@@ -108,13 +108,12 @@ counts also differ because WPCS honours `phpcs:ignore` comments and this extensi
 
 | Codebase | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
 |:---|---:|---:|---:|---:|
-| Elementor | 1,460 | 11.0 s | 1.6 s | 7× |
-| Yoast SEO | 1,511 | 15.3 s | 1.8 s | 9× |
-| WooCommerce | 3,528 | 40.2 s | 4.9 s | 8× |
-| a small theme | 88 | 1.0 s | 0.3 s | 3× |
+| Elementor | 1,460 | 16.7 s | 3.6 s | 4.7× |
+| Yoast SEO | 1,511 | 12.5 s | 2.9 s | 4.4× |
+| WooCommerce | 3,528 | 66.7 s | 9.7 s | 6.9× |
 
 Measured 2026-09-27 on the plugins' release zips (vendor and tests excluded), `mago` at 1.50.0 and this
-package at 0.1.0. The mago column includes starting the PHP worker.
+package at 0.2.0 (28 rules). The mago column includes starting the PHP worker.
 
 ## Development
 
