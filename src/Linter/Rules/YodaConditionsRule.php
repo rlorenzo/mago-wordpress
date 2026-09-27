@@ -94,7 +94,7 @@ final class YodaConditionsRule implements Rule
                 'Comparison has the variable on the left and the literal or constant on the right.',
                 $context->node->span,
             )->withHelp('Swap the operands so the constant or literal comes first, e.g. `true === $foo`.'),
-            [self::SNIFF],
+            [self::SNIFF . '.NotYoda'],
         );
     }
 

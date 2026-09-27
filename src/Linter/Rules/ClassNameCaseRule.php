@@ -114,7 +114,7 @@ final class ClassNameCaseRule implements Rule
                 "References the WordPress core class `{$name}` with the wrong case; expected `{$properCase}`.",
                 $identifier->span,
             )->withHelp("Use the properly cased name: `{$properCase}`."),
-            [self::SNIFF],
+            [self::SNIFF . '.Incorrect'],
         );
     }
 

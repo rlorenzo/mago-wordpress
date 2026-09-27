@@ -74,7 +74,7 @@ final class EscapedNotTranslatedRule extends CallRule
                 "{$name}() expects only a \$text parameter. Did you mean to use {$alternative}()?",
                 $context->node->span,
             )->withHelp("Use {$alternative}() to translate and escape the text in one call."),
-            [self::SNIFF],
+            [self::SNIFF . '.Found'],
         );
     }
 }

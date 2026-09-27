@@ -100,7 +100,7 @@ final class AssignmentInTernaryConditionRule implements Rule
                     'Variable assignment found within a condition. Did you mean to do a comparison?',
                     $assignment->span,
                 )->withHelp('Use a comparison operator (e.g. `==`), or move the assignment outside the ternary.'),
-                [self::SNIFF],
+                [self::SNIFF . '.FoundInTernaryCondition'],
             );
         }
     }

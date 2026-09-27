@@ -95,7 +95,7 @@ final class GetMetaSingleRule extends CallRule
                 "Pass the \${$recommendedName} parameter explicitly to indicate whether a single value or "
                 . 'multiple values are expected to be returned.',
             ),
-            [self::SNIFF],
+            [self::SNIFF . '.Missing'],
         );
     }
 }

@@ -15,6 +15,7 @@ use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function strtolower;
+use function trim;
 
 /**
  * Ports `WordPress.PHP.StrictInArray`.
@@ -70,13 +71,18 @@ final class StrictInArrayRule extends CallRule
             return;
         }
 
+        // WPCS gives a deliberate `false` its own code, so it can be ignored on its own.
+        $code =
+            $strict !== null && strtolower(trim($context->file->getText($strict))) === 'false'
+                ? 'FoundNonStrictFalse'
+                : 'MissingTrueStrict';
         Report::issue(
             $context,
             Issue::new(
                 "Not using strict comparison for {$name}(); supply true for \$strict argument.",
                 $context->node->span,
             )->withHelp('Pass true as the $strict argument so the comparison also checks type.'),
-            [self::SNIFF],
+            [self::SNIFF . '.' . $code],
         );
     }
 }

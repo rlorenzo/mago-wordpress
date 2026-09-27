@@ -91,8 +91,8 @@ final class PhpcsSuppressions
 
     /**
      * Whether a report on the line is silenced for any of the codes. A code
-     * names a sniff (`WordPress.Security.SafeRedirect`) or a sniff message
-     * (`WordPress.WP.I18n.MissingTranslatorsComment`).
+     * is the WPCS message code (`WordPress.WP.I18n.MissingTranslatorsComment`),
+     * or only the sniff for a report WPCS has no message for.
      *
      * @param list<string> $codes
      */
@@ -112,8 +112,7 @@ final class PhpcsSuppressions
         }
 
         foreach ($codes as $code) {
-            $ignored = self::matches($rules['ignored'], $code) || self::namesMessageOf($rules['ignored'], $code);
-            if ($ignored && !self::matches($rules['except'], $code)) {
+            if (self::matches($rules['ignored'], $code) && !self::matches($rules['except'], $code)) {
                 return true;
             }
         }
@@ -451,27 +450,6 @@ final class PhpcsSuppressions
         $parts = explode('.', $code);
         for ($length = count($parts); $length > 0; $length--) {
             if ($set[implode('.', array_slice($parts, offset: 0, length: $length))] ?? false) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Whether the set names a message of the code when the code names only a
-     * sniff, since such a rule reports every message of it.
-     *
-     * @param array<string, true> $set
-     */
-    private static function namesMessageOf(array $set, string $code): bool
-    {
-        if (substr_count($code, needle: '.') !== 2) {
-            return false;
-        }
-
-        foreach ($set as $key => $_) {
-            if (str_starts_with($key, $code . '.')) {
                 return true;
             }
         }

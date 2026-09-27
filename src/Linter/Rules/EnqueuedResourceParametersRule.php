@@ -145,7 +145,8 @@ final class EnqueuedResourceParametersRule extends CallRule
             )->withNote(
                 'Browsers and CDNs use the version query string to cache-bust; it should change when the asset changes.',
             )->withHelp("Pass the asset's own version string as the 4th (`\$ver`) argument."),
-            [self::SNIFF . '.NoExplicitVersion'],
+            // WPCS reports an explicit `null` as a missing version, and only a falsy one as not explicit.
+            [self::SNIFF . ($word === 'null' ? '.MissingVersion' : '.NoExplicitVersion')],
         );
     }
 

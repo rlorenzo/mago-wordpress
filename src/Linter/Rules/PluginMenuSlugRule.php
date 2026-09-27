@@ -88,7 +88,7 @@ final class PluginMenuSlugRule extends CallRule
                     'Using __FILE__ for menu slugs risks exposing filesystem structure.',
                     $constant->span,
                 )->withHelp('Pass a plugin-specific slug string instead of __FILE__.'),
-                [self::SNIFF],
+                [self::SNIFF . '.Using__FILE__'],
             );
         }
     }

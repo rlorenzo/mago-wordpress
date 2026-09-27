@@ -108,7 +108,7 @@ final class WpDeprecatedParameterValuesRule extends CallRule
             $issue = $issue->withHelp("Use {$deprecation['alt']} instead.");
         }
 
-        Report::issue($context, $issue, [self::SNIFF]);
+        Report::issue($context, $issue, [self::SNIFF . '.Found']);
     }
 
     /**

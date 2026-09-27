@@ -57,6 +57,7 @@ final class CapitalPDangitRule implements Rule
                 $context,
                 $context->file->getText($context->node),
                 $context->node->span,
+                'MisspelledInText',
             ),
             default => null,
         };
@@ -65,22 +66,22 @@ final class CapitalPDangitRule implements Rule
     private function scanTrivia(LintContext $context): void
     {
         foreach ($context->file->getTrivia() as $trivia) {
-            $this->scanText($context, $context->file->getText($trivia->span), $trivia->span);
+            $this->scanText($context, $context->file->getText($trivia->span), $trivia->span, 'MisspelledInComment');
         }
     }
 
-    private function scanText(LintContext $context, string $text, Span $span): void
+    private function scanText(LintContext $context, string $text, Span $span, string $code): void
     {
-        $lower = strtolower($text);
-        $this->scanFor($context, $text, $lower, $span, self::LOWERCASE_SPELLING);
-        $this->scanFor($context, $text, $lower, $span, self::SPACED_SPELLING);
+        $this->scanFor($context, $text, $span, self::LOWERCASE_SPELLING, $code);
+        $this->scanFor($context, $text, $span, self::SPACED_SPELLING, $code);
     }
 
-    private function scanFor(LintContext $context, string $text, string $lower, Span $span, string $needle): void
+    private function scanFor(LintContext $context, string $text, Span $span, string $needle, string $code): void
     {
         // The all-lowercase spelling is legitimate in slugs, URLs and identifiers, and never flagged.
         $exemptCorrect = $needle === self::LOWERCASE_SPELLING;
 
+        $lower = strtolower($text);
         $length = strlen($needle);
         $offset = 0;
         $urls = self::urlRanges($lower);
@@ -104,7 +105,7 @@ final class CapitalPDangitRule implements Rule
                 continue;
             }
 
-            $this->report($context, $word, $span);
+            $this->report($context, $word, $span, $code);
         }
     }
 
@@ -173,14 +174,14 @@ final class CapitalPDangitRule implements Rule
         );
     }
 
-    private function report(LintContext $context, string $word, Span $span): void
+    private function report(LintContext $context, string $word, Span $span, string $code): void
     {
         Report::issue(
             $context,
             Issue::new('Misspelled `WordPress`', $span, "`{$word}` should be `WordPress`")->withNote(
                 'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',
             )->withHelp('Replace the misspelling with `WordPress`.'),
-            [self::SNIFF],
+            [self::SNIFF . '.' . $code],
         );
     }
 }

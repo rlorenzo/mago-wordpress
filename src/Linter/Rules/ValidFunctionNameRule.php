@@ -136,8 +136,7 @@ final class ValidFunctionNameRule implements Rule
             return;
         }
 
-        $subject = sprintf('Function name "%s"', $name);
-        $this->checkName($context, $identifier, $name, $subject, $subject);
+        $this->checkName($context, $identifier, $name, className: null);
     }
 
     private function checkMethod(LintContext $context, Node $identifier, string $name, Node $owner): void
@@ -162,22 +161,22 @@ final class ValidFunctionNameRule implements Rule
             return;
         }
 
-        $this->checkName(
-            $context,
-            $identifier,
-            $name,
-            sprintf('Method name "%s::%s"', $className, $name),
-            sprintf('Method name "%s" in class %s', $name, $className),
-        );
+        $this->checkName($context, $identifier, $name, $className);
     }
 
-    private function checkName(
-        LintContext $context,
-        Node $identifier,
-        string $name,
-        string $qualifiedSubject,
-        string $subject,
-    ): void {
+    /**
+     * $className is null for a function, and the class name for a method.
+     */
+    private function checkName(LintContext $context, Node $identifier, string $name, ?string $className): void
+    {
+        [$kind, $qualifiedSubject, $subject] = $className === null
+            ? ['Function', sprintf('Function name "%s"', $name), sprintf('Function name "%s"', $name)]
+            : [
+                'Method',
+                sprintf('Method name "%s::%s"', $className, $name),
+                sprintf('Method name "%s" in class %s', $name, $className),
+            ];
+
         if (preg_match('`^__[^_]`', $name) === 1) {
             Report::issue(
                 $context,
@@ -186,7 +185,7 @@ final class ValidFunctionNameRule implements Rule
                     . ' is invalid; only PHP magic methods should be prefixed with a double underscore.',
                     $identifier->span,
                 )->withHelp('Remove the leading double underscore.'),
-                [self::SNIFF],
+                [self::SNIFF . ".{$kind}DoubleUnderscore"],
             );
         }
 
@@ -198,7 +197,7 @@ final class ValidFunctionNameRule implements Rule
                     'Rename it to "%s".',
                     $suggested,
                 )),
-                [self::SNIFF],
+                [self::SNIFF . ".{$kind}NameInvalid"],
             );
         }
     }

@@ -139,7 +139,7 @@ final class ValidVariableNameRule implements Rule
 
             $name = $file->getText($identifier);
             if (!self::isExempt($name)) {
-                $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name);
+                $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name, 'InterpolatedVariableNotSnakeCase');
             }
         }
     }
@@ -162,7 +162,7 @@ final class ValidVariableNameRule implements Rule
         }
 
         if ($inString[$variable->id] ?? false) {
-            $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name);
+            $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name, 'InterpolatedVariableNotSnakeCase');
             return;
         }
 
@@ -171,12 +171,12 @@ final class ValidVariableNameRule implements Rule
 
         $owner = $file->getParent($wrapper);
         if ($owner === null || !in_array($owner->kind, self::CLASS_MEMBER_KINDS, strict: true)) {
-            $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name);
+            $this->reportIfNotSnakeCase($context, $variable, 'Variable', $name, 'VariableNotSnakeCase');
             return;
         }
 
         if (!in_array($name, self::ALLOWED_MEMBER_NAMES, strict: true)) {
-            $this->reportIfNotSnakeCase($context, $variable, 'Object property', $name);
+            $this->reportIfNotSnakeCase($context, $variable, 'Object property', $name, 'UsedPropertyNotSnakeCase');
         }
     }
 
@@ -191,7 +191,7 @@ final class ValidVariableNameRule implements Rule
                 continue;
             }
 
-            $this->reportIfNotSnakeCase($context, $variable, 'Member variable', $name);
+            $this->reportIfNotSnakeCase($context, $variable, 'Member variable', $name, 'PropertyNotSnakeCase');
             return;
         }
     }
@@ -219,7 +219,7 @@ final class ValidVariableNameRule implements Rule
             return;
         }
 
-        $this->reportIfNotSnakeCase($context, $identifier, 'Object property', $name);
+        $this->reportIfNotSnakeCase($context, $identifier, 'Object property', $name, 'UsedPropertyNotSnakeCase');
     }
 
     private static function isExempt(string $name): bool
@@ -230,8 +230,13 @@ final class ValidVariableNameRule implements Rule
         );
     }
 
-    private function reportIfNotSnakeCase(LintContext $context, Node $node, string $what, string $name): void
-    {
+    private function reportIfNotSnakeCase(
+        LintContext $context,
+        Node $node,
+        string $what,
+        string $name,
+        string $code,
+    ): void {
         $suggested = Strings::snakeCase($name);
         if ($suggested === $name) {
             return;
@@ -245,7 +250,7 @@ final class ValidVariableNameRule implements Rule
                 sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, $name),
                 $node->span,
             )->withHelp(sprintf('Rename it to "%s%s".', $sigil, $suggested)),
-            [self::SNIFF],
+            [self::SNIFF . '.' . $code],
         );
     }
 

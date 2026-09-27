@@ -175,7 +175,7 @@ final class CronIntervalRule implements Rule
             )->withNote('Cron schedules that run too frequently can severely degrade site performance.')->withHelp(
                 "Use a longer interval ({$this->minInterval} seconds or more).",
             ),
-            [self::SNIFF],
+            [self::SNIFF . '.CronSchedulesInterval'],
         );
     }
 

@@ -17,7 +17,7 @@ use function str_contains;
  */
 final class PhpcsSuppressionsTest extends TestCase
 {
-    private const CODES = ['WordPress.Security.SafeRedirect'];
+    private const CODES = ['WordPress.Security.SafeRedirect.wp_redirect_wp_redirect'];
 
     /**
      * @return iterable<string, array{string}>
@@ -36,8 +36,11 @@ final class PhpcsSuppressionsTest extends TestCase
         yield 'prefix only at dot boundaries' => ["<?php\n// phpcs:ignore WordPress.Sec\nkeep();\n"];
         yield 'codes are case-sensitive' => ["<?php\n// phpcs:ignore wordpress.security\nkeep();\n"];
         yield 'directive is case-insensitive' => ["<?php\n// PHPCS:Ignore\ndrop();\n"];
-        yield 'message code matches a sniff-only code' => [
+        yield 'message code' => [
             "<?php\n// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect\ndrop();\n",
+        ];
+        yield 'sibling message code' => [
+            "<?php\n// phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_other\nkeep();\n",
         ];
         yield 'docblock line' => ["<?php\n/**\n * @phpcs:disable\n */\ndrop();\n"];
         yield 'one-line docblock trails its delimiters' => ["<?php\n/** phpcs:ignore */\nkeep();\n"];

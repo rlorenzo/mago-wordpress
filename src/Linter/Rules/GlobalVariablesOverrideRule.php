@@ -142,7 +142,7 @@ final class GlobalVariablesOverrideRule implements Rule
             )->withNote(
                 'WordPress core and other plugins rely on this global; overwriting it can break them in unpredictable ways.',
             )->withHelp('Use a differently named local variable, or the appropriate WordPress API instead.'),
-            [self::SNIFF],
+            [self::SNIFF . '.Prohibited'],
         );
     }
 
