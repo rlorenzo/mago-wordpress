@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
+use Rlorenzo\MagoWordPress\Internal\WordPress\Placeholders;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
 use Rlorenzo\MagoWordPress\Internal\WordPress\WpVersion;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -30,7 +31,6 @@ use function preg_match_all;
 use function str_contains;
 
 use const PREG_SET_ORDER;
-use const PREG_UNMATCHED_AS_NULL;
 use const SORT_STRING;
 
 /**
@@ -42,17 +42,6 @@ use const SORT_STRING;
 final class PreparedSqlPlaceholdersRule extends CallRule
 {
     private const SNIFF = 'WordPress.DB.PreparedSQLPlaceholders';
-
-    /**
-     * The sign, padding, alignment, width and precision a placeholder may
-     * carry between `%` and its type, as in `%05d` or `%.2f`. WPCS: a
-     * space pads only together with a width.
-     *
-     * ponytail: omits WPCS's `'x` custom padding, because it reads the
-     * `%' AND` after a LIKE wildcard as a placeholder; add it with WPCS's
-     * LIKE-content stripping if needed.
-     */
-    private const MODIFIERS = '[+-]?(?:0?-?\d*(?:\.[ 0]?\d+)?|[ ]?-?\d+(?:\.[ 0]?\d+)?)';
 
     /**
      * Whether the configured minimum WordPress version supports `%i`,
@@ -281,46 +270,43 @@ final class PreparedSqlPlaceholdersRule extends CallRule
      */
     private function scan(string $text): array
     {
-        $matches = [];
-        preg_match_all(
-            '/%(?:%|(?:(\d+)\$)?' . self::MODIFIERS . '([a-zA-Z]))/',
-            $text,
-            $matches,
-            flags: PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL,
-        );
-
-        $count = 0;
+        // WPCS and `wpdb::prepare()` expect one replacement per placeholder
+        // occurrence, even when `%1$s` repeats a number, and count those in
+        // `LIKE` wildcards too.
+        $placeholders = [];
+        $count = (int) preg_match_all('`' . Placeholders::PLACEHOLDER . '`', $text, $placeholders);
         $highest = 0;
+        foreach ($placeholders[0] as $placeholder) {
+            $argnum = [];
+            if (preg_match('`^%([0-9]+)`', $placeholder, $argnum) === 1 && str_contains($placeholder, '$')) {
+                $highest = max($highest, (int) $argnum[1]);
+            }
+        }
+
+        $text = Placeholders::withoutLikeOperands($text);
+        $matches = [];
+        preg_match_all('`%(?:%|' . Placeholders::SPEC . '([a-zA-Z]))`', $text, $matches, flags: PREG_SET_ORDER);
+
         $unsupported = [];
         $identifier = false;
         foreach ($matches as $match) {
-            $letter = $match[2] ?? null;
-            if ($letter === null) {
-                continue;
-            }
-
-            if (!str_contains('sdfFi', $letter)) {
-                $unsupported["`%{$letter}`"] = true;
-                continue;
-            }
-
+            $letter = $match[1] ?? '';
             if ($letter === 'i') {
                 $identifier = true;
             }
 
-            ++$count;
-            $highest = max($highest, (int) ($match[1] ?? 0));
+            if ($letter !== '' && !str_contains('sdfFi', $letter)) {
+                $unsupported["`%{$letter}`"] = true;
+            }
         }
 
         ksort($unsupported, SORT_STRING);
         // WPCS: WordPress quotes only the simple `%s`, `%d`, `%f` and `%F`,
         // so a quoted complex value placeholder like `'%1$s'` is correct.
         // `%i` in any form is always backtick-quoted.
-        $quotedSimple = preg_match('/([\'"])%[sdfF]\1/', $text) === 1;
-        $quotedIdentifier = preg_match('/([\'"`])%(?:\d+\$)?' . self::MODIFIERS . 'i\1/', $text) === 1;
+        $quotedSimple = preg_match('`([\'"])%[sdfF]\1`', $text) === 1;
+        $quotedIdentifier = preg_match('/([\'"`])%' . Placeholders::SPEC . 'i\1/', $text) === 1;
 
-        // WPCS and `wpdb::prepare()` expect one replacement per placeholder
-        // occurrence, even when `%1$s` repeats a number.
         return [
             $count,
             $highest,

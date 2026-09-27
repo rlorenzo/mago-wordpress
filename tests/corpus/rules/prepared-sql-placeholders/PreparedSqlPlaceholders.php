@@ -181,3 +181,23 @@ $wpdb?->prepare("SELECT * FROM my_table WHERE name = '%s'", $name);
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE a = %s AND b = %d", (['a']));
 $wpdb->prepare("SELECT * FROM my_table WHERE a = %s AND b = %d", (['a', 2]));
+
+// custom_padding_placeholders_are_counted
+$wpdb->prepare("SELECT '%'.5s'", 'abc');
+$wpdb->prepare("SELECT * FROM my_table WHERE code = '%1\$'x10s' AND ID = %2\$d", $code, $id);
+
+// custom_padding_placeholder_count_mismatch
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT '%'.5s'", 'abc', 'def');
+
+// like_wildcards_are_not_unsupported_placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE a LIKE '%bar%' AND b LIKE \"_x%\" AND c = %d", $c);
+$wpdb->prepare("SELECT * FROM my_table WHERE %s LIKE concat('%%', name, '%x')", $agent);
+
+// like_wildcards_matching_placeholders_are_counted
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE a LIKE '%foo%' AND b = %d", 5);
+
+// quoted_placeholder_after_like_is_still_reported
+// @mago-expect lint:wordpress/prepared-sql-placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE a LIKE '%s'", $a);

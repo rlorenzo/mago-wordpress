@@ -47,3 +47,13 @@ $wpdb->prepare('SELECT * FROM my_table WHERE ID = %d AND pct = 100%%', $id);
 // other_receivers_and_methods_are_ignored
 $db->prepare('SELECT * FROM my_table WHERE name = %1$s', $name);
 $wpdb->query('SELECT * FROM my_table WHERE name = %1$s');
+
+// quoted_custom_padding_placeholder_is_ok
+$wpdb->prepare("SELECT * FROM my_table WHERE code = '%'.10s' AND name = \"%1\$'x5s\"", $code);
+
+// like_wildcards_are_not_placeholders
+$wpdb->prepare("SELECT * FROM my_table WHERE code LIKE 'a%5sb' AND name = %s", $name);
+
+// unquoted_placeholder_after_like_is_reported
+// @mago-expect lint:wordpress/prepared-sql-unquoted-complex-placeholder
+$wpdb->prepare("SELECT * FROM my_table WHERE code LIKE %s AND name = %'.5s", $code, $name);

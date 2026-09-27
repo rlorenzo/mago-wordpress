@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\WordPress\Placeholders;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
@@ -29,11 +30,6 @@ use function str_ends_with;
 final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
 {
     private const SNIFF = 'WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder';
-
-    /**
-     * WPCS `PREPARE_PLACEHOLDER_REGEX`, not preceded or followed by a quote.
-     */
-    private const UNQUOTED_PLACEHOLDER = '`(?<![\'"])(?<![^%]%)%(?:[0-9]+\\\\?\$)?[+-]?(?:(?:0|\'.)?-?[0-9]*(?:\.(?:[ 0]|\'.)?[0-9]+)?|[ ]?-?[0-9]+(?:\.(?:[ 0]|\'.)?[0-9]+)?)[dfFsi](?![\'"])`';
 
     public function getDefinition(): RuleDefinition
     {
@@ -60,7 +56,11 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
         }
 
         $matches = [];
-        preg_match_all(self::UNQUOTED_PLACEHOLDER, $prepared->text, $matches);
+        preg_match_all(
+            '`(?<![\'"])' . Placeholders::PLACEHOLDER . '(?![\'"])`',
+            Placeholders::withoutLikeOperands($prepared->text),
+            $matches,
+        );
         $complex = array_values(array_unique(array_filter(
             $matches[0],
             static fn(string $placeholder): bool => (
