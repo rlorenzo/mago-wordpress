@@ -13,15 +13,14 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
-use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
+use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
 use function count;
 use function implode;
-use function is_string;
 use function ksort;
 use function max;
 use function preg_match;
@@ -38,16 +37,9 @@ use const SORT_STRING;
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
- * @mago-expect lint:too-many-methods
  */
 final class PreparedSqlPlaceholdersRule extends CallRule
 {
-    /**
-     * Stands in for a dynamic part of the query. A placeholder never
-     * matches across it.
-     */
-    private const GAP = "\0";
-
     /**
      * The sign, padding, alignment, width and precision a placeholder may
      * carry between `%` and its type, as in `%05d` or `%.2f`. WPCS: a
@@ -91,23 +83,13 @@ final class PreparedSqlPlaceholdersRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        $file = $context->file;
-        if ($call->receiver === null || !$this->isWpdb($file, $call->receiver)) {
+        $prepared = PreparedQuery::fromCall($context->file, $call);
+        if ($prepared === null) {
             return;
         }
 
-        $query = $this->queryArgument($call);
-        if ($query === null) {
-            return;
-        }
-
-        $flattened = $this->flatten($file, $query->value);
-        if ($flattened === null) {
-            return;
-        }
-
-        [$text, $fullyLiteral] = $flattened;
-        [$expected, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] = $this->scan($text);
+        $query = $prepared->argument;
+        [$expected, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] = $this->scan($prepared->text);
         if ($quotedSimple) {
             $context->report(Issue::new(
                 'Simple placeholders should not be quoted in the query string in `$wpdb->prepare()`',
@@ -156,22 +138,9 @@ final class PreparedSqlPlaceholdersRule extends CallRule
             return;
         }
 
-        if ($fullyLiteral) {
+        if ($prepared->fullyLiteral) {
             $this->checkCount($context, $call, $query, $expected);
         }
-    }
-
-    private function queryArgument(CallExpression $call): ?CallArgument
-    {
-        foreach ($call->arguments as $argument) {
-            if ($argument->name === 'query') {
-                return $argument;
-            }
-        }
-
-        $first = $call->arguments[0] ?? null;
-
-        return $first !== null && $first->name === null ? $first : null;
     }
 
     private function checkCount(LintContext $context, CallExpression $call, CallArgument $query, int $expected): void
@@ -222,33 +191,6 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
     }
 
-    private function isWpdb(SourceFile $file, Node $node): bool
-    {
-        $node = Values::unwrap($file, $node);
-
-        return $node->kind === NodeKind::Variable && $file->getText($node) === '$wpdb';
-    }
-
-    /**
-     * Whether a node reads a `$wpdb` table property such as `$wpdb->posts`.
-     */
-    private function isStaticWpdbProperty(SourceFile $file, Node $node): bool
-    {
-        $node = Values::unwrap($file, $node);
-        if ($node->kind !== NodeKind::PropertyAccess && $node->kind !== NodeKind::NullSafePropertyAccess) {
-            return false;
-        }
-
-        $children = $file->getChildren($node);
-        $selector = $children[1] ?? null;
-
-        return (
-            $selector !== null
-            && $this->isWpdb($file, $children[0])
-            && ($file->getChildren($selector)[0] ?? null)?->kind === NodeKind::LocalIdentifier
-        );
-    }
-
     /**
      * Counts the values of an array literal. NULL means the count is
      * unknowable: a spread element, or a value that is not an array.
@@ -270,74 +212,6 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         return $count;
-    }
-
-    /**
-     * Flattens a query into its literal text, with a gap for every dynamic
-     * part. A `$wpdb` table property is a static identifier, so it keeps
-     * the query fully literal.
-     *
-     * @return null|array{string, bool} The text and whether the query is
-     *     fully literal, or NULL when the query has no literal text at all.
-     */
-    private function flatten(SourceFile $file, Node $query): ?array
-    {
-        $text = '';
-        $fullyLiteral = true;
-        $sawLiteralText = false;
-        foreach ($this->parts($file, $query) as $part) {
-            if (is_string($part)) {
-                $sawLiteralText = true;
-                $text .= $part;
-                continue;
-            }
-
-            $fullyLiteral = $fullyLiteral && $this->isStaticWpdbProperty($file, $part);
-            $text .= self::GAP;
-        }
-
-        return $sawLiteralText ? [$text, $fullyLiteral] : null;
-    }
-
-    /**
-     * Yields the parts of a query in source order: the decoded text of a
-     * literal part, or the node of a dynamic part.
-     *
-     * @return iterable<string|Node>
-     */
-    private function parts(SourceFile $file, Node $node): iterable
-    {
-        $node = Values::unwrap($file, $node);
-        $children = $file->getChildren($node);
-
-        if ($node->kind === NodeKind::LiteralString) {
-            yield Values::literalString($file, $node) ?? '';
-
-            return;
-        }
-
-        if ($node->kind === NodeKind::CompositeString) {
-            foreach (Strings::compositeParts($file, $node) as $part => $text) {
-                yield $text ?? $file->getChildren($part)[0] ?? $part;
-            }
-
-            return;
-        }
-
-        if ($node->kind === NodeKind::Binary && count($children) === 3 && $file->getText($children[1]) === '.') {
-            yield from $this->parts($file, $children[0]);
-            yield from $this->parts($file, $children[2]);
-
-            return;
-        }
-
-        if ($node->kind === NodeKind::Parenthesized && $children !== []) {
-            yield from $this->parts($file, $children[0]);
-
-            return;
-        }
-
-        yield $node;
     }
 
     /**

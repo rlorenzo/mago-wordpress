@@ -14,6 +14,7 @@ wordpress/plugin-menu-slug
 wordpress/posts-per-page
 wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders
+wordpress/prepared-sql-unquoted-complex-placeholder
 wordpress/safe-redirect
 wordpress/slow-db-query
 wordpress/strict-in-array

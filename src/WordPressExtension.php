@@ -21,6 +21,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
@@ -60,6 +61,7 @@ final class WordPressExtension
                 new EnqueuedResourcesRule(),
                 new FileNameRule(),
                 new PreparedSqlPlaceholdersRule($settings),
+                new PreparedSqlUnquotedComplexPlaceholderRule(),
                 new SafeRedirectRule(),
                 new ValidHookNameRule($settings),
                 new WpI18nRule($settings),
