@@ -87,7 +87,7 @@ final class WpDateTimeRule extends CallRule
                 $context->node->span,
                 "`{$name}()` uses the runtime timezone, not the WordPress site timezone",
             )->withNote($details['reason'])->withHelp($details['help']),
-            [self::SNIFF],
+            [self::SNIFF . '.' . ($name === 'date' ? 'date_date' : "timezone_change_{$name}")],
         );
     }
 
@@ -102,7 +102,7 @@ final class WpDateTimeRule extends CallRule
             )->withNote(
                 "`current_time('timestamp')` returns a Unix timestamp shifted by the site's UTC offset, which corrupts date arithmetic.",
             )->withHelp('Use `time()` for a true Unix timestamp, or `current_datetime()` for a timezone-aware object.'),
-            ['WordPress.DateTime.CurrentTimeTimestamp'],
+            ['WordPress.DateTime.CurrentTimeTimestamp.Requested'],
         );
     }
 

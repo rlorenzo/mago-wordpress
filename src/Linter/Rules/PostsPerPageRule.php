@@ -124,7 +124,7 @@ final class PostsPerPageRule implements Rule
                 )->withNote(
                     'Unbounded queries load every matching row into memory and degrade badly as content grows.',
                 )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'),
-                [self::SNIFF],
+                [self::SNIFF . ".posts_per_page_{$key}"],
             );
 
             return;
@@ -140,7 +140,7 @@ final class PostsPerPageRule implements Rule
                 )->withNote(
                     'Huge result sets load every matching row into memory and degrade badly as content grows.',
                 )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'),
-                [self::SNIFF],
+                [self::SNIFF . ".posts_per_page_{$key}"],
             );
         }
     }

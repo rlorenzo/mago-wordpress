@@ -106,7 +106,7 @@ final class WpDeprecatedParametersRule extends CallRule
             )->withNote(
                 'Deprecated parameters are ignored; passing anything but their default has no effect.',
             )->withHelp($help),
-            [self::SNIFF],
+            [self::SNIFF . '.' . ucfirst($name) . "Param{$position}Found"],
         );
     }
 

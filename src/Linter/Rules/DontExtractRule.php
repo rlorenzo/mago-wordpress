@@ -44,7 +44,7 @@ final class DontExtractRule extends CallRule
             Issue::new('Do not use `extract()`', $context->node->span, '`extract()` call detected')->withNote(
                 '`extract()` creates variables from arbitrary array keys, obscuring where variables come from and enabling variable clobbering.',
             )->withHelp('Access array elements explicitly, or use `wp_parse_args()` for defaults merging.'),
-            [self::SNIFF],
+            [self::SNIFF . '.extract_extract'],
         );
     }
 }

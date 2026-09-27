@@ -202,7 +202,7 @@ final class DiscouragedConstantsRule implements Rule
             Issue::new("Found usage of constant `{$name}`.", $node->span)->withHelp(
                 "Use {$this->replacementFor($name)} instead.",
             ),
-            [self::SNIFF . '.UsageFound'],
+            [self::SNIFF . ".{$name}UsageFound"],
         );
     }
 
@@ -213,7 +213,7 @@ final class DiscouragedConstantsRule implements Rule
             Issue::new("Found declaration of constant `{$name}`.", $node->span)->withHelp(
                 "Use {$this->replacementFor($name)} instead.",
             ),
-            [self::SNIFF . '.DeclarationFound'],
+            [self::SNIFF . ".{$name}DeclarationFound"],
         );
     }
 

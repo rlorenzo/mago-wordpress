@@ -119,7 +119,7 @@ final class DiscouragedWpFunctionsRule extends CallRule
                     $context->node->span,
                     "`{$name}()` is discouraged",
                 )->withNote($details['reason'])->withHelp($details['alternative']),
-                [self::SNIFF],
+                [self::SNIFF . ".{$name}_{$name}"],
             );
 
             return;
@@ -138,8 +138,22 @@ final class DiscouragedWpFunctionsRule extends CallRule
                 $context->node->span,
                 "`{$name}()` is discouraged by the WordPress Coding Standards \"{$group}\" function group",
             )->withNote($messages['note'])->withHelp($messages['help']),
-            [$group === 'development' ? 'WordPress.PHP.DevelopmentFunctions' : 'WordPress.PHP.DiscouragedPHPFunctions'],
+            [self::groupCode($group, $name)],
         );
+    }
+
+    /**
+     * The WPCS message code, which joins the sniff's own group name and the function.
+     */
+    private static function groupCode(string $group, string $name): string
+    {
+        if ($group !== 'development') {
+            return "WordPress.PHP.DiscouragedPHPFunctions.{$group}_{$name}";
+        }
+
+        $group = $name === 'error_reporting' || $name === 'phpinfo' ? 'prevent_path_disclosure' : 'error_log';
+
+        return "WordPress.PHP.DevelopmentFunctions.{$group}_{$name}";
     }
 
     /**

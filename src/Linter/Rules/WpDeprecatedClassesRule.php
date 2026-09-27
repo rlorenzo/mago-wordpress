@@ -124,7 +124,7 @@ final class WpDeprecatedClassesRule implements Rule
             Issue::new("Class `{$name}` has been deprecated since WordPress {$since}.", $identifier->span)->withNote(
                 'Deprecated classes may be removed in a future WordPress release.',
             ),
-            [self::SNIFF],
+            [self::SNIFF . '.' . strtolower($normalized) . 'Found'],
         );
     }
 }

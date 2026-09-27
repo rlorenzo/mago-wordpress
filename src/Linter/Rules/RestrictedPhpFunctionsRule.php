@@ -46,7 +46,7 @@ final class RestrictedPhpFunctionsRule extends CallRule
                 "{$name}() internally performs an eval(), which makes this a very dangerous function.",
                 $context->node->span,
             )->withHelp('Use an anonymous function, or declare a named function instead.'),
-            [self::SNIFF],
+            [self::SNIFF . ".create_function_{$name}"],
         );
     }
 }

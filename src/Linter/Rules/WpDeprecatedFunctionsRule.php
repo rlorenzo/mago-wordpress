@@ -66,7 +66,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
                 "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
                 $context->node->span,
             )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help),
-            [self::SNIFF],
+            [self::SNIFF . ".{$name}Found"],
         );
     }
 }

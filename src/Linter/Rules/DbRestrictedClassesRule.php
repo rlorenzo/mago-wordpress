@@ -101,7 +101,7 @@ final class DbRestrictedClassesRule implements Rule
                     "Accessing the database directly through {$class} should be avoided.",
                     $identifier->span,
                 )->withHelp('Use the $wpdb object and its associated methods instead.'),
-                [self::SNIFF],
+                [self::SNIFF . ".mysql__{$name}"],
             );
 
             return;

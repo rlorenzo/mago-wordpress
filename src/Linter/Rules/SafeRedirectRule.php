@@ -44,7 +44,7 @@ final class SafeRedirectRule extends CallRule
             Issue::new('wp_redirect() does not validate the redirect target.', $context->node->span)->withHelp(
                 'Use wp_safe_redirect(), and add hosts through the allowed_redirect_hosts filter when needed.',
             ),
-            [self::SNIFF],
+            [self::SNIFF . '.wp_redirect_wp_redirect'],
         );
     }
 }

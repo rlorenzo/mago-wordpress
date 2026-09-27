@@ -125,7 +125,7 @@ final class SlowDbQueryRule implements Rule
             )->withHelp(
                 'Prefer indexed alternatives: register a taxonomy for filterable values, use a dedicated table for complex lookups, or cache the query results.',
             ),
-            [self::SNIFF],
+            [self::SNIFF . ".slow_db_query_{$value}"],
         );
     }
 }

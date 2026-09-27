@@ -81,7 +81,7 @@ final class DbRestrictedFunctionsRule implements Rule
                     "Accessing the database directly through {$name}() should be avoided.",
                     $context->node->span,
                 )->withHelp('Use the $wpdb object and its associated methods instead.'),
-                [self::SNIFF],
+                [self::SNIFF . ".mysql_{$normalized}"],
             );
 
             return;
