@@ -250,8 +250,7 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 `--parallel=8`) against `mago lint` running only this extension's rules, mean of three runs after a
 warm-up, on the same machine (Apple M-series, PHP 8.4, Mago 1.50). This is not an apples-to-apples
 comparison of the same rule set: `WordPress-Extra` is the full phpcs standard (all of `WordPress`,
-`WordPress-Core`, and `WordPress-Docs`), while the mago side only runs this extension's rules. Issue
-counts also differ because WPCS honours `phpcs:ignore` comments and this extension does not.
+`WordPress-Core`, and `WordPress-Docs`), while the mago side only runs this extension's rules.
 
 | Codebase | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
 |:---|---:|---:|---:|---:|
