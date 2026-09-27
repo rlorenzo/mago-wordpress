@@ -21,6 +21,17 @@ namespace {
         $pagenow = 'index.php';
     }
 
+    // mixed_case_global_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $is_IE = false;
+
+    // lowercased_mixed_case_global_is_not_flagged
+    $post_id = 123;
+
+    // override_allowed_globals_are_not_flagged
+    $content_width = 800;
+    $GLOBALS['wp_cockneyreplace'] = [];
+
     // globals_write_with_other_key_is_not_flagged
     $GLOBALS['my_plugin_state'] = [];
 

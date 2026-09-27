@@ -18,6 +18,8 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use function in_array;
 use function ltrim;
 
+use const PHP_INT_MAX;
+
 /**
  * Ports `WordPress.WP.GlobalVariablesOverride`.
  *
@@ -42,6 +44,11 @@ final class GlobalVariablesOverrideRule implements Rule
         NodeKind::PropertyHook,
     ];
 
+    /**
+     * Globals themes and plugins are expected to set (WPCS `$override_allowed`).
+     */
+    private const OVERRIDE_ALLOWED = ['content_width', 'wp_cockneyreplace'];
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -58,7 +65,7 @@ final class GlobalVariablesOverrideRule implements Rule
     {
         $file = $context->file;
 
-        /** @var array<int, array<string, list<int>>> $importsByScope scope node id => variable name => global-statement start offsets */
+        /** @var array<int, array<string, int>> $importsByScope scope node id => variable name => earliest global-statement start offset */
         $importsByScope = [];
         foreach ($file->getDescendants($context->node, NodeKind::Global) as $global) {
             $scope = $this->nearestScope($file, $global);
@@ -67,7 +74,8 @@ final class GlobalVariablesOverrideRule implements Rule
             }
 
             foreach ($file->getDescendants($global, NodeKind::DirectVariable) as $variable) {
-                $importsByScope[$scope->id][$file->getText($variable)][] = $global->span->start;
+                // Descendants arrive in source order, so the first import is the earliest.
+                $importsByScope[$scope->id][$file->getText($variable)] ??= $global->span->start;
             }
         }
 
@@ -77,7 +85,7 @@ final class GlobalVariablesOverrideRule implements Rule
     }
 
     /**
-     * @param array<int, array<string, list<int>>> $importsByScope
+     * @param array<int, array<string, int>> $importsByScope
      */
     private function checkAssignment(
         LintContext $context,
@@ -104,7 +112,7 @@ final class GlobalVariablesOverrideRule implements Rule
     }
 
     /**
-     * @param array<int, array<string, list<int>>> $importsByScope
+     * @param array<int, array<string, int>> $importsByScope
      */
     private function checkDirectAssignment(
         LintContext $context,
@@ -113,27 +121,15 @@ final class GlobalVariablesOverrideRule implements Rule
         Node $variable,
         array $importsByScope,
     ): void {
-        $name = self::protectedGlobal($file->getText($variable));
+        $text = $file->getText($variable);
+        $name = self::protectedGlobal($text);
         if ($name === null) {
             return;
         }
 
         $scope = $this->nearestScope($file, $variable);
-        if ($scope !== null) {
-            $imports = $importsByScope[$scope->id][$file->getText($variable)] ?? [];
-            $importedBefore = false;
-            foreach ($imports as $importStart) {
-                if ($importStart >= $variable->span->start) {
-                    continue;
-                }
-
-                $importedBefore = true;
-                break;
-            }
-
-            if (!$importedBefore) {
-                return;
-            }
+        if ($scope !== null && ($importsByScope[$scope->id][$text] ?? PHP_INT_MAX) >= $variable->span->start) {
+            return;
         }
 
         $this->report($context, $lhsSpanNode, $name);
@@ -204,6 +200,10 @@ final class GlobalVariablesOverrideRule implements Rule
     private static function protectedGlobal(string $name): ?string
     {
         $bare = ltrim($name, characters: '$');
+
+        if (in_array($bare, self::OVERRIDE_ALLOWED, strict: true)) {
+            return null;
+        }
 
         return in_array($bare, Lists::WP_GLOBAL_VARIABLES, strict: true) ? $bare : null;
     }
