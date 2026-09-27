@@ -9,8 +9,6 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Syntax\SourceFile;
 use WeakMap;
 
-use function substr_count;
-
 /**
  * The one reporting path for the rules, so each report honours the phpcs
  * suppression comments for the WPCS sniff codes the rule ports.
@@ -67,8 +65,6 @@ final class Report
             return false;
         }
 
-        $line = substr_count($file->contents, needle: "\n", offset: 0, length: $issue->annotations[0]->span->start) + 1;
-
-        return $suppressions->isSuppressed($line, $sniffCodes);
+        return $suppressions->isSuppressedAt($issue->annotations[0]->span->start, $sniffCodes);
     }
 }

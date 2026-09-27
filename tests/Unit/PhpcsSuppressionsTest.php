@@ -9,7 +9,10 @@ use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\PhpcsSuppressions;
 
 use function explode;
+use function hrtime;
 use function str_contains;
+use function str_repeat;
+use function strlen;
 
 /**
  * Each case marks a line that a report must survive with `keep();` and a
@@ -90,6 +93,35 @@ final class PhpcsSuppressionsTest extends TestCase
         self::assertTrue(PhpcsSuppressions::fromSource("<?php\n// a comment\nf();\n")->isEmpty());
         self::assertFalse(PhpcsSuppressions::fromSource("<?php\n// phpcs:ignore\nf();\n")->isEmpty());
         self::assertFalse(PhpcsSuppressions::fromSource("<?php\n// @codingStandardsIgnoreFile\n")->isEmpty());
+    }
+
+    /**
+     * Ordinary comments record nothing and lookups binary-search, so lookups
+     * stay fast on a comment-heavy file. A linear scan per lookup takes
+     * seconds here.
+     */
+    public function testLookupsScaleOnCommentHeavySource(): void
+    {
+        $directive = "<?php\n// phpcs:disable Generic.Foo\n";
+        $source = $directive . str_repeat("// note\nf();\n", times: 20_000);
+        $suppressions = PhpcsSuppressions::fromSource($source);
+
+        $start = hrtime(true);
+        for ($offset = strlen($directive); $offset < strlen($source); $offset += 12) {
+            self::assertFalse($suppressions->isSuppressedAt($offset, self::CODES));
+        }
+
+        self::assertLessThan(1.0, (hrtime(true) - $start) / 1e9);
+    }
+
+    public function testOffsetLookupUsesTheOffsetsLine(): void
+    {
+        $suppressions = PhpcsSuppressions::fromSource("<?php\n// phpcs:ignore\nf();\ng();\n");
+
+        self::assertFalse($suppressions->isSuppressedAt(5, self::CODES));
+        self::assertTrue($suppressions->isSuppressedAt(22, self::CODES));
+        self::assertTrue($suppressions->isSuppressedAt(25, self::CODES));
+        self::assertFalse($suppressions->isSuppressedAt(27, self::CODES));
     }
 
     public function testMessageCodeMustMatchAMessageCode(): void

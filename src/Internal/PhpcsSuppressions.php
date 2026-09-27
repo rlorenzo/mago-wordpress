@@ -59,17 +59,25 @@ final class PhpcsSuppressions
     /** @var array<int, null|Rules> Rules set on a line; null re-enables it. */
     private array $lines = [];
 
-    /** @var array<int, null|Rules> The region's rules from the line after the key onward. */
-    private array $regions = [];
+    /** @var list<int> Lines where the region's rules change, in order. */
+    private array $regionLines = [];
+
+    /** @var list<null|Rules> The region's rules from the line after the matching line onward. */
+    private array $regionRules = [];
+
+    /** @var null|list<int> Offsets where each line starts, built on the first offset lookup. */
+    private ?array $lineStarts = null;
 
     /** @var null|Rules */
     private ?array $ignoring = null;
 
-    private function __construct() {}
+    private function __construct(
+        private readonly string $source,
+    ) {}
 
     public static function fromSource(string $source): self
     {
-        $suppressions = new self();
+        $suppressions = new self($source);
         if (stripos($source, needle: 'phpcs:') === false && !str_contains($source, '@codingStandards')) {
             return $suppressions;
         }
@@ -86,7 +94,25 @@ final class PhpcsSuppressions
      */
     public function isEmpty(): bool
     {
-        return !$this->ignoreFile && $this->regions === [];
+        return !$this->ignoreFile && $this->lines === [] && $this->regionLines === [];
+    }
+
+    /**
+     * Whether a report starting at the byte offset is silenced for any of the codes.
+     *
+     * @param list<string> $codes
+     */
+    public function isSuppressedAt(int $offset, array $codes): bool
+    {
+        if ($this->lineStarts === null) {
+            $this->lineStarts = [0];
+            $newline = -1;
+            while (($newline = strpos($this->source, needle: "\n", offset: $newline + 1)) !== false) {
+                $this->lineStarts[] = $newline + 1;
+            }
+        }
+
+        return $this->isSuppressed(self::floorIndex($this->lineStarts, $offset) + 1, $codes);
     }
 
     /**
@@ -200,17 +226,38 @@ final class PhpcsSuppressions
 
     private function apply(int $line, string $piece, bool $before, bool $after, bool $doc): void
     {
+        $text = rtrim(ltrim($piece, characters: " \t/*#"), characters: " */\t\r\n");
+        $lower = strtolower($text);
+        $legacy = str_contains($text, '@codingStandards');
+        if (!$legacy && !str_starts_with($lower, 'phpcs:') && !str_starts_with($lower, '@phpcs:')) {
+            // An ordinary comment changes nothing, so it records nothing.
+            return;
+        }
+
         $this->fillFromRegion($line);
-        $this->applyComment(
-            $line,
-            rtrim(ltrim($piece, characters: " \t/*#"), characters: " */\t\r\n"),
-            $before,
-            $after,
-            $doc,
-        );
+        $this->applyComment($line, $text, $before, $after, $doc);
+
         // Again, for a trailing directive that just opened a region.
         $this->fillFromRegion($line);
-        $this->regions[$line] = $this->ignoring;
+        $this->recordRegion($line);
+    }
+
+    /**
+     * Records the region's rules after the line, when they changed.
+     */
+    private function recordRegion(int $line): void
+    {
+        $last = count($this->regionLines) - 1;
+        if ($last >= 0 && $this->regionLines[$last] === $line) {
+            $this->regionRules[$last] = $this->ignoring;
+
+            return;
+        }
+
+        if (($last >= 0 ? $this->regionRules[$last] : null) !== $this->ignoring) {
+            $this->regionLines[] = $line;
+            $this->regionRules[] = $this->ignoring;
+        }
     }
 
     private function applyComment(int $line, string $text, bool $before, bool $after, bool $doc): void
@@ -218,11 +265,6 @@ final class PhpcsSuppressions
         if (str_contains($text, '@codingStandards')) {
             $this->applyLegacy($line, $text, ownLine: !$before && !$doc);
 
-            return;
-        }
-
-        $lower = strtolower($text);
-        if (!str_starts_with($lower, 'phpcs:') && !str_starts_with($lower, '@phpcs:')) {
             return;
         }
 
@@ -383,16 +425,32 @@ final class PhpcsSuppressions
      */
     private function regionAt(int $line): ?array
     {
-        $rules = null;
-        foreach ($this->regions as $regionLine => $regionRules) {
-            if ($regionLine >= $line) {
-                break;
+        $index = self::floorIndex($this->regionLines, $line - 1);
+
+        return $index < 0 ? null : $this->regionRules[$index];
+    }
+
+    /**
+     * The index of the last value no greater than $value, or -1.
+     *
+     * @param list<int> $sorted
+     */
+    private static function floorIndex(array $sorted, int $value): int
+    {
+        $low = 0;
+        $high = count($sorted) - 1;
+        while ($low <= $high) {
+            $middle = ($low + $high) >> 1;
+            if ($sorted[$middle] <= $value) {
+                $low = $middle + 1;
+
+                continue;
             }
 
-            $rules = $regionRules;
+            $high = $middle - 1;
         }
 
-        return $rules;
+        return $high;
     }
 
     /**
