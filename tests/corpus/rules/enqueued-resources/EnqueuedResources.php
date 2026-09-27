@@ -96,3 +96,7 @@ echo '<link rel=\'stylesheet\' href=\'style.css\'>';
 // quoted_greater_than_before_src
 // @mago-expect lint:wordpress/enqueued-resources
 echo '<script data-query="a > b" src="app.js"></script>';
+
+// quoted_greater_than_before_rel
+// @mago-expect lint:wordpress/enqueued-resources
+echo '<link title="a > b" rel="stylesheet" href="app.css">';

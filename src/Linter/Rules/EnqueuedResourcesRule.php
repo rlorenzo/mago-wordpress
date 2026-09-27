@@ -13,8 +13,10 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 
+use function rtrim;
 use function str_contains;
 use function str_starts_with;
+use function strcspn;
 use function strlen;
 use function strpos;
 use function strtolower;
@@ -130,27 +132,18 @@ final class EnqueuedResourcesRule implements Rule
     private static function findTagClosingBracket(string $lower, int $offset): int|false
     {
         $length = strlen($lower);
-        $quote = null;
 
-        for ($index = $offset; $index < $length; ++$index) {
-            $byte = $lower[$index];
-
-            if ($quote !== null) {
-                if ($byte === $quote) {
-                    $quote = null;
-                }
-
-                continue;
+        while (($offset += strcspn($lower, characters: '\'">', offset: $offset)) < $length) {
+            if ($lower[$offset] === '>') {
+                return $offset;
             }
 
-            if ($byte === "'" || $byte === '"') {
-                $quote = $byte;
-                continue;
+            $closeQuote = strpos($lower, $lower[$offset], $offset + 1);
+            if ($closeQuote === false) {
+                return false;
             }
 
-            if ($byte === '>') {
-                return $index;
-            }
+            $offset = $closeQuote + 1;
         }
 
         return false;
