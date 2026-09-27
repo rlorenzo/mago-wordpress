@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
@@ -26,10 +27,10 @@ use function array_values;
 use function count;
 use function implode;
 use function in_array;
-use function ltrim;
 use function preg_match_all;
 use function sprintf;
 use function str_contains;
+use function strtolower;
 
 /**
  * Ports `WordPress.WP.I18n`.
@@ -106,7 +107,7 @@ final class WpI18nRule extends CallRule
     {
         $resolved = $context->getResolvedName();
         $written = $resolved !== null && $resolved->imported ? $resolved->name : $call->getName($context->file);
-        if ($written === null || ltrim($written, characters: '\\') !== $name || $this->insideWrapper($context)) {
+        if ($written === null || Calls::normalize($written) !== $name || $this->insideWrapper($context)) {
             return;
         }
 
@@ -256,7 +257,7 @@ final class WpI18nRule extends CallRule
                     continue;
                 }
 
-                $declared = $context->file->getText($child);
+                $declared = strtolower($context->file->getText($child));
 
                 return $declared !== self::SKIPPED && array_key_exists($declared, Lists::I18N_FUNCTIONS);
             }

@@ -116,6 +116,29 @@ namespace {
         }
     }
 
+    // wrapper_name_matches_case_insensitively
+    class LoudTranslator
+    {
+        public function ESC_HTML__($text, $domain = 'default')
+        {
+            return esc_html__($text, $domain);
+        }
+    }
+
+    // uppercase_call_is_checked
+    // @mago-expect lint:wordpress/wp-i18n
+    _E($message, 'my-plugin');
+
+    // closure_inside_wrapper_is_checked
+    function _x($text, $context, $domain = 'default')
+    {
+        // @mago-expect lint:wordpress/wp-i18n
+        return static fn() => __($text, 'my-plugin');
+    }
+
+    // skipped_function_is_ignored
+    $label = translate_with_gettext_context($text, $context);
+
     // translate_method_call_is_ignored
     $result = $translator->translate($key);
     $other = Translator::translate($key);
