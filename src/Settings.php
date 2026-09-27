@@ -71,7 +71,7 @@ final class Settings
         }
 
         return new self(
-            textDomains: self::lowercased(self::stringList($values['text-domains'] ?? [])),
+            textDomains: self::unique(self::stringList($values['text-domains'] ?? [])),
             prefixes: self::lowercased(self::stringList($values['prefixes'] ?? [])),
             minimumWpVersion: Shape::string($values['minimum-wp-version'] ?? null) ?? self::DEFAULT_MINIMUM_WP_VERSION,
             customLists: $customLists,
@@ -109,6 +109,17 @@ final class Settings
      */
     private static function lowercased(array $list): array
     {
-        return array_values(array_unique(array_map(strtolower(...), $list)));
+        return self::unique(array_map(strtolower(...), $list));
+    }
+
+    /**
+     * Text domains are compared exactly, as WPCS does, so their case is kept.
+     *
+     * @param list<string> $list
+     * @return list<string>
+     */
+    private static function unique(array $list): array
+    {
+        return array_values(array_unique($list));
     }
 }

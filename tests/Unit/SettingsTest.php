@@ -14,7 +14,7 @@ final class SettingsTest extends TestCase
     {
         $settings = Settings::fromArray(['text-domains' => 'My-Plugin', 'prefixes' => ['MP', 'mp_']]);
 
-        self::assertSame(['my-plugin'], $settings->textDomains);
+        self::assertSame(['My-Plugin'], $settings->textDomains);
         self::assertSame(['mp', 'mp_'], $settings->prefixes);
         self::assertSame('6.0', $settings->minimumWpVersion);
         self::assertSame([], $settings->customList('custom-escaping-functions'));
