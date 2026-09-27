@@ -228,3 +228,16 @@ if ((binary) $binary === b"binary $foo") {
 // double_quoted_string_on_the_left_is_excluded
 if (b"binary $foo" === (binary) $binary) {
 }
+
+// Right operand is a concatenation that starts with a variable: WPCS peeks at
+// the first token after the operator, finds a variable, and exempts it.
+if ($topic_slug === $topic_data['resource'] . '.' . $topic_data['event']) {
+    echo 'ok';
+}
+
+// Right operand is a concatenation that starts with a literal: still flagged.
+// @mago-expect lint:wordpress/yoda-conditions
+if ($topic_slug === 'resource.' . $event) {
+    echo 'flagged';
+}
+

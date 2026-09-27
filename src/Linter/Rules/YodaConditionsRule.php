@@ -156,6 +156,12 @@ final class YodaConditionsRule implements Rule
             }
         }
 
+        // WPCS looks only at the first token after the operator, so for
+        // `$a === $b . '.x'` the leftmost operand of the concatenation decides.
+        while ($node->kind === NodeKind::Binary) {
+            $node = Values::unwrap($file, $file->getChildren($node)[0] ?? $node);
+        }
+
         return $this->headIsVariable($file, $node);
     }
 
