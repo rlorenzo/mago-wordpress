@@ -108,7 +108,7 @@ namespace {
     }
 
     // wrapper_method_definition_is_exempt
-    class Translator
+    class MyPlugin_Translator
     {
         public function _e($text, $domain = 'default')
         {
@@ -117,7 +117,7 @@ namespace {
     }
 
     // wrapper_name_matches_case_insensitively
-    class LoudTranslator
+    class MyPlugin_LoudTranslator
     {
         public function ESC_HTML__($text, $domain = 'default')
         {
@@ -130,6 +130,7 @@ namespace {
     _E($message, 'my-plugin');
 
     // closure_inside_wrapper_is_checked
+    // @mago-expect lint:wordpress/prefix-all-globals
     function _x($text, $context, $domain = 'default')
     {
         // @mago-expect lint:wordpress/wp-i18n

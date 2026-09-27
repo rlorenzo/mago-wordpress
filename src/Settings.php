@@ -12,6 +12,7 @@ use function array_values;
 use function is_array;
 use function is_string;
 use function strtolower;
+use function trim;
 
 /**
  * Project-level settings that WPCS reads from `phpcs.xml` properties.
@@ -93,7 +94,9 @@ final class Settings
 
         $strings = [];
         foreach ($value as $item) {
-            if (!is_string($item) || $item === '') {
+            // A whitespace-only entry would otherwise match every name as a prefix.
+            $item = is_string($item) ? trim($item) : '';
+            if ($item === '') {
                 continue;
             }
 

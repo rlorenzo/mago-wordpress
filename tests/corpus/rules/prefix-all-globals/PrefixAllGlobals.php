@@ -102,13 +102,41 @@ namespace {
     // prefix_in_middle_is_flagged
     // @mago-expect lint:wordpress/prefix-all-globals
     function init_myplugin() {}
+
+    // attribute_name_is_not_the_declared_name
+    #[MyPlugin_Marker]
+    // @mago-expect lint:wordpress/prefix-all-globals
+    function boot() {}
+    #[Marker]
+    class MyPlugin_Marked {}
+
+    // named_arguments_are_checked
+    // @mago-expect lint:wordpress/prefix-all-globals
+    define(constant_name: 'PLUGIN_URL', value: '/');
+    // @mago-expect lint:wordpress/prefix-all-globals
+    do_action(hook_name: 'saved');
+
+    // nested_calls_in_global_code_are_checked
+    function myplugin_run() {
+        // @mago-expect lint:wordpress/prefix-all-globals
+        do_action('run');
+    }
 }
 
-namespace App {
+namespace App\Plugin {
     // namespaced_code_is_ignored
     function init() {}
 
-    class Admin {}
+    class Admin {
+        public function boot() {
+            do_action('booted');
+        }
+    }
 
     const VERSION = '1.0.0';
+
+    function run() {
+        define('PLUGIN_DIR', '/tmp');
+        do_action('run');
+    }
 }

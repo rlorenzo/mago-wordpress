@@ -18,16 +18,12 @@ use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Settings;
 
-use function array_pop;
-use function count;
 use function ltrim;
-use function preg_match;
 use function rtrim;
 use function str_contains;
 use function str_starts_with;
 use function stripos;
 use function substr;
-use function trim;
 
 /**
  * Ports `WordPress.NamingConventions.PrefixAllGlobals`.
@@ -54,17 +50,7 @@ final class PrefixAllGlobalsRule implements Rule
 
     public function __construct(Settings $settings)
     {
-        // Trims and drops empty entries, so an effectively empty configuration
-        // (or one holding only whitespace) leaves the rule inert.
-        $prefixes = [];
-        foreach ($settings->prefixes as $prefix) {
-            $prefix = trim($prefix);
-            if ($prefix !== '') {
-                $prefixes[] = $prefix;
-            }
-        }
-
-        $this->prefixes = $prefixes;
+        $this->prefixes = $settings->prefixes;
     }
 
     public function getDefinition(): RuleDefinition
@@ -83,9 +69,9 @@ final class PrefixAllGlobalsRule implements Rule
                 NodeKind::Enum,
                 NodeKind::Constant,
                 NodeKind::FunctionCall,
-                // Not otherwise dispatched on; targeting it is what makes
-                // every namespace declaration available to inNamedNamespace(),
-                // since a snapshot only materializes the node kinds a rule targets.
+                // Not otherwise dispatched on; targeting it keeps enclosing
+                // namespaces in the snapshot for inNamedNamespace(), since a
+                // snapshot only materializes the subtrees a rule targets.
                 NodeKind::Namespace,
             ],
         );
@@ -156,12 +142,11 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         $call = CallExpression::fromNode($context->file, $context->node);
-        $first = $call->arguments[0] ?? null;
-        if ($first === null || $first->name !== null || $first->unpacked) {
+        $string = Calls::argument($context->file, $call, 0, $name === 'define' ? 'constant_name' : 'hook_name');
+        if ($string === null) {
             return;
         }
 
-        $string = Values::unwrap($context->file, $first->value);
         $value = Values::literalString($context->file, $string);
         if ($value === null || $value === '') {
             return;
@@ -227,25 +212,12 @@ final class PrefixAllGlobalsRule implements Rule
      *
      * A bracketed global namespace block (`namespace { ... }`) has no name,
      * so it does not count: its contents are still checked.
-     *
-     * This checks span containment against every namespace in the file
-     * instead of walking node ancestors: a linter snapshot materializes a
-     * node's ancestors only up to the nearest node whose kind some active
-     * rule targets, so `getParent()` from a Function/Class/etc. target does
-     * not reliably reach an enclosing `Namespace` unless that kind is itself
-     * targeted (it is, see `getDefinition()`), which is what makes
-     * `getNodes(NodeKind::Namespace)` return every namespace in the file
-     * here regardless of which node triggered this dispatch.
      */
     private function inNamedNamespace(SourceFile $file, Node $node): bool
     {
-        foreach ($file->getNodes(NodeKind::Namespace) as $namespace) {
-            if (!$namespace->span->contains($node->span)) {
-                continue;
-            }
-
-            if (preg_match('/^namespace\s*\{/', $file->getText($namespace)) !== 1) {
-                return true;
+        foreach ($file->getAncestors($node) as $ancestor) {
+            if ($ancestor->kind === NodeKind::Namespace) {
+                return $this->declaredIdentifier($file, $ancestor) !== null;
             }
         }
 
@@ -253,30 +225,15 @@ final class PrefixAllGlobalsRule implements Rule
     }
 
     /**
-     * Returns the name identifier node of a function, class, interface,
-     * trait or enum declaration.
-     *
-     * An attribute list sits before the name and holds its own identifier
-     * (e.g. `#[Foo] function bar()`), so a plain descendant search would
-     * return `Foo` instead of `bar`. This skips attribute subtrees. The name
-     * identifier otherwise comes before any member, parameter or extends
-     * clause in child order, so the first remaining hit is the declared name.
+     * Returns the name identifier of a declaration: its direct identifier
+     * child. An attribute's name sits deeper, inside the attribute list.
      */
     private function declaredIdentifier(SourceFile $file, Node $node): ?Node
     {
-        $stack = [$node];
-        while (($current = array_pop($stack)) !== null) {
-            if ($current->kind === NodeKind::AttributeList) {
-                continue;
-            }
-
-            if ($current->kind === NodeKind::LocalIdentifier) {
-                return $current;
-            }
-
-            $children = $file->getChildren($current);
-            for ($index = count($children) - 1; $index >= 0; --$index) {
-                $stack[] = $children[$index];
+        foreach ($file->getChildren($node) as $child) {
+            // A namespace name is an `Identifier`; other declarations use `LocalIdentifier`.
+            if ($child->kind === NodeKind::LocalIdentifier || $child->kind === NodeKind::Identifier) {
+                return $child;
             }
         }
 

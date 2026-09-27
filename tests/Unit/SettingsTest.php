@@ -31,6 +31,14 @@ final class SettingsTest extends TestCase
         self::assertSame(['Edit_Things'], $settings->customList('custom-capabilities'));
     }
 
+    public function testListEntriesAreTrimmedAndBlankOnesDropped(): void
+    {
+        $settings = Settings::fromArray(['prefixes' => [' mp ', '   ', ''], 'text-domains' => [' my-plugin']]);
+
+        self::assertSame(['mp'], $settings->prefixes);
+        self::assertSame(['my-plugin'], $settings->textDomains);
+    }
+
     public function testPhpcsRulesetPropertiesAreRead(): void
     {
         $xml = <<<'XML'
