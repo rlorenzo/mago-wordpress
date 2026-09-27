@@ -5,6 +5,5 @@ php-version = "8.1"
 paths = ["src"]
 
 [extension-hosts.wordpress]
-command = ["php", "worker.php"]
+command = ["php", "../../resources/worker.php"]
 workers = 1
-

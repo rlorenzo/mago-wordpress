@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
-use Rlorenzo\MagoWordPress\Analyzer\WordPressPlugin;
-use Rlorenzo\MagoWordPress\Linter\Rules\NoLegacyHelperRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 
 /**
  * Constructs the complete extension advertised by each worker process.
@@ -19,14 +18,17 @@ final class WordPressExtension
 
     private function __construct() {}
 
-    public static function create(): Extension
+    public static function create(?Settings $settings = null): Extension
     {
+        $settings ??= new Settings();
+
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',
-            name: 'Mago WordPress Extension',
+            name: 'WordPress',
             version: self::VERSION,
-            linterRules: [new NoLegacyHelperRule()],
-            analyzerPlugins: [new WordPressPlugin()],
+            linterRules: [
+                new SafeRedirectRule(),
+            ],
         );
     }
 }

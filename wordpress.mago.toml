@@ -1,0 +1,12 @@
+# Extend this file from your project's mago.toml to enable the WordPress extension:
+#
+#     extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
+#
+# Rule settings (text domains, prefixes, minimum WordPress version) are read from
+# composer.json `extra.mago-wordpress`, or from phpcs.xml if that is absent.
+
+[linter]
+integrations = ["wordpress"]
+
+[extension-hosts.wordpress]
+command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php"]
