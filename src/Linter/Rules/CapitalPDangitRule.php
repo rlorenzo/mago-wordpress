@@ -13,7 +13,7 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 
 use function ord;
-use function str_contains;
+use function preg_match;
 use function strlen;
 use function strpos;
 use function strtolower;
