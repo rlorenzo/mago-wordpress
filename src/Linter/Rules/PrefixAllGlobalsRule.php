@@ -16,9 +16,14 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Values;
+use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function array_key_exists;
 use function ltrim;
+use function preg_match;
+use function preg_quote;
+use function preg_replace_callback;
 use function rtrim;
 use function str_contains;
 use function str_starts_with;
@@ -30,6 +35,7 @@ use function substr;
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class PrefixAllGlobalsRule implements Rule
 {
@@ -58,7 +64,7 @@ final class PrefixAllGlobalsRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/prefix-all-globals',
             name: 'Prefix all globals',
-            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured, and it does not check code declared inside a namespace.',
+            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks and PHP built-in names are exempt.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [
@@ -69,9 +75,6 @@ final class PrefixAllGlobalsRule implements Rule
                 NodeKind::Enum,
                 NodeKind::Constant,
                 NodeKind::FunctionCall,
-                // Not otherwise dispatched on; targeting it keeps enclosing
-                // namespaces in the snapshot for inNamedNamespace(), since a
-                // snapshot only materializes the subtrees a rule targets.
                 NodeKind::Namespace,
             ],
         );
@@ -83,19 +86,32 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        // Namespaced code is already isolated from the global namespace.
+        $kind = $context->node->kind;
+        if ($kind === NodeKind::Namespace) {
+            $this->checkNamespace($context);
+
+            return;
+        }
+
+        // `define()` and hook names stay global even inside a namespace.
+        if ($kind === NodeKind::FunctionCall) {
+            $this->checkCall($context);
+
+            return;
+        }
+
+        // PHP namespaces these declarations, isolating them from the global namespace.
         if ($this->inNamedNamespace($context->file, $context->node)) {
             return;
         }
 
-        match ($context->node->kind) {
+        match ($kind) {
             NodeKind::Function => $this->checkDeclared($context, 'function'),
             NodeKind::Class_ => $this->checkDeclared($context, 'class'),
             NodeKind::Interface => $this->checkDeclared($context, 'interface'),
             NodeKind::Trait => $this->checkDeclared($context, 'trait'),
             NodeKind::Enum => $this->checkDeclared($context, 'enum'),
             NodeKind::Constant => $this->checkConstantStatement($context),
-            NodeKind::FunctionCall => $this->checkCall($context),
             default => null,
         };
     }
@@ -110,7 +126,52 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        $this->checkSymbol($context, $kind, $context->file->getText($identifier), $identifier->span);
+        $name = $context->file->getText($identifier);
+        $exempt = match ($kind) {
+            'function' => PrefixAllowlists::isAllowedFunction($name),
+            'class' => PrefixAllowlists::isAllowedClass($name),
+            default => PrefixAllowlists::isNativeClassLike($name),
+        };
+
+        if (!$exempt) {
+            $this->checkSymbol($context, $kind, $name, $identifier->span);
+        }
+    }
+
+    /**
+     * Checks that a namespace name starts with a prefix. A prefix without a
+     * backslash may use `\` in place of any of its non-word characters, so
+     * prefix `my_plugin` accepts `My\Plugin`.
+     */
+    private function checkNamespace(LintContext $context): void
+    {
+        $identifier = $this->declaredIdentifier($context->file, $context->node);
+        if ($identifier === null) {
+            return;
+        }
+
+        $name = $context->file->getText($identifier);
+        foreach ($this->prefixes as $prefix) {
+            if (str_contains($prefix, '\\') || preg_match('`[_\W]`', $prefix) !== 1) {
+                if (stripos($name, $prefix) === 0) {
+                    return;
+                }
+
+                continue;
+            }
+
+            $pattern =
+                preg_replace_callback(
+                    '`[_\W]`',
+                    static fn(array $match): string => '[\\\\' . preg_quote($match[0], delimiter: '`') . ']',
+                    $prefix,
+                ) ?? $prefix;
+            if (preg_match('`^' . $pattern . '`i', $name) === 1) {
+                return;
+            }
+        }
+
+        $this->checkSymbol($context, 'namespace', $name, $identifier->span);
     }
 
     /**
@@ -124,7 +185,10 @@ final class PrefixAllGlobalsRule implements Rule
                 continue;
             }
 
-            $this->checkSymbol($context, 'constant', $context->file->getText($identifier), $identifier->span);
+            $name = $context->file->getText($identifier);
+            if (!PrefixAllowlists::isAllowedConstant($name)) {
+                $this->checkSymbol($context, 'constant', $name, $identifier->span);
+            }
         }
     }
 
@@ -156,31 +220,31 @@ final class PrefixAllGlobalsRule implements Rule
             // A leading backslash denotes the global namespace; any other
             // backslash means the constant is explicitly namespaced.
             $constant = str_starts_with($value, '\\') ? substr($value, offset: 1) : $value;
-            if (!str_contains($constant, '\\')) {
+            if (!str_contains($constant, '\\') && !PrefixAllowlists::isAllowedConstant($constant)) {
                 $this->checkSymbol($context, 'constant', $constant, $string->span);
             }
 
             return;
         }
 
-        $this->checkSymbol($context, 'hook', $value, $string->span);
+        if (!array_key_exists($value, PrefixAllowlists::CORE_HOOKS)) {
+            $this->checkSymbol($context, 'hook', $value, $string->span);
+        }
     }
 
     private function checkSymbol(LintContext $context, string $kind, string $name, Span $span): void
     {
-        if ($name === '' || str_starts_with($name, '__')) {
-            // Never flag PHP magic names (`__construct`, `__DIR__`, etc.).
+        if ($name === '' || $this->isPrefixed($name)) {
             return;
         }
 
-        if ($this->isPrefixed($name)) {
-            return;
-        }
-
-        $example = rtrim($this->prefixes[0], characters: '_') . '_' . ltrim($name, characters: '_');
+        $example = $kind === 'namespace'
+            ? rtrim($this->prefixes[0], characters: '\\') . '\\' . $name
+            : rtrim($this->prefixes[0], characters: '_') . '_' . ltrim($name, characters: '_');
+        $subject = $kind === 'namespace' ? 'Namespace' : "Global {$kind}";
 
         $context->report(Issue::new(
-            "Global {$kind} `{$name}` is not prefixed.",
+            "{$subject} `{$name}` is not prefixed.",
             $span,
             "This {$kind} name lacks a plugin/theme prefix.",
         )->withNote(
@@ -189,15 +253,10 @@ final class PrefixAllGlobalsRule implements Rule
     }
 
     /**
-     * Whether $name starts with one of the configured prefixes.
-     *
-     * The comparison ignores case, and a single leading underscore on the
-     * symbol name is ignored (e.g. prefix `myplugin` accepts `_myplugin_internal`).
+     * Whether $name starts with one of the configured prefixes, ignoring case.
      */
     private function isPrefixed(string $name): bool
     {
-        $name = str_starts_with($name, '_') ? substr($name, offset: 1) : $name;
-
         foreach ($this->prefixes as $prefix) {
             if (stripos($name, $prefix) === 0) {
                 return true;

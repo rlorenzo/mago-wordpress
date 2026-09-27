@@ -77,8 +77,43 @@ namespace {
     apply_filters('myplugin/content', $content);
     do_action('myplugin-init');
 
-    // leading_underscore_is_ignored
+    // leading_underscore_is_not_part_of_the_prefix
+    // @mago-expect lint:wordpress/prefix-all-globals
     function _myplugin_internal() {}
+
+    // double_underscore_names_are_not_exempt
+    // @mago-expect lint:wordpress/prefix-all-globals
+    function __arbitrary() {}
+    // @mago-expect lint:wordpress/prefix-all-globals
+    define('__PLUGIN_DIR__', '/tmp');
+
+    // allowed_core_hooks
+    apply_filters('widget_title', $title);
+    do_action('add_meta_boxes');
+
+    // overridable_core_constants
+    define('WP_DEBUG', true);
+    define('\SCRIPT_DEBUG', true);
+    const WP_POST_REVISIONS = 5;
+
+    // non_overridable_core_constant_is_flagged
+    // @mago-expect lint:wordpress/prefix-all-globals
+    define('ABSPATH', '/var/www/');
+
+    // pluggable_functions_and_classes
+    function wp_mail() {}
+    function WP_Hash_Password() {}
+    class WP_User_Search {}
+
+    // php_builtin_backfills
+    function array_is_list() {}
+    interface Stringable {}
+    define('JSON_THROW_ON_ERROR', 4194304);
+    const E_USER_DEPRECATED = 16384;
+
+    // deprecated_hook_invocations_are_not_checked
+    do_action_deprecated('loaded', [], '1.0.0');
+    apply_filters_deprecated('content', [$content], '1.0.0');
 
     // methods_and_closures_are_not_flagged
     $callback = function () {};
@@ -123,12 +158,16 @@ namespace {
     }
 }
 
+// unprefixed_namespace_name
+// @mago-expect lint:wordpress/prefix-all-globals
 namespace App\Plugin {
-    // namespaced_code_is_ignored
+    // namespaced_declarations_are_ignored
     function init() {}
 
     class Admin {
         public function boot() {
+            // namespaced_hooks_are_still_global
+            // @mago-expect lint:wordpress/prefix-all-globals
             do_action('booted');
         }
     }
@@ -136,7 +175,23 @@ namespace App\Plugin {
     const VERSION = '1.0.0';
 
     function run() {
+        // namespaced_define_is_still_global
+        // @mago-expect lint:wordpress/prefix-all-globals
         define('PLUGIN_DIR', '/tmp');
-        do_action('run');
+        // @mago-expect lint:wordpress/prefix-all-globals
+        apply_filters_ref_array('run', [$args]);
+        do_action('myplugin_run');
+        define('MYPLUGIN_RUN', true);
+        do_action('widget_title');
+        define('WP_DEBUG', true);
     }
+}
+
+// prefixed_namespace_names
+namespace MyPlugin\Admin {
+    function init() {}
+}
+
+namespace Example {
+    class Admin {}
 }
