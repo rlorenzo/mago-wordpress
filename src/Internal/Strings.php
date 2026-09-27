@@ -75,14 +75,14 @@ final class Strings
     {
         // Escapes are matched first so that `\$name` does not count as interpolation.
         $matches = [];
-        preg_match_all('/\\\\.|\$[A-Za-z_\x80-\xFF]|\{\$/s', $body, $matches);
+        preg_match_all('/\\\\.|\$[A-Za-z_\x80-\xFF{]|\{\$/s', $body, $matches);
         foreach ($matches[0] as $match) {
             if ($match[0] !== '\\') {
                 return null;
             }
         }
 
-        return Strings::decode($body);
+        return self::decode($body);
     }
 
     /**

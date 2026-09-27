@@ -124,8 +124,7 @@ final class PhpcsRuleset
         }
 
         $elements = [];
-        for ($index = 0; $index < $nodes->length; $index++) {
-            $node = $nodes->item($index);
+        foreach ($nodes as $node) {
             if (!$node instanceof DOMElement) {
                 continue;
             }

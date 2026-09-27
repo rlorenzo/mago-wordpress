@@ -29,6 +29,8 @@ final class StringsTest extends TestCase
         yield 'lone dollar is not interpolation' => ['"costs $5"', 'costs $5'];
         yield 'interpolated variable' => ['"hello $name"', null];
         yield 'interpolated expression' => ['"hello {$name}"', null];
+        yield 'interpolated dollar-brace' => ['"hello ${name}"', null];
+        yield 'escaped dollar-brace is not interpolation' => ['"\${name}"', '${name}'];
         yield 'nowdoc is raw' => ["<<<'EOT'\n  a\\n \$b\n  EOT", "a\\n \$b"];
         yield 'heredoc decodes escapes' => ["<<<EOT\n\\x41\\tb\nEOT", "A\tb"];
         yield 'quoted heredoc label' => ["<<<\"EOT\"\n    one\n      two\n    EOT", "one\n  two"];
