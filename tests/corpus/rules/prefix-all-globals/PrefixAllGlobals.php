@@ -119,10 +119,79 @@ namespace {
     $callback = function () {};
     $mapper = fn($x) => $x;
 
-    // dynamic_names_are_ignored
+    // dynamic_names_without_a_literal_start_are_flagged (DynamicHooknameFound, VariableConstantNameFound)
+    // @mago-expect lint:wordpress/prefix-all-globals
     define($name, '/tmp');
+    // @mago-expect lint:wordpress/prefix-all-globals
     do_action($hook);
+    // @mago-expect lint:wordpress/prefix-all-globals
+    do_action("{$hook}_loaded");
+    // @mago-expect lint:wordpress/prefix-all-globals
+    apply_filters($type . '_content', $content);
+    // @mago-expect lint:wordpress/prefix-all-globals
+    do_action(get_hook_name());
+    // @mago-expect lint:wordpress/prefix-all-globals
+    define(PLUGIN_CONSTANT_NAME, true);
+
+    // dynamic_names_with_an_unprefixed_literal_start_are_flagged
+    // @mago-expect lint:wordpress/prefix-all-globals
+    apply_filters('content_' . $key, $value);
+    // @mago-expect lint:wordpress/prefix-all-globals
+    do_action("loaded_{$type}");
+    // @mago-expect lint:wordpress/prefix-all-globals
+    define('PLUGIN_' . $suffix, true);
+
+    // dynamic_names_with_a_prefixed_start_are_ok
     apply_filters('myplugin_' . $key, $value);
+    do_action("myplugin_{$type}_loaded");
+    do_action("myplugin_$type");
+    define('MYPLUGIN_' . $suffix, true);
+    do_action(MYPLUGIN_HOOK);
+    do_action(myplugin_hook_name());
+
+    // dynamic_namespaced_define_is_ignored
+    define(__NAMESPACE__ . '\PLUGIN_DIR', '/tmp');
+
+    // deprecated_functions_are_not_flagged
+    /**
+     * @deprecated 2.0.0 Use myplugin_setup() instead.
+     */
+    function setup_plugin() {}
+
+    /** @deprecated */
+    #[Marker]
+    function old_setup() {}
+
+    // non_deprecated_docblock_function_is_flagged
+    /**
+     * Mentions @deprecated mid-line only.
+     */
+    // @mago-expect lint:wordpress/prefix-all-globals
+    function current_setup() {}
+
+    // deprecated_classes_are_still_flagged
+    /** @deprecated */
+    // @mago-expect lint:wordpress/prefix-all-globals
+    class Legacy_Admin {}
+
+    // test_classes_are_skipped
+    class Admin_Test extends WP_UnitTestCase {
+        public function test_boot() {
+            do_action('booted');
+            define('TEST_DIR', '/tmp');
+        }
+    }
+    class Unit_Test extends \PHPUnit\Framework\TestCase {}
+    class WP_UnitTestCase {}
+    $test = new class extends TestCase {
+        public function test_boot() {
+            do_action('booted');
+        }
+    };
+
+    // non_test_classes_are_flagged
+    // @mago-expect lint:wordpress/prefix-all-globals
+    class Admin_Screen extends WP_List_Table {}
 
     // subscribing_to_existing_hooks_is_ok
     add_action('init', 'myplugin_init');
@@ -184,6 +253,20 @@ namespace App\Plugin {
         define('MYPLUGIN_RUN', true);
         do_action('widget_title');
         define('WP_DEBUG', true);
+    }
+
+    // namespaced_test_class_extending_an_unqualified_name_is_not_a_test_class
+    class Admin_Test extends \WP_UnitTestCase {
+        public function test_boot() {
+            do_action('booted');
+        }
+    }
+
+    class Admin_Other_Test extends TestCase {
+        public function test_boot() {
+            // @mago-expect lint:wordpress/prefix-all-globals
+            do_action('booted');
+        }
     }
 }
 

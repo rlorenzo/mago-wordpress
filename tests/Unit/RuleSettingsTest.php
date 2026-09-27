@@ -54,7 +54,7 @@ final class RuleSettingsTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, array<string, int|string>, string, int}>
+     * @return iterable<string, array{string, array<string, int|string|list<string>>, string, int}>
      */
     public static function cases(): iterable
     {
@@ -130,10 +130,28 @@ final class RuleSettingsTest extends TestCase
             "do_action('myplugin-loaded');",
             1,
         ];
+        yield 'forbidden_prefix_is_reported' => [
+            'wordpress/prefix-all-globals',
+            ['prefixes' => ['wp', 'myplugin']],
+            'function myplugin_init() {}',
+            1,
+        ];
+        yield 'short_prefix_is_reported' => [
+            'wordpress/prefix-all-globals',
+            ['prefixes' => 'ab'],
+            'function ab_init() {}',
+            1,
+        ];
+        yield 'valid_prefixes_are_not_reported' => [
+            'wordpress/prefix-all-globals',
+            ['prefixes' => ['abc', 'myplugin']],
+            "function abc_init() {}\ndo_action('myplugin_init');",
+            0,
+        ];
     }
 
     /**
-     * @param array<string, int|string> $settings
+     * @param array<string, int|string|list<string>> $settings
      */
     #[DataProvider('cases')]
     public function testRuleHonoursSettings(string $rule, array $settings, string $code, int $issues): void

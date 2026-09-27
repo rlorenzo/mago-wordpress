@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
@@ -21,14 +22,20 @@ use Rlorenzo\MagoWordPress\Settings;
 
 use function array_key_exists;
 use function array_map;
+use function explode;
+use function in_array;
 use function ltrim;
+use function mb_strlen;
 use function preg_match;
 use function preg_quote;
+use function preg_replace;
 use function preg_replace_callback;
 use function rtrim;
 use function str_contains;
 use function str_starts_with;
 use function stripos;
+use function strspn;
+use function strtolower;
 use function substr;
 
 /**
@@ -49,8 +56,45 @@ final class PrefixAllGlobalsRule implements Rule
         'apply_filters_ref_array',
     ];
 
-    /** @var list<string> */
+    /** Prefixes WPCS refuses outright (`ForbiddenPrefixPassed`). */
+    private const FORBIDDEN_PREFIXES = ['wordpress', 'wp', '_', 'php'];
+
+    /** Shorter prefixes are not unique enough (`ShortPrefixPassed`). */
+    private const MIN_PREFIX_LENGTH = 3;
+
+    /**
+     * Class names that mark a class as a unit test (WPCS `IsUnitTestTrait`), lowercased.
+     */
+    private const TEST_CLASSES = [
+        'wp_unittestcase',
+        'wp_unittestcase_base',
+        'phpunit_adapter_testcase',
+        'wp_ajax_unittestcase',
+        'wp_canonical_unittestcase',
+        'wp_font_face_unittestcase',
+        'wp_test_rest_controller_testcase',
+        'wp_test_rest_post_type_controller_testcase',
+        'wp_test_rest_testcase',
+        'wp_test_xml_testcase',
+        'wp_xmlrpc_unittestcase',
+        'phpunit_framework_testcase',
+        'phpunit\\framework\\testcase',
+        'testcase',
+    ];
+
+    private const CLASS_LIKE_KINDS = [
+        NodeKind::Class_,
+        NodeKind::Interface,
+        NodeKind::Trait,
+        NodeKind::Enum,
+        NodeKind::AnonymousClass,
+    ];
+
+    /** @var list<string> Valid configured prefixes; invalid ones are dropped, as WPCS does. */
     private readonly array $prefixes;
+
+    /** @var list<string> Messages about configured prefixes, reported at the top of every file. */
+    private readonly array $prefixProblems;
 
     /** @var list<string> Regexes matching a namespace name that starts with a prefix. */
     private readonly array $namespacePatterns;
@@ -60,8 +104,29 @@ final class PrefixAllGlobalsRule implements Rule
 
     public function __construct(Settings $settings)
     {
-        $this->prefixes = $settings->prefixes;
-        $this->namespacePatterns = array_map(self::namespacePattern(...), $settings->prefixes);
+        $prefixes = [];
+        $problems = [];
+        foreach ($settings->prefixes as $prefix) {
+            if (in_array($prefix, self::FORBIDDEN_PREFIXES, strict: true)) {
+                $problems[] = "The `{$prefix}` prefix is not allowed.";
+                continue;
+            }
+
+            if (mb_strlen($prefix) < self::MIN_PREFIX_LENGTH) {
+                $problems[] = "The `{$prefix}` prefix is too short. Short prefixes are not unique enough and may cause name collisions with other code.";
+                continue;
+            }
+
+            if (preg_match('`^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff\\\\]*$`', $prefix) !== 1) {
+                $problems[] = "The `{$prefix}` prefix is not a valid namespace/function/class/variable/constant prefix in PHP.";
+            }
+
+            $prefixes[] = $prefix;
+        }
+
+        $this->prefixes = $prefixes;
+        $this->prefixProblems = $problems;
+        $this->namespacePatterns = array_map(self::namespacePattern(...), $prefixes);
     }
 
     public function getDefinition(): RuleDefinition
@@ -69,7 +134,7 @@ final class PrefixAllGlobalsRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/prefix-all-globals',
             name: 'Prefix all globals',
-            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks and PHP built-in names are exempt.',
+            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured; the prefixes `wordpress`, `wp`, `_` and `php` and prefixes shorter than three characters are reported at the top of each file and ignored. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. A constant or hook name built dynamically is reported unless its leading literal part is prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks, PHP built-in names, functions documented as @deprecated and unit test classes are exempt.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [
@@ -81,17 +146,26 @@ final class PrefixAllGlobalsRule implements Rule
                 NodeKind::Constant,
                 NodeKind::FunctionCall,
                 NodeKind::Namespace,
+                // Only so test classes show up in a call's ancestors.
+                NodeKind::AnonymousClass,
+                ...($this->prefixProblems === [] ? [] : [NodeKind::Program]),
             ],
         );
     }
 
     public function lint(LintContext $context): void
     {
-        if ($this->prefixes === []) {
+        $kind = $context->node->kind;
+        if ($kind === NodeKind::Program) {
+            $this->reportPrefixProblems($context);
+
             return;
         }
 
-        $kind = $context->node->kind;
+        if ($this->prefixes === [] || $kind === NodeKind::AnonymousClass) {
+            return;
+        }
+
         if ($kind === NodeKind::Namespace) {
             $this->checkNamespace($context);
 
@@ -219,7 +293,13 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         $value = Values::literalString($context->file, $string);
-        if ($value === null || $value === '') {
+        if ($value === null) {
+            $this->checkDynamicName($context, $name === 'define' ? 'constant' : 'hook', $string);
+
+            return;
+        }
+
+        if ($value === '') {
             return;
         }
 
@@ -239,9 +319,80 @@ final class PrefixAllGlobalsRule implements Rule
         }
     }
 
+    /**
+     * Checks a constant or hook name that is not a single literal string,
+     * the way WPCS does: the name passes if its text, or its leading
+     * literal part, starts with a prefix. A name whose leading part is not
+     * a literal cannot be verified and gets a warning of its own.
+     */
+    private function checkDynamicName(LintContext $context, string $kind, Node $argument): void
+    {
+        $file = $context->file;
+        $text = $file->getText($argument);
+        // A backslash means a namespaced (or unreachable) constant.
+        if ($kind === 'constant' && str_contains($text, '\\')) {
+            return;
+        }
+
+        if ($this->isPrefixed(preg_replace('`^([\'"])(.*)\1$`Ds', replacement: '$2', subject: $text) ?? $text)) {
+            return;
+        }
+
+        $leading = $this->leadingLiteral($file, $argument);
+        if ($leading !== null) {
+            $this->checkSymbol($context, $kind, $leading, $argument->span);
+
+            return;
+        }
+
+        if ($this->isExempt($context)) {
+            return;
+        }
+
+        $subject = $kind === 'constant' ? 'Constant' : 'Hook';
+        $context->report(Issue::new(
+            "{$subject} name `{$text}` is built dynamically, so its prefix cannot be verified.",
+            $argument->span,
+            "This {$kind} name does not start with a literal prefix.",
+        )->withNote(
+            'WordPress plugins and themes share a single global namespace; unprefixed global names can collide with WordPress core or other plugins.',
+        )->withHelp("Start the name with a literal prefix, e.g. `'{$this->prefixes[0]}_' . \$name`."));
+    }
+
+    /**
+     * Returns the literal text a name expression starts with: a whole
+     * leading literal string, or the part of a leading interpolated string
+     * before its first variable. NULL when the name starts with anything
+     * else, including a variable inside the interpolated string.
+     */
+    private function leadingLiteral(SourceFile $file, Node $argument): ?string
+    {
+        $node = $argument;
+        while ($node->kind !== NodeKind::LiteralString && $node->kind !== NodeKind::CompositeString) {
+            $child = $file->getChildren($node)[0] ?? null;
+            if ($child === null || $child->span->start !== $argument->span->start) {
+                return null;
+            }
+
+            $node = $child;
+        }
+
+        if ($node->kind === NodeKind::LiteralString) {
+            return Values::literalString($file, $node);
+        }
+
+        if (($file->getChildren($node)[0] ?? null)?->kind !== NodeKind::InterpolatedString) {
+            return null;
+        }
+
+        $leading = rtrim(explode('$', substr($file->getText($node), offset: 1))[0], characters: '{');
+
+        return $leading === '' ? null : $leading;
+    }
+
     private function checkSymbol(LintContext $context, string $kind, string $name, Span $span): void
     {
-        if ($name === '' || $this->isPrefixed($name)) {
+        if ($name === '' || $this->isPrefixed($name) || $this->isExempt($context)) {
             return;
         }
 
@@ -257,6 +408,129 @@ final class PrefixAllGlobalsRule implements Rule
         )->withNote(
             'WordPress plugins and themes share a single global namespace; unprefixed global symbols can collide with WordPress core or other plugins.',
         )->withHelp("Rename it to start with your prefix, e.g. `{$example}`."));
+    }
+
+    private function reportPrefixProblems(LintContext $context): void
+    {
+        $span = ($context->file->getChildren($context->node)[0] ?? $context->node)->span;
+        foreach ($this->prefixProblems as $problem) {
+            $context->report(Issue::new($problem, $span, 'Invalid `prefixes` setting.')->withHelp(
+                'Configure a distinctive prefix of at least three characters for your plugin or theme.',
+            ));
+        }
+    }
+
+    /**
+     * Whether the checked node is a function documented as `@deprecated`,
+     * or sits in (or is) a unit test class. Only asked once a name is
+     * known to be unprefixed, since both lookups walk the file.
+     */
+    private function isExempt(LintContext $context): bool
+    {
+        $file = $context->file;
+        $node = $context->node;
+        if ($node->kind === NodeKind::Function && $this->isDeprecated($file, $node)) {
+            return true;
+        }
+
+        $namespace = '';
+        $classLikes = [];
+        foreach ([$node, ...$file->getAncestors($node)] as $candidate) {
+            if ($candidate->kind === NodeKind::Namespace) {
+                $identifier = $this->declaredIdentifier($file, $candidate);
+                $namespace = $identifier === null ? '' : strtolower($file->getText($identifier));
+                break;
+            }
+
+            if (in_array($candidate->kind, self::CLASS_LIKE_KINDS, strict: true)) {
+                $classLikes[] = $candidate;
+            }
+        }
+
+        foreach ($classLikes as $classLike) {
+            if ($this->isTestClass($file, $classLike, $namespace)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * WPCS `IsUnitTestTrait::is_test_class()`: the class-like is, or
+     * extends, a known test class. Names resolve against the namespace
+     * only; `use` imports are not followed.
+     */
+    private function isTestClass(SourceFile $file, Node $classLike, string $namespace): bool
+    {
+        $identifier = $this->declaredIdentifier($file, $classLike);
+        if ($identifier !== null && self::isKnownTestClass($namespace, $file->getText($identifier))) {
+            return true;
+        }
+
+        foreach ($file->getChildren($classLike) as $child) {
+            if ($child->kind !== NodeKind::Extends) {
+                continue;
+            }
+
+            foreach ($file->getDescendants($child) as $name) {
+                if (
+                    $name->kind === NodeKind::LocalIdentifier
+                    || $name->kind === NodeKind::QualifiedIdentifier
+                    || $name->kind === NodeKind::FullyQualifiedIdentifier
+                ) {
+                    return self::isKnownTestClass($namespace, $file->getText($name));
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static function isKnownTestClass(string $namespace, string $name): bool
+    {
+        $name = strtolower($name);
+        $qualified = match (true) {
+            str_starts_with($name, '\\') => substr($name, offset: 1),
+            $namespace !== '' => $namespace . '\\' . $name,
+            default => $name,
+        };
+
+        return in_array($qualified, self::TEST_CLASSES, strict: true);
+    }
+
+    /**
+     * Whether a `@deprecated` docblock sits right before the function or
+     * one of its leading attributes.
+     */
+    private function isDeprecated(SourceFile $file, Node $function): bool
+    {
+        $starts = [$function->span->start => true];
+        foreach ($file->getChildren($function) as $child) {
+            $starts[$child->span->start] = true;
+        }
+
+        foreach ($file->getTrivia() as $trivia) {
+            if ($trivia->kind !== TriviaKind::DocBlockComment) {
+                continue;
+            }
+
+            $end = $trivia->span->end;
+            $next = $end + strspn($file->contents, characters: " \t\r\n", offset: $end);
+            // PHPCS only tokenizes a tag at the start of a docblock line.
+            if (
+                ($starts[$next] ?? false)
+                && preg_match('~^[ \t]*(?:/\*\*|\*)?[ \t]*@deprecated(?:\s|$)~m', substr(
+                    $file->contents,
+                    $trivia->span->start,
+                    $trivia->span->length(),
+                )) === 1
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
