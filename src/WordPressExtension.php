@@ -8,12 +8,14 @@ use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
@@ -35,6 +37,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedParameterValuesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\YodaConditionsRule;
 
 /**
  * Constructs the complete extension advertised by each worker process.
@@ -86,6 +89,9 @@ final class WordPressExtension
                 new GetMetaSingleRule(),
                 new PluginMenuSlugRule(),
                 new CapabilitiesRule($settings),
+                new YodaConditionsRule(),
+                new ClassNameCaseRule(),
+                new EscapedNotTranslatedRule(),
             ],
         );
     }

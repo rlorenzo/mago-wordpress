@@ -1,12 +1,14 @@
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities
 wordpress/capital-p-dangit
+wordpress/class-name-case
 wordpress/cron-interval
 wordpress/discouraged-constants
 wordpress/discouraged-wp-functions
 wordpress/dont-extract
 wordpress/enqueued-resource-parameters
 wordpress/enqueued-resources
+wordpress/escaped-not-translated
 wordpress/file-name
 wordpress/get-meta-single
 wordpress/global-variables-override
@@ -28,3 +30,4 @@ wordpress/wp-deprecated-functions
 wordpress/wp-deprecated-parameter-values
 wordpress/wp-deprecated-parameters
 wordpress/wp-i18n
+wordpress/yoda-conditions
