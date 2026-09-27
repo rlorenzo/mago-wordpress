@@ -2,7 +2,11 @@ version = "1"
 php-version = "8.1"
 
 [source]
-paths = ["src"]
+paths = ["rules"]
+
+[linter]
+# Any report that is not consumed by a `@mago-expect` fails the corpus run.
+minimum-fail-level = "note"
 
 [extension-hosts.wordpress]
 command = ["php", "../../resources/worker.php"]
