@@ -21,6 +21,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedParametersRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedParameterValuesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 
 /**
@@ -60,6 +62,8 @@ final class WordPressExtension
                 new CapitalPDangitRule(),
                 new WpDeprecatedFunctionsRule($settings),
                 new WpDeprecatedClassesRule($settings),
+                new WpDeprecatedParametersRule($settings),
+                new WpDeprecatedParameterValuesRule($settings),
             ],
         );
     }
