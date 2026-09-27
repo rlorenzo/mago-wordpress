@@ -19,6 +19,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedClassesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 
 /**
@@ -56,6 +58,8 @@ final class WordPressExtension
                 new DontExtractRule(),
                 new WpDateTimeRule(),
                 new CapitalPDangitRule(),
+                new WpDeprecatedFunctionsRule($settings),
+                new WpDeprecatedClassesRule($settings),
             ],
         );
     }

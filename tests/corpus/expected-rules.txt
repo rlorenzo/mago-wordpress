@@ -12,4 +12,6 @@ wordpress/safe-redirect
 wordpress/slow-db-query
 wordpress/valid-hook-name
 wordpress/wp-date-time
+wordpress/wp-deprecated-classes
+wordpress/wp-deprecated-functions
 wordpress/wp-i18n
