@@ -72,12 +72,12 @@ Properties are read only when set directly on the sniff's own `<rule ref="WordPr
 similar); a `<rule ref="WordPress-Extra">` or other ruleset that merely *includes* that sniff is not
 followed, so set properties on the sniff ref itself, as phpcs recommends.
 
-The five `custom-*` lists (`custom-escaping-functions`, `custom-auto-escaped-functions`,
-`custom-sanitizing-functions`, `custom-unslashing-sanitizing-functions`, `custom-capabilities`) are
-parsed and stored but currently have no effect: no rule in this package reads them yet. They exist
-for Mago's own core `wordpress` rules (`no-unescaped-output`, `validated-sanitized-input`,
-`no-roles-as-capabilities`, ...), which cannot yet receive per-project options. They are reserved for
-a planned port of those core rules into this package.
+`custom-capabilities` lists capabilities `wordpress/capabilities` accepts. The other four `custom-*`
+lists (`custom-escaping-functions`, `custom-auto-escaped-functions`, `custom-sanitizing-functions`,
+`custom-unslashing-sanitizing-functions`) are parsed and stored but currently have no effect: no rule
+in this package reads them yet. They exist for Mago's own core `wordpress` rules
+(`no-unescaped-output`, `validated-sanitized-input`, ...), which cannot yet receive per-project
+options. They are reserved for a planned port of those core rules into this package.
 
 Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 
@@ -91,6 +91,7 @@ Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 
 | Rule | Ports | Checks |
 |:---|:---|:---|
+| `wordpress/capabilities` | `WordPress.WP.Capabilities` | roles, deprecated user levels and unknown capabilities passed to `current_user_can()`, `add_menu_page()` and the other capability checks; accepts `custom-capabilities` |
 | `wordpress/capital-p-dangit` | `WordPress.WP.CapitalPDangit` | "Wordpress"/"word press" misspellings in strings and comments |
 | `wordpress/cron-interval` | `WordPress.WP.CronInterval` | `cron_schedules` intervals under `min-cron-interval` (default 900 seconds); only inline callbacks (closures and arrow functions) are inspected |
 | `wordpress/discouraged-wp-functions` | `WordPress.WP.DiscouragedFunctions`, `WordPress.PHP.DiscouragedPHPFunctions`, `WordPress.PHP.DevelopmentFunctions` | `query_posts()`, `wp_reset_query()`, serialization, obfuscation, system calls, debug output |
@@ -107,7 +108,7 @@ Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 | `wordpress/wp-date-time` | `WordPress.DateTime.RestrictedFunctions`, `WordPress.DateTime.CurrentTimeTimestamp` | `date()`, `date_default_timezone_set()`, `current_time('timestamp')` |
 | `wordpress/wp-deprecated-classes` | `WordPress.WP.DeprecatedClasses` | deprecated core classes, gated by `minimum-wp-version` |
 | `wordpress/wp-deprecated-functions` | `WordPress.WP.DeprecatedFunctions` | 386 deprecated core functions with their replacements, gated by `minimum-wp-version` |
-| `wordpress/wp-i18n` | `WordPress.WP.I18n` | wrong or missing text domains, non-literal strings, placeholder mismatches in `_n()` |
+| `wordpress/wp-i18n` | `WordPress.WP.I18n` | wrong or missing text domains, non-literal strings, placeholder mismatches in `_n()`, unordered placeholders, missing `translators:` comments |
 
 All rules are enabled by default when the extension is installed. Function, class, constant and
 capability lists come from WPCS 3.4.1 (`src/Internal/WordPress/Lists.php`).

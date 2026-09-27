@@ -348,3 +348,8 @@ namespace {
     /* translators: 1: text. */
     __('String with a literal %% and a %s placeholder', 'my-plugin');
 }
+
+// Translators comment on the same line as the call.
+namespace {
+    /* translators: %s: name. */ __('Hello %s', 'my-plugin');
+}

@@ -157,19 +157,18 @@ final class WpI18nRule extends CallRule
             $texts[] = [$argument, $text];
             if ($text !== null) {
                 self::checkOrder($context, $argument, $text);
+                continue;
             }
 
-            if ($text === null) {
-                $context->report(Issue::new(
-                    'Translatable text must be a literal string',
-                    $argument->span,
-                    sprintf('This argument to `%s()` is not a literal string', $name),
-                )->withNote(
-                    'Translation tools statically extract translatable strings from the source code; variables, concatenations, and interpolations cannot be extracted.',
-                )->withHelp(
-                    'Pass a single-quoted or double-quoted literal string without variables, and use `sprintf()` for dynamic values.',
-                ));
-            }
+            $context->report(Issue::new(
+                'Translatable text must be a literal string',
+                $argument->span,
+                sprintf('This argument to `%s()` is not a literal string', $name),
+            )->withNote(
+                'Translation tools statically extract translatable strings from the source code; variables, concatenations, and interpolations cannot be extracted.',
+            )->withHelp(
+                'Pass a single-quoted or double-quoted literal string without variables, and use `sprintf()` for dynamic values.',
+            ));
         }
 
         $gettextContext = $arguments['context'] ?? null;
@@ -348,10 +347,11 @@ final class WpI18nRule extends CallRule
      */
     private static function translatorsCommentBefore(SourceFile $file, int $start): ?TriviaKind
     {
+        // Trivia come in source order, so the last one that ends before the call is the nearest.
         $comment = null;
         foreach ($file->getTrivia() as $trivia) {
-            if ($trivia->span->end > $start || $comment !== null && $trivia->span->end <= $comment->span->end) {
-                continue;
+            if ($trivia->span->end > $start) {
+                break;
             }
 
             $comment = $trivia;
@@ -363,18 +363,20 @@ final class WpI18nRule extends CallRule
 
         $end = $comment->span->end;
         $between = substr($file->contents, $end, $start - $end);
-        $commentLine = substr_count($file->contents, needle: "\n", offset: 0, length: $end - 1);
-        $callLine = substr_count($file->contents, needle: "\n", offset: 0, length: $start);
-        if (str_contains(ltrim($between), needle: "\n") && $callLine !== ($commentLine + 1)) {
+        // Newlines from the comment's last character to the call: 1 when the comment ends on the line above.
+        $lineGap = substr_count($file->contents, needle: "\n", offset: $end - 1, length: $start - $end + 1);
+        if (str_contains(ltrim($between), needle: "\n") && $lineGap !== 1) {
             return null;
         }
 
-        $lines = array_map(trim(...), explode("\n", trim($file->getText($comment->span))));
-        $text = implode('', $lines);
+        $source = $file->getText($comment->span);
+        $text = implode('', array_map(trim(...), explode("\n", trim($source))));
         if ($comment->kind === TriviaKind::DocBlockComment) {
-            $text = '';
-            foreach (explode("\n", substr(implode("\n", $lines), offset: 3, length: -2)) as $line) {
-                $text = $text !== '' ? $text : trim(ltrim(trim($line), characters: '*'));
+            foreach (explode("\n", substr($source, offset: 3, length: -2)) as $line) {
+                $text = trim(ltrim(trim($line), characters: '*'));
+                if ($text !== '') {
+                    break;
+                }
             }
         }
 
