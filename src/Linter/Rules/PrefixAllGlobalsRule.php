@@ -103,7 +103,7 @@ final class PrefixAllGlobalsRule implements Rule
     private ?array $wantedCalls = null;
 
     /** @var WeakMap<SourceFile, array<int, true>> `@deprecated` docblock ends per file. */
-    private readonly WeakMap $deprecatedStarts;
+    private WeakMap $deprecatedStarts;
 
     public function __construct(Settings $settings)
     {
