@@ -52,8 +52,10 @@ final class CronIntervalRule implements Rule
 
     private readonly int $minInterval;
 
-    public function __construct(Settings $settings)
-    {
+    public function __construct(
+        private readonly Report $report,
+        Settings $settings,
+    ) {
         $this->minInterval = $settings->minCronInterval;
         $this->gate = new FileGate('/cron_schedules/i');
         $this->wanted = Calls::normalizeAll([self::ADD_FILTER]);
@@ -166,7 +168,7 @@ final class CronIntervalRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Cron schedule interval of {$interval} seconds is below the minimum of {$this->minInterval} seconds.",

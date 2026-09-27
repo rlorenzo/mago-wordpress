@@ -46,6 +46,10 @@ final class GlobalVariablesOverrideRule implements Rule
      */
     private const EXTRA_GLOBALS = ['query_string'];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -133,7 +137,7 @@ final class GlobalVariablesOverrideRule implements Rule
 
     private function report(LintContext $context, Node $spanNode, string $name): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Assignment overwrites the WordPress global variable \${$name}.",

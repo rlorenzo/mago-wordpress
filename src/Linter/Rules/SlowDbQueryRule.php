@@ -34,8 +34,9 @@ final class SlowDbQueryRule implements Rule
     /** @var array<string, true> */
     private readonly array $wanted;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly Report $report,
+    ) {
         $this->gate = new FileGate('/meta_query|tax_query|meta_key|meta_value|set_query_var/i');
         $this->wanted = Calls::normalizeAll([self::SET_QUERY_VAR]);
     }
@@ -114,7 +115,7 @@ final class SlowDbQueryRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Potentially slow database query using `{$value}`.",

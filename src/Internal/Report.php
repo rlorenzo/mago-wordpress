@@ -11,25 +11,20 @@ use WeakMap;
 
 /**
  * The one reporting path for the rules, so each report honours the phpcs
- * suppression comments for the WPCS sniff codes the rule ports.
+ * suppression comments for the WPCS sniff codes the rule ports. Each
+ * extension owns one, so its settings never reach another extension's rules.
  *
  * @internal
  */
 final class Report
 {
-    private static bool $honorPhpcsComments = true;
+    /** @var WeakMap<SourceFile, PhpcsSuppressions> */
+    private WeakMap $suppressions;
 
-    /** @var null|WeakMap<SourceFile, PhpcsSuppressions> */
-    private static ?WeakMap $suppressions = null;
-
-    private function __construct() {}
-
-    /**
-     * Set once per worker from the `honor-phpcs-comments` setting.
-     */
-    public static function honorPhpcsComments(bool $honor): void
-    {
-        self::$honorPhpcsComments = $honor;
+    public function __construct(
+        private readonly bool $honorPhpcsComments,
+    ) {
+        $this->suppressions = new WeakMap();
     }
 
     /**
@@ -38,9 +33,9 @@ final class Report
      *
      * @param non-empty-list<string> $sniffCodes
      */
-    public static function issue(LintContext $context, Issue $issue, array $sniffCodes): void
+    public function issue(LintContext $context, Issue $issue, array $sniffCodes): void
     {
-        if (self::$honorPhpcsComments && self::isSuppressed($context->file, $issue, $sniffCodes)) {
+        if ($this->honorPhpcsComments && $this->isSuppressed($context->file, $issue, $sniffCodes)) {
             return;
         }
 
@@ -54,32 +49,28 @@ final class Report
      *
      * @param non-empty-list<string> $sniffCodes
      */
-    public static function fileIssue(LintContext $context, Issue $issue, array $sniffCodes): void
+    public function fileIssue(LintContext $context, Issue $issue, array $sniffCodes): void
     {
-        if (self::$honorPhpcsComments && self::suppressions($context->file)->disablesToEnd($sniffCodes)) {
+        if ($this->honorPhpcsComments && $this->suppressions($context->file)->disablesToEnd($sniffCodes)) {
             return;
         }
 
-        self::issue($context, $issue, $sniffCodes);
+        $this->issue($context, $issue, $sniffCodes);
     }
 
     /**
      * @param list<string> $sniffCodes
      */
-    private static function isSuppressed(SourceFile $file, Issue $issue, array $sniffCodes): bool
+    private function isSuppressed(SourceFile $file, Issue $issue, array $sniffCodes): bool
     {
-        $suppressions = self::suppressions($file);
+        $suppressions = $this->suppressions($file);
 
         return !$suppressions->isEmpty()
         && $suppressions->isSuppressedAt($issue->annotations[0]->span->start, $sniffCodes);
     }
 
-    private static function suppressions(SourceFile $file): PhpcsSuppressions
+    private function suppressions(SourceFile $file): PhpcsSuppressions
     {
-        self::$suppressions ??= new WeakMap();
-        /** @var WeakMap<SourceFile, PhpcsSuppressions> $cache */
-        $cache = self::$suppressions;
-
-        return $cache[$file] ??= PhpcsSuppressions::fromSource($file->contents);
+        return $this->suppressions[$file] ??= PhpcsSuppressions::fromSource($file->contents);
     }
 }

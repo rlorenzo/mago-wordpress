@@ -21,6 +21,10 @@ final class RestrictedPhpFunctionsRule extends CallRule
 {
     private const SNIFF = 'WordPress.PHP.RestrictedPHPFunctions';
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -40,7 +44,7 @@ final class RestrictedPhpFunctionsRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "{$name}() internally performs an eval(), which makes this a very dangerous function.",

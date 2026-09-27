@@ -41,6 +41,7 @@ final class WpDeprecatedParametersRule extends CallRule
     private const SNIFF = 'WordPress.WP.DeprecatedParameters';
 
     public function __construct(
+        private readonly Report $report,
         private readonly Settings $settings,
     ) {}
 
@@ -97,7 +98,7 @@ final class WpDeprecatedParametersRule extends CallRule
 
         $paramName = self::namesLabel($parameter['name']);
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "The \"{$paramName}\" parameter (position #{$position}) of `{$name}()` has been deprecated "

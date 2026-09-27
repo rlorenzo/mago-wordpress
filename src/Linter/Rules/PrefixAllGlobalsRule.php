@@ -108,8 +108,10 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var WeakMap<SourceFile, array<int, true>> `@deprecated` docblock ends per file. */
     private WeakMap $deprecatedStarts;
 
-    public function __construct(Settings $settings)
-    {
+    public function __construct(
+        private readonly Report $report,
+        Settings $settings,
+    ) {
         $prefixes = [];
         $problems = [];
         foreach ($settings->prefixes as $prefix) {
@@ -421,7 +423,7 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             $issue
                 ->withNote(
@@ -510,7 +512,7 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         $subject = $kind === 'constant' ? 'Constant' : 'Hook';
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "{$subject} name `{$text}` is built dynamically, so its prefix cannot be verified.",
@@ -563,7 +565,7 @@ final class PrefixAllGlobalsRule implements Rule
             : rtrim($this->prefixes[0], characters: '_') . '_' . ltrim($name, characters: '_');
         $subject = $kind === 'namespace' ? 'Namespace' : "Global {$kind}";
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "{$subject} `{$name}` is not prefixed.",
@@ -580,7 +582,7 @@ final class PrefixAllGlobalsRule implements Rule
     {
         $span = ($context->file->getChildren($context->node)[0] ?? $context->node)->span;
         foreach ($this->prefixProblems as [$code, $problem]) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new($problem, $span, 'Invalid `prefixes` setting.')->withHelp(
                     'Configure a distinctive prefix of at least three characters for your plugin or theme.',

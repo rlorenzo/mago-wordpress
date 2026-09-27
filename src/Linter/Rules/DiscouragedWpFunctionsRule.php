@@ -88,6 +88,10 @@ final class DiscouragedWpFunctionsRule extends CallRule
     /** @var null|array<string, string> */
     private ?array $groupsByFunction = null;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -112,7 +116,7 @@ final class DiscouragedWpFunctionsRule extends CallRule
     {
         $details = self::DISCOURAGED_FUNCTIONS[$name] ?? null;
         if ($details !== null) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "Discouraged WordPress function `{$name}()`",
@@ -131,7 +135,7 @@ final class DiscouragedWpFunctionsRule extends CallRule
         }
 
         $messages = self::GROUP_MESSAGES[$group];
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Discouraged PHP function `{$name}()` ({$group})",

@@ -45,6 +45,10 @@ final class ClassNameCaseRule implements Rule
     /** @var array<string, string>|null lowercase name => properly cased name */
     private static ?array $properCase = null;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -108,7 +112,7 @@ final class ClassNameCaseRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "References the WordPress core class `{$name}` with the wrong case; expected `{$properCase}`.",

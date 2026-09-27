@@ -56,6 +56,10 @@ final class YodaConditionsRule implements Rule
 
     private const HIERARCHY_KEYWORDS = ['self', 'parent', 'static'];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -88,7 +92,7 @@ final class YodaConditionsRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 'Comparison has the variable on the left and the literal or constant on the right.',

@@ -45,8 +45,10 @@ final class ValidHookNameRule extends CallRule
      */
     private readonly string $delimiterPattern;
 
-    public function __construct(Settings $settings)
-    {
+    public function __construct(
+        private readonly Report $report,
+        Settings $settings,
+    ) {
         $allowed = preg_quote($settings->additionalWordDelimiters, delimiter: '/');
         $this->delimiterPattern = "/[^A-Za-z0-9_\\x80-\\xFF{$allowed}]/";
     }
@@ -105,7 +107,7 @@ final class ValidHookNameRule extends CallRule
     private function validate(LintContext $context, string $name, Span $span): void
     {
         if (preg_match('/[A-Z]/', $name) === 1) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Hook names should be lowercase.',
@@ -126,7 +128,7 @@ final class ValidHookNameRule extends CallRule
                 array_unique($matches[0]),
             ));
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Words in hook names should be separated by underscores.',

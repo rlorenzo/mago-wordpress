@@ -37,6 +37,10 @@ final class StrictInArrayRule extends CallRule
         'array_keys' => ['position' => 2, 'alwaysNeeded' => false],
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -76,7 +80,7 @@ final class StrictInArrayRule extends CallRule
             $strict !== null && strtolower(trim($context->file->getText($strict))) === 'false'
                 ? 'FoundNonStrictFalse'
                 : 'MissingTrueStrict';
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Not using strict comparison for {$name}(); supply true for \$strict argument.",

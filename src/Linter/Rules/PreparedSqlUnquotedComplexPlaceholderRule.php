@@ -31,6 +31,10 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
 {
     private const SNIFF = 'WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder';
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -73,7 +77,7 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
         }
 
         $found = implode(', ', array_map(static fn(string $placeholder): string => "`{$placeholder}`", $complex));
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Complex placeholders in `\$wpdb->prepare()` are not quoted: {$found}",

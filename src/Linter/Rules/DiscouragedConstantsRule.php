@@ -47,6 +47,10 @@ final class DiscouragedConstantsRule implements Rule
     /** @var null|array<string, true> */
     private ?array $defineCall = null;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -197,7 +201,7 @@ final class DiscouragedConstantsRule implements Rule
 
     private function reportUsage(LintContext $context, Node $node, string $name): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new("Found usage of constant `{$name}`.", $node->span)->withHelp(
                 "Use {$this->replacementFor($name)} instead.",
@@ -208,7 +212,7 @@ final class DiscouragedConstantsRule implements Rule
 
     private function reportDeclaration(LintContext $context, Node $node, string $name): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new("Found declaration of constant `{$name}`.", $node->span)->withHelp(
                 "Use {$this->replacementFor($name)} instead.",

@@ -43,6 +43,10 @@ final class WpDateTimeRule extends CallRule
         ],
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -80,7 +84,7 @@ final class WpDateTimeRule extends CallRule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "`{$name}()` conflicts with how WordPress manages timezones.",
@@ -93,7 +97,7 @@ final class WpDateTimeRule extends CallRule
 
     private function reportCurrentTimeTimestamp(LintContext $context): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 '`current_time()` should not be used to retrieve a timestamp.',

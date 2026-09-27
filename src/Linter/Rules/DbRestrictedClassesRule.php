@@ -37,6 +37,10 @@ final class DbRestrictedClassesRule implements Rule
 
     private ?FileGate $gate = null;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -95,7 +99,7 @@ final class DbRestrictedClassesRule implements Rule
                 continue;
             }
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "Accessing the database directly through {$class} should be avoided.",

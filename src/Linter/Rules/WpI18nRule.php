@@ -91,6 +91,7 @@ final class WpI18nRule extends CallRule
     private const TRANSLATORS_COMMENT = '`^(?:(?://|/\*{1,2}) )?translators:`i';
 
     public function __construct(
+        private readonly Report $report,
         private readonly Settings $settings,
     ) {}
 
@@ -156,11 +157,11 @@ final class WpI18nRule extends CallRule
             $text = $this->literal($context, $argument);
             $texts[] = [$argument, $text];
             if ($text !== null) {
-                self::checkOrder($context, $argument, $parameter, $text);
+                $this->checkOrder($context, $argument, $parameter, $text);
                 continue;
             }
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Translatable text must be a literal string',
@@ -180,7 +181,7 @@ final class WpI18nRule extends CallRule
 
         $gettextContext = $arguments['context'] ?? null;
         if ($gettextContext !== null && $this->literal($context, $gettextContext) === null) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Translation context must be a literal string',
@@ -194,7 +195,7 @@ final class WpI18nRule extends CallRule
         }
 
         $this->checkDomain($context, $name, $arguments['domain']);
-        self::checkTranslatorsComment($context, $name, $texts);
+        $this->checkTranslatorsComment($context, $name, $texts);
 
         if (count($texts) !== 2) {
             return;
@@ -214,7 +215,7 @@ final class WpI18nRule extends CallRule
         // English conflates "singular" with "only one", but some languages use the
         // singular form for other counts too, so it needs the placeholders as well.
         if (count($singularPlaceholders) < count($pluralPlaceholders)) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Missing singular placeholder, needed for some languages',
@@ -236,7 +237,7 @@ final class WpI18nRule extends CallRule
         sort($singularPlaceholders, SORT_NATURAL);
         sort($pluralPlaceholders, SORT_NATURAL);
         if ($singularPlaceholders !== $pluralPlaceholders) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Mismatched placeholders between singular and plural strings',
@@ -258,7 +259,7 @@ final class WpI18nRule extends CallRule
     private function checkDomain(LintContext $context, string $name, ?Node $argument): void
     {
         if ($argument === null) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Missing text domain in translation function call',
@@ -275,7 +276,7 @@ final class WpI18nRule extends CallRule
 
         $domain = $this->literal($context, $argument);
         if ($domain === null) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Text domain must be a literal string',
@@ -295,7 +296,7 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 'Unexpected text domain in translation function call',
@@ -314,7 +315,7 @@ final class WpI18nRule extends CallRule
     /**
      * Reports a string with several placeholders that are not all numbered.
      */
-    private static function checkOrder(LintContext $context, Node $argument, string $parameter, string $text): void
+    private function checkOrder(LintContext $context, Node $argument, string $parameter, string $text): void
     {
         $unordered = [];
         $unorderedCount = (int) preg_match_all(self::WPCS_UNORDERED_PLACEHOLDER, $text, $unordered);
@@ -322,7 +323,7 @@ final class WpI18nRule extends CallRule
         $allCount = (int) preg_match_all(self::WPCS_PLACEHOLDER, $text, $all);
 
         if ($unorderedCount > 0 && $unorderedCount !== $allCount && $allCount > 1) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Mix of ordered and unordered placeholders in translatable string',
@@ -346,7 +347,7 @@ final class WpI18nRule extends CallRule
             $expected[] = '%' . ($index + 1) . '$' . substr($placeholder, offset: 1);
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 'Multiple placeholders in translatable strings should be ordered',
@@ -366,7 +367,7 @@ final class WpI18nRule extends CallRule
      *
      * @param list<array{Node, ?string}> $texts
      */
-    private static function checkTranslatorsComment(LintContext $context, string $name, array $texts): void
+    private function checkTranslatorsComment(LintContext $context, string $name, array $texts): void
     {
         $needsComment = false;
         foreach ($texts as [, $text]) {
@@ -379,7 +380,7 @@ final class WpI18nRule extends CallRule
 
         $style = self::translatorsCommentBefore($context->file, $context->node->span->start);
         if ($style === TriviaKind::DocBlockComment) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'A translators comment must be a `/* */` style comment',
@@ -398,7 +399,7 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 'Missing translators comment for a string with placeholders',

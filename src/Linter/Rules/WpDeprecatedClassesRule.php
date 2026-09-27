@@ -37,6 +37,7 @@ final class WpDeprecatedClassesRule implements Rule
     private ?FileGate $gate = null;
 
     public function __construct(
+        private readonly Report $report,
         private readonly Settings $settings,
     ) {}
 
@@ -119,7 +120,7 @@ final class WpDeprecatedClassesRule implements Rule
         }
 
         $name = $file->getText($identifier);
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new("Class `{$name}` has been deprecated since WordPress {$since}.", $identifier->span)->withNote(
                 'Deprecated classes may be removed in a future WordPress release.',

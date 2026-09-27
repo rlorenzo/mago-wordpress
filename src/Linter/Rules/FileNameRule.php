@@ -56,6 +56,10 @@ final class FileNameRule implements Rule
         'functions.wp-styles.php' => true,
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -117,7 +121,7 @@ final class FileNameRule implements Rule
             return;
         }
 
-        Report::fileIssue(
+        $this->report->fileIssue(
             $context,
             Issue::new(
                 "Filenames should be all lowercase with hyphens as word separators. Expected {$expected}, but found {$fileName}.",
@@ -153,7 +157,7 @@ final class FileNameRule implements Rule
             return;
         }
 
-        Report::fileIssue(
+        $this->report->fileIssue(
             $context,
             Issue::new(
                 "Class file names should be based on the class name with \"class-\" prepended. Expected {$expected}, but found {$fileName}.",
@@ -178,7 +182,7 @@ final class FileNameRule implements Rule
             return;
         }
 
-        Report::fileIssue(
+        $this->report->fileIssue(
             $context,
             Issue::new(
                 'Files containing template tags should have "-template" appended to the end of the file name.',

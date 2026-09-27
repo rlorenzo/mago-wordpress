@@ -67,6 +67,10 @@ final class ValidFunctionNameRule implements Rule
         NodeKind::Enum,
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -178,7 +182,7 @@ final class ValidFunctionNameRule implements Rule
             ];
 
         if (preg_match('`^__[^_]`', $name) === 1) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     $qualifiedSubject
@@ -191,7 +195,7 @@ final class ValidFunctionNameRule implements Rule
 
         $suggested = Strings::snakeCase($name);
         if ($suggested !== $name) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new($subject . ' is not in snake case format.', $identifier->span)->withHelp(sprintf(
                     'Rename it to "%s".',

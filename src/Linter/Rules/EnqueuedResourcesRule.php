@@ -38,6 +38,10 @@ final class EnqueuedResourcesRule implements Rule
 
     private ?FileGate $gate = null;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -90,7 +94,7 @@ final class EnqueuedResourcesRule implements Rule
                 continue;
             }
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Hardcoded `<script>` tag with a `src` attribute',
@@ -108,7 +112,7 @@ final class EnqueuedResourcesRule implements Rule
                 continue;
             }
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Hardcoded stylesheet `<link>` tag',

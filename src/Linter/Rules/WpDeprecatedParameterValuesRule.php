@@ -42,6 +42,7 @@ final class WpDeprecatedParameterValuesRule extends CallRule
     private const SNIFF = 'WordPress.WP.DeprecatedParameterValues';
 
     public function __construct(
+        private readonly Report $report,
         private readonly Settings $settings,
     ) {}
 
@@ -108,7 +109,7 @@ final class WpDeprecatedParameterValuesRule extends CallRule
             $issue = $issue->withHelp("Use {$deprecation['alt']} instead.");
         }
 
-        Report::issue($context, $issue, [self::SNIFF . '.Found']);
+        $this->report->issue($context, $issue, [self::SNIFF . '.Found']);
     }
 
     /**

@@ -52,6 +52,10 @@ final class PluginMenuSlugRule extends CallRule
         'add_utility_page' => [3 => 'menu_slug'],
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -82,7 +86,7 @@ final class PluginMenuSlugRule extends CallRule
                 continue;
             }
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Using __FILE__ for menu slugs risks exposing filesystem structure.',

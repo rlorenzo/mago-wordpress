@@ -42,6 +42,10 @@ final class EnqueuedResourceParametersRule extends CallRule
     private const VER_SLOT = 3;
     private const FIFTH_SLOT = 4;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -90,7 +94,7 @@ final class EnqueuedResourceParametersRule extends CallRule
         $this->checkVersion($context, $slots[self::VER_SLOT] ?? null);
 
         if ($isScript && !array_key_exists(self::FIFTH_SLOT, $slots)) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Enqueued script does not set `$in_footer` explicitly',
@@ -110,7 +114,7 @@ final class EnqueuedResourceParametersRule extends CallRule
     private function checkVersion(LintContext $context, ?Node $verNode): void
     {
         if ($verNode === null) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Enqueued resource is missing the `$ver` (version) parameter',
@@ -136,7 +140,7 @@ final class EnqueuedResourceParametersRule extends CallRule
             ? ['`false`', 'WordPress falls back to its core version']
             : ['`null`', 'no version is added at all'];
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Enqueued resource version is explicitly {$what}",

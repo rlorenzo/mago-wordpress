@@ -105,6 +105,10 @@ final class ValidVariableNameRule implements Rule
 
     private const STRING_KINDS = [NodeKind::InterpolatedString, NodeKind::DocumentString];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -244,7 +248,7 @@ final class ValidVariableNameRule implements Rule
 
         // `$object->name` has no `$`; variables and `Foo::$name` do.
         $sigil = $node->kind === NodeKind::LocalIdentifier ? '' : '$';
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, $name),

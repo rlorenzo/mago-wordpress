@@ -59,6 +59,10 @@ final class AssignmentInTernaryConditionRule implements Rule
         NodeKind::Match,
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -94,7 +98,7 @@ final class AssignmentInTernaryConditionRule implements Rule
                 continue;
             }
 
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Variable assignment found within a condition. Did you mean to do a comparison?',

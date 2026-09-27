@@ -71,6 +71,10 @@ final class ValidPostTypeSlugRule extends CallRule
         'wp_template_part' => true,
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -104,7 +108,7 @@ final class ValidPostTypeSlugRule extends CallRule
 
         $literal = $this->literal($context->file, $argument);
         if ($literal === null) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "register_post_type() called with a post type slug that is not a string literal: {$context->file->getText(
@@ -120,7 +124,7 @@ final class ValidPostTypeSlugRule extends CallRule
 
         [$postType, $dynamic] = $literal;
         if ($dynamic) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "The post type slug may, or may not, get too long with dynamic contents and could contain invalid characters. Found: \"{$postType}\".",
@@ -140,7 +144,7 @@ final class ValidPostTypeSlugRule extends CallRule
         }
 
         if (preg_match(self::VALID_CHARACTERS, $postType) !== 1) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "register_post_type() called with invalid post type \"{$postType}\". Only lowercase alphanumeric characters, dashes, and underscores are allowed.",
@@ -153,7 +157,7 @@ final class ValidPostTypeSlugRule extends CallRule
         // register_post_type() runs the slug through sanitize_key(), which lowercases it.
         $reserved = array_key_exists(strtolower($postType), self::RESERVED_NAMES);
         if ($reserved) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "register_post_type() called with reserved post type \"{$postType}\". Reserved post types interfere with the functioning of WordPress itself.",
@@ -164,7 +168,7 @@ final class ValidPostTypeSlugRule extends CallRule
         }
 
         if (!$reserved && str_starts_with(strtolower($postType), 'wp_')) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "The post type passed to register_post_type() uses a prefix reserved for WordPress itself. Found: \"{$postType}\".",
@@ -175,7 +179,7 @@ final class ValidPostTypeSlugRule extends CallRule
         }
 
         if (strlen($postType) > self::MAX_LENGTH) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'A post type slug must not exceed '
@@ -192,7 +196,7 @@ final class ValidPostTypeSlugRule extends CallRule
 
     private function reportEmpty(LintContext $context): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 'register_post_type() called without a post type slug. The slug must be a non-empty string.',

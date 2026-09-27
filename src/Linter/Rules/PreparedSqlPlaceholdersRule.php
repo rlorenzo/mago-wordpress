@@ -50,8 +50,10 @@ final class PreparedSqlPlaceholdersRule extends CallRule
      */
     private readonly bool $identifierSupported;
 
-    public function __construct(Settings $settings)
-    {
+    public function __construct(
+        private readonly Report $report,
+        Settings $settings,
+    ) {
         $this->identifierSupported = WpVersion::reached($settings->normalizedMinimumWpVersion(), '6.2.0');
     }
 
@@ -83,7 +85,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         [$expected, $highest, $quotedSimple, $quotedIdentifier, $identifier, $unsupported] =
             $this->scan($prepared->text);
         if ($quotedSimple) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Simple placeholders should not be quoted in the query string in `$wpdb->prepare()`',
@@ -99,7 +101,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($quotedIdentifier) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Placeholders used for identifiers (`%i`) in the query string in `$wpdb->prepare()` are always quoted automagically',
@@ -113,7 +115,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($identifier && !$this->identifierSupported) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'The `%i` modifier is only supported in WP 6.2 or higher',
@@ -129,7 +131,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($unsupported !== '') {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "Unsupported placeholder in `\$wpdb->prepare()` query: {$unsupported}",
@@ -171,7 +173,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
 
         $provided = count($replacements);
         if ($expected === 0 && $provided === 0) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     '`$wpdb->prepare()` called without any placeholders',
@@ -198,7 +200,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         }
 
         if ($provided !== null && $provided !== $expected) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "`\$wpdb->prepare()` placeholder count mismatch: {$expected} placeholder(s) but {$provided} replacement argument(s)",
@@ -223,7 +225,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
 
         // `%3$s` needs a third replacement even when the counts match.
         if ($provided !== null && $highest > $provided) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "`\$wpdb->prepare()` placeholder `%{$highest}\$` refers to a missing replacement argument",

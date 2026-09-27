@@ -42,6 +42,10 @@ final class EscapedNotTranslatedRule extends CallRule
         'esc_attr' => 'esc_attr__',
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -68,7 +72,7 @@ final class EscapedNotTranslatedRule extends CallRule
 
         $alternative = self::ALTERNATIVES[$name];
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "{$name}() expects only a \$text parameter. Did you mean to use {$alternative}()?",

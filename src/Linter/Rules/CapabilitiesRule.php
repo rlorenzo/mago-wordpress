@@ -61,6 +61,7 @@ final class CapabilitiesRule extends CallRule
     ];
 
     public function __construct(
+        private readonly Report $report,
         private readonly Settings $settings,
     ) {}
 
@@ -127,6 +128,6 @@ final class CapabilitiesRule extends CallRule
             ],
         };
 
-        Report::issue($context, $issue, [self::SNIFF . '.' . $code]);
+        $this->report->issue($context, $issue, [self::SNIFF . '.' . $code]);
     }
 }

@@ -52,6 +52,10 @@ final class GetMetaSingleRule extends CallRule
         'get_user_meta' => self::SPECIFIC,
     ];
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -86,7 +90,7 @@ final class GetMetaSingleRule extends CallRule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "Call to {$name}() passes \${$conditionName} without \${$recommendedName}.",

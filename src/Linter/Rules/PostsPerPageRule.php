@@ -38,8 +38,10 @@ final class PostsPerPageRule implements Rule
 
     private readonly int $max;
 
-    public function __construct(Settings $settings)
-    {
+    public function __construct(
+        private readonly Report $report,
+        Settings $settings,
+    ) {
         $this->max = $settings->maxPostsPerPage;
         // The escape branch keeps in a key spelled with a hex, unicode, or octal escape, like `"posts_per_pag\x65"`.
         $this->gate = new FileGate('/posts_per_page|numberposts|nopaging|\\\\(?:x[0-9a-f]|u\{|[0-7])/i');
@@ -115,7 +117,7 @@ final class PostsPerPageRule implements Rule
     {
         $number = $this->numericValue($context->file, $value);
         if ($number === -1) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "Unbounded query: `{$key}` is set to `-1`.",
@@ -131,7 +133,7 @@ final class PostsPerPageRule implements Rule
         }
 
         if ($number !== null && $number > $this->max) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "Excessively large query: `{$key}` exceeds the maximum of {$this->max}.",
@@ -154,7 +156,7 @@ final class PostsPerPageRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 'Unbounded query: `nopaging` is set to `true`.',

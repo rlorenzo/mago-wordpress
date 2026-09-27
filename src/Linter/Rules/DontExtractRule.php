@@ -20,6 +20,10 @@ final class DontExtractRule extends CallRule
 {
     private const SNIFF = 'WordPress.PHP.DontExtract';
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -39,7 +43,7 @@ final class DontExtractRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new('Do not use `extract()`', $context->node->span, '`extract()` call detected')->withNote(
                 '`extract()` creates variables from arbitrary array keys, obscuring where variables come from and enabling variable clobbering.',

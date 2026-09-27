@@ -26,6 +26,7 @@ use const PHP_INT_MAX;
  * Ports `WordPress.WP.CapitalPDangit`.
  *
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:too-many-methods
  */
 final class CapitalPDangitRule implements Rule
 {
@@ -36,6 +37,10 @@ final class CapitalPDangitRule implements Rule
     private const LOWERCASE_SPELLING = 'wordpress';
 
     private const SPACED_SPELLING = 'word press';
+
+    public function __construct(
+        private readonly Report $report,
+    ) {}
 
     public function getDefinition(): RuleDefinition
     {
@@ -176,7 +181,7 @@ final class CapitalPDangitRule implements Rule
 
     private function report(LintContext $context, string $word, Span $span, string $code): void
     {
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new('Misspelled `WordPress`', $span, "`{$word}` should be `WordPress`")->withNote(
                 'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',

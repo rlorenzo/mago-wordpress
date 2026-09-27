@@ -43,6 +43,10 @@ final class TypeCastsRule implements Rule
 
     private ?FileGate $gate = null;
 
+    public function __construct(
+        private readonly Report $report,
+    ) {}
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -82,7 +86,7 @@ final class TypeCastsRule implements Rule
         $normalized = strtolower(preg_replace('/\s+/', replacement: '', subject: $written) ?? $written);
 
         if (in_array($normalized, self::DOUBLE_CAST_SPELLINGS, strict: true)) {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     "Normalized type keywords must be used; expected \"(float)\" but found \"{$written}\".",
@@ -95,7 +99,7 @@ final class TypeCastsRule implements Rule
         }
 
         if ($normalized === '(unset)') {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new(
                     'Using the "(unset)" cast is forbidden as the cast was removed in PHP 8.0.',
@@ -108,7 +112,7 @@ final class TypeCastsRule implements Rule
         }
 
         if ($normalized === '(binary)') {
-            Report::issue(
+            $this->report->issue(
                 $context,
                 Issue::new("Using binary casting is strongly discouraged. Found: \"{$written}\".", $operator->span),
                 [self::SNIFF . '.BinaryFound'],
@@ -123,7 +127,7 @@ final class TypeCastsRule implements Rule
             return;
         }
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new("Using binary casting is strongly discouraged. Found: \"{$text}\".", $context->node->span),
             [self::SNIFF . '.BinaryFound'],

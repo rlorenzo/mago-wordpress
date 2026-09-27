@@ -29,6 +29,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
     private const SNIFF = 'WordPress.WP.DeprecatedFunctions';
 
     public function __construct(
+        private readonly Report $report,
         private readonly Settings $settings,
     ) {}
 
@@ -60,7 +61,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
             ? 'There is no direct replacement; remove the call or implement the behavior manually.'
             : "Use `{$entry['alt']}` instead.";
 
-        Report::issue(
+        $this->report->issue(
             $context,
             Issue::new(
                 "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
