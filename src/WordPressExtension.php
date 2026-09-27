@@ -5,19 +5,23 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
+use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedFunctionsRule;
@@ -48,6 +52,7 @@ final class WordPressExtension
                 new GlobalVariablesOverrideRule(),
                 new EnqueuedResourceParametersRule(),
                 new EnqueuedResourcesRule(),
+                new FileNameRule(),
                 new PreparedSqlPlaceholdersRule($settings),
                 new SafeRedirectRule(),
                 new ValidHookNameRule($settings),
@@ -64,6 +69,9 @@ final class WordPressExtension
                 new WpDeprecatedClassesRule($settings),
                 new WpDeprecatedParametersRule($settings),
                 new WpDeprecatedParameterValuesRule($settings),
+                new ValidPostTypeSlugRule(),
+                new StrictInArrayRule(),
+                new AssignmentInTernaryConditionRule(),
             ],
         );
     }
