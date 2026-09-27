@@ -69,6 +69,14 @@ namespace {
     // @mago-expect lint:wordpress/global-variables-override
     [[$unrelated, $post]] = my_plugin_get_nested_pair();
 
+    // skipped_slot_destructuring_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    [, $post] = my_plugin_get_pair();
+
+    // globals_write_in_destructuring_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    [$GLOBALS['wp_query']] = my_plugin_get_pair();
+
     // foreach_value_target_is_flagged
     // @mago-expect lint:wordpress/global-variables-override
     foreach (my_plugin_get_posts() as $post) {

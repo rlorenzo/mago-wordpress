@@ -168,7 +168,7 @@ final class PrefixAllGlobalsRule implements Rule
     private static function namespacePattern(string $prefix): string
     {
         // A trailing separator (`my_plugin_`, `acme\tools\`) must still match the root namespace itself.
-        $trimmed = rtrim($prefix, '_\\');
+        $trimmed = rtrim($prefix, characters: '_\\');
         $boundary = $trimmed !== $prefix ? '(?:[\\\\_]|$)' : '';
         $quoted = str_contains($trimmed, '\\')
             ? preg_quote($trimmed, delimiter: '`')

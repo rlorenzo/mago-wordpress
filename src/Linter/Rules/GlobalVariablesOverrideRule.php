@@ -69,10 +69,16 @@ final class GlobalVariablesOverrideRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
+        // One walk of the whole program; each pass below filters it by kind.
+        $nodes = $file->getDescendants($context->node);
 
         /** @var array<int, array<string, int>> $importsByScope scope node id => variable name => earliest global-statement start offset */
         $importsByScope = [];
-        foreach ($file->getDescendants($context->node, NodeKind::Global) as $global) {
+        foreach ($nodes as $global) {
+            if ($global->kind !== NodeKind::Global) {
+                continue;
+            }
+
             $scope = $this->nearestScope($file, $global);
             if ($scope === null) {
                 continue;
@@ -84,21 +90,17 @@ final class GlobalVariablesOverrideRule implements Rule
             }
         }
 
-        foreach ($file->getDescendants($context->node, NodeKind::Assignment) as $assignment) {
-            $lhsChild = $file->getChildren($assignment)[0] ?? $assignment;
-            $this->checkTarget($context, $file, $lhsChild, $importsByScope);
-        }
+        foreach ($nodes as $node) {
+            $targets = match ($node->kind) {
+                // `$post = ...` and `foreach ($x as $post)`: the first child binds.
+                NodeKind::Assignment, NodeKind::ForeachValueTarget => [$file->getChildren($node)[0] ?? $node],
+                // `foreach ($x as $post => $item)`: both the key and the value bind.
+                NodeKind::ForeachKeyValueTarget => $file->getChildren($node),
+                default => [],
+            };
 
-        // `foreach ($x as $post)`: the value binds like an assignment.
-        foreach ($file->getDescendants($context->node, NodeKind::ForeachValueTarget) as $target) {
-            $value = $file->getChildren($target)[0] ?? $target;
-            $this->checkTarget($context, $file, $value, $importsByScope);
-        }
-
-        // `foreach ($x as $post => $item)`: both the key and the value bind.
-        foreach ($file->getDescendants($context->node, NodeKind::ForeachKeyValueTarget) as $target) {
-            foreach ($file->getChildren($target) as $child) {
-                $this->checkTarget($context, $file, $child, $importsByScope);
+            foreach ($targets as $target) {
+                $this->checkTarget($context, $file, $target, $importsByScope);
             }
         }
     }
@@ -120,7 +122,7 @@ final class GlobalVariablesOverrideRule implements Rule
                 return;
             }
 
-            $this->checkDirectAssignment($context, $file, $target, $variable, $importsByScope);
+            $this->checkVariableTarget($context, $file, $target, $variable, $importsByScope);
             return;
         }
 
@@ -154,7 +156,7 @@ final class GlobalVariablesOverrideRule implements Rule
         // expression selecting the source offset, never a write target.
         $valueChild = match ($wrapped->kind) {
             NodeKind::KeyValueArrayElement => $file->getChildren($wrapped)[1] ?? null,
-            NodeKind::ValueArrayElement, NodeKind::VariadicArrayElement => $file->getChildren($wrapped)[0] ?? null,
+            NodeKind::ValueArrayElement => $file->getChildren($wrapped)[0] ?? null,
             default => null, // A missing (skipped) slot has nothing to check.
         };
 
@@ -166,10 +168,10 @@ final class GlobalVariablesOverrideRule implements Rule
     /**
      * @param array<int, array<string, int>> $importsByScope
      */
-    private function checkDirectAssignment(
+    private function checkVariableTarget(
         LintContext $context,
         SourceFile $file,
-        Node $lhsSpanNode,
+        Node $spanNode,
         Node $variable,
         array $importsByScope,
     ): void {
@@ -186,7 +188,7 @@ final class GlobalVariablesOverrideRule implements Rule
             return;
         }
 
-        $this->report($context, $lhsSpanNode, $name);
+        $this->report($context, $spanNode, $name);
     }
 
     private function checkGlobalsWrite(LintContext $context, SourceFile $file, Node $arrayAccess): void
@@ -216,11 +218,11 @@ final class GlobalVariablesOverrideRule implements Rule
         $this->report($context, $arrayAccess, $name);
     }
 
-    private function report(LintContext $context, Node $lhsSpanNode, string $name): void
+    private function report(LintContext $context, Node $spanNode, string $name): void
     {
         $context->report(Issue::new(
             "Assignment overwrites the WordPress global variable \${$name}.",
-            $lhsSpanNode->span,
+            $spanNode->span,
             "\${$name} is a WordPress global and must not be overwritten",
         )->withNote(
             'WordPress core and other plugins rely on this global; overwriting it can break them in unpredictable ways.',
