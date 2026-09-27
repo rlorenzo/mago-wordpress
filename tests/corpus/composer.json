@@ -1,0 +1,7 @@
+{
+    "extra": {
+        "mago-wordpress": {
+            "text-domains": ["my-plugin"]
+        }
+    }
+}

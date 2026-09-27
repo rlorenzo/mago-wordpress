@@ -1,1 +1,2 @@
 wordpress/safe-redirect
+wordpress/wp-i18n

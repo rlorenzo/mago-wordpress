@@ -6,6 +6,7 @@ namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 
 /**
  * Constructs the complete extension advertised by each worker process.
@@ -18,9 +19,6 @@ final class WordPressExtension
 
     private function __construct() {}
 
-    /**
-     * No rule reads $settings yet; the worker already passes the discovered settings in.
-     */
     public static function create(?Settings $settings = null): Extension
     {
         $settings ??= new Settings();
@@ -31,6 +29,7 @@ final class WordPressExtension
             version: self::VERSION,
             linterRules: [
                 new SafeRedirectRule(),
+                new WpI18nRule($settings),
             ],
         );
     }
