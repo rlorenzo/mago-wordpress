@@ -18,6 +18,7 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function in_array;
 use function preg_match;
+use function str_replace;
 use function strtolower;
 use function trim;
 
@@ -109,8 +110,8 @@ final class PostsPerPageRule implements Rule
      */
     private function checkLimit(LintContext $context, string $key, Node $element, Node $value): void
     {
-        $unbounded = $this->isUnbounded($context->file, $value);
-        if ($unbounded === true) {
+        $number = $this->numericValue($context->file, $value);
+        if ($number === -1) {
             $context->report(Issue::new(
                 "Unbounded query: `{$key}` is set to `-1`.",
                 $element->span,
@@ -122,7 +123,7 @@ final class PostsPerPageRule implements Rule
             return;
         }
 
-        if ($unbounded === false && $this->exceedsMaximum($context->file, $value)) {
+        if ($number !== null && $number > self::MAX_POSTS_PER_PAGE) {
             $context->report(Issue::new(
                 "Excessively large query: `{$key}` exceeds the maximum of " . self::MAX_POSTS_PER_PAGE . '.',
                 $element->span,
@@ -149,24 +150,6 @@ final class PostsPerPageRule implements Rule
         )->withNote(
             'Disabling pagination loads every matching row into memory and degrades badly as content grows.',
         )->withHelp('Paginate the query with a reasonable page size instead of fetching everything at once.'));
-    }
-
-    /**
-     * Whether $value is a literal `-1` (integer or numeric string), or NULL
-     * when it is not a number at all (an unrecognized shape such as a variable).
-     */
-    private function isUnbounded(SourceFile $file, Node $value): ?bool
-    {
-        $number = $this->numericValue($file, $value);
-
-        return $number === null ? null : $number === -1;
-    }
-
-    private function exceedsMaximum(SourceFile $file, Node $value): bool
-    {
-        $number = $this->numericValue($file, $value);
-
-        return $number !== null && $number > self::MAX_POSTS_PER_PAGE;
     }
 
     /**
@@ -207,7 +190,7 @@ final class PostsPerPageRule implements Rule
             return null;
         }
 
-        $text = $file->getText($node);
+        $text = str_replace(search: '_', replace: '', subject: $file->getText($node));
 
         return preg_match('/^\d+$/', $text) === 1 ? (int) $text : null;
     }

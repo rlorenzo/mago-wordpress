@@ -19,6 +19,7 @@ use Rlorenzo\MagoWordPress\Internal\Values;
 
 use function count;
 use function in_array;
+use function is_int;
 use function ltrim;
 use function preg_match;
 use function str_replace;
@@ -88,9 +89,8 @@ final class CronIntervalRule implements Rule
         }
 
         $call = CallExpression::fromNode($file, $context->node);
-        $positional = Calls::positionalArguments($file, $call);
-        $hook = $positional[0] ?? null;
-        if ($hook === null || $hook->kind !== NodeKind::LiteralString) {
+        $hook = Calls::argument($file, $call, index: 0, parameter: 'hook_name');
+        if ($hook === null) {
             return;
         }
 
@@ -98,7 +98,7 @@ final class CronIntervalRule implements Rule
             return;
         }
 
-        $callback = $positional[1] ?? null;
+        $callback = Calls::argument($file, $call, index: 1, parameter: 'callback');
         if ($callback === null) {
             return;
         }
@@ -158,7 +158,7 @@ final class CronIntervalRule implements Rule
         }
 
         $key = $this->unwrap($file, $key);
-        if ($key->kind !== NodeKind::LiteralString || Values::literalString($file, $key) !== self::INTERVAL_KEY) {
+        if (Values::literalString($file, $key) !== self::INTERVAL_KEY) {
             return;
         }
 
@@ -212,11 +212,13 @@ final class CronIntervalRule implements Rule
                 return null;
             }
 
-            return match (trim($file->getText($operator))) {
+            $result = match (trim($file->getText($operator))) {
                 '*' => $left * $right,
                 '+' => $left + $right,
                 default => null,
             };
+
+            return is_int($result) ? $result : null;
         }
 
         return null;

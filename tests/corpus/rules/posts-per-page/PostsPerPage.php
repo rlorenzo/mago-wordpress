@@ -26,6 +26,10 @@ $posts = get_posts(array('numberposts' => -1));
 // @mago-expect lint:wordpress/posts-per-page
 $query = new WP_Query(['nopaging' => true]);
 
+// posts_per_page_numeric_separator_over_limit_is_flagged
+// @mago-expect lint:wordpress/posts-per-page
+$query = new WP_Query(['posts_per_page' => 1_000]);
+
 // custom_limit_is_respected: skipped. The Rust rule's `max-posts-per-page`
 // option has no matching `Settings` field, so the limit cannot be lowered
 // for a corpus fixture (the corpus shares one composer.json for every rule).
