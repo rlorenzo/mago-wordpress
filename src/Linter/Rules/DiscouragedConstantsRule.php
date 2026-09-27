@@ -44,6 +44,9 @@ final class DiscouragedConstantsRule implements Rule
 {
     private ?FileGate $gate = null;
 
+    /** @var null|array<string, true> */
+    private ?array $defineCall = null;
+
     public function getDefinition(): RuleDefinition
     {
         return new RuleDefinition(
@@ -65,24 +68,22 @@ final class DiscouragedConstantsRule implements Rule
             return;
         }
 
-        foreach ($file->getDescendants($context->node, NodeKind::ConstantAccess) as $access) {
-            $this->checkConstantAccess($context, $file, $access);
+        // One walk of the whole program, dispatched by kind.
+        foreach ($file->getDescendants($context->node) as $node) {
+            match ($node->kind) {
+                NodeKind::ConstantAccess => $this->checkConstantAccess($context, $file, $node),
+                NodeKind::Constant => $this->checkConstantStatement($context, $file, $node),
+                NodeKind::UseItem => $this->checkUseItem($context, $file, $node),
+                NodeKind::FunctionCall => $this->checkFunctionCall($context, $file, $node),
+                default => null,
+            };
         }
+    }
 
-        foreach ($file->getDescendants($context->node, NodeKind::Constant) as $statement) {
-            $this->checkConstantStatement($context, $file, $statement);
-        }
-
-        foreach ($file->getDescendants($context->node, NodeKind::UseItem) as $item) {
-            $this->checkUseItem($context, $file, $item);
-        }
-
-        $wanted = Calls::normalizeAll(['define']);
-        foreach ($file->getDescendants($context->node, NodeKind::FunctionCall) as $call) {
-            if (Calls::matchWanted($file, $call, $wanted) === null) {
-                continue;
-            }
-
+    private function checkFunctionCall(LintContext $context, SourceFile $file, Node $call): void
+    {
+        $this->defineCall ??= Calls::normalizeAll(['define']);
+        if (Calls::matchWanted($file, $call, $this->defineCall) !== null) {
             $this->checkDefine($context, $file, CallExpression::fromNode($file, $call));
         }
     }
@@ -109,9 +110,15 @@ final class DiscouragedConstantsRule implements Rule
      * Checks a top-level `const NAME = value;` statement. Class-like
      * constants are a different node kind (`ClassLikeConstant`) and are
      * never targeted here, matching the sniff excluding OO constants.
+     * Inside a named namespace the statement declares a namespaced
+     * constant, not the global one, so it is skipped.
      */
     private function checkConstantStatement(LintContext $context, SourceFile $file, Node $statement): void
     {
+        if (self::inNamedNamespace($file, $statement)) {
+            return;
+        }
+
         foreach ($file->getDescendants($statement, NodeKind::ConstantItem) as $item) {
             $identifier = $file->getChildren($item)[0] ?? null;
             if ($identifier === null || $identifier->kind !== NodeKind::LocalIdentifier) {
@@ -235,6 +242,33 @@ final class DiscouragedConstantsRule implements Rule
         return str_contains($rest, '\\') ? null : $rest;
     }
 
+    /**
+     * Whether $node sits inside a `namespace` declaration that has a name
+     * (an `Identifier` child). `namespace { ... }` is the global namespace.
+     */
+    private static function inNamedNamespace(SourceFile $file, Node $node): bool
+    {
+        foreach ($file->getAncestors($node) as $ancestor) {
+            if ($ancestor->kind !== NodeKind::Namespace) {
+                continue;
+            }
+
+            foreach ($file->getChildren($ancestor) as $child) {
+                if ($child->kind === NodeKind::Identifier) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * Every check needs a discouraged name in the source as a whole word:
+     * `define()` only reads a literal string and `use const` names it.
+     */
     private static function buildGate(): FileGate
     {
         $names = array_keys(Lists::DISCOURAGED_CONSTANTS);
@@ -243,6 +277,6 @@ final class DiscouragedConstantsRule implements Rule
             delimiter: '/',
         ), $names));
 
-        return new FileGate(pattern: "/(?:{$alternation})|\\bdefine\\b|\\buse\\s+const\\b/i");
+        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)/i");
     }
 }

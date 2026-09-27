@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function array_keys;
@@ -67,6 +68,11 @@ final class GetMetaSingleRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        // A spread can supply `$single`, so its position is unknown.
+        if (Calls::isUnpacked($call)) {
+            return;
+        }
+
         [$conditionName, $conditionIndex] = self::TARGET_FUNCTIONS[$name]['condition'];
         if ($this->argument($context, $call, $conditionIndex, $conditionName) === null) {
             return;

@@ -12,10 +12,9 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
-use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
-use function array_pop;
+use function array_keys;
 use function strtolower;
 
 /**
@@ -64,7 +63,7 @@ final class PluginMenuSlugRule extends CallRule
 
     protected function names(): array
     {
-        return Lists::PLUGIN_MENU_SLUG_FUNCTIONS;
+        return array_keys(self::SLOTS);
     }
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
@@ -89,14 +88,10 @@ final class PluginMenuSlugRule extends CallRule
 
     private static function findFileConstant(SourceFile $file, Node $node): ?Node
     {
-        $stack = [$node];
-        while (($current = array_pop($stack)) !== null) {
-            if ($current->kind === NodeKind::MagicConstant && strtolower($file->getText($current)) === '__file__') {
-                return $current;
-            }
-
-            foreach ($file->getChildren($current) as $child) {
-                $stack[] = $child;
+        // getDescendants() excludes the root, which is itself `__FILE__` for a bare argument.
+        foreach ([$node, ...$file->getDescendants($node, NodeKind::MagicConstant)] as $candidate) {
+            if ($candidate->kind === NodeKind::MagicConstant && strtolower($file->getText($candidate)) === '__file__') {
+                return $candidate;
             }
         }
 

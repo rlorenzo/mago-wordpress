@@ -9,7 +9,7 @@ MyClass::get_post_meta($a, $b);
 echo GET_POST_META;
 add_action('my_action', get_post_meta(...));
 
-// missing_single_with_positional_key_is_ok
+// omitted_key_or_explicit_single_is_ok
 $ok = get_post_meta($post_id);
 $ok = get_post_meta($post_id, $meta_key, false);
 $ok = get_post_meta($post_id, single: true);
@@ -18,6 +18,10 @@ $ok = get_metadata('post', $post_id);
 $ok = get_metadata('post', $post_id, $meta_key, true);
 $ok = get_metadata('post', $post_id, single: true);
 $ok = get_metadata('post', $post_id, single: true, meta_key: $meta_key);
+
+// spread_arguments_are_ignored
+$ok = get_post_meta($post_id, $meta_key, ...$rest);
+$ok = get_post_meta(...$args);
 
 // incorrect_calls_are_ignored
 $incorrect_but_ok = get_post_meta();
