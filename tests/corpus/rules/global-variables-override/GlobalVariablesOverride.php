@@ -95,6 +95,23 @@ namespace {
         echo $post;
     }
 
+    // foreach_by_reference_value_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    foreach (my_plugin_get_posts() as &$post) {
+        echo $post;
+    }
+
+    // foreach_by_reference_key_value_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    foreach (my_plugin_get_posts() as $key => &$post) {
+        echo $key;
+    }
+
+    // foreach_by_reference_unrelated_target_is_not_flagged
+    foreach (my_plugin_get_posts() as &$current_post) {
+        echo $current_post;
+    }
+
     // foreach_unrelated_target_is_not_flagged
     foreach (my_plugin_get_posts() as $current_post) {
         echo $current_post;

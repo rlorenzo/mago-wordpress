@@ -116,6 +116,16 @@ final class GlobalVariablesOverrideRule implements Rule
     {
         $target = Values::unwrap($file, $targetChild);
 
+        // `foreach ($x as &$post)`: the by-reference operand is the write target.
+        if ($target->kind === NodeKind::UnaryPrefix) {
+            [$operator, $operand] = $file->getChildren($target) + [null, null];
+            if ($operator !== null && $operand !== null && $file->getText($operator) === '&') {
+                $this->checkTarget($context, $file, $operand, $importsByScope);
+            }
+
+            return;
+        }
+
         if ($target->kind === NodeKind::Variable) {
             $variable = $file->getChildren($target)[0] ?? $target;
             if ($variable->kind !== NodeKind::DirectVariable) {
