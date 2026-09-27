@@ -60,6 +60,10 @@ final class PhpcsSuppressionsTest extends TestCase
         yield 'enable of a wider category' => [
             "<?php\n// phpcs:disable WordPress.Security.SafeRedirect\ndrop();\n// phpcs:enable WordPress\nkeep();\n",
         ];
+        yield 'a region with exceptions stays open after its codes are enabled' => [
+            "<?php\n// phpcs:disable WordPress.Security.SafeRedirect\n// phpcs:enable WordPress.Security.SafeRedirect.Other\n"
+                . "// phpcs:enable WordPress.Security\nkeep(); // phpcs:disable WordPress\ndrop();\n",
+        ];
         yield 'trailing disable covers its own line' => ["<?php\ndrop(); // phpcs:disable\ndrop();\n"];
         yield 'trailing enable covers its own line' => ["<?php\n// phpcs:disable\nkeep(); // phpcs:enable\nkeep();\n"];
         yield 'ignoreFile' => ["<?php\ndrop();\n// phpcs:ignoreFile\ndrop();\n"];

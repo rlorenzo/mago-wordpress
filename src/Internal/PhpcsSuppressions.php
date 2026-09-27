@@ -407,7 +407,8 @@ final class PhpcsSuppressions
             $ignoring['except'] = self::without($ignoring['except'], $code);
         }
 
-        if ($ignoring['ignored'] === [] && $ignoring['except'] === []) {
+        // As in phpcs, a region that had exceptions stays open with only exceptions.
+        if ($ignoring['ignored'] === [] && $this->ignoring['except'] === []) {
             $this->ignoring = null;
 
             return;
