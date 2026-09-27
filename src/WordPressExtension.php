@@ -22,6 +22,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidVariableNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedFunctionsRule;
@@ -72,6 +74,8 @@ final class WordPressExtension
                 new ValidPostTypeSlugRule(),
                 new StrictInArrayRule(),
                 new AssignmentInTernaryConditionRule(),
+                new ValidFunctionNameRule(),
+                new ValidVariableNameRule(),
             ],
         );
     }

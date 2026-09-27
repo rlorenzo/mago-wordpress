@@ -13,8 +13,10 @@ wordpress/prepared-sql-placeholders
 wordpress/safe-redirect
 wordpress/slow-db-query
 wordpress/strict-in-array
+wordpress/valid-function-name
 wordpress/valid-hook-name
 wordpress/valid-post-type-slug
+wordpress/valid-variable-name
 wordpress/wp-date-time
 wordpress/wp-deprecated-classes
 wordpress/wp-deprecated-functions
