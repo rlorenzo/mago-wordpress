@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 
 use function array_key_exists;
 use function basename;
@@ -34,9 +35,7 @@ use function substr;
  * WPCS defaults: `is_theme = false` (theme exceptions never apply) and
  * `strict_class_file_names = true` (class files always need the `class-`
  * prefix check).
- *
- * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect */
+ */
 final class FileNameRule implements Rule
 {
     /**
@@ -52,30 +51,6 @@ final class FileNameRule implements Rule
         'class.wp-styles.php' => true,
         'functions.wp-scripts.php' => true,
         'functions.wp-styles.php' => true,
-    ];
-
-    /**
-     * Simple (unqualified) class names that mark a class as a unit test.
-     * WPCS resolves these against the class's namespace and its own
-     * `custom_test_classes` ruleset property; neither has a `Settings`
-     * field, so this matches on the last segment of the name only.
-     *
-     * @var array<string, true>
-     */
-    private const TEST_CLASSES = [
-        'wp_unittestcase' => true,
-        'wp_unittestcase_base' => true,
-        'phpunit_adapter_testcase' => true,
-        'wp_ajax_unittestcase' => true,
-        'wp_canonical_unittestcase' => true,
-        'wp_font_face_unittestcase' => true,
-        'wp_test_rest_controller_testcase' => true,
-        'wp_test_rest_post_type_controller_testcase' => true,
-        'wp_test_rest_testcase' => true,
-        'wp_test_xml_testcase' => true,
-        'wp_xmlrpc_unittestcase' => true,
-        'phpunit_framework_testcase' => true,
-        'testcase' => true,
     ];
 
     public function getDefinition(): RuleDefinition
@@ -96,7 +71,7 @@ final class FileNameRule implements Rule
         $fileName = basename($file->path);
 
         $class = $file->getFirstDescendant($context->node, NodeKind::Class_);
-        if ($class !== null && $this->isTestClass($file, $class)) {
+        if ($class !== null && TestClasses::is($file, $class, namespace: null)) {
             // WPCS exempts unit test classes from this sniff entirely.
             return;
         }
@@ -114,28 +89,6 @@ final class FileNameRule implements Rule
         }
     }
 
-    private function isTestClass(SourceFile $file, Node $class): bool
-    {
-        if ($this->isTestClassName($this->declaredName($file, $class))) {
-            return true;
-        }
-
-        foreach ($file->getChildren($class) as $child) {
-            if ($child->kind !== NodeKind::Extends) {
-                continue;
-            }
-
-            return $this->isTestClassName($this->lastIdentifierSegment($file, $child));
-        }
-
-        return false;
-    }
-
-    private function isTestClassName(?string $name): bool
-    {
-        return $name !== null && array_key_exists(strtolower($name), self::TEST_CLASSES);
-    }
-
     /**
      * The direct-child identifier that names a class-like declaration
      * (skips the leading `Keyword` child).
@@ -146,30 +99,6 @@ final class FileNameRule implements Rule
             if ($child->kind === NodeKind::LocalIdentifier) {
                 return $file->getText($child);
             }
-        }
-
-        return null;
-    }
-
-    /**
-     * The last `\`-separated segment of the name written after an
-     * `extends` keyword, regardless of import or namespace resolution.
-     */
-    private function lastIdentifierSegment(SourceFile $file, Node $extends): ?string
-    {
-        foreach ($file->getDescendants($extends) as $descendant) {
-            if (
-                $descendant->kind !== NodeKind::LocalIdentifier
-                && $descendant->kind !== NodeKind::QualifiedIdentifier
-                && $descendant->kind !== NodeKind::FullyQualifiedIdentifier
-            ) {
-                continue;
-            }
-
-            $text = $file->getText($descendant);
-            $lastSlash = strrchr($text, needle: '\\');
-
-            return $lastSlash === false ? $text : substr($lastSlash, offset: 1);
         }
 
         return null;

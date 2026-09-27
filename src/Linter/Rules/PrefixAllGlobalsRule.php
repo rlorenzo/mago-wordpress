@@ -19,6 +19,7 @@ use Rlorenzo\MagoWordPress\Internal\DocBlocks;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
+use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 use Rlorenzo\MagoWordPress\Settings;
 use WeakMap;
 
@@ -61,26 +62,6 @@ final class PrefixAllGlobalsRule implements Rule
 
     /** Shorter prefixes are not unique enough (`ShortPrefixPassed`). */
     private const MIN_PREFIX_LENGTH = 3;
-
-    /**
-     * Class names that mark a class as a unit test (WPCS `IsUnitTestTrait`), lowercased.
-     */
-    private const TEST_CLASSES = [
-        'wp_unittestcase',
-        'wp_unittestcase_base',
-        'phpunit_adapter_testcase',
-        'wp_ajax_unittestcase',
-        'wp_canonical_unittestcase',
-        'wp_font_face_unittestcase',
-        'wp_test_rest_controller_testcase',
-        'wp_test_rest_post_type_controller_testcase',
-        'wp_test_rest_testcase',
-        'wp_test_xml_testcase',
-        'wp_xmlrpc_unittestcase',
-        'phpunit_framework_testcase',
-        'phpunit\\framework\\testcase',
-        'testcase',
-    ];
 
     private const CLASS_LIKE_KINDS = [
         NodeKind::Class_,
@@ -452,55 +433,12 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         foreach ($classLikes as $classLike) {
-            if ($this->isTestClass($file, $classLike, $namespace)) {
+            if (TestClasses::is($file, $classLike, $namespace)) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    /**
-     * WPCS `IsUnitTestTrait::is_test_class()`: the class-like is, or
-     * extends, a known test class. Names resolve against the namespace
-     * only; `use` imports are not followed.
-     */
-    private function isTestClass(SourceFile $file, Node $classLike, string $namespace): bool
-    {
-        $identifier = $this->declaredIdentifier($file, $classLike);
-        if ($identifier !== null && self::isKnownTestClass($namespace, $file->getText($identifier))) {
-            return true;
-        }
-
-        foreach ($file->getChildren($classLike) as $child) {
-            if ($child->kind !== NodeKind::Extends) {
-                continue;
-            }
-
-            foreach ($file->getDescendants($child) as $name) {
-                if (
-                    $name->kind === NodeKind::LocalIdentifier
-                    || $name->kind === NodeKind::QualifiedIdentifier
-                    || $name->kind === NodeKind::FullyQualifiedIdentifier
-                ) {
-                    return self::isKnownTestClass($namespace, $file->getText($name));
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static function isKnownTestClass(string $namespace, string $name): bool
-    {
-        $name = strtolower($name);
-        $qualified = match (true) {
-            str_starts_with($name, '\\') => substr($name, offset: 1),
-            $namespace !== '' => $namespace . '\\' . $name,
-            default => $name,
-        };
-
-        return in_array($qualified, self::TEST_CLASSES, strict: true);
     }
 
     /**
