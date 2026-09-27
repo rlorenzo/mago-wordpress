@@ -10,6 +10,8 @@ use Mago\Sdk\Syntax\SourceFile;
 
 use function array_pop;
 use function ltrim;
+use function preg_match;
+use function str_replace;
 use function str_starts_with;
 use function strtr;
 use function substr;
@@ -45,6 +47,28 @@ final class Values
         $body = substr($literal, offset: 1, length: -1);
 
         return str_starts_with($literal, "'") ? strtr($body, ["\\'" => "'", '\\\\' => '\\']) : Strings::decode($body);
+    }
+
+    /**
+     * Returns the value of a decimal integer-literal node, accepting `_`
+     * digit separators. Hex, octal, and binary literals yield NULL.
+     */
+    public static function literalInteger(SourceFile $file, Node $node): ?int
+    {
+        if ($node->kind !== NodeKind::LiteralInteger) {
+            return null;
+        }
+
+        $text = str_replace(search: '_', replace: '', subject: $file->getText($node));
+
+        // Leading zero = legacy octal; the round-trip rejects values past PHP_INT_MAX.
+        if (preg_match('/^(?:0|[1-9]\d*)$/', $text) !== 1) {
+            return null;
+        }
+
+        $value = (int) $text;
+
+        return (string) $value === $text ? $value : null;
     }
 
     /**

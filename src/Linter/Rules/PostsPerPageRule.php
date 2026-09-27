@@ -18,7 +18,6 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function in_array;
 use function preg_match;
-use function str_replace;
 use function strtolower;
 use function trim;
 
@@ -166,13 +165,13 @@ final class PostsPerPageRule implements Rule
                 return null;
             }
 
-            $magnitude = $this->integerLiteral($file, Values::unwrap($file, $operand));
+            $magnitude = Values::literalInteger($file, Values::unwrap($file, $operand));
 
             return $magnitude === null ? null : -$magnitude;
         }
 
         if ($value->kind === NodeKind::LiteralInteger) {
-            return $this->integerLiteral($file, $value);
+            return Values::literalInteger($file, $value);
         }
 
         if ($value->kind === NodeKind::LiteralString) {
@@ -182,16 +181,5 @@ final class PostsPerPageRule implements Rule
         }
 
         return null;
-    }
-
-    private function integerLiteral(SourceFile $file, Node $node): ?int
-    {
-        if ($node->kind !== NodeKind::LiteralInteger) {
-            return null;
-        }
-
-        $text = str_replace(search: '_', replace: '', subject: $file->getText($node));
-
-        return preg_match('/^\d+$/', $text) === 1 ? (int) $text : null;
     }
 }

@@ -21,8 +21,6 @@ use function count;
 use function in_array;
 use function is_int;
 use function ltrim;
-use function preg_match;
-use function str_replace;
 use function trim;
 
 /**
@@ -186,9 +184,7 @@ final class CronIntervalRule implements Rule
         $node = $this->unwrap($file, $node);
 
         if ($node->kind === NodeKind::LiteralInteger) {
-            $text = str_replace(search: '_', replace: '', subject: $file->getText($node));
-
-            return preg_match('/^\d+$/', $text) === 1 ? (int) $text : null;
+            return Values::literalInteger($file, $node);
         }
 
         if ($node->kind === NodeKind::ConstantAccess) {

@@ -137,6 +137,27 @@ add_filter(hook_name: 'cron_schedules', callback: function ($schedules) {
     return $schedules;
 });
 
+// numeric_separator_is_evaluated
+add_filter('cron_schedules', function ($schedules) {
+    $schedules['every_ten_minutes'] = [
+        // @mago-expect lint:wordpress/cron-interval
+        'interval' => 6_00,
+        'display' => 'Every Ten Minutes',
+    ];
+
+    return $schedules;
+});
+
+// octal_literal_is_not_evaluated
+add_filter('cron_schedules', function ($schedules) {
+    $schedules['custom'] = [
+        'interval' => 0600,
+        'display' => 'Custom',
+    ];
+
+    return $schedules;
+});
+
 // integer_overflow_is_not_evaluated
 add_filter('cron_schedules', function ($schedules) {
     $schedules['custom'] = [
