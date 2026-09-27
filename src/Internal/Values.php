@@ -9,12 +9,8 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
 use function array_pop;
-use function ltrim;
 use function preg_match;
 use function str_replace;
-use function str_starts_with;
-use function strtr;
-use function substr;
 use function trim;
 
 /**
@@ -37,16 +33,7 @@ final class Values
             return null;
         }
 
-        $decoded = $file->getLiteralString($node);
-        if ($decoded !== null) {
-            return $decoded;
-        }
-
-        // A binary string literal carries a `b` prefix before its quote.
-        $literal = ltrim($file->getText($node), characters: 'bB');
-        $body = substr($literal, offset: 1, length: -1);
-
-        return str_starts_with($literal, "'") ? strtr($body, ["\\'" => "'", '\\\\' => '\\']) : Strings::decode($body);
+        return $file->getLiteralString($node) ?? Strings::unquote($file->getText($node));
     }
 
     /**

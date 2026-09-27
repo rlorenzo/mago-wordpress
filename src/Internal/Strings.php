@@ -10,18 +10,80 @@ use Mago\Sdk\Syntax\SourceFile;
 
 use function chr;
 use function hexdec;
+use function ltrim;
 use function octdec;
+use function preg_match;
+use function preg_match_all;
+use function preg_quote;
+use function preg_replace;
 use function preg_replace_callback;
+use function str_ends_with;
 use function str_starts_with;
+use function strlen;
+use function strtr;
+use function substr;
 
 /**
- * Decodes the text of double-quoted, heredoc and nowdoc strings.
+ * Decodes the text of quoted, heredoc and nowdoc strings.
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class Strings
 {
     private function __construct() {}
+
+    /**
+     * Decodes the source text of a PHP string literal: single- or double-quoted
+     * (with an optional `b` prefix), heredoc, or nowdoc. Returns NULL for text
+     * that is not a string literal or that interpolates a variable.
+     */
+    public static function unquote(string $raw): ?string
+    {
+        // A binary string literal carries a `b` prefix before its quote.
+        $literal = ltrim($raw, characters: 'bB');
+        $quote = $literal[0] ?? '';
+        if (($quote === "'" || $quote === '"') && strlen($literal) >= 2 && str_ends_with($literal, $quote)) {
+            $body = substr($literal, offset: 1, length: -1);
+
+            return $quote === "'" ? strtr($body, ["\\'" => "'", '\\\\' => '\\']) : self::decodeStatic($body);
+        }
+
+        $matches = [];
+        $document = '/^<<<[ \t]*(["\']?)([A-Za-z_\x80-\xFF][A-Za-z0-9_\x80-\xFF]*)\1\r?\n(?:(.*)\r?\n)?([ \t]*)\2$/s';
+        if (preg_match($document, $literal, $matches) !== 1) {
+            return null;
+        }
+
+        // Flexible heredoc/nowdoc syntax: the closing marker's indentation comes off every line.
+        $body = $matches[3] ?? '';
+        if ($matches[4] !== '') {
+            $body = (string) preg_replace(
+                '/^' . preg_quote($matches[4], delimiter: '/') . '/m',
+                replacement: '',
+                subject: $body,
+            );
+        }
+
+        return $matches[1] === "'" ? $body : self::decodeStatic($body);
+    }
+
+    /**
+     * Decodes a double-quoted/heredoc body, or returns NULL when it interpolates.
+     */
+    private static function decodeStatic(string $body): ?string
+    {
+        // Escapes are matched first so that `\$name` does not count as interpolation.
+        $matches = [];
+        preg_match_all('/\\\\.|\$[A-Za-z_\x80-\xFF]|\{\$/s', $body, $matches);
+        foreach ($matches[0] as $match) {
+            if ($match[0] !== '\\') {
+                return null;
+            }
+        }
+
+        return Strings::decode($body);
+    }
 
     /**
      * Walks the parts of an interpolated string.
