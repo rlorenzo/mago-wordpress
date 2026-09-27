@@ -22,7 +22,6 @@ use function array_diff;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
-use function array_search;
 use function array_slice;
 use function array_values;
 use function count;
@@ -44,19 +43,7 @@ use function strtolower;
 final class WpI18nRule extends CallRule
 {
     /**
-     * Argument positions per Lists::I18N_FUNCTIONS kind: text arguments, context argument, domain argument.
-     */
-    private const SHAPES = [
-        'simple' => [[0], null, 1],
-        'context' => [[0], 1, 2],
-        'number' => [[0, 1], null, 3],
-        'number_context' => [[0, 1], 3, 4],
-        'noopnumber' => [[0, 1], null, 2],
-        'noopnumber_context' => [[0, 1], 2, 3],
-    ];
-
-    /**
-     * WordPress's parameter names per Lists::I18N_FUNCTIONS kind, in position order, for binding named arguments.
+     * WordPress's parameter names per Lists::I18N_FUNCTIONS kind, in position order.
      */
     private const PARAMETERS = [
         'simple' => ['text', 'domain'],
@@ -66,6 +53,11 @@ final class WpI18nRule extends CallRule
         'noopnumber' => ['singular', 'plural', 'domain'],
         'noopnumber_context' => ['singular', 'plural', 'context', 'domain'],
     ];
+
+    /**
+     * The translatable text parameters, singular before plural.
+     */
+    private const TEXT_PARAMETERS = ['text', 'single', 'singular', 'plural'];
 
     /**
      * WPCS lists this one, but the ported rule does not check it.
@@ -124,35 +116,28 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        $shape = Lists::I18N_FUNCTIONS[$name];
-        $arguments = [];
-        foreach ($call->arguments as $argument) {
-            if ($argument->unpacked) {
-                return;
-            }
-
-            $index = $argument->name === null
-                ? count($arguments)
-                : array_search($argument->name, self::PARAMETERS[$shape], strict: true);
-            if ($index !== false) {
-                $arguments[$index] = $argument->value;
-            }
+        if (Calls::isUnpacked($call)) {
+            return;
         }
 
-        [$textIndexes, $contextIndex, $domainIndex] = self::SHAPES[$shape];
+        $arguments = [];
+        foreach (self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]] as $index => $parameter) {
+            $arguments[$parameter] = $this->argument($context, $call, $index, $parameter);
+        }
 
         $texts = [];
-        foreach ($textIndexes as $index) {
-            if (!array_key_exists($index, $arguments)) {
+        foreach (self::TEXT_PARAMETERS as $parameter) {
+            $argument = $arguments[$parameter] ?? null;
+            if ($argument === null) {
                 continue;
             }
 
-            $text = $this->literal($context, $arguments[$index]);
-            $texts[] = [$arguments[$index], $text];
+            $text = $this->literal($context, $argument);
+            $texts[] = [$argument, $text];
             if ($text === null) {
                 $context->report(Issue::new(
                     'Translatable text must be a literal string',
-                    $arguments[$index]->span,
+                    $argument->span,
                     sprintf('This argument to `%s()` is not a literal string', $name),
                 )->withNote(
                     'Translation tools statically extract translatable strings from the source code; variables, concatenations, and interpolations cannot be extracted.',
@@ -162,21 +147,18 @@ final class WpI18nRule extends CallRule
             }
         }
 
-        if (
-            $contextIndex !== null
-            && array_key_exists($contextIndex, $arguments)
-            && $this->literal($context, $arguments[$contextIndex]) === null
-        ) {
+        $gettextContext = $arguments['context'] ?? null;
+        if ($gettextContext !== null && $this->literal($context, $gettextContext) === null) {
             $context->report(Issue::new(
                 'Translation context must be a literal string',
-                $arguments[$contextIndex]->span,
+                $gettextContext->span,
                 sprintf('The context argument to `%s()` is not a literal string', $name),
             )->withNote(
                 'The gettext context is extracted statically by translation tools and must be a literal string.',
             )->withHelp("Pass the context as a literal string, e.g. `'noun'`."));
         }
 
-        $this->checkDomain($context, $name, $arguments[$domainIndex] ?? null);
+        $this->checkDomain($context, $name, $arguments['domain']);
 
         if (count($texts) !== 2) {
             return;

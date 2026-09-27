@@ -147,9 +147,8 @@ namespace {
     // spread_arguments_are_ignored
     $greeting = __(...$args);
 
-    // named_arguments_are_checked (count = 2)
-    // @mago-expect lint:wordpress/wp-i18n
-    // @mago-expect lint:wordpress/wp-i18n
+    // named_arguments_are_checked
+    // @mago-expect lint:wordpress/wp-i18n(2)
     $greeting = __(text: $message, domain: 'wrong');
 
     // named_arguments_bind_by_parameter_name

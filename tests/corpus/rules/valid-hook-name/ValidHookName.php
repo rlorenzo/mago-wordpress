@@ -35,8 +35,7 @@ namespace {
     do_action('MyPlugin_Post_Saved', $post_id);
 
     // named_hook_name_is_flagged
-    // @mago-expect lint:wordpress/valid-hook-name
-    // @mago-expect lint:wordpress/valid-hook-name
+    // @mago-expect lint:wordpress/valid-hook-name(2)
     do_action(hook_name: 'Bad-Hook');
 
     // hyphen_separator_is_flagged
