@@ -6,7 +6,6 @@ namespace Rlorenzo\MagoWordPress\Internal;
 
 use Rlorenzo\MagoWordPress\Settings;
 
-use function array_key_exists;
 use function file_exists;
 use function file_get_contents;
 use function json_decode;
@@ -43,8 +42,7 @@ final class SettingsDiscovery
     /**
      * Malformed JSON (e.g. a half-saved file), or no `extra.mago-wordpress` key at all,
      * counts as no settings and falls back to phpcs.xml. An explicitly present but empty
-     * block (`{"extra": {"mago-wordpress": {}}}`) does not: it means "use the defaults",
-     * so `Shape::arrayAt()`'s "key missing or empty" collapse can't be used here.
+     * block (`{"extra": {"mago-wordpress": {}}}`) does not: it means "use the defaults".
      *
      * @return null|array<array-key, mixed>
      */
@@ -54,16 +52,10 @@ final class SettingsDiscovery
             return null;
         }
 
-        $document = Shape::array(json_decode((string) file_get_contents($path), associative: true));
-        if ($document === null || !array_key_exists('extra', $document)) {
-            return null;
-        }
-
-        $extra = Shape::array($document['extra']);
-        if ($extra === null || !array_key_exists('mago-wordpress', $extra)) {
-            return null;
-        }
-
-        return Shape::array($extra['mago-wordpress']) ?? [];
+        return Shape::arrayAt(
+            json_decode((string) file_get_contents($path), associative: true),
+            'extra',
+            'mago-wordpress',
+        );
     }
 }

@@ -349,7 +349,7 @@ final class Calls
     ): ?Node {
         if ($parameter !== null) {
             foreach ($call->arguments as $argument) {
-                if ($argument->name !== null && in_array($argument->name, (array) $parameter, true)) {
+                if ($argument->name !== null && in_array($argument->name, (array) $parameter, strict: true)) {
                     return Values::unwrap($file, $argument->value);
                 }
             }

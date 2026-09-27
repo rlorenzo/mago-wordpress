@@ -35,14 +35,15 @@ final class Shape
     }
 
     /**
-     * Returns the array at the path that the keys make, or an empty array.
+     * Returns the array at the path that the keys make: NULL when a key on the path is
+     * missing, an empty array when the last key is present but not an array.
      *
-     * @return array<array-key, mixed>
+     * @return array<array-key, mixed>|null
      */
-    public static function arrayAt(mixed $value, string $key, string ...$rest): array
+    public static function arrayAt(mixed $value, string $key, string ...$rest): ?array
     {
         if (!is_array($value) || !array_key_exists($key, $value)) {
-            return [];
+            return null;
         }
 
         return $rest === [] ? self::array($value[$key]) ?? [] : self::arrayAt($value[$key], ...$rest);

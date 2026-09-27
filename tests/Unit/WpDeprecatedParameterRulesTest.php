@@ -64,6 +64,6 @@ final class WpDeprecatedParameterRulesTest extends TestCase
     {
         $method = new ReflectionMethod($rule, 'isReportable');
 
-        return (bool) $method->invoke($rule, $deprecatedSince);
+        return $method->invoke($rule, $deprecatedSince) === true;
     }
 }

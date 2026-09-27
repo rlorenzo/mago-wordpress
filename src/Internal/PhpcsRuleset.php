@@ -10,6 +10,8 @@ use DOMNodeList;
 use DOMXPath;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function array_filter;
+use function array_values;
 use function count;
 use function in_array;
 use function libxml_clear_errors;
@@ -27,10 +29,11 @@ use function libxml_use_internal_errors;
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect
  */
 final class PhpcsRuleset
 {
+    private const SANITIZING_PROPERTIES = ['customSanitizingFunctions', 'customUnslashingSanitizingFunctions'];
+
     /**
      * WPCS sniff refs, mapped to the property names each one accepts. Scoping by ref
      * keeps an unrelated sniff (or a project's own custom one) from feeding the wrong
@@ -42,14 +45,8 @@ final class PhpcsRuleset
         'WordPress.WP.I18n' => ['text_domain'],
         'WordPress.NamingConventions.PrefixAllGlobals' => ['prefixes'],
         'WordPress.Security.EscapeOutput' => ['customEscapingFunctions', 'customAutoEscapedFunctions'],
-        'WordPress.Security.NonceVerification' => [
-            'customSanitizingFunctions',
-            'customUnslashingSanitizingFunctions',
-        ],
-        'WordPress.Security.ValidatedSanitizedInput' => [
-            'customSanitizingFunctions',
-            'customUnslashingSanitizingFunctions',
-        ],
+        'WordPress.Security.NonceVerification' => self::SANITIZING_PROPERTIES,
+        'WordPress.Security.ValidatedSanitizedInput' => self::SANITIZING_PROPERTIES,
         'WordPress.WP.Capabilities' => ['custom_capabilities'],
         'WordPress.WP.PostsPerPage' => ['posts_per_page'],
         'WordPress.WP.CronInterval' => ['min_interval'],
@@ -97,17 +94,8 @@ final class PhpcsRuleset
     {
         $properties = [];
         foreach (self::elements($xpath, '//rule[@ref]') as $rule) {
-            $owned = self::OWNED_PROPERTIES[$rule->getAttribute('ref')] ?? null;
-            if ($owned === null) {
-                continue;
-            }
-
-            foreach (self::elements($xpath, 'properties/property', $rule) as $property) {
+            foreach (self::ownedProperties($xpath, $rule) as $property) {
                 $name = $property->getAttribute('name');
-                if (!in_array($name, $owned, strict: true)) {
-                    continue;
-                }
-
                 $values = $property->getAttribute('type') === 'array'
                     ? self::elementValues($xpath, $property)
                     : [$property->getAttribute('value')];
@@ -116,6 +104,24 @@ final class PhpcsRuleset
         }
 
         return $properties;
+    }
+
+    /**
+     * The `<property>` elements of a sniff ref that the sniff actually accepts.
+     *
+     * @return list<DOMElement>
+     */
+    private static function ownedProperties(DOMXPath $xpath, DOMElement $rule): array
+    {
+        $owned = self::OWNED_PROPERTIES[$rule->getAttribute('ref')] ?? [];
+        if ($owned === []) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            self::elements($xpath, 'properties/property', $rule),
+            static fn(DOMElement $property): bool => in_array($property->getAttribute('name'), $owned, strict: true),
+        ));
     }
 
     /**
