@@ -59,12 +59,14 @@ abstract class CallRule implements Rule
 
     /**
      * Returns the value of an argument, read positionally or by name.
+     *
+     * @param string|list<string>|null $parameter
      */
     protected function argument(
         LintContext $context,
         CallExpression $call,
         int $index,
-        ?string $parameter = null,
+        string|array|null $parameter = null,
     ): ?Node {
         return Calls::argument($context->file, $call, $index, $parameter);
     }

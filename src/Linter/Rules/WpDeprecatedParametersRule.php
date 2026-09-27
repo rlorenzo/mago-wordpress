@@ -20,9 +20,7 @@ use Rlorenzo\MagoWordPress\Settings;
 use function array_keys;
 use function implode;
 use function is_string;
-use function preg_match;
 use function strtolower;
-use function trim;
 use function version_compare;
 
 /**
@@ -83,12 +81,12 @@ final class WpDeprecatedParametersRule extends CallRule
         int $position,
         array $parameter,
     ): void {
-        $argument = $this->findArgument($context, $call, $position, $parameter['name']);
-        if ($argument === null || !$this->isReportable($parameter['version'])) {
+        if (!$this->isReportable($parameter['version'])) {
             return;
         }
 
-        if (self::valueMatchesDefault($context->file, $argument, $parameter['value'])) {
+        $argument = $this->argument($context, $call, $position - 1, $parameter['name']);
+        if ($argument === null || self::valueMatchesDefault($context->file, $argument, $parameter['value'])) {
             return;
         }
 
@@ -110,24 +108,6 @@ final class WpDeprecatedParametersRule extends CallRule
     }
 
     /**
-     * Finds the argument at $position, trying every name a renamed parameter
-     * may have been passed under (PHP 8.0 renamed some WP core parameters).
-     *
-     * @param string|list<string> $names
-     */
-    private function findArgument(LintContext $context, CallExpression $call, int $position, string|array $names): ?Node
-    {
-        foreach ((array) $names as $name) {
-            $argument = $this->argument($context, $call, $position - 1, $name);
-            if ($argument !== null) {
-                return $argument;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * @param string|list<string> $names
      */
     private static function namesLabel(string|array $names): string
@@ -142,8 +122,6 @@ final class WpDeprecatedParametersRule extends CallRule
      */
     private static function valueMatchesDefault(SourceFile $file, Node $node, mixed $default): bool
     {
-        $node = Values::unwrap($file, $node);
-
         return match ($node->kind) {
             NodeKind::Keyword => match (strtolower($file->getText($node))) {
                 'true' => $default === true,
@@ -186,27 +164,16 @@ final class WpDeprecatedParametersRule extends CallRule
     }
 
     /**
-     * Copied from `WpDeprecatedFunctionsRule::isReportable()`: this rule owns no
-     * shared helper file, so the gate is duplicated here rather than extracted.
-     *
      * Whether a deprecation at $deprecatedSince should be reported under the
-     * project's configured minimum WordPress version. An empty or unparsable
-     * `minimum-wp-version` reports everything, matching the ported sniff.
-     * `version_compare()` treats a shorter version as older than the same
-     * version with a trailing `.0` (`"4.5" < "4.5.0"`), so the minimum is
-     * padded to three components before it is compared against the table's
-     * `major.minor.patch` entries.
+     * project's configured minimum WordPress version.
+     *
+     * An empty or unparsable `minimum-wp-version` reports everything,
+     * matching the ported sniff.
      */
     private function isReportable(string $deprecatedSince): bool
     {
-        $minimum = trim($this->settings->minimumWpVersion);
-        $parts = [];
-        if (preg_match('/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/', $minimum, $parts) !== 1) {
-            return true;
-        }
+        $minimum = $this->settings->normalizedMinimumWpVersion();
 
-        $normalizedMinimum = ($parts[1] ?? '0') . '.' . ($parts[2] ?? '0') . '.' . ($parts[3] ?? '0');
-
-        return version_compare($deprecatedSince, $normalizedMinimum, operator: '<=');
+        return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
     }
 }

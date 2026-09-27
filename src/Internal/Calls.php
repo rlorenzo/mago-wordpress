@@ -337,16 +337,19 @@ final class Calls
      * PHP binds a named argument by parameter name, so `unserialize($data,
      * options: [])` puts the options in the same place as the second
      * positional argument. Reading only the positions does not find it.
+     * A list of names covers a parameter PHP 8.0 renamed.
+     *
+     * @param string|list<string>|null $parameter
      */
     public static function argument(
         SourceFile $file,
         CallExpression $call,
         int $index,
-        ?string $parameter = null,
+        string|array|null $parameter = null,
     ): ?Node {
         if ($parameter !== null) {
             foreach ($call->arguments as $argument) {
-                if ($argument->name === $parameter) {
+                if ($argument->name !== null && in_array($argument->name, (array) $parameter, true)) {
                     return Values::unwrap($file, $argument->value);
                 }
             }

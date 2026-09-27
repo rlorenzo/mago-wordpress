@@ -18,9 +18,7 @@ use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_keys;
-use function preg_match;
 use function strtolower;
-use function trim;
 use function version_compare;
 
 /**
@@ -79,7 +77,7 @@ final class WpDeprecatedParameterValuesRule extends CallRule
         int $position,
         array $parameter,
     ): void {
-        $argument = $this->findArgument($context, $call, $position, $parameter['name']);
+        $argument = $this->argument($context, $call, $position - 1, $parameter['name']);
         if ($argument === null) {
             return;
         }
@@ -108,24 +106,6 @@ final class WpDeprecatedParameterValuesRule extends CallRule
     }
 
     /**
-     * Finds the argument at $position, trying every name a renamed parameter
-     * may have been passed under (PHP 8.0 renamed some WP core parameters).
-     *
-     * @param string|list<string> $names
-     */
-    private function findArgument(LintContext $context, CallExpression $call, int $position, string|array $names): ?Node
-    {
-        foreach ((array) $names as $name) {
-            $argument = $this->argument($context, $call, $position - 1, $name);
-            if ($argument !== null) {
-                return $argument;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Returns the argument's value as plain text, the way the sniff reads it
      * off the raw token: a string literal decoded, or a `true`/`false`
      * keyword lowercased. Any other shape yields NULL, since it cannot be
@@ -133,8 +113,6 @@ final class WpDeprecatedParameterValuesRule extends CallRule
      */
     private static function rawValueText(SourceFile $file, Node $node): ?string
     {
-        $node = Values::unwrap($file, $node);
-
         return match ($node->kind) {
             NodeKind::LiteralString => Values::literalString($file, $node),
             NodeKind::Keyword => strtolower($file->getText($node)),
@@ -143,27 +121,16 @@ final class WpDeprecatedParameterValuesRule extends CallRule
     }
 
     /**
-     * Copied from `WpDeprecatedFunctionsRule::isReportable()`: this rule owns no
-     * shared helper file, so the gate is duplicated here rather than extracted.
-     *
      * Whether a deprecation at $deprecatedSince should be reported under the
-     * project's configured minimum WordPress version. An empty or unparsable
-     * `minimum-wp-version` reports everything, matching the ported sniff.
-     * `version_compare()` treats a shorter version as older than the same
-     * version with a trailing `.0` (`"4.5" < "4.5.0"`), so the minimum is
-     * padded to three components before it is compared against the table's
-     * `major.minor.patch` entries.
+     * project's configured minimum WordPress version.
+     *
+     * An empty or unparsable `minimum-wp-version` reports everything,
+     * matching the ported sniff.
      */
     private function isReportable(string $deprecatedSince): bool
     {
-        $minimum = trim($this->settings->minimumWpVersion);
-        $parts = [];
-        if (preg_match('/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/', $minimum, $parts) !== 1) {
-            return true;
-        }
+        $minimum = $this->settings->normalizedMinimumWpVersion();
 
-        $normalizedMinimum = ($parts[1] ?? '0') . '.' . ($parts[2] ?? '0') . '.' . ($parts[3] ?? '0');
-
-        return version_compare($deprecatedSince, $normalizedMinimum, operator: '<=');
+        return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
     }
 }
