@@ -148,18 +148,26 @@ final class YodaConditionsRule implements Rule
     {
         $node = Values::unwrap($file, $node);
 
+        // WPCS looks only at the first token after the operator, so for
+        // `$a === $b . '.x'` the leftmost operand of the concatenation decides.
+        // This runs before the cast check: a cast binds tighter than any
+        // binary operator, so `(string) $b . 'x'` is a concatenation whose
+        // leftmost operand is the cast.
+        while ($node->kind === NodeKind::Binary) {
+            $left = $file->getChildren($node)[0] ?? null;
+            if ($left === null) {
+                break;
+            }
+
+            $node = Values::unwrap($file, $left);
+        }
+
         if ($node->kind === NodeKind::UnaryPrefix) {
             $children = $file->getChildren($node);
             $operator = trim($file->getText($children[0] ?? $node), characters: "() \t\n\r\0\x0B");
             if (in_array(strtolower($operator), self::CAST_KEYWORDS, strict: true)) {
                 $node = $children[1] ?? $node;
             }
-        }
-
-        // WPCS looks only at the first token after the operator, so for
-        // `$a === $b . '.x'` the leftmost operand of the concatenation decides.
-        while ($node->kind === NodeKind::Binary) {
-            $node = Values::unwrap($file, $file->getChildren($node)[0] ?? $node);
         }
 
         return $this->headIsVariable($file, $node);

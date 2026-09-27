@@ -235,6 +235,12 @@ if ($topic_slug === $topic_data['resource'] . '.' . $topic_data['event']) {
     echo 'ok';
 }
 
+// Right operand is a concatenation that starts with a cast variable: WPCS
+// skips the cast and lands on the variable.
+if ($topic_slug === (string) $topic_id . '.x') {
+    echo 'ok';
+}
+
 // Right operand is a concatenation that starts with a literal: still flagged.
 // @mago-expect lint:wordpress/yoda-conditions
 if ($topic_slug === 'resource.' . $event) {
