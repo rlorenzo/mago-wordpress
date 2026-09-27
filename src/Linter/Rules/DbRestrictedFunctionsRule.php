@@ -52,7 +52,7 @@ final class DbRestrictedFunctionsRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= new FileGate(pattern: self::buildGatePattern());
+        $this->gate ??= new FileGate(pattern: $this->buildGatePattern());
         if (!$this->gate->passes($context->file)) {
             return;
         }
@@ -92,12 +92,12 @@ final class DbRestrictedFunctionsRule implements Rule
         ), Lists::DB_RESTRICTED_FUNCTIONS);
     }
 
-    private static function buildGatePattern(): string
+    private function buildGatePattern(): string
     {
-        $alternation = implode('|', array_map(static fn(string $pattern): string => preg_quote(
-            rtrim($pattern, characters: '*'),
+        $alternation = implode('|', array_map(static fn(string $prefix): string => preg_quote(
+            $prefix,
             delimiter: '/',
-        ), Lists::DB_RESTRICTED_FUNCTIONS));
+        ), $this->prefixes()));
 
         return "/(?<!\\w)(?:{$alternation})\\w*\\s*\\(/i";
     }

@@ -16,6 +16,7 @@ use Rlorenzo\MagoWordPress\Internal\FileGate;
 use function in_array;
 use function preg_replace;
 use function strtolower;
+use function substr;
 
 /**
  * Ports `WordPress.PHP.TypeCasts`.
@@ -32,8 +33,6 @@ use function strtolower;
  * than the fixable `(double)`/`(real)` normalization, but one rule has one
  * `defaultLevel`, so every report here uses `Level::Error`, one level
  * stricter than WPCS's `Warning` for `(binary)`/`b"..."`.
- *
- * @mago-expect lint:cyclomatic-complexity
  */
 final class TypeCastsRule implements Rule
 {
@@ -108,11 +107,7 @@ final class TypeCastsRule implements Rule
     private function inspectBinaryStringLiteral(LintContext $context): void
     {
         $text = $context->file->getText($context->node);
-        if (($text[0] ?? '') !== 'b' && ($text[0] ?? '') !== 'B') {
-            return;
-        }
-
-        if (($text[1] ?? '') !== '"' && ($text[1] ?? '') !== "'") {
+        if (!in_array(strtolower(substr($text, offset: 0, length: 2)), ['b"', "b'"], strict: true)) {
             return;
         }
 

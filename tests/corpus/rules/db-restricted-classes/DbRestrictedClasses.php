@@ -36,6 +36,8 @@ echo mysqli::$affected_rows;
 mysqli::init();
 // @mago-expect lint:wordpress/db-restricted-classes
 \mysqli::use_result();
+// @mago-expect lint:wordpress/db-restricted-classes
+echo PDO::PARAM_INT;
 
 // extends_is_flagged
 // @mago-expect lint:wordpress/db-restricted-classes

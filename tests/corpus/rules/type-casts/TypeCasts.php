@@ -44,6 +44,8 @@ $o = ( binary ) 'x';
 $p = b'binary string';
 // @mago-expect lint:wordpress/type-casts
 $q = b"binary string";
+// @mago-expect lint:wordpress/type-casts
+$q2 = B'binary string';
 
 $string = 'x';
 // @mago-expect lint:wordpress/type-casts
