@@ -10,6 +10,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
@@ -24,9 +26,11 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
@@ -92,6 +96,10 @@ final class WordPressExtension
                 new YodaConditionsRule(),
                 new ClassNameCaseRule(),
                 new EscapedNotTranslatedRule(),
+                new DbRestrictedFunctionsRule(),
+                new DbRestrictedClassesRule(),
+                new RestrictedPhpFunctionsRule(),
+                new TypeCastsRule(),
             ],
         );
     }
