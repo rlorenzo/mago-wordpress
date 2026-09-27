@@ -8,6 +8,9 @@ use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
@@ -15,6 +18,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 
 /**
@@ -48,6 +52,10 @@ final class WordPressExtension
                 new SlowDbQueryRule(),
                 new PostsPerPageRule(),
                 new CronIntervalRule(),
+                new DiscouragedWpFunctionsRule(),
+                new DontExtractRule(),
+                new WpDateTimeRule(),
+                new CapitalPDangitRule(),
             ],
         );
     }

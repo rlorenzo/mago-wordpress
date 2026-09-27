@@ -1,4 +1,7 @@
+wordpress/capital-p-dangit
 wordpress/cron-interval
+wordpress/discouraged-wp-functions
+wordpress/dont-extract
 wordpress/enqueued-resource-parameters
 wordpress/enqueued-resources
 wordpress/global-variables-override
@@ -8,4 +11,5 @@ wordpress/prepared-sql-placeholders
 wordpress/safe-redirect
 wordpress/slow-db-query
 wordpress/valid-hook-name
+wordpress/wp-date-time
 wordpress/wp-i18n
