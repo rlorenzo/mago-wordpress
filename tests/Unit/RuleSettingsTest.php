@@ -54,7 +54,7 @@ final class RuleSettingsTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, array<string, int|string|list<string>>, string, int}>
+     * @return iterable<string, array{string, array<string, bool|int|string|list<string>>, string, int}>
      */
     public static function cases(): iterable
     {
@@ -148,10 +148,22 @@ final class RuleSettingsTest extends TestCase
             "function abc_init() {}\ndo_action('myplugin_init');",
             0,
         ];
+        yield 'phpcs_comments_are_honoured_by_default' => [
+            'wordpress/safe-redirect',
+            [],
+            "wp_redirect(\$url); // phpcs:ignore WordPress.Security.SafeRedirect",
+            0,
+        ];
+        yield 'phpcs_comments_are_ignored_when_disabled' => [
+            'wordpress/safe-redirect',
+            ['honor-phpcs-comments' => false],
+            "wp_redirect(\$url); // phpcs:ignore WordPress.Security.SafeRedirect",
+            1,
+        ];
     }
 
     /**
-     * @param array<string, int|string|list<string>> $settings
+     * @param array<string, bool|int|string|list<string>> $settings
      */
     #[DataProvider('cases')]
     public function testRuleHonoursSettings(string $rule, array $settings, string $code, int $issues): void

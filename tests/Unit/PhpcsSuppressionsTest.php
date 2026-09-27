@@ -28,6 +28,8 @@ final class PhpcsSuppressionsTest extends TestCase
         yield 'ignore on its own line silences the next line' => ["<?php\n// phpcs:ignore\ndrop();\nkeep();\n"];
         yield 'trailing ignore silences its own line' => ["<?php\ndrop(); // phpcs:ignore\nkeep();\n"];
         yield 'ignore with a note' => ["<?php\n// phpcs:ignore WordPress.Security -- reviewed\ndrop();\n"];
+        yield 'blank codes before a note mean no codes' => ["<?php\n// phpcs:ignore   -- reviewed\ndrop();\n"];
+        yield 'blank codes in a list mean no codes' => ["<?php\n// phpcs:disable ,\ndrop();\n"];
         yield 'ignore of another sniff' => ["<?php\n// phpcs:ignore WordPress.WP.I18n\nkeep();\n"];
         yield 'ignore list' => ["<?php\n# phpcs:ignore Generic.Foo, WordPress.Security.SafeRedirect\ndrop();\n"];
         yield 'standard prefix' => ["<?php\n/* phpcs:ignore WordPress */\ndrop();\n"];
@@ -78,6 +80,13 @@ final class PhpcsSuppressionsTest extends TestCase
                 self::assertTrue($suppressions->isSuppressed($index + 1, self::CODES), "line {$index} is dropped");
             }
         }
+    }
+
+    public function testIsEmptyOnlyWithoutSuppressionComments(): void
+    {
+        self::assertTrue(PhpcsSuppressions::fromSource("<?php\n// a comment\nf();\n")->isEmpty());
+        self::assertFalse(PhpcsSuppressions::fromSource("<?php\n// phpcs:ignore\nf();\n")->isEmpty());
+        self::assertFalse(PhpcsSuppressions::fromSource("<?php\n// @codingStandardsIgnoreFile\n")->isEmpty());
     }
 
     public function testMessageCodeMustMatchAMessageCode(): void

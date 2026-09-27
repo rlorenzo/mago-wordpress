@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal;
 
+use function array_filter;
 use function array_key_exists;
 use function array_slice;
 use function count;
@@ -23,6 +24,7 @@ use function substr_count;
 use function token_get_all;
 use function trim;
 
+use const ARRAY_FILTER_USE_KEY;
 use const T_CLOSE_TAG;
 use const T_COMMENT;
 use const T_DOC_COMMENT;
@@ -80,6 +82,14 @@ final class PhpcsSuppressions
     }
 
     /**
+     * Whether no comment silences anything, so no report needs a line lookup.
+     */
+    public function isEmpty(): bool
+    {
+        return !$this->ignoreFile && $this->regions === [];
+    }
+
+    /**
      * Whether a report on the line is silenced for any of the codes. A code
      * names a sniff (`WordPress.Security.SafeRedirect`) or a sniff message
      * (`WordPress.WP.I18n.MissingTranslatorsComment`).
@@ -102,7 +112,8 @@ final class PhpcsSuppressions
         }
 
         foreach ($codes as $code) {
-            if (self::matches($rules['ignored'], $code, lenient: true) && !self::matches($rules['except'], $code)) {
+            $ignored = self::matches($rules['ignored'], $code) || self::namesMessageOf($rules['ignored'], $code);
+            if ($ignored && !self::matches($rules['except'], $code)) {
                 return true;
             }
         }
@@ -144,11 +155,12 @@ final class PhpcsSuppressions
             $isContent = self::isContent($id, $text);
             if ($newlines === 0) {
                 $contentOnLine = $contentOnLine || $isContent;
-            } else {
-                $line += $newlines;
-                $contentOnLine =
-                    $isContent && trim(substr($text, offset: (int) strrpos($text, needle: "\n") + 1)) !== '';
+
+                continue;
             }
+
+            $line += $newlines;
+            $contentOnLine = $isContent && trim(substr($text, offset: (int) strrpos($text, needle: "\n") + 1)) !== '';
         }
 
         return $comments;
@@ -189,44 +201,80 @@ final class PhpcsSuppressions
 
     private function apply(int $line, string $piece, bool $before, bool $after, bool $doc): void
     {
-        if ($this->ignoring !== null && ($this->lines[$line] ?? null) === null) {
-            $this->lines[$line] = $this->ignoring;
-        }
-
-        $text = rtrim(ltrim($piece, characters: " \t/*#"), characters: " */\t\r\n");
-        if (str_contains($text, '@codingStandards')) {
-            $this->applyLegacy($line, $text, ownLine: !$before && !$doc);
-        } elseif (str_starts_with(strtolower($text), 'phpcs:') || str_starts_with(strtolower($text), '@phpcs:')) {
-            $text = ltrim($text, characters: '@');
-            $note = strpos($text, needle: ' --');
-            $this->applyDirective(
-                $line,
-                $note === false ? $text : substr($text, offset: 0, length: $note),
-                ownLine: !$before && !$after,
-            );
-        }
-
-        if ($this->ignoring !== null && ($this->lines[$line] ?? null) === null) {
-            $this->lines[$line] = $this->ignoring;
-        }
-
+        $this->fillFromRegion($line);
+        $this->applyComment(
+            $line,
+            rtrim(ltrim($piece, characters: " \t/*#"), characters: " */\t\r\n"),
+            $before,
+            $after,
+            $doc,
+        );
+        // Again, for a trailing directive that just opened a region.
+        $this->fillFromRegion($line);
         $this->regions[$line] = $this->ignoring;
     }
 
+    private function applyComment(int $line, string $text, bool $before, bool $after, bool $doc): void
+    {
+        if (str_contains($text, '@codingStandards')) {
+            $this->applyLegacy($line, $text, ownLine: !$before && !$doc);
+
+            return;
+        }
+
+        $lower = strtolower($text);
+        if (!str_starts_with($lower, 'phpcs:') && !str_starts_with($lower, '@phpcs:')) {
+            return;
+        }
+
+        $text = ltrim($text, characters: '@');
+        $note = strpos($text, needle: ' --');
+        $this->applyDirective(
+            $line,
+            $note === false ? $text : substr($text, offset: 0, length: $note),
+            ownLine: !$before && !$after,
+        );
+    }
+
+    /**
+     * Gives a line with no rules of its own the open region's rules.
+     */
+    private function fillFromRegion(int $line): void
+    {
+        if ($this->ignoring !== null && ($this->lines[$line] ?? null) === null) {
+            $this->lines[$line] = $this->ignoring;
+        }
+    }
+
+    /**
+     * @mago-expect lint:no-boolean-flag-parameter $ownLine is where the comment sits, not a mode switch.
+     */
     private function applyLegacy(int $line, string $text, bool $ownLine): void
     {
         $all = self::rules([self::ALL]);
         if (str_contains($text, '@codingStandardsIgnoreFile')) {
             $this->ignoreFile = true;
-        } elseif ($this->ignoring === null && str_contains($text, '@codingStandardsIgnoreStart')) {
+
+            return;
+        }
+
+        if ($this->ignoring === null && str_contains($text, '@codingStandardsIgnoreStart')) {
             $this->ignoring = $all;
             if ($ownLine) {
                 $this->lines[$line] = $all;
             }
-        } elseif ($this->ignoring !== null && str_contains($text, '@codingStandardsIgnoreEnd')) {
+
+            return;
+        }
+
+        if ($this->ignoring !== null && str_contains($text, '@codingStandardsIgnoreEnd')) {
             $this->lines[$line] = $ownLine ? $all : $this->ignoring;
             $this->ignoring = null;
-        } elseif ($this->ignoring === null && str_contains($text, '@codingStandardsIgnoreLine')) {
+
+            return;
+        }
+
+        if ($this->ignoring === null && str_contains($text, '@codingStandardsIgnoreLine')) {
             $this->lines[$line] = $all;
             if ($ownLine) {
                 $this->lines[$line + 1] = $all;
@@ -234,22 +282,37 @@ final class PhpcsSuppressions
         }
     }
 
+    /**
+     * @mago-expect lint:no-boolean-flag-parameter $ownLine is where the comment sits, not a mode switch.
+     */
     private function applyDirective(int $line, string $text, bool $ownLine): void
     {
         $lower = strtolower($text);
         if (str_starts_with($lower, 'phpcs:ignorefile')) {
             $this->ignoreFile = true;
-        } elseif (str_starts_with($lower, 'phpcs:disable')) {
+
+            return;
+        }
+
+        if (str_starts_with($lower, 'phpcs:disable')) {
             $this->disable(self::codes(substr($text, offset: 14)));
             if ($ownLine) {
                 $this->lines[$line] = self::rules([self::ALL]);
             }
-        } elseif (str_starts_with($lower, 'phpcs:enable')) {
+
+            return;
+        }
+
+        if (str_starts_with($lower, 'phpcs:enable')) {
             if ($this->ignoring !== null) {
                 $this->enable(self::codes(substr($text, offset: 13)));
                 $this->lines[$line] = $ownLine ? self::rules([self::ALL]) : $this->ignoring;
             }
-        } elseif (str_starts_with($lower, 'phpcs:ignore')) {
+
+            return;
+        }
+
+        if (str_starts_with($lower, 'phpcs:ignore')) {
             $codes = self::codes(substr($text, offset: 13));
             $rules = self::rules($codes === [] ? [self::ALL] : $codes);
             if ($this->ignoring !== null) {
@@ -259,11 +322,9 @@ final class PhpcsSuppressions
                 ];
             }
 
+            $this->lines[$line] = $ownLine ? self::rules([self::ALL]) : $rules;
             if ($ownLine) {
-                $this->lines[$line] = self::rules([self::ALL]);
                 $this->lines[$line + 1] = $rules;
-            } else {
-                $this->lines[$line] = $rules;
             }
         }
     }
@@ -340,13 +401,12 @@ final class PhpcsSuppressions
      */
     private static function codes(string $list): array
     {
-        if ($list === '' || $list === '0') {
-            return [];
-        }
-
         $codes = [];
         foreach (explode(',', $list) as $code) {
-            $codes[] = trim($code);
+            $code = trim($code);
+            if ($code !== '') {
+                $codes[] = $code;
+            }
         }
 
         return $codes;
@@ -374,23 +434,19 @@ final class PhpcsSuppressions
      */
     private static function without(array $set, string $code): array
     {
-        foreach ($set as $key => $_) {
-            if ($key === $code || str_starts_with($key, $code . '.')) {
-                unset($set[$key]);
-            }
-        }
-
-        return $set;
+        return array_filter(
+            $set,
+            static fn(string $key): bool => $key !== $code && !str_starts_with($key, $code . '.'),
+            ARRAY_FILTER_USE_KEY,
+        );
     }
 
     /**
-     * Whether the set names the code, its sniff, category or standard. A
-     * lenient match also lets a message code in the set match a code that
-     * names only the sniff, since such a rule reports every message of it.
+     * Whether the set names the code, its sniff, category or standard.
      *
      * @param array<string, true> $set
      */
-    private static function matches(array $set, string $code, bool $lenient = false): bool
+    private static function matches(array $set, string $code): bool
     {
         $parts = explode('.', $code);
         for ($length = count($parts); $length > 0; $length--) {
@@ -399,7 +455,18 @@ final class PhpcsSuppressions
             }
         }
 
-        if (!$lenient || count($parts) !== 3) {
+        return false;
+    }
+
+    /**
+     * Whether the set names a message of the code when the code names only a
+     * sniff, since such a rule reports every message of it.
+     *
+     * @param array<string, true> $set
+     */
+    private static function namesMessageOf(array $set, string $code): bool
+    {
+        if (substr_count($code, needle: '.') !== 2) {
             return false;
         }
 

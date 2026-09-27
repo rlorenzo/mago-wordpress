@@ -63,6 +63,10 @@ final class Report
             $cache[$file] = $suppressions;
         }
 
+        if ($suppressions->isEmpty()) {
+            return false;
+        }
+
         $line = substr_count($file->contents, needle: "\n", offset: 0, length: $issue->annotations[0]->span->start) + 1;
 
         return $suppressions->isSuppressed($line, $sniffCodes);
