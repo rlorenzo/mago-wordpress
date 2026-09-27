@@ -68,7 +68,7 @@ final class ValidHookNameRule extends CallRule
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
         $position = Lists::HOOK_NAME_ARGUMENT_POSITION[$name] - 1;
-        $value = $this->argument($context, $call, $position);
+        $value = $this->argument($context, $call, $position, 'hook_name');
         if ($value === null) {
             return;
         }

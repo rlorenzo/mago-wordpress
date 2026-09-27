@@ -147,8 +147,23 @@ namespace {
     // spread_arguments_are_ignored
     $greeting = __(...$args);
 
-    // named_arguments_are_ignored
-    $greeting = __(text: $message);
+    // named_arguments_are_checked (count = 2)
+    // @mago-expect lint:wordpress/wp-i18n
+    // @mago-expect lint:wordpress/wp-i18n
+    $greeting = __(text: $message, domain: 'wrong');
+
+    // named_arguments_bind_by_parameter_name
+    $greeting = __(domain: 'my-plugin', text: 'Hello');
+    $label = _x('Post', domain: 'my-plugin', context: 'noun');
+    $text = _n(single: '%d item', plural: '%d items', number: $count, domain: 'my-plugin');
+    $text = _nx_noop(singular: '%d item', plural: '%d items', context: 'noun', domain: 'my-plugin');
+
+    // named_domain_mismatch_is_flagged
+    // @mago-expect lint:wordpress/wp-i18n
+    $text = _n_noop('%d item', '%d items', domain: 'wrong');
+
+    // parenthesized_literals_are_allowed
+    $greeting = __(('Hello'), ('my-plugin'));
 
     // namespace_qualified_call_is_ignored
     $greeting = Foo\__($message);

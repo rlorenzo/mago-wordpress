@@ -50,6 +50,10 @@ $query = new WP_Query([
 // meta_query_as_value_is_allowed
 $keys = ['meta_query', 'tax_query'];
 
+// named_set_query_var_is_flagged
+// @mago-expect lint:wordpress/slow-db-query
+set_query_var(query_var: 'meta_query', value: []);
+
 // set_query_var_with_safe_key_is_allowed
 set_query_var('paged', 2);
 

@@ -92,7 +92,7 @@ final class SlowDbQueryRule implements Rule
         }
 
         $call = CallExpression::fromNode($file, $context->node);
-        $first = Calls::argument($file, $call, index: 0);
+        $first = Calls::argument($file, $call, index: 0, parameter: 'query_var');
         if ($first !== null) {
             $this->checkKey($context, $first);
         }

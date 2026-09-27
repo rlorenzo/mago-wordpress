@@ -6,6 +6,10 @@ declare(strict_types=1);
 // @mago-expect lint:wordpress/posts-per-page
 $query = new WP_Query(['posts_per_page' => -1]);
 
+// parenthesized_minus_one_is_flagged
+// @mago-expect lint:wordpress/posts-per-page
+$query = new WP_Query(['posts_per_page' => (-1)]);
+
 // posts_per_page_minus_one_string_is_flagged
 // @mago-expect lint:wordpress/posts-per-page
 $query = new WP_Query(['posts_per_page' => '-1']);

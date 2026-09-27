@@ -22,6 +22,7 @@ use function array_diff;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
+use function array_search;
 use function array_slice;
 use function array_values;
 use function count;
@@ -52,6 +53,18 @@ final class WpI18nRule extends CallRule
         'number_context' => [[0, 1], 3, 4],
         'noopnumber' => [[0, 1], null, 2],
         'noopnumber_context' => [[0, 1], 2, 3],
+    ];
+
+    /**
+     * WordPress's parameter names per Lists::I18N_FUNCTIONS kind, in position order, for binding named arguments.
+     */
+    private const PARAMETERS = [
+        'simple' => ['text', 'domain'],
+        'context' => ['text', 'context', 'domain'],
+        'number' => ['single', 'plural', 'number', 'domain'],
+        'number_context' => ['single', 'plural', 'number', 'context', 'domain'],
+        'noopnumber' => ['singular', 'plural', 'domain'],
+        'noopnumber_context' => ['singular', 'plural', 'context', 'domain'],
     ];
 
     /**
@@ -111,16 +124,22 @@ final class WpI18nRule extends CallRule
             return;
         }
 
+        $shape = Lists::I18N_FUNCTIONS[$name];
         $arguments = [];
         foreach ($call->arguments as $argument) {
-            if ($argument->name !== null || $argument->unpacked) {
+            if ($argument->unpacked) {
                 return;
             }
 
-            $arguments[] = $argument->value;
+            $index = $argument->name === null
+                ? count($arguments)
+                : array_search($argument->name, self::PARAMETERS[$shape], strict: true);
+            if ($index !== false) {
+                $arguments[$index] = $argument->value;
+            }
         }
 
-        [$textIndexes, $contextIndex, $domainIndex] = self::SHAPES[Lists::I18N_FUNCTIONS[$name]];
+        [$textIndexes, $contextIndex, $domainIndex] = self::SHAPES[$shape];
 
         $texts = [];
         foreach ($textIndexes as $index) {
