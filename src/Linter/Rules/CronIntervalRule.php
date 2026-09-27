@@ -16,6 +16,7 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\Values;
+use Rlorenzo\MagoWordPress\Settings;
 
 use function count;
 use function in_array;
@@ -26,10 +27,6 @@ use function trim;
 /**
  * Ports `WordPress.WP.CronInterval`.
  *
- * The Rust rule's `min-interval` option (default `900`, 15 minutes) has no
- * matching `Settings` field here, so the minimum is hardcoded to the Rust
- * default.
- *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
  */
@@ -38,8 +35,6 @@ final class CronIntervalRule implements Rule
     private const ADD_FILTER = 'add_filter';
 
     private const HOOK_NAME = 'cron_schedules';
-
-    private const MIN_INTERVAL = 900;
 
     private const INTERVAL_KEY = 'interval';
 
@@ -52,8 +47,11 @@ final class CronIntervalRule implements Rule
     /** @var array<string, true> */
     private readonly array $wanted;
 
-    public function __construct()
+    private readonly int $minInterval;
+
+    public function __construct(Settings $settings)
     {
+        $this->minInterval = $settings->minCronInterval;
         $this->gate = new FileGate('/cron_schedules/i');
         $this->wanted = Calls::normalizeAll([self::ADD_FILTER]);
     }
@@ -64,7 +62,7 @@ final class CronIntervalRule implements Rule
             code: 'wordpress/cron-interval',
             name: 'Cron interval',
             description: "Flags custom cron schedules registered via add_filter('cron_schedules', ...) whose interval "
-            . 'is shorter than 900 seconds (15 minutes). Cron schedules that run too often can severely degrade site '
+            . 'is shorter than the configured minimum (default 900 seconds, min-cron-interval). Cron schedules that run too often can severely degrade site '
             . 'performance. Only inline callbacks (closures and arrow functions) are inspected, and only interval values '
             . 'that are simple constant integer expressions: integer literals, */+ arithmetic on them, and the WordPress '
             . 'time constants MINUTE_IN_SECONDS, HOUR_IN_SECONDS, and DAY_IN_SECONDS. Callbacks referenced by name and '
@@ -161,16 +159,16 @@ final class CronIntervalRule implements Rule
         }
 
         $interval = $this->evaluateConstantInteger($file, $value);
-        if ($interval === null || $interval >= self::MIN_INTERVAL) {
+        if ($interval === null || $interval >= $this->minInterval) {
             return;
         }
 
         $context->report(Issue::new(
-            "Cron schedule interval of {$interval} seconds is below the minimum of " . self::MIN_INTERVAL . ' seconds.',
+            "Cron schedule interval of {$interval} seconds is below the minimum of {$this->minInterval} seconds.",
             $value->span,
             "This interval evaluates to {$interval} seconds",
         )->withNote('Cron schedules that run too frequently can severely degrade site performance.')->withHelp(
-            'Use a longer interval (15 minutes or more).',
+            "Use a longer interval ({$this->minInterval} seconds or more).",
         ));
     }
 

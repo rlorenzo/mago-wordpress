@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
+use Rlorenzo\MagoWordPress\Settings;
 
 use function in_array;
 use function preg_match;
@@ -24,21 +25,19 @@ use function trim;
 /**
  * Ports `WordPress.WP.PostsPerPage`.
  *
- * The Rust rule's `max-posts-per-page` option (default `100`) has no matching
- * `Settings` field here, so the maximum is hardcoded to the Rust default.
- *
  * @mago-expect lint:cyclomatic-complexity
  */
 final class PostsPerPageRule implements Rule
 {
-    private const MAX_POSTS_PER_PAGE = 100;
-
     private const NOPAGING_KEY = 'nopaging';
 
     private readonly FileGate $gate;
 
-    public function __construct()
+    private readonly int $max;
+
+    public function __construct(Settings $settings)
     {
+        $this->max = $settings->maxPostsPerPage;
         $this->gate = new FileGate('/posts_per_page|numberposts|nopaging/i');
     }
 
@@ -48,7 +47,8 @@ final class PostsPerPageRule implements Rule
             code: 'wordpress/posts-per-page',
             name: 'Posts per page',
             description: 'Flags query arguments that request an unbounded or excessively large number of posts: '
-            . 'posts_per_page or numberposts set to -1 or to a value above 100, and nopaging set to true. Unbounded '
+            . 'posts_per_page or numberposts set to -1 or to a value above the configured maximum (default 100, '
+            . 'max-posts-per-page), and nopaging set to true. Unbounded '
             . 'queries load every matching row into memory and can take a site down as content grows.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
@@ -122,9 +122,9 @@ final class PostsPerPageRule implements Rule
             return;
         }
 
-        if ($number !== null && $number > self::MAX_POSTS_PER_PAGE) {
+        if ($number !== null && $number > $this->max) {
             $context->report(Issue::new(
-                "Excessively large query: `{$key}` exceeds the maximum of " . self::MAX_POSTS_PER_PAGE . '.',
+                "Excessively large query: `{$key}` exceeds the maximum of {$this->max}.",
                 $element->span,
                 'This query fetches too many posts',
             )->withNote(

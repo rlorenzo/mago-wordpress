@@ -39,7 +39,10 @@ takes as sniff properties from your project instead. Put them in `composer.json`
       "custom-auto-escaped-functions": [],
       "custom-sanitizing-functions": [],
       "custom-unslashing-sanitizing-functions": [],
-      "custom-capabilities": []
+      "custom-capabilities": [],
+      "max-posts-per-page": 100,
+      "min-cron-interval": 900,
+      "additional-word-delimiters": ""
     }
   }
 }
@@ -47,7 +50,7 @@ takes as sniff properties from your project instead. Put them in `composer.json`
 
 If there is no `extra.mago-wordpress` block, the worker reads the same values from your existing
 `phpcs.xml` (`text_domain`, `prefixes`, `minimum_supported_wp_version`, `customEscapingFunctions`,
-...), so a project migrating from phpcs needs no new configuration.
+`posts_per_page`, `min_interval`, `additional_word_delimiters`, ...), so a project migrating from phpcs needs no new configuration.
 
 Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 
@@ -62,18 +65,18 @@ Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 | Rule | Ports | Checks |
 |:---|:---|:---|
 | `wordpress/capital-p-dangit` | `WordPress.WP.CapitalPDangit` | "Wordpress"/"word press" misspellings in strings and comments |
-| `wordpress/cron-interval` | `WordPress.WP.CronInterval` | `cron_schedules` intervals under 15 minutes |
+| `wordpress/cron-interval` | `WordPress.WP.CronInterval` | `cron_schedules` intervals under `min-cron-interval` (default 900 seconds) |
 | `wordpress/discouraged-wp-functions` | `WordPress.WP.DiscouragedFunctions`, `WordPress.PHP.DiscouragedPHPFunctions`, `WordPress.PHP.DevelopmentFunctions` | `query_posts()`, `wp_reset_query()`, serialization, obfuscation, system calls, debug output |
 | `wordpress/dont-extract` | `WordPress.PHP.DontExtract` | `extract()` |
 | `wordpress/enqueued-resource-parameters` | `WordPress.WP.EnqueuedResourceParameters` | missing `$ver` / `$in_footer` on enqueue and register calls |
 | `wordpress/enqueued-resources` | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
 | `wordpress/global-variables-override` | `WordPress.WP.GlobalVariablesOverride` | assignments to WordPress's protected globals (243 names) |
-| `wordpress/posts-per-page` | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` of `-1` or over 100, `nopaging => true` |
+| `wordpress/posts-per-page` | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` of `-1` or over `max-posts-per-page` (default 100), `nopaging => true` |
 | `wordpress/prefix-all-globals` | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants and hook names |
 | `wordpress/prepared-sql-placeholders` | `WordPress.DB.PreparedSQLPlaceholders` | quoted or unsupported placeholders and count mismatches in `$wpdb->prepare()` |
 | `wordpress/safe-redirect` | `WordPress.Security.SafeRedirect` | `wp_redirect()` instead of `wp_safe_redirect()` |
 | `wordpress/slow-db-query` | `WordPress.DB.SlowDBQuery` | `meta_query`, `tax_query`, `meta_key`, `meta_value` in query arguments |
-| `wordpress/valid-hook-name` | `WordPress.NamingConventions.ValidHookName` | hook names with uppercase letters or separators other than `_` |
+| `wordpress/valid-hook-name` | `WordPress.NamingConventions.ValidHookName` | hook names with uppercase letters or separators other than `_` and `additional-word-delimiters` |
 | `wordpress/wp-date-time` | `WordPress.DateTime.RestrictedFunctions`, `WordPress.DateTime.CurrentTimeTimestamp` | `date()`, `date_default_timezone_set()`, `current_time('timestamp')` |
 | `wordpress/wp-deprecated-classes` | `WordPress.WP.DeprecatedClasses` | deprecated core classes, gated by `minimum-wp-version` |
 | `wordpress/wp-deprecated-functions` | `WordPress.WP.DeprecatedFunctions` | 386 deprecated core functions with their replacements, gated by `minimum-wp-version` |

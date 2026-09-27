@@ -19,6 +19,7 @@ use function libxml_use_internal_errors;
  * `Settings::fromArray()` accepts.
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class PhpcsRuleset
 {
@@ -45,6 +46,9 @@ final class PhpcsRuleset
             'text-domains' => $properties['text_domain'] ?? [],
             'prefixes' => $properties['prefixes'] ?? [],
             'minimum-wp-version' => self::minimumVersion($xpath),
+            'max-posts-per-page' => self::last($properties['posts_per_page'] ?? []),
+            'min-cron-interval' => self::last($properties['min_interval'] ?? []),
+            'additional-word-delimiters' => self::last($properties['additional_word_delimiters'] ?? []),
         ];
         foreach (Settings::CUSTOM_LISTS as $option => $property) {
             $values[$option] = $properties[$property] ?? [];
@@ -68,6 +72,16 @@ final class PhpcsRuleset
         }
 
         return $properties;
+    }
+
+    /**
+     * A scalar property set more than once keeps its last value, as phpcs does.
+     *
+     * @param list<string> $values
+     */
+    private static function last(array $values): ?string
+    {
+        return $values === [] ? null : $values[count($values) - 1];
     }
 
     /**

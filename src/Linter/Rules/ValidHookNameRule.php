@@ -15,6 +15,7 @@ use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
+use Rlorenzo\MagoWordPress\Settings;
 
 use function array_diff;
 use function array_map;
@@ -23,19 +24,29 @@ use function array_values;
 use function implode;
 use function preg_match;
 use function preg_match_all;
+use function preg_quote;
 
 /**
  * Ports `WordPress.NamingConventions.ValidHookName`.
  *
  * Only checks the hook-defining calls the Rust spec covers: it skips the
  * `*_deprecated` dispatchers in `Lists::HOOK_INVOKE_FUNCTIONS`, as the Rust
- * rule does. The Rust rule's `additional_word_delimiters` option has no
- * `Settings` field here, so it is hardcoded to the Rust default (no
- * additional delimiters).
+ * rule does.
  */
 final class ValidHookNameRule extends CallRule
 {
     private const SKIPPED = ['do_action_deprecated', 'apply_filters_deprecated'];
+
+    /**
+     * Matches one byte that is not a valid hook-name character.
+     */
+    private readonly string $delimiterPattern;
+
+    public function __construct(Settings $settings)
+    {
+        $allowed = preg_quote($settings->additionalWordDelimiters, delimiter: '/');
+        $this->delimiterPattern = "/[^A-Za-z0-9_\\x80-\\xFF{$allowed}]/";
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -101,7 +112,7 @@ final class ValidHookNameRule extends CallRule
         }
 
         $matches = [];
-        preg_match_all('/[^A-Za-z0-9_\x80-\xFF]/', $name, $matches);
+        preg_match_all($this->delimiterPattern, $name, $matches);
         if (($matches[0] ?? []) !== []) {
             $characters = implode(', ', array_map(
                 static fn(string $byte): string => "`{$byte}`",

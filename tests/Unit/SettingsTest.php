@@ -71,6 +71,50 @@ final class SettingsTest extends TestCase
         self::assertSame(['ex_esc'], $settings->customList('custom-escaping-functions'));
     }
 
+    public function testThresholdSettingsDefaultAndParse(): void
+    {
+        $defaults = Settings::fromArray([]);
+        self::assertSame(100, $defaults->maxPostsPerPage);
+        self::assertSame(900, $defaults->minCronInterval);
+        self::assertSame('', $defaults->additionalWordDelimiters);
+
+        $settings = Settings::fromArray([
+            'max-posts-per-page' => '250',
+            'min-cron-interval' => 60,
+            'additional-word-delimiters' => '/.',
+        ]);
+        self::assertSame(250, $settings->maxPostsPerPage);
+        self::assertSame(60, $settings->minCronInterval);
+        self::assertSame('/.', $settings->additionalWordDelimiters);
+
+        self::assertSame(100, Settings::fromArray(['max-posts-per-page' => -5])->maxPostsPerPage);
+        self::assertSame(900, Settings::fromArray(['min-cron-interval' => 'often'])->minCronInterval);
+    }
+
+    public function testPhpcsThresholdPropertiesAreRead(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="Example">
+              <rule ref="WordPress.WP.PostsPerPage">
+                <properties><property name="posts_per_page" value="50"/></properties>
+              </rule>
+              <rule ref="WordPress.WP.CronInterval">
+                <properties><property name="min_interval" value="600"/></properties>
+              </rule>
+              <rule ref="WordPress.NamingConventions.ValidHookName">
+                <properties><property name="additional_word_delimiters" value="-/"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        $settings = Settings::fromArray(PhpcsRuleset::values($xml));
+
+        self::assertSame(50, $settings->maxPostsPerPage);
+        self::assertSame(600, $settings->minCronInterval);
+        self::assertSame('-/', $settings->additionalWordDelimiters);
+    }
+
     public function testInvalidXmlYieldsDefaults(): void
     {
         self::assertSame([], PhpcsRuleset::values('not xml'));
