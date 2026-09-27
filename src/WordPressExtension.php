@@ -9,6 +9,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 
 /**
@@ -34,6 +35,7 @@ final class WordPressExtension
                 new GlobalVariablesOverrideRule(),
                 new PreparedSqlPlaceholdersRule(),
                 new SafeRedirectRule(),
+                new ValidHookNameRule(),
                 new WpI18nRule($settings),
                 new PrefixAllGlobalsRule($settings),
             ],

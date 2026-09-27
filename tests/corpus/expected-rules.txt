@@ -2,4 +2,5 @@ wordpress/global-variables-override
 wordpress/prefix-all-globals
 wordpress/prepared-sql-placeholders
 wordpress/safe-redirect
+wordpress/valid-hook-name
 wordpress/wp-i18n
