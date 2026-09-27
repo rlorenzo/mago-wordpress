@@ -36,3 +36,76 @@ jobs:
       - name: Check
         run: just check
 
+  lowest-mago:
+    name: Lowest supported mago
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Just
+        uses: extractions/setup-just@v3
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Downgrade to the lowest supported mago
+        run: composer update carthage-software/mago --prefer-lowest --prefer-stable --no-interaction
+
+      - name: Check
+        run: just check
+
+  consumer-smoke:
+    name: Consumer smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install this package as a consumer would
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          cd "$work"
+          composer init --no-interaction --name=mago-wordpress/consumer-smoke -q
+          composer config repositories.local path "$GITHUB_WORKSPACE"
+          composer require --no-interaction --dev carthage-software/mago 'rlorenzo/mago-wordpress:*@dev'
+
+          cat > mago.toml <<'EOF'
+          extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
+          php-version = "8.1"
+
+          [source]
+          paths = ["redirect.php"]
+          EOF
+
+          cat > redirect.php <<'EOF'
+          <?php
+
+          $url = 'https://example.com';
+          wp_redirect($url);
+          EOF
+
+          out=$(vendor/bin/mago lint 2>&1)
+          echo "$out"
+          echo "$out" | grep -q 'wordpress/safe-redirect' || {
+            echo "error: wordpress/safe-redirect was not reported for wp_redirect()" >&2
+            exit 1
+          }
+
