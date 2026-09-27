@@ -235,10 +235,6 @@ final class PreparedSqlPlaceholdersRule extends CallRule
     private function isStaticWpdbProperty(SourceFile $file, Node $node): bool
     {
         $node = Values::unwrap($file, $node);
-        if ($node->kind === NodeKind::Access) {
-            $node = $file->getChildren($node)[0] ?? $node;
-        }
-
         if ($node->kind !== NodeKind::PropertyAccess && $node->kind !== NodeKind::NullSafePropertyAccess) {
             return false;
         }

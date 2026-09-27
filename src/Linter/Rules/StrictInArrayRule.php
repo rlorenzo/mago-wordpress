@@ -10,6 +10,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function strtolower;
@@ -59,7 +60,10 @@ final class StrictInArrayRule extends CallRule
         }
 
         $strict = $this->argument($context, $call, $target['position'], 'strict');
-        if ($strict !== null && strtolower($context->file->getText($strict)) === 'true') {
+        if (
+            $strict !== null
+            && strtolower($context->file->getText(Values::unparenthesize($context->file, $strict))) === 'true'
+        ) {
             return;
         }
 

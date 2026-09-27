@@ -68,7 +68,7 @@ final class AssignmentInTernaryConditionRule implements Rule
         }
 
         foreach ($this->assignments($file, Values::unwrap($file, $inner)) as $assignment) {
-            $left = $this->target($file, $file->getChildren($assignment)[0] ?? $assignment);
+            $left = Values::unwrap($file, $file->getChildren($assignment)[0] ?? $assignment);
             if (!in_array($left->kind, self::ASSIGNABLE_KINDS, strict: true)) {
                 // A call or other non-assignable expression on the left is a fatal
                 // error, not a comparison-vs-assignment mistake; WPCS ignores it too.
@@ -97,21 +97,5 @@ final class AssignmentInTernaryConditionRule implements Rule
         }
 
         return $found;
-    }
-
-    /**
-     * Unwraps an assignment's left-hand side down to the node that names
-     * what is being assigned to. A property or static property access
-     * keeps its target under an `Access` wrapper that `Values::unwrap()`
-     * does not peel, since a read of one is not itself unwrapped elsewhere.
-     */
-    private function target(SourceFile $file, Node $node): Node
-    {
-        $node = Values::unwrap($file, $node);
-        if ($node->kind === NodeKind::Access) {
-            $node = $file->getChildren($node)[0] ?? $node;
-        }
-
-        return $node;
     }
 }

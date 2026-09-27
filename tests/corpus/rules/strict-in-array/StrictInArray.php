@@ -60,3 +60,6 @@ array_keys($array, filter_value: 'my_key');
 
 // use_function_import_is_not_a_call
 use function in_array;
+
+// parenthesized_true_is_ok
+in_array(1, ['1', 1, true], (true));

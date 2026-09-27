@@ -59,6 +59,10 @@ register_post_type('', []);
 // @mago-expect lint:wordpress/valid-post-type-slug
 register_post_type("my_post_type_{$suffix}");
 
+// unknown_escape_keeps_its_backslash
+// @mago-expect lint:wordpress/valid-post-type-slug
+register_post_type("my_\qtype", []);
+
 // non_string_literal_function_call
 // @mago-expect lint:wordpress/valid-post-type-slug
 register_post_type(sprintf('my_post_type_%d', $suffix));
@@ -93,3 +97,7 @@ register_post_type(args: [], post_type: 'my-own-post-type-too-long');
 // namespaced_calls_are_not_matched
 MyNamespace\register_post_type('my-own-post-type-too-long', []);
 namespace\Sub\register_post_type('my-own-post-type-too-long', []);
+
+// purely_interpolated_slug_warns_as_dynamic_not_empty
+// @mago-expect lint:wordpress/valid-post-type-slug
+register_post_type("{$slug}");

@@ -12,18 +12,17 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
+use function array_key_exists;
 use function count;
 use function ltrim;
 use function preg_match;
 use function str_starts_with;
-use function stripcslashes;
 use function strlen;
 use function strtolower;
-use function strtr;
-use function substr;
 
 /**
  * Ports `WordPress.NamingConventions.ValidPostTypeSlug`.
@@ -113,17 +112,20 @@ final class ValidPostTypeSlugRule extends CallRule
         }
 
         [$postType, $dynamic] = $literal;
-        if ($postType === '') {
-            $this->reportEmpty($context);
-
-            return;
-        }
-
         if ($dynamic) {
             $context->report(Issue::new(
                 "The post type slug may, or may not, get too long with dynamic contents and could contain invalid characters. Found: \"{$postType}\".",
                 $argument->span,
             )->withHelp('Prefer a fully static post type slug so its validity can be checked.'));
+        }
+
+        if ($postType === '') {
+            // A purely interpolated slug such as "{$slug}" was passed, just not checkable.
+            if (!$dynamic) {
+                $this->reportEmpty($context);
+            }
+
+            return;
         }
 
         if (preg_match(self::VALID_CHARACTERS, $postType) !== 1) {
@@ -133,12 +135,16 @@ final class ValidPostTypeSlugRule extends CallRule
             )->withHelp('Use only lowercase letters, digits, dashes and underscores in the post type slug.'));
         }
 
-        if (isset(self::RESERVED_NAMES[$postType])) {
+        // register_post_type() runs the slug through sanitize_key(), which lowercases it.
+        $reserved = array_key_exists(strtolower($postType), self::RESERVED_NAMES);
+        if ($reserved) {
             $context->report(Issue::new(
                 "register_post_type() called with reserved post type \"{$postType}\". Reserved post types interfere with the functioning of WordPress itself.",
                 $argument->span,
             )->withHelp('Choose a post type slug that is not reserved by WordPress core.'));
-        } elseif (str_starts_with(strtolower($postType), 'wp_')) {
+        }
+
+        if (!$reserved && str_starts_with(strtolower($postType), 'wp_')) {
             $context->report(Issue::new(
                 "The post type passed to register_post_type() uses a prefix reserved for WordPress itself. Found: \"{$postType}\".",
                 $argument->span,
@@ -176,8 +182,9 @@ final class ValidPostTypeSlugRule extends CallRule
     {
         $node = Values::unwrap($file, $node);
 
-        if ($node->kind === NodeKind::LiteralString) {
-            return [$this->unquote($file->getText($node)), false];
+        $static = Values::literalString($file, $node);
+        if ($static !== null) {
+            return [$static, false];
         }
 
         if ($node->kind !== NodeKind::CompositeString) {
@@ -190,15 +197,13 @@ final class ValidPostTypeSlugRule extends CallRule
 
         $text = '';
         $dynamic = false;
-        foreach ($file->getChildren($string) as $part) {
-            $inner = $file->getChildren($part)[0] ?? $part;
-            if ($inner->kind !== NodeKind::LiteralStringPart) {
+        foreach (Strings::compositeParts($file, $node) as $partText) {
+            if ($partText === null) {
                 $dynamic = true;
                 continue;
             }
 
-            $partText = $file->getText($inner);
-            $text .= $nowdoc ? $partText : stripcslashes($partText);
+            $text .= $partText;
         }
 
         if ($isDocument) {
@@ -206,21 +211,7 @@ final class ValidPostTypeSlugRule extends CallRule
             $text = ltrim($text);
         }
 
-        if ($nowdoc) {
-            $dynamicWarn = false;
-        } elseif ($isDocument) {
-            $dynamicWarn = $dynamic;
-        } else {
-            $dynamicWarn = true;
-        }
-
-        return [$text, $dynamicWarn];
-    }
-
-    private function unquote(string $literal): string
-    {
-        $body = substr($literal, offset: 1, length: -1);
-
-        return str_starts_with($literal, "'") ? strtr($body, ["\\'" => "'", '\\\\' => '\\']) : stripcslashes($body);
+        // A composite quoted string always interpolates; a heredoc only when it has a dynamic part.
+        return [$text, !$nowdoc && (!$isDocument || $dynamic)];
     }
 }

@@ -32,6 +32,10 @@ $mode = ($a['key'] = 'on') ? 'on' : 'off';
 // @mago-expect lint:wordpress/assignment-in-ternary-condition
 $mode = ($a->prop = 'on') ? 'on' : 'off';
 
+// static_property_assignment
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (Foo::$prop = 'on') ? 'on' : 'off';
+
 // null_coalesce_assignment_is_checked_too
 // @mago-expect lint:wordpress/assignment-in-ternary-condition
 $mode = ($a ??= 'on') ? 'on' : 'off';

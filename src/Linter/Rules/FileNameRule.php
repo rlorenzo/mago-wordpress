@@ -13,6 +13,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
+use function array_key_exists;
 use function basename;
 use function preg_match;
 use function preg_replace;
@@ -35,8 +36,7 @@ use function substr;
  * prefix check).
  *
  * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect
- */
+ * @mago-expect lint:kan-defect */
 final class FileNameRule implements Rule
 {
     /**
@@ -95,7 +95,7 @@ final class FileNameRule implements Rule
         $file = $context->file;
         $fileName = basename($file->path);
 
-        $class = $this->firstClass($file, $context->node);
+        $class = $file->getFirstDescendant($context->node, NodeKind::Class_);
         if ($class !== null && $this->isTestClass($file, $class)) {
             // WPCS exempts unit test classes from this sniff entirely.
             return;
@@ -109,38 +109,31 @@ final class FileNameRule implements Rule
             return;
         }
 
-        if (str_contains($file->path, '/wp-includes/')) {
+        if (str_contains('/' . str_replace(search: '\\', replace: '/', subject: $file->path), '/wp-includes/')) {
             $this->checkTemplateSuffix($context, $fileName);
         }
     }
 
-    private function firstClass(SourceFile $file, Node $program): ?Node
-    {
-        return $file->getDescendants($program, NodeKind::Class_)[0] ?? null;
-    }
-
     private function isTestClass(SourceFile $file, Node $class): bool
     {
-        $name = $this->declaredName($file, $class);
-        if ($name !== null && isset(self::TEST_CLASSES[strtolower($name)])) {
+        if ($this->isTestClassName($this->declaredName($file, $class))) {
             return true;
         }
 
-        $extends = null;
         foreach ($file->getChildren($class) as $child) {
-            if ($child->kind === NodeKind::Extends) {
-                $extends = $child;
-                break;
+            if ($child->kind !== NodeKind::Extends) {
+                continue;
             }
+
+            return $this->isTestClassName($this->lastIdentifierSegment($file, $child));
         }
 
-        if ($extends === null) {
-            return false;
-        }
+        return false;
+    }
 
-        $extended = $this->lastIdentifierSegment($file, $extends);
-
-        return $extended !== null && isset(self::TEST_CLASSES[strtolower($extended)]);
+    private function isTestClassName(?string $name): bool
+    {
+        return $name !== null && array_key_exists(strtolower($name), self::TEST_CLASSES);
     }
 
     /**
@@ -166,15 +159,17 @@ final class FileNameRule implements Rule
     {
         foreach ($file->getDescendants($extends) as $descendant) {
             if (
-                $descendant->kind === NodeKind::LocalIdentifier
-                || $descendant->kind === NodeKind::QualifiedIdentifier
-                || $descendant->kind === NodeKind::FullyQualifiedIdentifier
+                $descendant->kind !== NodeKind::LocalIdentifier
+                && $descendant->kind !== NodeKind::QualifiedIdentifier
+                && $descendant->kind !== NodeKind::FullyQualifiedIdentifier
             ) {
-                $text = $file->getText($descendant);
-                $lastSlash = strrchr($text, '\\');
-
-                return $lastSlash === false ? $text : substr($lastSlash, 1);
+                continue;
             }
+
+            $text = $file->getText($descendant);
+            $lastSlash = strrchr($text, needle: '\\');
+
+            return $lastSlash === false ? $text : substr($lastSlash, offset: 1);
         }
 
         return null;
@@ -182,12 +177,11 @@ final class FileNameRule implements Rule
 
     private function checkHyphenated(LintContext $context, string $fileName): void
     {
-        $extensionAt = strrchr($fileName, '.');
-        $extension = $extensionAt === false ? '' : $extensionAt;
-        $name = $extension === '' ? $fileName : substr($fileName, 0, -strlen($extension));
+        $extension = $this->extension($fileName);
+        $name = $extension === '' ? $fileName : substr($fileName, offset: 0, length: -strlen($extension));
 
-        $expected = strtolower((string) preg_replace('/[^a-zA-Z0-9]/', '-', $name)) . $extension;
-        if ($fileName === $expected || isset(self::HYPHENATION_EXCEPTIONS[$fileName])) {
+        $expected = strtolower((string) preg_replace('/[^a-zA-Z0-9]/', replacement: '-', subject: $name)) . $extension;
+        if ($fileName === $expected || array_key_exists($fileName, self::HYPHENATION_EXCEPTIONS)) {
             return;
         }
 
@@ -197,6 +191,16 @@ final class FileNameRule implements Rule
         )->withHelp("Rename the file to {$expected}."));
     }
 
+    /**
+     * The file name's last extension including its dot, or '' when it has none.
+     */
+    private function extension(string $fileName): string
+    {
+        $extension = strrchr($fileName, needle: '.');
+
+        return $extension === false ? '' : $extension;
+    }
+
     private function checkClassPrefix(LintContext $context, Node $class, string $fileName): void
     {
         $className = $this->declaredName($context->file, $class);
@@ -204,9 +208,10 @@ final class FileNameRule implements Rule
             return;
         }
 
-        $extensionAt = strrchr($fileName, '.');
-        $extension = $extensionAt === false ? '' : $extensionAt;
-        $expected = 'class-' . strtolower(str_replace('_', '-', $className)) . $extension;
+        $expected =
+            'class-'
+            . strtolower(str_replace(search: '_', replace: '-', subject: $className))
+            . $this->extension($fileName);
 
         if ($fileName === $expected) {
             return;
