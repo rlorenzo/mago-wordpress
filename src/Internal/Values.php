@@ -17,6 +17,7 @@ use function trim;
  * Reads values out of expression nodes.
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class Values
 {
@@ -78,6 +79,24 @@ final class Values
             }
 
             $node = $child;
+        }
+
+        return $node;
+    }
+
+    /**
+     * Unwraps a value like `unwrap()`, plus any parentheses around it.
+     */
+    public static function unparenthesize(SourceFile $file, Node $node): Node
+    {
+        $node = self::unwrap($file, $node);
+        while ($node->kind === NodeKind::Parenthesized) {
+            $inner = $file->getChildren($node)[0] ?? null;
+            if ($inner === null) {
+                break;
+            }
+
+            $node = self::unwrap($file, $inner);
         }
 
         return $node;

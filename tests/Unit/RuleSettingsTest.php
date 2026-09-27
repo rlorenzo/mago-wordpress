@@ -112,6 +112,12 @@ final class RuleSettingsTest extends TestCase
             "\$wpdb->prepare('SELECT * FROM %i WHERE ID = %d', \$table, \$id);",
             1,
         ];
+        yield 'identifier_placeholder_is_supported_under_unparsable_minimum' => [
+            'wordpress/prepared-sql-placeholders',
+            ['minimum-wp-version' => 'latest'],
+            "\$wpdb->prepare('SELECT * FROM %i WHERE ID = %d', \$table, \$id);",
+            0,
+        ];
         yield 'additional_word_delimiters_are_allowed' => [
             'wordpress/valid-hook-name',
             ['additional-word-delimiters' => '/.'],

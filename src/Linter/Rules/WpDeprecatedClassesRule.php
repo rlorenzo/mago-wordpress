@@ -22,11 +22,9 @@ use function array_map;
 use function implode;
 use function in_array;
 use function ltrim;
-use function preg_match;
 use function preg_quote;
 use function str_contains;
 use function strtolower;
-use function trim;
 use function version_compare;
 
 /**
@@ -196,22 +194,13 @@ final class WpDeprecatedClassesRule implements Rule
      * under the project's configured minimum WordPress version.
      *
      * An empty or unparsable `minimum-wp-version` reports every class in
-     * the table, matching the ported sniff. `version_compare()` treats a
-     * shorter version as older than the same version with a trailing `.0`
-     * (`"4.5" < "4.5.0"`), so the minimum is padded to three components
-     * before it is compared against the table's `major.minor.patch` entries.
+     * the table, matching the ported sniff.
      */
     private function isReportable(string $deprecatedSince): bool
     {
-        $minimum = trim($this->settings->minimumWpVersion);
-        $parts = [];
-        if (preg_match('/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/', $minimum, $parts) !== 1) {
-            return true;
-        }
+        $minimum = $this->settings->normalizedMinimumWpVersion();
 
-        $normalizedMinimum = ($parts[1] ?? '0') . '.' . ($parts[2] ?? '0') . '.' . ($parts[3] ?? '0');
-
-        return version_compare($deprecatedSince, $normalizedMinimum, operator: '<=');
+        return $minimum === null || version_compare($deprecatedSince, $minimum, operator: '<=');
     }
 
     /**

@@ -27,7 +27,6 @@ use function max;
 use function preg_match;
 use function preg_match_all;
 use function str_contains;
-use function trim;
 use function version_compare;
 
 use const PREG_SET_ORDER;
@@ -69,10 +68,8 @@ final class PreparedSqlPlaceholdersRule extends CallRule
 
     public function __construct(Settings $settings)
     {
-        $parts = [];
-        $this->identifierSupported =
-            preg_match('/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/', trim($settings->minimumWpVersion), $parts) !== 1
-            || version_compare(($parts[1] ?? '0') . '.' . ($parts[2] ?? '0'), version2: '6.2', operator: '>=');
+        $minimum = $settings->normalizedMinimumWpVersion();
+        $this->identifierSupported = $minimum === null || version_compare($minimum, version2: '6.2.0', operator: '>=');
     }
 
     public function getDefinition(): RuleDefinition
@@ -210,7 +207,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
         if ($expected > 0 && $provided === 1 && $replacements[0]->kind !== NodeKind::Literal) {
             $provided = $this->countArrayValues(
                 $context->file,
-                $this->unparenthesize($context->file, $replacements[0]),
+                Values::unparenthesize($context->file, $replacements[0]),
             );
         }
 
@@ -254,22 +251,6 @@ final class PreparedSqlPlaceholdersRule extends CallRule
             && $this->isWpdb($file, $children[0])
             && ($file->getChildren($selector)[0] ?? null)?->kind === NodeKind::LocalIdentifier
         );
-    }
-
-    /**
-     * Unwraps a value and any parentheses around it.
-     *
-     * ponytail: `Values::unwrap()` does not strip `Parenthesized` yet;
-     * drop this once it does.
-     */
-    private function unparenthesize(SourceFile $file, Node $node): Node
-    {
-        $node = Values::unwrap($file, $node);
-        $inner = $file->getChildren($node)[0] ?? null;
-
-        return $node->kind === NodeKind::Parenthesized && $inner !== null
-            ? $this->unparenthesize($file, $inner)
-            : $node;
     }
 
     /**

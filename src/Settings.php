@@ -72,6 +72,23 @@ final class Settings
     }
 
     /**
+     * The minimum WordPress version padded to `major.minor.patch`, or NULL
+     * when it is empty or unparsable.
+     *
+     * `version_compare()` treats a shorter version as older than the same
+     * version with a trailing `.0` (`"4.5" < "4.5.0"`), hence the padding.
+     */
+    public function normalizedMinimumWpVersion(): ?string
+    {
+        $parts = [];
+        if (preg_match('/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/', trim($this->minimumWpVersion), $parts) !== 1) {
+            return null;
+        }
+
+        return ($parts[1] ?? '0') . '.' . ($parts[2] ?? '0') . '.' . ($parts[3] ?? '0');
+    }
+
+    /**
      * @param array<array-key, mixed> $values
      */
     public static function fromArray(array $values): self

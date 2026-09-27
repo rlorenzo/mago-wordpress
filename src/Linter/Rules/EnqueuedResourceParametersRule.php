@@ -25,7 +25,6 @@ use function strtolower;
  * Ports `WordPress.WP.EnqueuedResourceParameters`.
  *
  * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect
  */
 final class EnqueuedResourceParametersRule extends CallRule
 {
@@ -76,7 +75,7 @@ final class EnqueuedResourceParametersRule extends CallRule
             return;
         }
 
-        $src = self::unparenthesized($context->file, $srcNode);
+        $src = Values::unparenthesize($context->file, $srcNode);
         if (self::falseOrNullWord($context->file, $src) !== null) {
             return;
         }
@@ -114,7 +113,7 @@ final class EnqueuedResourceParametersRule extends CallRule
             return;
         }
 
-        $version = self::unparenthesized($context->file, $verNode);
+        $version = Values::unparenthesize($context->file, $verNode);
         $word = self::falseOrNullWord($context->file, $version);
         if ($word === null) {
             return;
@@ -191,25 +190,6 @@ final class EnqueuedResourceParametersRule extends CallRule
         }
 
         return $lower === 'media';
-    }
-
-    /**
-     * Strips one more layer of parentheses off a value already unwrapped by Values::unwrap(),
-     * which does not descend into NodeKind::Parenthesized.
-     */
-    private static function unparenthesized(SourceFile $file, Node $node): Node
-    {
-        $node = Values::unwrap($file, $node);
-        while ($node->kind === NodeKind::Parenthesized) {
-            $child = $file->getChildren($node)[0] ?? null;
-            if ($child === null) {
-                return $node;
-            }
-
-            $node = Values::unwrap($file, $child);
-        }
-
-        return $node;
     }
 
     /**

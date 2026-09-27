@@ -99,7 +99,7 @@ final class CronIntervalRule implements Rule
             return;
         }
 
-        $callback = $this->unwrap($file, $callback);
+        $callback = Values::unparenthesize($file, $callback);
         if ($callback->kind === NodeKind::Closure) {
             $children = $file->getChildren($callback);
             $body = $children[count($children) - 1] ?? null;
@@ -153,7 +153,7 @@ final class CronIntervalRule implements Rule
             return;
         }
 
-        $key = $this->unwrap($file, $key);
+        $key = Values::unparenthesize($file, $key);
         if (Values::literalString($file, $key) !== self::INTERVAL_KEY) {
             return;
         }
@@ -179,7 +179,7 @@ final class CronIntervalRule implements Rule
      */
     private function evaluateConstantInteger(SourceFile $file, Node $node): ?int
     {
-        $node = $this->unwrap($file, $node);
+        $node = Values::unparenthesize($file, $node);
 
         if ($node->kind === NodeKind::LiteralInteger) {
             return Values::literalInteger($file, $node);
@@ -216,23 +216,5 @@ final class CronIntervalRule implements Rule
         }
 
         return null;
-    }
-
-    /**
-     * Unwraps expression/literal/call wrappers and parentheses.
-     */
-    private function unwrap(SourceFile $file, Node $node): Node
-    {
-        $node = Values::unwrap($file, $node);
-        while ($node->kind === NodeKind::Parenthesized) {
-            $inner = $file->getChildren($node)[0] ?? null;
-            if ($inner === null) {
-                break;
-            }
-
-            $node = Values::unwrap($file, $inner);
-        }
-
-        return $node;
     }
 }
