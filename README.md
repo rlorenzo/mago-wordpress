@@ -33,9 +33,9 @@ Then extend the shipped configuration from your `mago.toml`:
 extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
 ```
 
-That starts the extension worker and enables Mago's own `wordpress` integration, five core
-WordPress rules (see [Mago's own WordPress rules](#magos-own-wordpress-rules) below) plus this
-package's rules. Run `mago lint` as usual.
+That starts the extension worker and enables Mago's own `wordpress` integration: eight core
+WordPress rules (see [Mago's own WordPress rules](#magos-own-wordpress-rules) below), including the
+three Mago ships switched off, plus this package's rules. Run `mago lint` as usual.
 
 ## Configuration
 
@@ -74,10 +74,10 @@ followed, so set properties on the sniff ref itself, as phpcs recommends.
 `custom-capabilities` lists capabilities `wordpress/capabilities` accepts. The other four `custom-*`
 lists (`custom-escaping-functions`, `custom-auto-escaped-functions`, `custom-sanitizing-functions`,
 `custom-unslashing-sanitizing-functions`) are parsed and stored but currently have no effect: no rule
-in this package reads them yet. They exist for Mago's own core `wordpress` rule `no-unescaped-output`
-(see [Mago's own WordPress rules](#magos-own-wordpress-rules)) and for the nonce-verification and
-input-sanitization rules Mago's core does not have yet, none of which can currently receive
-per-project options. They are reserved for a planned port of that behavior into this package.
+in this package reads them yet. They mirror WPCS properties used by Mago's core rules `no-unescaped-output`,
+`nonce-verification` and `validated-sanitized-input` (see
+[Mago's own WordPress rules](#magos-own-wordpress-rules)), which cannot receive per-project options
+from an extension. They are reserved for a planned port of those rules into this package.
 
 Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 
@@ -138,21 +138,20 @@ class, constant and capability lists come from WPCS 3.4.1 (`src/Internal/WordPre
 
 ## Mago's own WordPress rules
 
-Mago's core linter has its own `wordpress` integration, five rules enabled by the
-`extends` in [Install](#install) above, independent of this package's `wordpress/*` rules:
+Mago's core linter has its own `wordpress` integration: eight rules, independent of this package's
+`wordpress/*` rules. Mago ships three of them disabled; the `extends` in [Install](#install) turns
+them on so a project keeps the security checks WPCS gave it.
 
-| Mago rule | Covers |
-|:---|:---|
-| `use-wp-functions` | `WordPress.WP.AlternativeFunctions` |
-| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) |
-| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` |
-| `no-unescaped-output` | `WordPress.Security.EscapeOutput` |
-| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part; overlaps `wordpress/capabilities` above) |
-
-Mago 1.50.0 does not yet have core rules for `WordPress.Security.NonceVerification` or
-`WordPress.Security.ValidatedSanitizedInput`; the `custom-sanitizing-functions` and
-`custom-unslashing-sanitizing-functions` settings are read and stored for when it does (see
-[Configuration](#configuration)).
+| Mago rule | Covers | Mago default |
+|:---|:---|:---|
+| `nonce-verification` | `WordPress.Security.NonceVerification` | off (on via this package's config) |
+| `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput` | off (on via this package's config) |
+| `prepared-sql` | `WordPress.DB.PreparedSQL` | off (on via this package's config) |
+| `no-unescaped-output` | `WordPress.Security.EscapeOutput` | on |
+| `use-wp-functions` | `WordPress.WP.AlternativeFunctions` | on |
+| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) | on |
+| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` | on |
+| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part; overlaps `wordpress/capabilities` above) | on |
 
 ## Coming from WPCS
 

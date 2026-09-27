@@ -8,5 +8,12 @@
 [linter]
 integrations = ["wordpress"]
 
+# Mago ships these three WordPress security rules disabled; WPCS runs their
+# equivalents (NonceVerification, ValidatedSanitizedInput, PreparedSQL) by default.
+[linter.rules]
+nonce-verification = { enabled = true }
+validated-sanitized-input = { enabled = true }
+prepared-sql = { enabled = true }
+
 [extension-hosts.wordpress]
 command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php"]
