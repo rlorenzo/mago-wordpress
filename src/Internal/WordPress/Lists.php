@@ -1,0 +1,2103 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Rlorenzo\MagoWordPress\Internal\WordPress;
+
+/**
+ * Function, class, constant and capability lists ported from WordPress Coding Standards 3.4.1
+ * (https://github.com/WordPress/WordPress-Coding-Standards, MIT). Keep entries lowercase and sorted.
+ *
+ * Generated from the WPCS source arrays (tokenized and evaluated, not hand-typed) — do not
+ * hand-edit; regenerate from WPCS instead if the data needs to be refreshed.
+ *
+ * @internal
+ */
+final class Lists
+{
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/EscapingFunctionsTrait.php ($escapingFunctions)
+     */
+    public const ESCAPING_FUNCTIONS = [
+        'absint',
+        'esc_attr',
+        'esc_attr__',
+        'esc_attr_e',
+        'esc_attr_x',
+        'esc_html',
+        'esc_html__',
+        'esc_html_e',
+        'esc_html_x',
+        'esc_js',
+        'esc_sql',
+        'esc_textarea',
+        'esc_url',
+        'esc_url_raw',
+        'esc_xml',
+        'filter_input',
+        'filter_var',
+        'floatval',
+        'highlight_string',
+        'intval',
+        'json_encode',
+        'like_escape',
+        'number_format',
+        'rawurlencode',
+        'sanitize_hex_color',
+        'sanitize_hex_color_no_hash',
+        'sanitize_html_class',
+        'sanitize_key',
+        'sanitize_locale_name',
+        'sanitize_user_field',
+        'tag_escape',
+        'urlencode',
+        'urlencode_deep',
+        'wp_json_encode',
+        'wp_kses',
+        'wp_kses_data',
+        'wp_kses_one_attr',
+        'wp_kses_post',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/EscapingFunctionsTrait.php ($autoEscapedFunctions)
+     */
+    public const AUTO_ESCAPED_FUNCTIONS = [
+        'allowed_tags',
+        'bloginfo',
+        'body_class',
+        'calendar_week_mod',
+        'category_description',
+        'checked',
+        'comment_class',
+        'count',
+        'disabled',
+        'do_shortcode',
+        'do_shortcode_tag',
+        'get_archives_link',
+        'get_attachment_link',
+        'get_avatar',
+        'get_bookmark_field',
+        'get_calendar',
+        'get_comment_author_link',
+        'get_current_blog_id',
+        'get_delete_post_link',
+        'get_search_form',
+        'get_search_query',
+        'get_the_author',
+        'get_the_author_link',
+        'get_the_date',
+        'get_the_id',
+        'get_the_post_thumbnail',
+        'get_the_term_list',
+        'post_type_archive_title',
+        'readonly',
+        'selected',
+        'single_cat_title',
+        'single_month_title',
+        'single_post_title',
+        'single_tag_title',
+        'single_term_title',
+        'tag_description',
+        'term_description',
+        'the_author',
+        'the_date',
+        'the_title_attribute',
+        'walk_nav_menu_tree',
+        'wp_dropdown_categories',
+        'wp_dropdown_users',
+        'wp_generate_tag_cloud',
+        'wp_get_archives',
+        'wp_get_attachment_image',
+        'wp_get_attachment_link',
+        'wp_link_pages',
+        'wp_list_authors',
+        'wp_list_bookmarks',
+        'wp_list_categories',
+        'wp_list_comments',
+        'wp_login_form',
+        'wp_loginout',
+        'wp_nav_menu',
+        'wp_readonly',
+        'wp_register',
+        'wp_tag_cloud',
+        'wp_timezone_choice',
+        'wp_title',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/PrintingFunctionsTrait.php ($printingFunctions)
+     */
+    public const PRINTING_FUNCTIONS = [
+        '_deprecated_argument',
+        '_deprecated_constructor',
+        '_deprecated_file',
+        '_deprecated_function',
+        '_deprecated_hook',
+        '_doing_it_wrong',
+        '_e',
+        '_ex',
+        'printf',
+        'trigger_error',
+        'user_error',
+        'vprintf',
+        'wp_die',
+        'wp_dropdown_pages',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/SanitizationHelperTrait.php ($sanitizingFunctions)
+     */
+    public const SANITIZING_FUNCTIONS = [
+        '_wp_handle_upload',
+        'esc_url_raw',
+        'filter_input',
+        'filter_var',
+        'hash_equals',
+        'is_email',
+        'number_format',
+        'sanitize_bookmark',
+        'sanitize_bookmark_field',
+        'sanitize_email',
+        'sanitize_file_name',
+        'sanitize_hex_color',
+        'sanitize_hex_color_no_hash',
+        'sanitize_html_class',
+        'sanitize_meta',
+        'sanitize_mime_type',
+        'sanitize_option',
+        'sanitize_sql_orderby',
+        'sanitize_term',
+        'sanitize_term_field',
+        'sanitize_text_field',
+        'sanitize_textarea_field',
+        'sanitize_title',
+        'sanitize_title_for_query',
+        'sanitize_title_with_dashes',
+        'sanitize_url',
+        'sanitize_user',
+        'sanitize_user_field',
+        'validate_file',
+        'wp_handle_sideload',
+        'wp_handle_upload',
+        'wp_kses',
+        'wp_kses_allowed_html',
+        'wp_kses_data',
+        'wp_kses_one_attr',
+        'wp_kses_post',
+        'wp_parse_id_list',
+        'wp_redirect',
+        'wp_safe_redirect',
+        'wp_sanitize_redirect',
+        'wp_strip_all_tags',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/SanitizationHelperTrait.php ($unslashingSanitizingFunctions)
+     */
+    public const UNSLASHING_SANITIZING_FUNCTIONS = [
+        'absint',
+        'boolval',
+        'count',
+        'doubleval',
+        'floatval',
+        'intval',
+        'rest_sanitize_boolean',
+        'sanitize_key',
+        'sanitize_locale_name',
+        'sizeof',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/UnslashingFunctionsHelper.php ($unslashingFunctions)
+     */
+    public const UNSLASHING_FUNCTIONS = [
+        'stripslashes_deep',
+        'stripslashes_from_strings_only',
+        'wp_unslash',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/ArrayWalkingFunctionsHelper.php ($arrayWalkingFunctions)
+     */
+    public const ARRAY_WALKING_FUNCTIONS = [
+        'array_map',
+        'map_deep',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/FormattingFunctionsHelper.php ($formattingFunctions)
+     */
+    public const FORMATTING_FUNCTIONS = [
+        'antispambot',
+        'array_fill',
+        'ent2ncr',
+        'implode',
+        'join',
+        'nl2br',
+        'sprintf',
+        'vsprintf',
+        'wp_sprintf',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/WPHookHelper.php ($hookInvokeFunctions)
+     */
+    public const HOOK_INVOKE_FUNCTIONS = [
+        'apply_filters',
+        'apply_filters_deprecated',
+        'apply_filters_ref_array',
+        'do_action',
+        'do_action_deprecated',
+        'do_action_ref_array',
+    ];
+
+    /**
+     * @var array<string, int> function name => 1-based argument position of the hook name, as stored by WPCS
+     * Source: WPCS Helpers/WPHookHelper.php ($hookInvokeFunctions[*]['position'])
+     */
+    public const HOOK_NAME_ARGUMENT_POSITION = [
+        'apply_filters' => 1,
+        'apply_filters_deprecated' => 1,
+        'apply_filters_ref_array' => 1,
+        'do_action' => 1,
+        'do_action_deprecated' => 1,
+        'do_action_ref_array' => 1,
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Helpers/WPGlobalVariablesHelper.php ($wp_globals)
+     */
+    public const WP_GLOBAL_VARIABLES = [
+        '_links_add_base',
+        '_links_add_target',
+        '_menu_item_sort_prop',
+        '_nav_menu_placeholder',
+        '_new_bundled_files',
+        '_old_files',
+        '_parent_pages',
+        '_registered_pages',
+        '_updated_user_settings',
+        '_wp_additional_image_sizes',
+        '_wp_admin_css_colors',
+        '_wp_default_headers',
+        '_wp_deprecated_widgets_callbacks',
+        '_wp_last_object_menu',
+        '_wp_last_utility_menu',
+        '_wp_menu_nopriv',
+        '_wp_nav_menu_max_depth',
+        '_wp_post_type_features',
+        '_wp_real_parent_file',
+        '_wp_registered_nav_menus',
+        '_wp_sidebars_widgets',
+        '_wp_submenu_nopriv',
+        '_wp_suspend_cache_invalidation',
+        '_wp_theme_features',
+        '_wp_using_ext_object_cache',
+        'action',
+        'active_signup',
+        'admin_body_class',
+        'admin_page_hooks',
+        'all_links',
+        'allowedentitynames',
+        'allowedposttags',
+        'allowedtags',
+        'auth_secure_cookie',
+        'authordata',
+        'avail_post_mime_types',
+        'avail_post_stati',
+        'blog_id',
+        'blog_title',
+        'blogname',
+        'cat',
+        'cat_id',
+        'charset_collate',
+        'comment',
+        'comment_alt',
+        'comment_depth',
+        'comment_status',
+        'comment_thread_alt',
+        'comment_type',
+        'comments',
+        'compress_css',
+        'compress_scripts',
+        'concatenate_scripts',
+        'content_width',
+        'current_blog',
+        'current_screen',
+        'current_site',
+        'current_user',
+        'currentcat',
+        'currentday',
+        'currentmonth',
+        'custom_background',
+        'custom_image_header',
+        'default_menu_order',
+        'descriptions',
+        'domain',
+        'editor_styles',
+        'error',
+        'errors',
+        'ezsql_error',
+        'feeds',
+        'getid3_errorarray',
+        'hook_suffix',
+        'http_raw_post_data',
+        'id',
+        'in_comment_loop',
+        'interim_login',
+        'is_apache',
+        'is_chrome',
+        'is_gecko',
+        'is_ie',
+        'is_iis',
+        'is_iis7',
+        'is_macie',
+        'is_ns4',
+        'is_opera',
+        'is_safari',
+        'is_winie',
+        'l10n',
+        'link',
+        'link_id',
+        'locale',
+        'locked_post_status',
+        'lost',
+        'm',
+        'map',
+        'menu',
+        'menu_order',
+        'merged_filters',
+        'mode',
+        'monthnum',
+        'more',
+        'mu_plugin',
+        'multipage',
+        'names',
+        'nav_menu_selected_id',
+        'network_plugin',
+        'new_whitelist_options',
+        'numpages',
+        'one_theme_location_no_menus',
+        'opml',
+        'order',
+        'orderby',
+        'overridden_cpage',
+        'page',
+        'paged',
+        'pagenow',
+        'pages',
+        'parent_file',
+        'pass_allowed_html',
+        'pass_allowed_protocols',
+        'path',
+        'per_page',
+        'php_self',
+        'phpmailer',
+        'plugin',
+        'plugin_page',
+        'plugins',
+        'post',
+        'post_default_category',
+        'post_default_title',
+        'post_id',
+        'post_mime_types',
+        'post_type',
+        'post_type_object',
+        'posts',
+        'preview',
+        'previouscat',
+        'previousday',
+        'previousweekday',
+        'redir_tab',
+        'required_mysql_version',
+        'required_php_version',
+        'rnd_value',
+        'role',
+        's',
+        'search',
+        'self',
+        'shortcode_tags',
+        'show_admin_bar',
+        'sidebars_widgets',
+        'status',
+        'submenu',
+        'submenu_file',
+        'super_admins',
+        'tab',
+        'table_prefix',
+        'tabs',
+        'tag',
+        'tag_id',
+        'targets',
+        'tax',
+        'taxnow',
+        'taxonomy',
+        'term',
+        'text_direction',
+        'theme_field_defaults',
+        'themes_allowedtags',
+        'timeend',
+        'timestart',
+        'tinymce_version',
+        'title',
+        'totals',
+        'type',
+        'typenow',
+        'updated_timestamp',
+        'upgrading',
+        'urls',
+        'user_email',
+        'user_id',
+        'user_identity',
+        'user_level',
+        'user_login',
+        'user_url',
+        'userdata',
+        'usersearch',
+        'whitelist_options',
+        'withcomments',
+        'wp',
+        'wp_actions',
+        'wp_admin_bar',
+        'wp_cockneyreplace',
+        'wp_current_db_version',
+        'wp_current_filter',
+        'wp_customize',
+        'wp_dashboard_control_callbacks',
+        'wp_db_version',
+        'wp_did_header',
+        'wp_embed',
+        'wp_file_descriptions',
+        'wp_filesystem',
+        'wp_filter',
+        'wp_hasher',
+        'wp_header_to_desc',
+        'wp_importers',
+        'wp_json',
+        'wp_list_table',
+        'wp_local_package',
+        'wp_locale',
+        'wp_meta_boxes',
+        'wp_object_cache',
+        'wp_plugin_paths',
+        'wp_post_statuses',
+        'wp_post_types',
+        'wp_queries',
+        'wp_query',
+        'wp_registered_sidebars',
+        'wp_registered_widget_controls',
+        'wp_registered_widget_updates',
+        'wp_registered_widgets',
+        'wp_rewrite',
+        'wp_rich_edit',
+        'wp_rich_edit_exists',
+        'wp_roles',
+        'wp_scripts',
+        'wp_settings_errors',
+        'wp_settings_fields',
+        'wp_settings_sections',
+        'wp_smiliessearch',
+        'wp_styles',
+        'wp_taxonomies',
+        'wp_the_query',
+        'wp_theme_directories',
+        'wp_themes',
+        'wp_user_roles',
+        'wp_version',
+        'wp_widget_factory',
+        'wp_xmlrpc_server',
+        'wpcommentsjavascript',
+        'wpcommentspopupfile',
+        'wpdb',
+        'wpsmiliestrans',
+        'year',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/Security/ValidatedSanitizedInputSniff.php ($slashed_superglobals)
+     */
+    public const SUPERGLOBALS = [
+        '$_COOKIE',
+        '$_GET',
+        '$_POST',
+        '$_REQUEST',
+        '$_SERVER',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/Security/ValidatedSanitizedInputSniff.php ($slashed_superglobals)
+     */
+    public const INPUT_SUPERGLOBALS = [
+        '$_COOKIE',
+        '$_GET',
+        '$_POST',
+        '$_REQUEST',
+        '$_SERVER',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/DB/RestrictedFunctionsSniff.php getGroups() ('mysql' group)
+     */
+    public const DB_RESTRICTED_FUNCTIONS = [
+        'maxdb_*',
+        'mysql_*',
+        'mysqli_*',
+        'mysqlnd_memcache_*',
+        'mysqlnd_ms_*',
+        'mysqlnd_qc_*',
+        'mysqlnd_uh_*',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/DB/RestrictedClassesSniff.php getGroups() ('mysql' group)
+     */
+    public const DB_RESTRICTED_CLASSES = [
+        'PDO',
+        'PDOStatement',
+        'mysqli',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/WP/DiscouragedFunctionsSniff.php getGroups()
+     */
+    public const DISCOURAGED_WP_FUNCTIONS = [
+        'query_posts',
+        'wp_reset_query',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/PHP/DiscouragedPHPFunctionsSniff.php getGroups()
+     */
+    public const DISCOURAGED_PHP_FUNCTIONS = [
+        'apache_setenv',
+        'base64_decode',
+        'base64_encode',
+        'convert_uudecode',
+        'convert_uuencode',
+        'dl',
+        'error_reporting',
+        'exec',
+        'ini_restore',
+        'magic_quotes_runtime',
+        'passthru',
+        'popen',
+        'proc_open',
+        'putenv',
+        'restore_include_path',
+        'serialize',
+        'set_include_path',
+        'set_magic_quotes_runtime',
+        'shell_exec',
+        'str_rot13',
+        'system',
+        'unserialize',
+        'urlencode',
+    ];
+
+    /**
+     * @var array<string, list<string>>
+     * Source: WPCS Sniffs/PHP/DiscouragedPHPFunctionsSniff.php getGroups()
+     */
+    public const DISCOURAGED_PHP_FUNCTION_GROUPS = [
+        'obfuscation' => [
+            'base64_decode',
+            'base64_encode',
+            'convert_uudecode',
+            'convert_uuencode',
+            'str_rot13',
+        ],
+        'runtime_configuration' => [
+            'apache_setenv',
+            'dl',
+            'error_reporting',
+            'ini_restore',
+            'magic_quotes_runtime',
+            'putenv',
+            'restore_include_path',
+            'set_include_path',
+            'set_magic_quotes_runtime',
+        ],
+        'serialize' => [
+            'serialize',
+            'unserialize',
+        ],
+        'system_calls' => [
+            'exec',
+            'passthru',
+            'popen',
+            'proc_open',
+            'shell_exec',
+            'system',
+        ],
+        'urlencode' => [
+            'urlencode',
+        ],
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/PHP/DevelopmentFunctionsSniff.php getGroups()
+     */
+    public const DEVELOPMENT_FUNCTIONS = [
+        'debug_backtrace',
+        'debug_print_backtrace',
+        'error_log',
+        'error_reporting',
+        'phpinfo',
+        'print_r',
+        'set_error_handler',
+        'trigger_error',
+        'var_dump',
+        'var_export',
+        'wp_debug_backtrace_summary',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/PHP/RestrictedPHPFunctionsSniff.php getGroups()
+     */
+    public const RESTRICTED_PHP_FUNCTIONS = [
+        'create_function',
+    ];
+
+    /**
+     * @var array<string, array{functions: list<string>, message: string, since?: string}>
+     * Source: WPCS Sniffs/WP/AlternativeFunctionsSniff.php getGroups()
+     */
+    public const ALTERNATIVE_FUNCTIONS = [
+        'curl' => [
+            'functions' => [
+                'curl_*',
+            ],
+            'message' => 'Using cURL functions is highly discouraged. Use wp_remote_get() instead.',
+            'since' => '2.7.0',
+        ],
+        'file_get_contents' => [
+            'functions' => [
+                'file_get_contents',
+            ],
+            'message' => '%s() is discouraged. Use wp_remote_get() for remote URLs instead.',
+            'since' => '2.7.0',
+        ],
+        'file_system_operations' => [
+            'functions' => [
+                'chgrp',
+                'chmod',
+                'chown',
+                'fclose',
+                'file_put_contents',
+                'fopen',
+                'fputs',
+                'fread',
+                'fsockopen',
+                'fwrite',
+                'is_writable',
+                'is_writeable',
+                'mkdir',
+                'pfsockopen',
+                'readfile',
+                'rmdir',
+                'touch',
+            ],
+            'message' => 'File operations should use WP_Filesystem methods instead of direct PHP filesystem calls. Found: %s().',
+            'since' => '2.5.0',
+        ],
+        'json_encode' => [
+            'functions' => [
+                'json_encode',
+            ],
+            'message' => '%s() is discouraged. Use wp_json_encode() instead.',
+            'since' => '4.1.0',
+        ],
+        'parse_url' => [
+            'functions' => [
+                'parse_url',
+            ],
+            'message' => '%s() is discouraged because of inconsistency in the output across PHP versions; use wp_parse_url() instead.',
+            'since' => '4.4.0',
+        ],
+        'rand' => [
+            'functions' => [
+                'mt_rand',
+                'rand',
+            ],
+            'message' => '%s() is discouraged. Use the far less predictable wp_rand() instead.',
+            'since' => '2.6.2',
+        ],
+        'rand_seeding' => [
+            'functions' => [
+                'mt_srand',
+                'srand',
+            ],
+            'message' => '%s() is discouraged. Rand seeding is not necessary when using the wp_rand() function (as you should).',
+            'since' => '2.6.2',
+        ],
+        'rename' => [
+            'functions' => [
+                'rename',
+            ],
+            'message' => '%s() is discouraged. Use WP_Filesystem::move() to rename a file.',
+            'since' => '2.5.0',
+        ],
+        'strip_tags' => [
+            'functions' => [
+                'strip_tags',
+            ],
+            'message' => '%s() is discouraged. Use the more comprehensive wp_strip_all_tags() instead.',
+            'since' => '2.9.0',
+        ],
+        'unlink' => [
+            'functions' => [
+                'unlink',
+            ],
+            'message' => '%s() is discouraged. Use wp_delete_file() to delete a file.',
+            'since' => '4.2.0',
+        ],
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/DateTime/RestrictedFunctionsSniff.php getGroups()
+     */
+    public const WP_DATETIME_RESTRICTED = [
+        'date',
+        'date_default_timezone_set',
+    ];
+
+    /**
+     * @var array<string, string> constant name => suggested replacement
+     * Source: WPCS Sniffs/WP/DiscouragedConstantsSniff.php ($discouraged_constants)
+     */
+    public const DISCOURAGED_CONSTANTS = [
+        'BACKGROUND_COLOR' => 'add_theme_support( \'custom-background\' )',
+        'BACKGROUND_IMAGE' => 'add_theme_support( \'custom-background\' )',
+        'HEADER_IMAGE' => 'add_theme_support( \'custom-header\' )',
+        'HEADER_IMAGE_HEIGHT' => 'add_theme_support( \'custom-header\' )',
+        'HEADER_IMAGE_WIDTH' => 'add_theme_support( \'custom-header\' )',
+        'HEADER_TEXTCOLOR' => 'add_theme_support( \'custom-header\' )',
+        'MUPLUGINDIR' => 'WPMU_PLUGIN_DIR',
+        'NO_HEADER_TEXT' => 'add_theme_support( \'custom-header\' )',
+        'PLUGINDIR' => 'WP_PLUGIN_DIR',
+        'STYLESHEETPATH' => 'get_stylesheet_directory()',
+        'TEMPLATEPATH' => 'get_template_directory()',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/WP/CapabilitiesSniff.php ($core_roles)
+     */
+    public const CORE_ROLES = [
+        'administrator',
+        'author',
+        'contributor',
+        'editor',
+        'subscriber',
+        'super_admin',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/WP/CapabilitiesSniff.php ($core_capabilities)
+     */
+    public const CORE_CAPABILITIES = [
+        'activate_plugin',
+        'activate_plugins',
+        'add_comment_meta',
+        'add_post_meta',
+        'add_term_meta',
+        'add_user_meta',
+        'add_users',
+        'assign_categories',
+        'assign_post_tags',
+        'assign_term',
+        'create_app_password',
+        'create_sites',
+        'create_users',
+        'customize',
+        'deactivate_plugin',
+        'deactivate_plugins',
+        'delete_app_password',
+        'delete_app_passwords',
+        'delete_block',
+        'delete_blocks',
+        'delete_categories',
+        'delete_comment_meta',
+        'delete_others_blocks',
+        'delete_others_pages',
+        'delete_others_posts',
+        'delete_page',
+        'delete_pages',
+        'delete_plugins',
+        'delete_post',
+        'delete_post_meta',
+        'delete_post_tags',
+        'delete_posts',
+        'delete_private_blocks',
+        'delete_private_pages',
+        'delete_private_posts',
+        'delete_published_blocks',
+        'delete_published_pages',
+        'delete_published_posts',
+        'delete_site',
+        'delete_sites',
+        'delete_term',
+        'delete_term_meta',
+        'delete_themes',
+        'delete_user',
+        'delete_user_meta',
+        'delete_users',
+        'edit_app_password',
+        'edit_block',
+        'edit_block_binding',
+        'edit_blocks',
+        'edit_categories',
+        'edit_comment',
+        'edit_comment_meta',
+        'edit_css',
+        'edit_dashboard',
+        'edit_files',
+        'edit_others_blocks',
+        'edit_others_pages',
+        'edit_others_posts',
+        'edit_page',
+        'edit_pages',
+        'edit_plugins',
+        'edit_post',
+        'edit_post_meta',
+        'edit_post_tags',
+        'edit_posts',
+        'edit_private_blocks',
+        'edit_private_pages',
+        'edit_private_posts',
+        'edit_published_blocks',
+        'edit_published_pages',
+        'edit_published_posts',
+        'edit_term',
+        'edit_term_meta',
+        'edit_theme_options',
+        'edit_themes',
+        'edit_user',
+        'edit_user_meta',
+        'edit_users',
+        'erase_others_personal_data',
+        'export',
+        'export_others_personal_data',
+        'import',
+        'install_languages',
+        'install_plugins',
+        'install_themes',
+        'list_app_passwords',
+        'list_users',
+        'manage_categories',
+        'manage_links',
+        'manage_network',
+        'manage_network_options',
+        'manage_network_plugins',
+        'manage_network_themes',
+        'manage_network_users',
+        'manage_options',
+        'manage_post_tags',
+        'manage_privacy_options',
+        'manage_sites',
+        'moderate_comments',
+        'promote_user',
+        'promote_users',
+        'publish_blocks',
+        'publish_pages',
+        'publish_post',
+        'publish_posts',
+        'read',
+        'read_app_password',
+        'read_block',
+        'read_page',
+        'read_post',
+        'read_private_blocks',
+        'read_private_pages',
+        'read_private_posts',
+        'remove_user',
+        'remove_users',
+        'resume_plugin',
+        'resume_plugins',
+        'resume_theme',
+        'resume_themes',
+        'setup_network',
+        'switch_themes',
+        'unfiltered_html',
+        'unfiltered_upload',
+        'update_core',
+        'update_https',
+        'update_languages',
+        'update_php',
+        'update_plugins',
+        'update_themes',
+        'upgrade_network',
+        'upload_files',
+        'upload_plugins',
+        'upload_themes',
+        'view_site_health_checks',
+    ];
+
+    /**
+     * @var array<string, string> capability => version deprecated since
+     * Source: WPCS Sniffs/WP/CapabilitiesSniff.php ($deprecated_capabilities)
+     */
+    public const DEPRECATED_CAPABILITIES = [
+        'level_0' => '3.0.0',
+        'level_1' => '3.0.0',
+        'level_10' => '3.0.0',
+        'level_2' => '3.0.0',
+        'level_3' => '3.0.0',
+        'level_4' => '3.0.0',
+        'level_5' => '3.0.0',
+        'level_6' => '3.0.0',
+        'level_7' => '3.0.0',
+        'level_8' => '3.0.0',
+        'level_9' => '3.0.0',
+    ];
+
+    /**
+     * @var array<string, string> class name => version deprecated since
+     * Source: WPCS Sniffs/WP/DeprecatedClassesSniff.php ($deprecated_classes)
+     */
+    public const DEPRECATED_CLASSES = [
+        'services_json' => '5.3.0',
+        'services_json_error' => '5.3.0',
+        'wp_customize_new_menu_control' => '4.9.0',
+        'wp_customize_new_menu_section' => '4.9.0',
+        'wp_http_curl' => '6.4.0',
+        'wp_http_fsockopen' => '3.7.0',
+        'wp_http_streams' => '6.4.0',
+        'wp_privacy_data_export_requests_table' => '5.3.0',
+        'wp_privacy_data_removal_requests_table' => '5.3.0',
+        'wp_user_search' => '3.1.0',
+    ];
+
+    /**
+     * @var array<string, array{alt: string, version: string}>
+     * Source: WPCS Sniffs/WP/DeprecatedFunctionsSniff.php ($deprecated_functions)
+     */
+    public const DEPRECATED_FUNCTIONS = [
+        '__ngettext' => ['alt' => '_n()', 'version' => '2.8.0'],
+        '__ngettext_noop' => ['alt' => '_n_noop()', 'version' => '2.8.0'],
+        '_admin_bar_bump_cb' => ['alt' => 'wp_enqueue_admin_bar_bump_styles()', 'version' => '6.4.0'],
+        '_c' => ['alt' => '_x()', 'version' => '2.9.0'],
+        '_excerpt_render_inner_columns_blocks' => ['alt' => '_excerpt_render_inner_blocks()', 'version' => '5.8.0'],
+        '_filter_query_attachment_filenames' => [
+            'alt' => 'add_filter( "wp_allow_query_attachment_by_filename", "__return_true" )',
+            'version' => '6.0.3',
+        ],
+        '_flip_image_resource' => ['alt' => 'WP_Image_Editor::flip()', 'version' => '3.5.0'],
+        '_get_path_to_translation' => ['alt' => 'WP_Textdomain_Registry', 'version' => '6.1.0'],
+        '_get_path_to_translation_from_lang_dir' => ['alt' => 'WP_Textdomain_Registry', 'version' => '6.1.0'],
+        '_get_post_ancestors' => ['alt' => '', 'version' => '3.5.0'],
+        '_inject_theme_attribute_in_block_template_content' => [
+            'alt' => 'traverse_and_serialize_blocks( parse_blocks( $template_content ), "_inject_theme_attribute_in_template_part_block" )',
+            'version' => '6.4.0',
+        ],
+        '_insert_into_post_button' => ['alt' => '', 'version' => '3.5.0'],
+        '_media_button' => ['alt' => '', 'version' => '3.5.0'],
+        '_nc' => ['alt' => '_nx()', 'version' => '2.9.0'],
+        '_preview_theme_stylesheet_filter' => ['alt' => '', 'version' => '4.3.0'],
+        '_preview_theme_template_filter' => ['alt' => '', 'version' => '4.3.0'],
+        '_relocate_children' => ['alt' => '', 'version' => '3.9.0'],
+        '_remove_theme_attribute_in_block_template_content' => [
+            'alt' => 'traverse_and_serialize_blocks( parse_blocks( $template_content ), "_remove_theme_attribute_from_template_part_block" )',
+            'version' => '6.4.0',
+        ],
+        '_resolve_home_block_template' => ['alt' => '', 'version' => '6.2.0'],
+        '_rotate_image_resource' => ['alt' => 'WP_Image_Editor::rotate()', 'version' => '3.5.0'],
+        '_save_post_hook' => ['alt' => '', 'version' => '3.5.0'],
+        '_search_terms_tidy' => ['alt' => '', 'version' => '3.7.0'],
+        '_sort_nav_menu_items' => ['alt' => 'wp_list_sort()', 'version' => '4.7.0'],
+        '_usort_terms_by_id' => ['alt' => 'wp_list_sort()', 'version' => '4.7.0'],
+        '_usort_terms_by_name' => ['alt' => 'wp_list_sort()', 'version' => '4.7.0'],
+        '_wp_json_prepare_data' => ['alt' => '', 'version' => '5.3.0'],
+        '_wp_multiple_block_styles' => ['alt' => '', 'version' => '6.1.0'],
+        '_wp_privacy_requests_screen_options' => ['alt' => '', 'version' => '5.3.0'],
+        '_wp_register_meta_args_whitelist' => ['alt' => '_wp_register_meta_args_allowed_list()', 'version' => '5.5.0'],
+        '_wp_theme_json_webfonts_handler' => ['alt' => 'wp_print_font_faces()', 'version' => '6.4.0'],
+        '_wp_tinycolor_bound_alpha' => ['alt' => '', 'version' => '6.3.0'],
+        'activate_sitewide_plugin' => ['alt' => 'activate_plugin()', 'version' => '3.0.0'],
+        'add_contextual_help' => ['alt' => 'get_current_screen()->add_help_tab()', 'version' => '3.3.0'],
+        'add_custom_background' => ['alt' => 'add_theme_support( \'custom-background\', $args )', 'version' => '3.4.0'],
+        'add_custom_image_header' => ['alt' => 'add_theme_support( \'custom-header\', $args )', 'version' => '3.4.0'],
+        'add_object_page' => ['alt' => 'add_menu_page()', 'version' => '4.5.0'],
+        'add_option_update_handler' => ['alt' => 'register_setting()', 'version' => '3.0.0'],
+        'add_option_whitelist' => ['alt' => 'add_allowed_options()', 'version' => '5.5.0'],
+        'add_tab' => ['alt' => '', 'version' => '4.1.0'],
+        'add_utility_page' => ['alt' => 'add_menu_page()', 'version' => '4.5.0'],
+        'addslashes_gpc' => ['alt' => 'wp_slash()', 'version' => '7.0.0'],
+        'attribute_escape' => ['alt' => 'esc_attr()', 'version' => '2.8.0'],
+        'automatic_feed_links' => ['alt' => 'add_theme_support( \'automatic-feed-links\' )', 'version' => '3.0.0'],
+        'block_core_file_ensure_interactivity_dependency' => [
+            'alt' => 'wp_register_script_module()',
+            'version' => '6.5.0',
+        ],
+        'block_core_image_ensure_interactivity_dependency' => [
+            'alt' => 'wp_register_script_module()',
+            'version' => '6.5.0',
+        ],
+        'block_core_navigation_block_contains_core_navigation' => [
+            'alt' => 'block_core_navigation_block_tree_has_block_type()',
+            'version' => '7.0.0',
+        ],
+        'block_core_navigation_get_classic_menu_fallback' => [
+            'alt' => 'WP_Navigation_Fallback::get_classic_menu_fallback',
+            'version' => '6.3.0',
+        ],
+        'block_core_navigation_get_classic_menu_fallback_blocks' => [
+            'alt' => 'WP_Navigation_Fallback::get_classic_menu_fallback_blocks',
+            'version' => '6.3.0',
+        ],
+        'block_core_navigation_get_most_recently_published_navigation' => [
+            'alt' => 'WP_Navigation_Fallback::get_most_recently_published_navigation',
+            'version' => '6.3.0',
+        ],
+        'block_core_navigation_maybe_use_classic_menu_fallback' => [
+            'alt' => 'WP_Navigation_Fallback::create_classic_menu_fallback',
+            'version' => '6.3.0',
+        ],
+        'block_core_navigation_parse_blocks_from_menu_items' => [
+            'alt' => 'WP_Navigation_Fallback::parse_blocks_from_menu_items',
+            'version' => '6.3.0',
+        ],
+        'block_core_navigation_submenu_build_css_colors' => [
+            'alt' => 'wp_apply_colors_support()',
+            'version' => '6.3.0',
+        ],
+        'block_core_query_ensure_interactivity_dependency' => [
+            'alt' => 'wp_register_script_module()',
+            'version' => '6.5.0',
+        ],
+        'clean_page_cache' => ['alt' => 'clean_post_cache()', 'version' => '3.4.0'],
+        'clean_pre' => ['alt' => '', 'version' => '3.4.0'],
+        'clean_url' => ['alt' => 'esc_url()', 'version' => '3.0.0'],
+        'clear_global_post_cache' => ['alt' => 'clean_post_cache()', 'version' => '3.0.0'],
+        'codepress_footer_js' => ['alt' => '', 'version' => '3.0.0'],
+        'codepress_get_lang' => ['alt' => '', 'version' => '3.0.0'],
+        'comments_popup_script' => ['alt' => '', 'version' => '4.5.0'],
+        'comments_rss' => ['alt' => 'get_post_comments_feed_link()', 'version' => '2.2.0'],
+        'comments_rss_link' => ['alt' => 'post_comments_feed_link()', 'version' => '2.5.0'],
+        'create_empty_blog' => ['alt' => '', 'version' => '4.4.0'],
+        'create_user' => ['alt' => 'wp_create_user()', 'version' => '2.0.0'],
+        'current_theme_info' => ['alt' => 'wp_get_theme()', 'version' => '3.4.0'],
+        'current_user_can_for_blog' => ['alt' => 'current_user_can_for_site()', 'version' => '6.7.0'],
+        'deactivate_sitewide_plugin' => ['alt' => 'deactivate_plugin()', 'version' => '3.0.0'],
+        'debug_fclose' => ['alt' => 'error_log()', 'version' => '3.4.0'],
+        'debug_fopen' => ['alt' => 'error_log()', 'version' => '3.4.0'],
+        'debug_fwrite' => ['alt' => 'error_log()', 'version' => '3.4.0'],
+        'default_topic_count_text' => ['alt' => '', 'version' => '3.9.0'],
+        'delete_usermeta' => ['alt' => 'delete_user_meta()', 'version' => '3.0.0'],
+        'display_theme' => ['alt' => '', 'version' => '3.4.0'],
+        'documentation_link' => ['alt' => '', 'version' => '2.5.0'],
+        'dropdown_categories' => ['alt' => 'wp_category_checklist()', 'version' => '2.6.0'],
+        'dropdown_cats' => ['alt' => 'wp_dropdown_categories()', 'version' => '2.1.0'],
+        'dropdown_link_categories' => ['alt' => 'wp_link_category_checklist()', 'version' => '2.6.0'],
+        'favorite_actions' => ['alt' => 'WP_Admin_Bar', 'version' => '3.2.0'],
+        'find_base_dir' => ['alt' => 'WP_Filesystem::abspath()', 'version' => '2.7.0'],
+        'flush_widget_cache' => ['alt' => '', 'version' => '4.4.0'],
+        'force_ssl_login' => ['alt' => 'force_ssl_admin()', 'version' => '4.4.0'],
+        'format_to_post' => ['alt' => '', 'version' => '3.9.0'],
+        'funky_javascript_callback' => ['alt' => '', 'version' => '3.0.0'],
+        'funky_javascript_fix' => ['alt' => '', 'version' => '3.0.0'],
+        'gd_edit_image_support' => ['alt' => 'wp_image_editor_supports()', 'version' => '3.5.0'],
+        'generate_random_password' => ['alt' => 'wp_generate_password()', 'version' => '3.0.0'],
+        'get_admin_users_for_domain' => ['alt' => '', 'version' => '4.4.0'],
+        'get_all_category_ids' => ['alt' => 'get_terms()', 'version' => '4.0.0'],
+        'get_alloptions' => ['alt' => 'wp_load_alloptions()', 'version' => '3.0.0'],
+        'get_allowed_themes' => ['alt' => 'wp_get_themes( array( \'allowed\' => true ) )', 'version' => '3.4.0'],
+        'get_archives' => ['alt' => 'wp_get_archives()', 'version' => '2.1.0'],
+        'get_attachment_icon' => ['alt' => 'wp_get_attachment_image()', 'version' => '2.5.0'],
+        'get_attachment_icon_src' => ['alt' => 'wp_get_attachment_image_src()', 'version' => '2.5.0'],
+        'get_attachment_innerhtml' => ['alt' => 'wp_get_attachment_image()', 'version' => '2.5.0'],
+        'get_author_link' => ['alt' => 'get_author_posts_url()', 'version' => '2.1.0'],
+        'get_author_name' => ['alt' => 'get_the_author_meta(\'display_name\')', 'version' => '2.8.0'],
+        'get_author_rss_link' => ['alt' => 'get_author_feed_link()', 'version' => '2.5.0'],
+        'get_author_user_ids' => ['alt' => 'get_users()', 'version' => '3.1.0'],
+        'get_autotoggle' => ['alt' => '', 'version' => '2.1.0'],
+        'get_base_dir' => ['alt' => 'WP_Filesystem::abspath()', 'version' => '2.7.0'],
+        'get_blog_list' => ['alt' => 'wp_get_sites()', 'version' => '3.0.0'],
+        'get_blogaddress_by_domain' => ['alt' => '', 'version' => '3.7.0'],
+        'get_boundary_post_rel_link' => ['alt' => '', 'version' => '3.3.0'],
+        'get_broken_themes' => ['alt' => 'wp_get_themes( array( \'errors\' => true )', 'version' => '3.4.0'],
+        'get_category_children' => ['alt' => 'get_term_children()', 'version' => '2.8.0'],
+        'get_category_rss_link' => ['alt' => 'get_category_feed_link()', 'version' => '2.5.0'],
+        'get_catname' => ['alt' => 'get_cat_name()', 'version' => '2.8.0'],
+        'get_commentdata' => ['alt' => 'get_comment()', 'version' => '2.7.0'],
+        'get_comments_popup_template' => ['alt' => '', 'version' => '4.5.0'],
+        'get_current_site_name' => ['alt' => 'get_current_site()', 'version' => '3.9.0'],
+        'get_current_theme' => ['alt' => 'wp_get_theme()', 'version' => '3.4.0'],
+        'get_currentuserinfo' => ['alt' => 'wp_get_current_user()', 'version' => '4.5.0'],
+        'get_dashboard_blog' => ['alt' => 'get_site()', 'version' => '3.1.0'],
+        'get_default_page_to_edit' => ['alt' => 'get_default_post_to_edit( \'page\' )', 'version' => '3.5.0'],
+        'get_editable_authors' => ['alt' => 'get_users()', 'version' => '3.1.0'],
+        'get_editable_user_ids' => ['alt' => 'get_users()', 'version' => '3.1.0'],
+        'get_index_rel_link' => ['alt' => '', 'version' => '3.3.0'],
+        'get_link' => ['alt' => 'get_bookmark()', 'version' => '2.1.0'],
+        'get_linkcatname' => ['alt' => 'get_category()', 'version' => '2.1.0'],
+        'get_linkobjects' => ['alt' => 'get_bookmarks()', 'version' => '2.1.0'],
+        'get_linkobjectsbyname' => ['alt' => 'get_bookmarks()', 'version' => '2.1.0'],
+        'get_linkrating' => ['alt' => 'sanitize_bookmark_field()', 'version' => '2.1.0'],
+        'get_links' => ['alt' => 'get_bookmarks()', 'version' => '2.1.0'],
+        'get_links_list' => ['alt' => 'wp_list_bookmarks()', 'version' => '2.1.0'],
+        'get_links_withrating' => ['alt' => 'get_bookmarks()', 'version' => '2.1.0'],
+        'get_linksbyname' => ['alt' => 'get_bookmarks()', 'version' => '2.1.0'],
+        'get_linksbyname_withrating' => ['alt' => 'get_bookmarks()', 'version' => '2.1.0'],
+        'get_most_active_blogs' => ['alt' => '', 'version' => '3.0.0'],
+        'get_nonauthor_user_ids' => ['alt' => 'get_users()', 'version' => '3.1.0'],
+        'get_others_drafts' => ['alt' => '', 'version' => '3.1.0'],
+        'get_others_pending' => ['alt' => '', 'version' => '3.1.0'],
+        'get_others_unpublished_posts' => ['alt' => '', 'version' => '3.1.0'],
+        'get_page_by_title' => ['alt' => 'WP_Query', 'version' => '6.2.0'],
+        'get_paged_template' => ['alt' => '', 'version' => '4.7.0'],
+        'get_parent_post_rel_link' => ['alt' => '', 'version' => '3.3.0'],
+        'get_post_to_edit' => ['alt' => 'get_post()', 'version' => '3.5.0'],
+        'get_postdata' => ['alt' => 'get_post()', 'version' => '1.5.1'],
+        'get_profile' => ['alt' => 'get_the_author_meta()', 'version' => '3.0.0'],
+        'get_real_file_to_edit' => ['alt' => '', 'version' => '2.9.0'],
+        'get_screen_icon' => ['alt' => '', 'version' => '3.8.0'],
+        'get_settings' => ['alt' => 'get_option()', 'version' => '2.1.0'],
+        'get_shortcut_link' => ['alt' => '', 'version' => '4.9.0'],
+        'get_site_allowed_themes' => ['alt' => 'WP_Theme::get_allowed_on_network()', 'version' => '3.4.0'],
+        'get_the_attachment_link' => ['alt' => 'wp_get_attachment_link()', 'version' => '2.5.0'],
+        'get_the_author_aim' => ['alt' => 'get_the_author_meta(\'aim\')', 'version' => '2.8.0'],
+        'get_the_author_description' => ['alt' => 'get_the_author_meta(\'description\')', 'version' => '2.8.0'],
+        'get_the_author_email' => ['alt' => 'get_the_author_meta(\'email\')', 'version' => '2.8.0'],
+        'get_the_author_firstname' => ['alt' => 'get_the_author_meta(\'first_name\')', 'version' => '2.8.0'],
+        'get_the_author_icq' => ['alt' => 'get_the_author_meta(\'icq\')', 'version' => '2.8.0'],
+        'get_the_author_id' => ['alt' => 'get_the_author_meta(\'ID\')', 'version' => '2.8.0'],
+        'get_the_author_lastname' => ['alt' => 'get_the_author_meta(\'last_name\')', 'version' => '2.8.0'],
+        'get_the_author_login' => ['alt' => 'get_the_author_meta(\'login\')', 'version' => '2.8.0'],
+        'get_the_author_msn' => ['alt' => 'get_the_author_meta(\'msn\')', 'version' => '2.8.0'],
+        'get_the_author_nickname' => ['alt' => 'get_the_author_meta(\'nickname\')', 'version' => '2.8.0'],
+        'get_the_author_url' => ['alt' => 'get_the_author_meta(\'url\')', 'version' => '2.8.0'],
+        'get_the_author_yim' => ['alt' => 'get_the_author_meta(\'yim\')', 'version' => '2.8.0'],
+        'get_theme' => ['alt' => 'wp_get_theme( $stylesheet )', 'version' => '3.4.0'],
+        'get_theme_data' => ['alt' => 'wp_get_theme()', 'version' => '3.4.0'],
+        'get_themes' => ['alt' => 'wp_get_themes()', 'version' => '3.4.0'],
+        'get_udims' => ['alt' => 'wp_constrain_dimensions()', 'version' => '3.5.0'],
+        'get_user_by_email' => ['alt' => 'get_user_by(\'email\')', 'version' => '3.3.0'],
+        'get_user_details' => ['alt' => 'get_user_by()', 'version' => '3.0.0'],
+        'get_user_id_from_string' => ['alt' => 'get_user_by()', 'version' => '3.6.0'],
+        'get_user_metavalues' => ['alt' => '', 'version' => '3.3.0'],
+        'get_userdatabylogin' => ['alt' => 'get_user_by(\'login\')', 'version' => '3.3.0'],
+        'get_usermeta' => ['alt' => 'get_user_meta()', 'version' => '3.0.0'],
+        'get_usernumposts' => ['alt' => 'count_user_posts()', 'version' => '3.0.0'],
+        'get_users_of_blog' => ['alt' => 'get_users()', 'version' => '3.1.0'],
+        'global_terms' => ['alt' => '', 'version' => '6.1.0'],
+        'global_terms_enabled' => ['alt' => '', 'version' => '6.1.0'],
+        'graceful_fail' => ['alt' => 'wp_die()', 'version' => '3.0.0'],
+        'gzip_compression' => ['alt' => '', 'version' => '2.5.0'],
+        'image_attachment_fields_to_save' => ['alt' => '', 'version' => '6.0.0'],
+        'image_resize' => ['alt' => 'wp_get_image_editor()', 'version' => '3.5.0'],
+        'index_rel_link' => ['alt' => '', 'version' => '3.3.0'],
+        'insert_blog' => ['alt' => 'wp_insert_site()', 'version' => '5.1.0'],
+        'install_blog' => ['alt' => '', 'version' => '5.1.0'],
+        'install_blog_defaults' => ['alt' => 'wp_install_defaults', 'version' => '3.0.0'],
+        'install_global_terms' => ['alt' => '', 'version' => '6.1.0'],
+        'install_themes_feature_list' => ['alt' => 'get_theme_feature_list()', 'version' => '3.1.0'],
+        'is_blog_user' => ['alt' => 'is_user_member_of_blog()', 'version' => '3.3.0'],
+        'is_comments_popup' => ['alt' => '', 'version' => '4.5.0'],
+        'is_main_blog' => ['alt' => 'is_main_site()', 'version' => '3.0.0'],
+        'is_plugin_page' => [
+            'alt' => 'global $plugin_page and/or get_plugin_page_hookname() hooks',
+            'version' => '3.1.0',
+        ],
+        'is_site_admin' => ['alt' => 'is_super_admin()', 'version' => '3.0.0'],
+        'is_taxonomy' => ['alt' => 'taxonomy_exists()', 'version' => '3.0.0'],
+        'is_term' => ['alt' => 'term_exists()', 'version' => '3.0.0'],
+        'is_user_option_local' => ['alt' => '', 'version' => '4.9.0'],
+        'is_wpmu_sitewide_plugin' => ['alt' => 'is_network_only_plugin()', 'version' => '3.0.0'],
+        'js_escape' => ['alt' => 'esc_js()', 'version' => '2.8.0'],
+        'like_escape' => ['alt' => 'wpdb::esc_like()', 'version' => '4.0.0'],
+        'link_pages' => ['alt' => 'wp_link_pages()', 'version' => '2.1.0'],
+        'links_popup_script' => ['alt' => '', 'version' => '2.1.0'],
+        'list_authors' => ['alt' => 'wp_list_authors()', 'version' => '2.1.0'],
+        'list_cats' => ['alt' => 'wp_list_categories()', 'version' => '2.1.0'],
+        'logio' => ['alt' => 'error_log()', 'version' => '3.4.0'],
+        'make_url_footnote' => ['alt' => '', 'version' => '2.9.0'],
+        'media_upload_audio' => ['alt' => 'wp_media_upload_handler()', 'version' => '3.3.0'],
+        'media_upload_file' => ['alt' => 'wp_media_upload_handler()', 'version' => '3.3.0'],
+        'media_upload_image' => ['alt' => 'wp_media_upload_handler()', 'version' => '3.3.0'],
+        'media_upload_video' => ['alt' => 'wp_media_upload_handler()', 'version' => '3.3.0'],
+        'mu_options' => ['alt' => '', 'version' => '3.0.0'],
+        'next_post' => ['alt' => 'next_post_link()', 'version' => '2.0.0'],
+        'noindex' => ['alt' => 'wp_robots_noindex()', 'version' => '5.7.0'],
+        'parent_post_rel_link' => ['alt' => '', 'version' => '3.3.0'],
+        'permalink_link' => ['alt' => 'the_permalink()', 'version' => '1.2.0'],
+        'permalink_single_rss' => ['alt' => 'the_permalink_rss()', 'version' => '2.3.0'],
+        'popuplinks' => ['alt' => '', 'version' => '4.5.0'],
+        'post_form_autocomplete_off' => ['alt' => '', 'version' => '4.6.0'],
+        'post_permalink' => ['alt' => 'get_permalink()', 'version' => '4.4.0'],
+        'prepare_control' => ['alt' => '', 'version' => '4.1.0'],
+        'prepreview_added_sidebars_widgets' => [
+            'alt' => 'the \'customize_dynamic_setting_args\' filter',
+            'version' => '4.2.0',
+        ],
+        'prepreview_added_widget_instance' => [
+            'alt' => 'the \'customize_dynamic_setting_args\' filter',
+            'version' => '4.2.0',
+        ],
+        'preview_theme' => ['alt' => '', 'version' => '4.3.0'],
+        'preview_theme_ob_filter' => ['alt' => '', 'version' => '4.3.0'],
+        'preview_theme_ob_filter_callback' => ['alt' => '', 'version' => '4.3.0'],
+        'previous_post' => ['alt' => 'previous_post_link()', 'version' => '2.0.0'],
+        'print_embed_styles' => ['alt' => 'wp_enqueue_embed_styles()', 'version' => '6.4.0'],
+        'print_emoji_styles' => ['alt' => 'wp_enqueue_emoji_styles()', 'version' => '6.4.0'],
+        'print_tab_image' => ['alt' => '', 'version' => '4.1.0'],
+        'readonly' => ['alt' => 'wp_readonly()', 'version' => '5.9.0'],
+        'register_sidebar_widget' => ['alt' => 'wp_register_sidebar_widget()', 'version' => '2.8.0'],
+        'register_widget_control' => ['alt' => 'wp_register_widget_control()', 'version' => '2.8.0'],
+        'remove_custom_background' => ['alt' => 'remove_theme_support( \'custom-background\' )', 'version' => '3.4.0'],
+        'remove_custom_image_header' => ['alt' => 'remove_theme_support( \'custom-header\' )', 'version' => '3.4.0'],
+        'remove_option_update_handler' => ['alt' => 'unregister_setting()', 'version' => '3.0.0'],
+        'remove_option_whitelist' => ['alt' => 'remove_allowed_options()', 'version' => '5.5.0'],
+        'remove_prepreview_filters' => ['alt' => 'the \'customize_dynamic_setting_args\' filter', 'version' => '4.2.0'],
+        'remove_tab' => ['alt' => '', 'version' => '4.1.0'],
+        'rich_edit_exists' => ['alt' => '', 'version' => '3.9.0'],
+        'sanitize_user_object' => ['alt' => '', 'version' => '3.3.0'],
+        'screen_icon' => ['alt' => '', 'version' => '3.8.0'],
+        'screen_layout' => ['alt' => '$current_screen->render_screen_layout()', 'version' => '3.3.0'],
+        'screen_meta' => ['alt' => '$current_screen->render_screen_meta()', 'version' => '3.3.0'],
+        'screen_options' => ['alt' => '$current_screen->render_per_page_options()', 'version' => '3.3.0'],
+        'seems_utf8' => ['alt' => 'wp_is_valid_utf8()', 'version' => '6.9.0'],
+        'set_current_user' => ['alt' => 'wp_set_current_user()', 'version' => '3.0.0'],
+        'setup_widget_addition_previews' => [
+            'alt' => 'the \'customize_dynamic_setting_args\' filter',
+            'version' => '4.2.0',
+        ],
+        'start_post_rel_link' => ['alt' => '', 'version' => '3.3.0'],
+        'start_wp' => ['alt' => 'the Loop', 'version' => '1.5.0'],
+        'sticky_class' => ['alt' => 'post_class()', 'version' => '3.5.0'],
+        'sync_category_tag_slugs' => ['alt' => '', 'version' => '6.1.0'],
+        'the_attachment_links' => ['alt' => '', 'version' => '3.7.0'],
+        'the_author_aim' => ['alt' => 'the_author_meta(\'aim\')', 'version' => '2.8.0'],
+        'the_author_description' => ['alt' => 'the_author_meta(\'description\')', 'version' => '2.8.0'],
+        'the_author_email' => ['alt' => 'the_author_meta(\'email\')', 'version' => '2.8.0'],
+        'the_author_firstname' => ['alt' => 'the_author_meta(\'first_name\')', 'version' => '2.8.0'],
+        'the_author_icq' => ['alt' => 'the_author_meta(\'icq\')', 'version' => '2.8.0'],
+        'the_author_id' => ['alt' => 'the_author_meta(\'ID\')', 'version' => '2.8.0'],
+        'the_author_lastname' => ['alt' => 'the_author_meta(\'last_name\')', 'version' => '2.8.0'],
+        'the_author_login' => ['alt' => 'the_author_meta(\'login\')', 'version' => '2.8.0'],
+        'the_author_msn' => ['alt' => 'the_author_meta(\'msn\')', 'version' => '2.8.0'],
+        'the_author_nickname' => ['alt' => 'the_author_meta(\'nickname\')', 'version' => '2.8.0'],
+        'the_author_url' => ['alt' => 'the_author_meta(\'url\')', 'version' => '2.8.0'],
+        'the_author_yim' => ['alt' => 'the_author_meta(\'yim\')', 'version' => '2.8.0'],
+        'the_block_template_skip_link' => ['alt' => 'wp_enqueue_block_template_skip_link()', 'version' => '6.4.0'],
+        'the_category_head' => ['alt' => 'get_the_category_by_ID()', 'version' => '0.71'],
+        'the_category_id' => ['alt' => 'get_the_category()', 'version' => '0.71'],
+        'the_content_rss' => ['alt' => 'the_content_feed()', 'version' => '2.9.0'],
+        'the_editor' => ['alt' => 'wp_editor()', 'version' => '3.3.0'],
+        'the_meta' => ['alt' => 'get_post_meta()', 'version' => '6.0.2'],
+        'tinymce_include' => ['alt' => 'wp_editor()', 'version' => '2.1.0'],
+        'translate_with_context' => ['alt' => '_x()', 'version' => '2.9.0'],
+        'type_url_form_audio' => ['alt' => 'wp_media_insert_url_form(\'audio\')', 'version' => '3.3.0'],
+        'type_url_form_file' => ['alt' => 'wp_media_insert_url_form(\'file\')', 'version' => '3.3.0'],
+        'type_url_form_image' => ['alt' => 'wp_media_insert_url_form(\'image\')', 'version' => '3.3.0'],
+        'type_url_form_video' => ['alt' => 'wp_media_insert_url_form(\'video\')', 'version' => '3.3.0'],
+        'unregister_sidebar_widget' => ['alt' => 'wp_unregister_sidebar_widget()', 'version' => '2.8.0'],
+        'unregister_widget_control' => ['alt' => 'wp_unregister_widget_control()', 'version' => '2.8.0'],
+        'update_category_cache' => ['alt' => '', 'version' => '3.1.0'],
+        'update_page_cache' => ['alt' => 'update_post_cache()', 'version' => '3.4.0'],
+        'update_user_status' => ['alt' => 'wp_update_user()', 'version' => '5.3.0'],
+        'update_usermeta' => ['alt' => 'update_user_meta()', 'version' => '3.0.0'],
+        'url_is_accessable_via_ssl' => ['alt' => '', 'version' => '4.0.0'],
+        'use_codepress' => ['alt' => '', 'version' => '3.0.0'],
+        'user_can_create_draft' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_create_post' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_delete_post' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_delete_post_comments' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_edit_post' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_edit_post_comments' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_edit_post_date' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_edit_user' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_can_set_post_date' => ['alt' => 'current_user_can()', 'version' => '2.0.0'],
+        'user_pass_ok' => ['alt' => 'wp_authenticate()', 'version' => '3.5.0'],
+        'validate_email' => ['alt' => 'is_email()', 'version' => '3.0.0'],
+        'wlwmanifest_link' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_add_editor_classic_theme_styles' => ['alt' => 'wp_enqueue_classic_theme_styles()', 'version' => '6.8.0'],
+        'wp_add_iframed_editor_assets_html' => ['alt' => '', 'version' => '6.0.0'],
+        'wp_admin_bar_dashboard_view_site_menu' => ['alt' => '', 'version' => '3.3.0'],
+        'wp_admin_bar_header' => ['alt' => 'wp_enqueue_admin_bar_header_styles()', 'version' => '6.4.0'],
+        'wp_ajax_press_this_add_category' => ['alt' => '', 'version' => '4.9.0'],
+        'wp_ajax_press_this_save_post' => ['alt' => '', 'version' => '4.9.0'],
+        'wp_ajax_wp_fullscreen_save_post' => ['alt' => '', 'version' => '4.3.0'],
+        'wp_blacklist_check' => ['alt' => 'wp_check_comment_disallowed_list()', 'version' => '5.5.0'],
+        'wp_cache_reset' => ['alt' => 'wp_cache_switch_to_blog()', 'version' => '3.5.0'],
+        'wp_clearcookie' => ['alt' => 'wp_clear_auth_cookie()', 'version' => '2.5.0'],
+        'wp_convert_bytes_to_hr' => ['alt' => 'size_format()', 'version' => '3.6.0'],
+        'wp_create_block_style_variation_instance_name' => [
+            'alt' => 'wp_unique_id( $variation . \'--\' )',
+            'version' => '6.7.0',
+        ],
+        'wp_create_thumbnail' => ['alt' => 'image_resize()', 'version' => '3.5.0'],
+        'wp_dashboard_incoming_links' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_incoming_links_control' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_incoming_links_output' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_plugins' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_plugins_output' => ['alt' => '', 'version' => '4.8.0'],
+        'wp_dashboard_primary_control' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_quick_press_output' => ['alt' => 'wp_dashboard_quick_press()', 'version' => '3.2.0'],
+        'wp_dashboard_recent_comments_control' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_secondary' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_secondary_control' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dashboard_secondary_output' => ['alt' => '', 'version' => '3.8.0'],
+        'wp_dropdown_cats' => ['alt' => 'wp_dropdown_categories()', 'version' => '3.0.0'],
+        'wp_embed_handler_googlevideo' => ['alt' => '', 'version' => '4.6.0'],
+        'wp_enqueue_global_styles_custom_css' => ['alt' => 'wp_enqueue_global_styles()', 'version' => '6.7.0'],
+        'wp_explain_nonce' => ['alt' => 'wp_nonce_ays()', 'version' => '3.4.1'],
+        'wp_get_attachment_thumb_file' => ['alt' => '', 'version' => '6.1.0'],
+        'wp_get_cookie_login' => ['alt' => '', 'version' => '2.5.0'],
+        'wp_get_duotone_filter_id' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_get_duotone_filter_property' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_get_duotone_filter_svg' => ['alt' => 'WP_Duotone::get_filter_svg_from_preset()', 'version' => '6.3.0'],
+        'wp_get_global_styles_custom_css' => [
+            'alt' => 'wp_get_global_stylesheet() or WP_Theme_JSON::get_styles_for_block()',
+            'version' => '6.7.0',
+        ],
+        'wp_get_global_styles_svg_filters' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_get_http' => ['alt' => 'the WP_Http class', 'version' => '4.4.0'],
+        'wp_get_links' => ['alt' => 'wp_list_bookmarks()', 'version' => '2.1.0'],
+        'wp_get_linksbyname' => ['alt' => 'wp_list_bookmarks()', 'version' => '2.1.0'],
+        'wp_get_loading_attr_default' => ['alt' => 'wp_get_loading_optimization_attributes()', 'version' => '6.3.0'],
+        'wp_get_network' => ['alt' => 'get_network()', 'version' => '4.7.0'],
+        'wp_get_post_cats' => ['alt' => 'wp_get_post_categories()', 'version' => '2.1.0'],
+        'wp_get_single_post' => ['alt' => 'get_post()', 'version' => '3.5.0'],
+        'wp_get_sites' => ['alt' => 'get_sites()', 'version' => '4.6.0'],
+        'wp_get_user_request_data' => ['alt' => 'wp_get_user_request()', 'version' => '5.4.0'],
+        'wp_global_styles_render_svg_filters' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_htmledit_pre' => ['alt' => 'format_for_editor()', 'version' => '4.3.0'],
+        'wp_img_tag_add_decoding_attr' => [
+            'alt' => 'wp_img_tag_add_loading_optimization_attrs()',
+            'version' => '6.4.0',
+        ],
+        'wp_img_tag_add_loading_attr' => ['alt' => 'wp_img_tag_add_loading_optimization_attrs()', 'version' => '6.3.0'],
+        'wp_init_targeted_link_rel_filters' => ['alt' => '', 'version' => '6.7.0'],
+        'wp_interactivity_process_directives_of_interactive_blocks' => ['alt' => '', 'version' => '6.6.0'],
+        'wp_kses_js_entities' => ['alt' => '', 'version' => '4.7.0'],
+        'wp_list_cats' => ['alt' => 'wp_list_categories()', 'version' => '2.1.0'],
+        'wp_load_image' => ['alt' => 'wp_get_image_editor()', 'version' => '3.5.0'],
+        'wp_login' => ['alt' => 'wp_signon()', 'version' => '2.5.0'],
+        'wp_make_content_images_responsive' => ['alt' => 'wp_filter_content_tags()', 'version' => '5.5.0'],
+        'wp_nav_menu_locations_meta_box' => ['alt' => '', 'version' => '3.6.0'],
+        'wp_no_robots' => ['alt' => 'wp_robots_no_robots()', 'version' => '5.7.0'],
+        'wp_preload_dialogs' => ['alt' => 'wp_editor()', 'version' => '3.3.0'],
+        'wp_print_auto_sizes_contain_css_fix' => [
+            'alt' => 'wp_enqueue_img_auto_sizes_contain_css_fix()',
+            'version' => '6.9.0',
+        ],
+        'wp_print_editor_js' => ['alt' => 'wp_editor()', 'version' => '3.3.0'],
+        'wp_queue_comments_for_comment_meta_lazyload' => ['alt' => 'wp_lazyload_comment_meta()', 'version' => '6.3.0'],
+        'wp_quicktags' => ['alt' => 'wp_editor()', 'version' => '3.3.0'],
+        'wp_register_duotone_support' => ['alt' => 'WP_Duotone::register_duotone_support()', 'version' => '6.3.0'],
+        'wp_remove_targeted_link_rel_filters' => ['alt' => '', 'version' => '6.7.0'],
+        'wp_render_duotone_filter_preset' => ['alt' => 'wp_get_duotone_filter_property()', 'version' => '5.9.1'],
+        'wp_render_duotone_support' => ['alt' => 'WP_Duotone::render_duotone_support()', 'version' => '6.3.0'],
+        'wp_render_elements_support' => ['alt' => 'wp_render_elements_class_name()', 'version' => '6.6.0'],
+        'wp_richedit_pre' => ['alt' => 'format_for_editor()', 'version' => '4.3.0'],
+        'wp_sanitize_script_attributes' => [
+            'alt' => 'wp_get_script_tag() or wp_get_inline_script_tag()',
+            'version' => '7.0.0',
+        ],
+        'wp_sensitive_page_meta' => ['alt' => 'wp_robots_sensitive_page()', 'version' => '5.7.0'],
+        'wp_set_post_cats' => ['alt' => 'wp_set_post_categories()', 'version' => '2.1.0'],
+        'wp_setcookie' => ['alt' => 'wp_set_auth_cookie()', 'version' => '2.5.0'],
+        'wp_shrink_dimensions' => ['alt' => 'wp_constrain_dimensions()', 'version' => '3.0.0'],
+        'wp_simplepie_autoload' => ['alt' => 'SimplePie_Autoloader', 'version' => '6.7.0'],
+        'wp_skip_border_serialization' => [
+            'alt' => 'wp_should_skip_block_supports_serialization()',
+            'version' => '6.0.0',
+        ],
+        'wp_skip_dimensions_serialization' => [
+            'alt' => 'wp_should_skip_block_supports_serialization()',
+            'version' => '6.0.0',
+        ],
+        'wp_skip_spacing_serialization' => [
+            'alt' => 'wp_should_skip_block_supports_serialization()',
+            'version' => '6.0.0',
+        ],
+        'wp_specialchars' => ['alt' => 'esc_html()', 'version' => '2.8.0'],
+        'wp_targeted_link_rel' => ['alt' => '', 'version' => '6.7.0'],
+        'wp_targeted_link_rel_callback' => ['alt' => '', 'version' => '6.7.0'],
+        'wp_timezone_supported' => ['alt' => '', 'version' => '3.2.0'],
+        'wp_tiny_mce' => ['alt' => 'wp_editor()', 'version' => '3.3.0'],
+        'wp_tinycolor_bound01' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_tinycolor_hsl_to_rgb' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_tinycolor_hue_to_rgb' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_tinycolor_rgb_to_rgb' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_tinycolor_string_to_rgb' => ['alt' => '', 'version' => '6.3.0'],
+        'wp_typography_get_css_variable_inline_style' => [
+            'alt' => 'wp_style_engine_get_styles()',
+            'version' => '6.1.0',
+        ],
+        'wp_unregister_globals' => ['alt' => '', 'version' => '5.5.0'],
+        'wp_update_core' => ['alt' => 'new Core_Upgrader();', 'version' => '3.7.0'],
+        'wp_update_https_detection_errors' => ['alt' => 'wp_get_https_detection_errors()', 'version' => '6.4.0'],
+        'wp_update_plugin' => ['alt' => 'new Plugin_Upgrader();', 'version' => '3.7.0'],
+        'wp_update_theme' => ['alt' => 'new Theme_Upgrader();', 'version' => '3.7.0'],
+        'wpmu_admin_do_redirect' => ['alt' => 'wp_redirect()', 'version' => '3.3.0'],
+        'wpmu_admin_redirect_add_updated_param' => ['alt' => 'add_query_arg()', 'version' => '3.3.0'],
+        'wpmu_checkavailablespace' => ['alt' => 'is_upload_space_available()', 'version' => '3.0.0'],
+        'wpmu_current_site' => ['alt' => '', 'version' => '3.9.0'],
+        'wpmu_get_blog_allowedthemes' => ['alt' => 'WP_Theme::get_allowed_on_site()', 'version' => '3.4.0'],
+        'wpmu_menu' => ['alt' => '', 'version' => '3.0.0'],
+    ];
+
+    /**
+     * @var array<string, array<int, array{name: string|list<string>, value: mixed, version: string}>> function name => 1-based parameter position => deprecation info
+     * Source: WPCS Sniffs/WP/DeprecatedParametersSniff.php ($target_functions)
+     */
+    public const DEPRECATED_PARAMETERS = [
+        '_future_post_hook' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '2.3.0',
+            ],
+        ],
+        '_load_remote_block_patterns' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '5.9.0',
+            ],
+        ],
+        '_wp_can_use_pcre_u' => [
+            1 => [
+                'name' => 'set',
+                'value' => null,
+                'version' => '6.9.0',
+            ],
+        ],
+        '_wp_post_revision_fields' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => false,
+                'version' => '4.5.0',
+            ],
+        ],
+        'add_option' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.3.0',
+            ],
+        ],
+        'comments_link' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '0.72',
+            ],
+            2 => [
+                'name' => 'deprecated_2',
+                'value' => '',
+                'version' => '1.3.0',
+            ],
+        ],
+        'convert_chars' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '0.71',
+            ],
+        ],
+        'delete_plugins' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '4.0.0',
+            ],
+        ],
+        'discover_pingback_server_uri' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.7.0',
+            ],
+        ],
+        'get_blog_list' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'get_category_parents' => [
+            5 => [
+                'name' => 'deprecated',
+                'value' => [],
+                'version' => '4.8.0',
+            ],
+        ],
+        'get_delete_post_link' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'get_last_updated' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'get_site_option' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => true,
+                'version' => '4.4.0',
+            ],
+        ],
+        'get_terms' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '4.5.0',
+            ],
+        ],
+        'get_the_author' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.1.0',
+            ],
+        ],
+        'get_user_option' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'get_wp_title_rss' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '&#8211;',
+                'version' => '4.4.0',
+            ],
+        ],
+        'global_terms' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '6.1.0',
+            ],
+        ],
+        'iframe_header' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => false,
+                'version' => '4.2.0',
+            ],
+        ],
+        'inject_ignored_hooked_blocks_metadata_attributes' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '6.5.3',
+            ],
+        ],
+        'install_search_form' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => true,
+                'version' => '4.6.0',
+            ],
+        ],
+        'is_email' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => false,
+                'version' => '3.0.0',
+            ],
+        ],
+        'load_plugin_textdomain' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => false,
+                'version' => '2.7.0',
+            ],
+        ],
+        'newblog_notify_siteadmin' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'permalink_single_rss' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.3.0',
+            ],
+        ],
+        'redirect_this_site' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'register_meta' => [
+            4 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '4.6.0',
+            ],
+        ],
+        'safecss_filter_attr' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.8.1',
+            ],
+        ],
+        'switch_to_blog' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '3.5.0',
+            ],
+        ],
+        'term_description' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '4.9.2',
+            ],
+        ],
+        'the_attachment_link' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => false,
+                'version' => '2.5.0',
+            ],
+        ],
+        'the_author' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.1.0',
+            ],
+            2 => [
+                'name' => 'deprecated_echo',
+                'value' => true,
+                'version' => '1.5.0',
+            ],
+        ],
+        'the_author_posts_link' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.1.0',
+            ],
+        ],
+        'trackback_rdf' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.5.0',
+            ],
+        ],
+        'trackback_url' => [
+            1 => [
+                'name' => 'deprecated_echo',
+                'value' => true,
+                'version' => '2.5.0',
+            ],
+        ],
+        'unregister_setting' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '4.7.0',
+            ],
+        ],
+        'update_blog_option' => [
+            4 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '3.1.0',
+            ],
+        ],
+        'update_blog_status' => [
+            4 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '3.1.0',
+            ],
+        ],
+        'update_posts_count' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.0.0',
+            ],
+        ],
+        'update_user_status' => [
+            4 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '3.0.2',
+            ],
+        ],
+        'wp_count_terms' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '5.6.0',
+            ],
+        ],
+        'wp_create_thumbnail' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '3.5.0',
+            ],
+        ],
+        'wp_get_http_headers' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => false,
+                'version' => '2.7.0',
+            ],
+        ],
+        'wp_get_sidebars_widgets' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => true,
+                'version' => '2.8.1',
+            ],
+        ],
+        'wp_install' => [
+            5 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.6.0',
+            ],
+        ],
+        'wp_login' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.5.0',
+            ],
+        ],
+        'wp_new_user_notification' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '4.3.1',
+            ],
+        ],
+        'wp_notify_postauthor' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '3.8.0',
+            ],
+        ],
+        'wp_render_elements_support_styles' => [
+            1 => [
+                'name' => 'parsed_block',
+                'value' => null,
+                'version' => '6.6.0',
+            ],
+        ],
+        'wp_title_rss' => [
+            1 => [
+                'name' => 'deprecated',
+                'value' => '&#8211;',
+                'version' => '4.4.0',
+            ],
+        ],
+        'wp_upload_bits' => [
+            2 => [
+                'name' => 'deprecated',
+                'value' => null,
+                'version' => '2.0.0',
+            ],
+        ],
+        'xfn_check' => [
+            3 => [
+                'name' => 'deprecated',
+                'value' => '',
+                'version' => '2.5.0',
+            ],
+        ],
+    ];
+
+    /**
+     * @var array<string, array<int, array{name: string|list<string>, values: array<string, array{alt: string, version: string}>}>> function name => 1-based parameter position => deprecated value info
+     * Source: WPCS Sniffs/WP/DeprecatedParameterValuesSniff.php ($target_functions)
+     */
+    public const DEPRECATED_PARAMETER_VALUES = [
+        'add_option' => [
+            1 => [
+                'name' => 'option',
+                'values' => [
+                    'blacklist_keys' => [
+                        'alt' => 'disallowed_keys',
+                        'version' => '5.5.0',
+                    ],
+                    'comment_whitelist' => [
+                        'alt' => 'comment_previously_approved',
+                        'version' => '5.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'add_settings_field' => [
+            4 => [
+                'name' => 'page',
+                'values' => [
+                    'misc' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.0.0',
+                    ],
+                    'privacy' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'add_settings_section' => [
+            4 => [
+                'name' => 'page',
+                'values' => [
+                    'misc' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.0.0',
+                    ],
+                    'privacy' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'bloginfo' => [
+            1 => [
+                'name' => 'show',
+                'values' => [
+                    'home' => [
+                        'alt' => 'the "url" argument',
+                        'version' => '2.2.0',
+                    ],
+                    'siteurl' => [
+                        'alt' => 'the "url" argument',
+                        'version' => '2.2.0',
+                    ],
+                    'text_direction' => [
+                        'alt' => 'is_rtl()',
+                        'version' => '2.2.0',
+                    ],
+                ],
+            ],
+        ],
+        'get_bloginfo' => [
+            1 => [
+                'name' => 'show',
+                'values' => [
+                    'home' => [
+                        'alt' => 'the "url" argument',
+                        'version' => '2.2.0',
+                    ],
+                    'siteurl' => [
+                        'alt' => 'the "url" argument',
+                        'version' => '2.2.0',
+                    ],
+                    'text_direction' => [
+                        'alt' => 'is_rtl()',
+                        'version' => '2.2.0',
+                    ],
+                ],
+            ],
+        ],
+        'get_option' => [
+            1 => [
+                'name' => 'option',
+                'values' => [
+                    'blacklist_keys' => [
+                        'alt' => 'disallowed_keys',
+                        'version' => '5.5.0',
+                    ],
+                    'comment_whitelist' => [
+                        'alt' => 'comment_previously_approved',
+                        'version' => '5.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'register_setting' => [
+            1 => [
+                'name' => 'option_group',
+                'values' => [
+                    'misc' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.0.0',
+                    ],
+                    'privacy' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'unregister_setting' => [
+            1 => [
+                'name' => 'option_group',
+                'values' => [
+                    'misc' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.0.0',
+                    ],
+                    'privacy' => [
+                        'alt' => 'another settings group',
+                        'version' => '3.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'update_option' => [
+            1 => [
+                'name' => 'option',
+                'values' => [
+                    'blacklist_keys' => [
+                        'alt' => 'disallowed_keys',
+                        'version' => '5.5.0',
+                    ],
+                    'comment_whitelist' => [
+                        'alt' => 'comment_previously_approved',
+                        'version' => '5.5.0',
+                    ],
+                ],
+            ],
+        ],
+        'wp_get_typography_font_size_value' => [
+            2 => [
+                'name' => 'settings',
+                'values' => [
+                    'true' => [
+                        'alt' => 'an array',
+                        'version' => '6.6.0',
+                    ],
+                    'false' => [
+                        'alt' => 'an array',
+                        'version' => '6.6.0',
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/DB/SlowDBQuerySniff.php getGroups() ('slow_db_query' group keys)
+     */
+    public const SLOW_DB_QUERY_KEYS = [
+        'meta_key',
+        'meta_query',
+        'meta_value',
+        'tax_query',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/WP/PostsPerPageSniff.php getGroups() ('posts_per_page' group keys)
+     */
+    public const POSTS_PER_PAGE_KEYS = [
+        'numberposts',
+        'posts_per_page',
+    ];
+
+    /**
+     * @var list<string>
+     * Source: WPCS Sniffs/Security/PluginMenuSlugSniff.php ($target_functions)
+     */
+    public const PLUGIN_MENU_SLUG_FUNCTIONS = [
+        'add_comments_page',
+        'add_dashboard_page',
+        'add_links_page',
+        'add_management_page',
+        'add_media_page',
+        'add_menu_page',
+        'add_object_page',
+        'add_options_page',
+        'add_pages_page',
+        'add_plugins_page',
+        'add_posts_page',
+        'add_submenu_page',
+        'add_theme_page',
+        'add_users_page',
+        'add_utility_page',
+    ];
+
+    /**
+     * @var array<string, array{ver: int, in_footer?: int}> function name => 0-based parameter positions
+     * Source: WPCS Sniffs/WP/EnqueuedResourceParametersSniff.php (process_parameters(), positions are hardcoded there, not stored in $target_functions)
+     */
+    public const ENQUEUE_FUNCTIONS = [
+        'wp_register_script' => [
+            'ver' => 3,
+            'in_footer' => 4,
+        ],
+        'wp_enqueue_script' => [
+            'ver' => 3,
+            'in_footer' => 4,
+        ],
+        'wp_register_style' => [
+            'ver' => 3,
+        ],
+        'wp_enqueue_style' => [
+            'ver' => 3,
+        ],
+    ];
+
+    /**
+     * @var array<string, string> function name => i18n type
+     * Source: WPCS Sniffs/WP/I18nSniff.php ($i18n_functions)
+     */
+    public const I18N_FUNCTIONS = [
+        '__' => 'simple',
+        '_e' => 'simple',
+        '_ex' => 'context',
+        '_n' => 'number',
+        '_n_noop' => 'noopnumber',
+        '_nx' => 'number_context',
+        '_nx_noop' => 'noopnumber_context',
+        '_x' => 'context',
+        'esc_attr__' => 'simple',
+        'esc_attr_e' => 'simple',
+        'esc_attr_x' => 'context',
+        'esc_html__' => 'simple',
+        'esc_html_e' => 'simple',
+        'esc_html_x' => 'context',
+        'translate' => 'simple',
+        'translate_with_gettext_context' => 'context',
+    ];
+
+    private function __construct() {}
+}
