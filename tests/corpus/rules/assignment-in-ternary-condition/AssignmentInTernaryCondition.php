@@ -49,3 +49,66 @@ call_user_func(function () {
 
     return 1 === 2 ? 'a' : 'b';
 });
+
+// whole_ternary_in_parens_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = ($a = 'on' ? 'on' : 'off');
+
+// whole_elvis_in_parens_with_indirect_variable_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (${$a->prop} = 'on' ?: 'off');
+
+// parenthesized_condition_and_nested_whole_ternary_report_one_each
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = ($a = 'on') ? 'true' : ($a = 'off' ? 't' : ${$a->prop});
+
+// whole_ternary_and_nested_whole_ternary_report_one_each
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = ($a = 'on' ? 'true' : ($a = 'off' ? 't' : 'f'));
+
+// whole_ternary_as_only_call_argument_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+foo($a = 'on' ? 'on' : 'off');
+
+// whole_ternary_as_control_structure_condition_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+if ($a = 'on' ? true : false) {
+}
+
+// whole_ternary_among_several_call_arguments_is_not_checked
+foo($a = 'on' ? 'on' : 'off', 1);
+
+// ternary_without_any_parens_is_not_checked
+$mode = $a = 'on' ? 'on' : 'off';
+$mode = $a = 'on' ?: 'off';
+
+// closure_in_parens_is_unaffected
+(function () {
+    $foo = 42;
+
+    return 1 === 2 ? 'a' : 'b';
+});
+
+// ternary_inside_closure_argument_is_unaffected
+$content = preg_replace_callback(
+    '/x/',
+    function ($matches) {
+        $rowcount = substr_count($table, '<tr>');
+        $height = $rowcount < 6 ? '100' : '250';
+    },
+    $content,
+);
+
+// array_value_ternary_is_not_checked
+$array = [
+    'key' => $key = true ?: $alt,
+];
+
+// condition_ending_in_call_parens_scans_only_those_parens
+// WPCS bounds the condition by the call's own parentheses, which hold no assignment.
+$mode = ($a = foo() ? 'on' : 'off');
+
+// The upstream fixture's unparenthesized nested ternaries (`$a ? b : $c ? d : e`)
+// are a fatal error since PHP 8.0 and are not ported.
