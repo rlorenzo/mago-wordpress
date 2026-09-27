@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
+use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
@@ -57,6 +58,7 @@ final class WordPressExtension
     public static function create(?Settings $settings = null): Extension
     {
         $settings ??= new Settings();
+        Report::honorPhpcsComments($settings->honorPhpcsComments);
 
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',

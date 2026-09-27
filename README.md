@@ -56,7 +56,8 @@ takes as sniff properties from your project instead. Put them in `composer.json`
       "custom-capabilities": [],
       "max-posts-per-page": 100,
       "min-cron-interval": 900,
-      "additional-word-delimiters": ""
+      "additional-word-delimiters": "",
+      "honor-phpcs-comments": true
     }
   }
 }
@@ -78,6 +79,15 @@ in this package reads them yet. They mirror WPCS properties used by Mago's core 
 `nonce-verification` and `validated-sanitized-input` (see
 [Mago's own WordPress rules](#magos-own-wordpress-rules)), which cannot receive per-project options
 from an extension. They are reserved for a planned port of those rules into this package.
+
+The rules honour the phpcs suppression comments already in your code, as PHP_CodeSniffer does:
+`phpcs:ignore` (on its own line it silences the next line, trailing code it silences its own line),
+`phpcs:disable` / `phpcs:enable` regions, `phpcs:ignoreFile`, and the legacy
+`@codingStandardsIgnoreLine`, `@codingStandardsIgnoreStart` / `@codingStandardsIgnoreEnd` and
+`@codingStandardsIgnoreFile`. A code list matches the WPCS code a rule ports at any level:
+`WordPress`, `WordPress.Security`, `WordPress.Security.SafeRedirect` or a message code such as
+`WordPress.WP.I18n.MissingTranslatorsComment`. Set `"honor-phpcs-comments": false` to report
+everything regardless. There is no `phpcs.xml` equivalent.
 
 Rules can be disabled or re-levelled from `mago.toml` like any other rule:
 

@@ -61,6 +61,7 @@ final class Settings
         public readonly int $maxPostsPerPage = self::DEFAULT_MAX_POSTS_PER_PAGE,
         public readonly int $minCronInterval = self::DEFAULT_MIN_CRON_INTERVAL,
         public readonly string $additionalWordDelimiters = '',
+        public readonly bool $honorPhpcsComments = true,
     ) {}
 
     /**
@@ -111,6 +112,7 @@ final class Settings
             maxPostsPerPage: $maxPostsPerPage < 0 ? self::DEFAULT_MAX_POSTS_PER_PAGE : $maxPostsPerPage,
             minCronInterval: self::integer($values['min-cron-interval'] ?? null) ?? self::DEFAULT_MIN_CRON_INTERVAL,
             additionalWordDelimiters: Shape::string($values['additional-word-delimiters'] ?? null) ?? '',
+            honorPhpcsComments: ($values['honor-phpcs-comments'] ?? true) !== false,
         );
     }
 

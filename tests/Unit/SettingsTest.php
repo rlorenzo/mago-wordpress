@@ -160,4 +160,11 @@ final class SettingsTest extends TestCase
 
         self::assertSame([], Settings::fromArray(PhpcsRuleset::values($xml))->textDomains);
     }
+
+    public function testHonorPhpcsCommentsDefaultsOnAndOnlyFalseTurnsItOff(): void
+    {
+        self::assertTrue(Settings::fromArray([])->honorPhpcsComments);
+        self::assertTrue(Settings::fromArray(['honor-phpcs-comments' => 'no'])->honorPhpcsComments);
+        self::assertFalse(Settings::fromArray(['honor-phpcs-comments' => false])->honorPhpcsComments);
+    }
 }
