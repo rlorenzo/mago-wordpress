@@ -59,6 +59,16 @@ final class AssignmentInTernaryConditionRule implements Rule
         NodeKind::Match,
     ];
 
+    /**
+     * Ancestors crossed between a ternary and its enclosing parentheses.
+     */
+    private const ENCLOSED_SPAN_KINDS = [
+        NodeKind::Expression,
+        NodeKind::Assignment,
+        NodeKind::Binary,
+        NodeKind::UnaryPrefix,
+    ];
+
     public function __construct(
         private readonly Report $report,
     ) {}
@@ -135,13 +145,9 @@ final class AssignmentInTernaryConditionRule implements Rule
      * parentheses; otherwise none, because WPCS cannot find where the
      * condition starts.
      *
-     * PHPCS finds this span by scanning tokens between the enclosing
-     * parenthesis and the `?`, so any operator joining the assignment to the
-     * rest of that span (`&&`, `||`, `and`, `or`, `xor`, a unary `!`, a
-     * comparison, arithmetic, ...) is inside it too. This walk mirrors that
-     * by also crossing `Binary` and `UnaryPrefix` ancestors, stopping at
-     * anything else, such as the enclosing parentheses, a statement, a
-     * closure/arrow-function, or an array.
+     * WPCS scans every token between the opening parenthesis and the `?`, so
+     * the walk also crosses binary and unary-prefix operators (`&&`, `or`,
+     * `!`, `==`, `+`, ...) that join an assignment to the rest of that span.
      *
      * @return list<Node>
      */
@@ -149,14 +155,7 @@ final class AssignmentInTernaryConditionRule implements Rule
     {
         $top = $ternary;
         $parent = $file->getParent($top);
-        while (
-            $parent !== null
-            && in_array(
-                $parent->kind,
-                [NodeKind::Expression, NodeKind::Assignment, NodeKind::Binary, NodeKind::UnaryPrefix],
-                strict: true,
-            )
-        ) {
+        while ($parent !== null && in_array($parent->kind, self::ENCLOSED_SPAN_KINDS, strict: true)) {
             $top = $parent;
             $parent = $file->getParent($top);
         }
