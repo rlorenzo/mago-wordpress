@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 
@@ -126,11 +127,11 @@ final class ValidVariableNameRule implements Rule
         $file = $context->file;
         $inString = self::nodesInStrings($file, $context->node);
 
-        foreach ($file->getDescendants($context->node, NodeKind::DirectVariable) as $variable) {
+        foreach (NodeIndex::ofKind($file, $context->node, NodeKind::DirectVariable) as $variable) {
             $this->check($context, $variable, substr($file->getText($variable), offset: 1), $inString);
         }
 
-        foreach ($file->getDescendants($context->node, NodeKind::IndirectVariable) as $variable) {
+        foreach (NodeIndex::ofKind($file, $context->node, NodeKind::IndirectVariable) as $variable) {
             $inner = $file->getChildren($variable)[0] ?? null;
             $identifier = $inner === null ? null : $file->getChildren($inner)[0] ?? null;
             if (
@@ -267,7 +268,7 @@ final class ValidVariableNameRule implements Rule
     {
         $ids = [];
         foreach (self::STRING_KINDS as $kind) {
-            foreach ($file->getDescendants($root, $kind) as $string) {
+            foreach (NodeIndex::ofKind($file, $root, $kind) as $string) {
                 foreach ($file->getDescendants($string) as $node) {
                     $ids[$node->id] = true;
                 }

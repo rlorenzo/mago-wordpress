@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 
@@ -89,7 +90,7 @@ final class AssignmentInTernaryConditionRule implements Rule
     {
         // The program is the target so that every ternary's ancestors are in
         // the snapshot; the enclosing parentheses decide whether it is checked.
-        foreach ($context->file->getDescendants($context->node, NodeKind::Conditional) as $ternary) {
+        foreach (NodeIndex::ofKind($context->file, $context->node, NodeKind::Conditional) as $ternary) {
             $this->lintTernary($context, $ternary);
         }
     }

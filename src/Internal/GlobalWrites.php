@@ -61,18 +61,12 @@ final class GlobalWrites
      * Maps each function-like scope's id to the variables it imports with
      * `global`, each mapped to the start of its earliest `global` statement.
      *
-     * @param list<Node> $nodes a whole-program descendant walk
-     *
      * @return array<int, array<string, int>>
      */
-    public static function imports(SourceFile $file, array $nodes): array
+    public static function imports(SourceFile $file, Node $program): array
     {
         $imports = [];
-        foreach ($nodes as $global) {
-            if ($global->kind !== NodeKind::Global) {
-                continue;
-            }
-
+        foreach (NodeIndex::ofKind($file, $program, NodeKind::Global) as $global) {
             $scope = self::nearestScope($file, $global);
             if ($scope === null) {
                 continue;
@@ -93,13 +87,20 @@ final class GlobalWrites
      * unwrapped: a by-reference `&$x` yields `$x`, and a list/array
      * destructuring pattern yields each of its targets, however deeply nested.
      *
-     * @param list<Node> $nodes a whole-program descendant walk
-     *
      * @return list<Node>
      */
-    public static function targets(SourceFile $file, array $nodes): array
+    public static function targets(SourceFile $file, Node $program): array
     {
         $targets = [];
+        $nodes = NodeIndex::ofKinds(
+            $file,
+            $program,
+            [
+                NodeKind::Assignment,
+                NodeKind::ForeachValueTarget,
+                NodeKind::ForeachKeyValueTarget,
+            ],
+        );
         foreach ($nodes as $node) {
             $bindings = match ($node->kind) {
                 // `$x = ...` and `foreach ($a as $x)`: the first child binds.

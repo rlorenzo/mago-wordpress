@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\DocBlocks;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 
@@ -89,7 +90,7 @@ final class ValidFunctionNameRule implements Rule
         $deprecatedStarts = DocBlocks::deprecatedStarts($file);
 
         foreach ([NodeKind::Function, NodeKind::Method] as $kind) {
-            foreach ($file->getDescendants($context->node, $kind) as $function) {
+            foreach (NodeIndex::ofKind($file, $context->node, $kind) as $function) {
                 $this->check($context, $function, $deprecatedStarts);
             }
         }

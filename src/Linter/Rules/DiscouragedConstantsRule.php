@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
@@ -41,6 +42,13 @@ use function substr;
 final class DiscouragedConstantsRule implements Rule
 {
     private const SNIFF = 'WordPress.WP.DiscouragedConstants';
+
+    private const CHECKED_KINDS = [
+        NodeKind::ConstantAccess,
+        NodeKind::Constant,
+        NodeKind::UseItem,
+        NodeKind::FunctionCall,
+    ];
 
     private ?FileGate $gate = null;
 
@@ -74,8 +82,7 @@ final class DiscouragedConstantsRule implements Rule
             return;
         }
 
-        // One walk of the whole program, dispatched by kind.
-        foreach ($file->getDescendants($context->node) as $node) {
+        foreach (NodeIndex::ofKinds($file, $context->node, self::CHECKED_KINDS) as $node) {
             match ($node->kind) {
                 NodeKind::ConstantAccess => $this->checkConstantAccess($context, $file, $node),
                 NodeKind::Constant => $this->checkConstantStatement($context, $file, $node),

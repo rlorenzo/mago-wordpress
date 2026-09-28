@@ -65,11 +65,9 @@ final class GlobalVariablesOverrideRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
-        // One walk of the whole program, shared by both passes below.
-        $nodes = $file->getDescendants($context->node);
-        $imports = GlobalWrites::imports($file, $nodes);
+        $imports = GlobalWrites::imports($file, $context->node);
 
-        foreach (GlobalWrites::targets($file, $nodes) as $target) {
+        foreach (GlobalWrites::targets($file, $context->node) as $target) {
             if ($target->kind === NodeKind::ArrayAccess) {
                 $this->checkGlobalsWrite($context, $file, $target);
                 continue;

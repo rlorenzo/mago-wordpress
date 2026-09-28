@@ -302,10 +302,9 @@ final class PrefixAllGlobalsRule implements Rule
     private function checkVariables(LintContext $context): void
     {
         $file = $context->file;
-        $nodes = $file->getDescendants($context->node);
-        $imports = GlobalWrites::imports($file, $nodes);
+        $imports = GlobalWrites::imports($file, $context->node);
 
-        foreach (GlobalWrites::targets($file, $nodes) as $target) {
+        foreach (GlobalWrites::targets($file, $context->node) as $target) {
             $this->checkVariableWrite($context, $target, $imports);
         }
     }
