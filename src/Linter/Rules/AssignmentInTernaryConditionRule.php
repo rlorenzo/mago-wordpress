@@ -187,11 +187,8 @@ final class AssignmentInTernaryConditionRule implements Rule
 
         $argument = $file->getParent($parent);
         $list = $argument === null ? null : $file->getParent($argument);
-        if ($list === null || $list->kind !== NodeKind::ArgumentList) {
-            return false;
-        }
 
-        return count($file->getChildren($list)) === 1;
+        return $list !== null && $list->kind === NodeKind::ArgumentList && count($file->getChildren($list)) === 1;
     }
 
     /**
