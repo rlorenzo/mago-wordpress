@@ -258,7 +258,35 @@ final class WpI18nRule extends CallRule
 
     private function checkDomain(LintContext $context, string $name, ?Node $argument): void
     {
+        $allowed = $this->settings->textDomains;
+        // WordPress core's own `default` domain, per WPCS's `$text_domain_is_default`/`$text_domain_contains_default`.
+        $isDefaultOnly = $allowed === ['default'];
+        $containsDefault = in_array('default', $allowed, strict: true);
+
         if ($argument === null) {
+            if ($isDefaultOnly) {
+                // The only accepted domain is `default`, which may be omitted.
+                return;
+            }
+
+            if ($containsDefault) {
+                $this->report->issue(
+                    $context,
+                    Issue::new(
+                        'Missing text domain in translation function call',
+                        $context->node->span,
+                        sprintf('This call to `%s()` does not pass a text domain', $name),
+                    )->withNote(
+                        'If this text string is supposed to use the WordPress core translation, pass `default` as the text domain explicitly.',
+                    )->withHelp(
+                        "Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`, or `'default'` for a WordPress core string.",
+                    ),
+                    [self::SNIFF . '.MissingArgDomainDefault'],
+                );
+
+                return;
+            }
+
             $this->report->issue(
                 $context,
                 Issue::new(
@@ -291,8 +319,22 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        $allowed = $this->settings->textDomains;
         if ($allowed === [] || in_array($domain, $allowed, strict: true)) {
+            if ($isDefaultOnly && $domain === 'default') {
+                $this->report->issue(
+                    $context,
+                    Issue::new(
+                        'Superfluous `default` text domain in translation function call',
+                        $argument->span,
+                        sprintf(
+                            'No need to supply the text domain in a call to `%s()` when `default` is the only accepted text domain',
+                            $name,
+                        ),
+                    )->withHelp('Remove the text domain argument.'),
+                    [self::SNIFF . '.SuperfluousDefaultTextDomain'],
+                );
+            }
+
             return;
         }
 

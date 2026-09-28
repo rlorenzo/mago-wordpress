@@ -54,7 +54,7 @@ final class RuleSettingsTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, array<string, bool|int|string|list<string>>, string, int}>
+     * @return iterable<string, array{string, array<string, bool|int|string|list<string>>, string, int, 4?: string}>
      */
     public static function cases(): iterable
     {
@@ -160,14 +160,56 @@ final class RuleSettingsTest extends TestCase
             "wp_redirect(\$url); // phpcs:ignore WordPress.Security.SafeRedirect",
             1,
         ];
+        // Ports WPCS's `$text_domain_is_default`/`$text_domain_contains_default` cases from I18nUnitTest.1.inc.
+        yield 'default_only_domain_allows_missing_argument' => [
+            'wordpress/wp-i18n',
+            ['text-domains' => ['default']],
+            "__('Greeting');",
+            0,
+        ];
+        yield 'default_only_domain_flags_explicit_default_as_superfluous' => [
+            'wordpress/wp-i18n',
+            ['text-domains' => ['default']],
+            "__('Greeting', 'default');",
+            1,
+            // WPCS's SuperfluousDefaultTextDomain.
+            'Superfluous `default` text domain',
+        ];
+        yield 'default_only_domain_still_flags_other_domains' => [
+            'wordpress/wp-i18n',
+            ['text-domains' => ['default']],
+            "__('Greeting', 'foo');",
+            1,
+            // WPCS's TextDomainMismatch.
+            'Unexpected text domain',
+        ];
+        yield 'mixed_default_domain_warns_on_missing_argument' => [
+            'wordpress/wp-i18n',
+            ['text-domains' => ['default', 'my-plugin']],
+            "__('Greeting');",
+            1,
+            // WPCS's MissingArgDomainDefault.
+            'pass `default` as the text domain explicitly',
+        ];
+        yield 'mixed_default_domain_allows_explicit_default' => [
+            'wordpress/wp-i18n',
+            ['text-domains' => ['default', 'my-plugin']],
+            "__('Greeting', 'default');",
+            0,
+        ];
     }
 
     /**
      * @param array<string, bool|int|string|list<string>> $settings
      */
     #[DataProvider('cases')]
-    public function testRuleHonoursSettings(string $rule, array $settings, string $code, int $issues): void
-    {
+    public function testRuleHonoursSettings(
+        string $rule,
+        array $settings,
+        string $code,
+        int $issues,
+        ?string $expectedText = null,
+    ): void {
         $worker = dirname(__DIR__, levels: 2) . '/resources/worker.php';
         file_put_contents("{$this->directory}/composer.json", json_encode(['extra' => [
             'mago-wordpress' => $settings,
@@ -197,6 +239,6 @@ final class RuleSettingsTest extends TestCase
 
         $report = implode("\n", $output);
         self::assertSame($issues, $status, $report);
-        self::assertSame($issues === 1, str_contains($report, $rule), $report);
+        self::assertSame($issues === 1, str_contains($report, $expectedText ?? $rule), $report);
     }
 }
