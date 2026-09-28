@@ -135,6 +135,14 @@ final class AssignmentInTernaryConditionRule implements Rule
      * parentheses; otherwise none, because WPCS cannot find where the
      * condition starts.
      *
+     * PHPCS finds this span by scanning tokens between the enclosing
+     * parenthesis and the `?`, so any operator joining the assignment to the
+     * rest of that span (`&&`, `||`, `and`, `or`, `xor`, a unary `!`, a
+     * comparison, arithmetic, ...) is inside it too. This walk mirrors that
+     * by also crossing `Binary` and `UnaryPrefix` ancestors, stopping at
+     * anything else, such as the enclosing parentheses, a statement, a
+     * closure/arrow-function, or an array.
+     *
      * @return list<Node>
      */
     private function enclosedAssignments(SourceFile $file, Node $ternary, int $conditionEnd): array
@@ -143,7 +151,11 @@ final class AssignmentInTernaryConditionRule implements Rule
         $parent = $file->getParent($top);
         while (
             $parent !== null
-            && in_array($parent->kind, [NodeKind::Expression, NodeKind::Assignment], strict: true)
+            && in_array(
+                $parent->kind,
+                [NodeKind::Expression, NodeKind::Assignment, NodeKind::Binary, NodeKind::UnaryPrefix],
+                strict: true,
+            )
         ) {
             $top = $parent;
             $parent = $file->getParent($top);

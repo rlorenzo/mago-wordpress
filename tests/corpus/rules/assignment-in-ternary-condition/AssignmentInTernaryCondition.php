@@ -125,3 +125,47 @@ $mode = ($a = foo() ? 'on' : 'off');
 
 // The upstream fixture's unparenthesized nested ternaries (`$a ? b : $c ? d : e`)
 // are a fatal error since PHP 8.0 and are not ported.
+
+// The cases below cover an assignment joined to the rest of the enclosing
+// parentheses by an operator, rather than being the whole content of, or the
+// direct value of, those parentheses.
+
+// assignment_after_logical_and_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (true && $a = 'on' ? 'on' : 'off');
+
+// assignment_after_logical_or_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (false || $a = 'on' ? 'on' : 'off');
+
+// assignment_after_and_keyword_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (true and $a = 'on' ? 'on' : 'off');
+
+// assignment_after_or_keyword_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (false or $a = 'on' ? 'on' : 'off');
+
+// assignment_after_xor_keyword_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (true xor $a = 'on' ? 'on' : 'off');
+
+// assignment_after_comparison_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (1 == $a = 'on' ? 'on' : 'off');
+
+// assignment_after_arithmetic_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (1 + $a = 1 ? 'on' : 'off');
+
+// assignment_after_unary_not_is_checked
+// @mago-expect lint:wordpress/assignment-in-ternary-condition
+$mode = (!$a = 'on' ? 'on' : 'off');
+
+// assignment_outside_the_enclosing_parentheses_is_not_checked
+// $a is assigned outside the ternary's own bounding parentheses, so it is
+// unrelated to the ternary even though `&&` joins the two expressions.
+$mode = ($a = 'on') && (true ? 'on' : 'off');
+
+// whole_ternary_with_intervening_operator_among_several_call_arguments_is_not_checked
+foo(true && $a = 'on' ? 'on' : 'off', 1);
