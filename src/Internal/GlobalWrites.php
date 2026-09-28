@@ -141,8 +141,12 @@ final class GlobalWrites
 
         foreach ($children as $element) {
             $wrapped = $file->getChildren($element)[0] ?? null;
+            if ($wrapped === null) {
+                continue;
+            }
+
             // A key-value element writes to its value; the key only selects the source offset.
-            $value = match ($wrapped?->kind) {
+            $value = match ($wrapped->kind) {
                 NodeKind::KeyValueArrayElement => $file->getChildren($wrapped)[1] ?? null,
                 NodeKind::ValueArrayElement => $file->getChildren($wrapped)[0] ?? null,
                 default => null,
