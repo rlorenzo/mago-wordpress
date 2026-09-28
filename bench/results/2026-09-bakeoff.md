@@ -2,7 +2,7 @@
 
 Bake-off of `bench/run.sh` (phpcs WordPress-Extra vs mago + mago-wordpress) across the top 10
 WordPress.org plugins by active installs and WordPress core's `src/`. Machine: Apple M4 MacBook Air.
-Versions: PHP 8.4.24, mago 1.50.0, PHP_CodeSniffer 3.13.6, WPCS 3.4.1, this package v1.0.0.
+Versions: PHP 8.4.24, mago 1.50.0, PHP_CodeSniffer 3.13.6, WPCS 3.4.1, this package v1.0.1.
 Measured 2026-09-28.
 
 `classic-editor` (rank 4 by active installs) was skipped: only 1 PHP file after excludes.
