@@ -63,9 +63,11 @@ warning[wordpress/wp-deprecated-functions]: 1
 
 `uptime` before this run: `9:23  up 1 day, 20:46, 7 users, load averages: 5.66 9.18 9.11`
 
+Counts recomputed after `wp-i18n` learned WPCS's `default` text-domain handling (the first run reported 15,368 `wp-i18n` issues here, mostly false positives on calls that correctly omit the domain).
+
 ```
-warning[wordpress/wp-i18n]: 15368
 error[wordpress/valid-variable-name]: 10073
+warning[wordpress/wp-i18n]: 3207
 warning[wordpress/prefix-all-globals]: 1868
 warning[wordpress/yoda-conditions]: 1835
 error[wordpress/global-variables-override]: 1048
