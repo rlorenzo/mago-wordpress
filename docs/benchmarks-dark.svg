@@ -1,32 +1,72 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="300" viewBox="0 0 760 300" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="14">
-<rect width="760" height="300" fill="#1a1a19"/>
-<text x="150" y="28" fill="#f2f1ea" font-size="17" font-weight="600">Lint time, seconds (lower is better)</text>
-<rect x="150" y="40" width="12" height="12" fill="#3987e5" rx="2"/><text x="168" y="51" fill="#c3c2b7">phpcs WordPress-Extra</text>
-<rect x="350" y="40" width="12" height="12" fill="#d95926" rx="2"/><text x="368" y="51" fill="#c3c2b7">mago + mago-wordpress</text>
-<line x1="150.0" y1="64" x2="150.0" y2="256" stroke="#33332f" stroke-width="1"/>
-<text x="150.0" y="274" fill="#c3c2b7" font-size="12" text-anchor="middle">0</text>
-<line x1="285.0" y1="64" x2="285.0" y2="256" stroke="#33332f" stroke-width="1"/>
-<text x="285.0" y="274" fill="#c3c2b7" font-size="12" text-anchor="middle">20</text>
-<line x1="420.0" y1="64" x2="420.0" y2="256" stroke="#33332f" stroke-width="1"/>
-<text x="420.0" y="274" fill="#c3c2b7" font-size="12" text-anchor="middle">40</text>
-<line x1="555.0" y1="64" x2="555.0" y2="256" stroke="#33332f" stroke-width="1"/>
-<text x="555.0" y="274" fill="#c3c2b7" font-size="12" text-anchor="middle">60</text>
-<line x1="690.0" y1="64" x2="690.0" y2="256" stroke="#33332f" stroke-width="1"/>
-<text x="690.0" y="274" fill="#c3c2b7" font-size="12" text-anchor="middle">80</text>
-<text x="138" y="101.0" fill="#f2f1ea" text-anchor="end" font-weight="600">Elementor</text>
-<path d="M150,77.0 h82.4 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-82.4 z" fill="#3987e5"/>
-<text x="244.4" y="91.0" fill="#f2f1ea">12.8 s</text>
-<path d="M150,97.0 h10.175 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-10.175 z" fill="#d95926"/>
-<text x="172.2" y="111.0" fill="#f2f1ea">2.1 s  <tspan fill="#c3c2b7">(6× faster)</tspan></text>
-<text x="138" y="165.0" fill="#f2f1ea" text-anchor="end" font-weight="600">Yoast SEO</text>
-<path d="M150,141.0 h100.625 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-100.625 z" fill="#3987e5"/>
-<text x="262.6" y="155.0" fill="#f2f1ea">15.5 s</text>
-<path d="M150,161.0 h7.475 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-7.475 z" fill="#d95926"/>
-<text x="169.5" y="175.0" fill="#f2f1ea">1.7 s  <tspan fill="#c3c2b7">(9× faster)</tspan></text>
-<text x="138" y="229.0" fill="#f2f1ea" text-anchor="end" font-weight="600">WooCommerce</text>
-<path d="M150,205.0 h476.6 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-476.6 z" fill="#3987e5"/>
-<text x="638.6" y="219.0" fill="#f2f1ea">71.2 s</text>
-<path d="M150,225.0 h25.700000000000003 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-25.700000000000003 z" fill="#d95926"/>
-<text x="187.7" y="239.0" fill="#f2f1ea">4.4 s  <tspan fill="#c3c2b7">(16× faster)</tspan></text>
-<line x1="150" y1="64" x2="150" y2="256" stroke="#c3c2b7" stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="812" viewBox="0 0 800 812" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif" font-size="14">
+<rect width="800" height="812" fill="#1a1a19"/>
+<text x="190" y="28" fill="#f2f1ea" font-size="17" font-weight="600">Lint time, seconds (lower is better)</text>
+<rect x="190" y="40" width="12" height="12" fill="#3987e5" rx="2"/><text x="208" y="51" fill="#c3c2b7">phpcs WordPress-Extra</text>
+<rect x="390" y="40" width="12" height="12" fill="#d95926" rx="2"/><text x="408" y="51" fill="#c3c2b7">mago + mago-wordpress</text>
+<line x1="190.0" y1="64" x2="190.0" y2="768" stroke="#33332f" stroke-width="1"/>
+<text x="190.0" y="786" fill="#c3c2b7" font-size="12" text-anchor="middle">0</text>
+<line x1="325.0" y1="64" x2="325.0" y2="768" stroke="#33332f" stroke-width="1"/>
+<text x="325.0" y="786" fill="#c3c2b7" font-size="12" text-anchor="middle">10</text>
+<line x1="460.0" y1="64" x2="460.0" y2="768" stroke="#33332f" stroke-width="1"/>
+<text x="460.0" y="786" fill="#c3c2b7" font-size="12" text-anchor="middle">20</text>
+<line x1="595.0" y1="64" x2="595.0" y2="768" stroke="#33332f" stroke-width="1"/>
+<text x="595.0" y="786" fill="#c3c2b7" font-size="12" text-anchor="middle">30</text>
+<line x1="730.0" y1="64" x2="730.0" y2="768" stroke="#33332f" stroke-width="1"/>
+<text x="730.0" y="786" fill="#c3c2b7" font-size="12" text-anchor="middle">40</text>
+<text x="178" y="101" fill="#f2f1ea" text-anchor="end" font-weight="600">WooCommerce</text>
+<path d="M190,77 h482.35499999999996 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-482.35499999999996 z" fill="#3987e5"/>
+<text x="684.355" y="91" fill="#f2f1ea">35.73 s</text>
+<path d="M190,97 h45.495000000000005 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-45.495000000000005 z" fill="#d95926"/>
+<text x="247.495" y="111" fill="#f2f1ea">3.37 s  <tspan fill="#c3c2b7">(11× faster)</tspan></text>
+<text x="178" y="165" fill="#f2f1ea" text-anchor="end" font-weight="600">WordPress core</text>
+<path d="M190,141 h304.15500000000003 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-304.15500000000003 z" fill="#3987e5"/>
+<text x="506.15500000000003" y="155" fill="#f2f1ea">22.53 s</text>
+<path d="M190,161 h41.58 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-41.58 z" fill="#d95926"/>
+<text x="243.57999999999998" y="175" fill="#f2f1ea">3.08 s  <tspan fill="#c3c2b7">(7× faster)</tspan></text>
+<text x="178" y="229" fill="#f2f1ea" text-anchor="end" font-weight="600">Elementor</text>
+<path d="M190,205 h192.915 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-192.915 z" fill="#3987e5"/>
+<text x="394.91499999999996" y="219" fill="#f2f1ea">14.29 s</text>
+<path d="M190,225 h26.595 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-26.595 z" fill="#d95926"/>
+<text x="228.595" y="239" fill="#f2f1ea">1.97 s  <tspan fill="#c3c2b7">(7× faster)</tspan></text>
+<text x="178" y="293" fill="#f2f1ea" text-anchor="end" font-weight="600">Google Site Kit</text>
+<path d="M190,269 h183.6 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-183.6 z" fill="#3987e5"/>
+<text x="385.6" y="283" fill="#f2f1ea">13.60 s</text>
+<path d="M190,289 h25.785 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-25.785 z" fill="#d95926"/>
+<text x="227.785" y="303" fill="#f2f1ea">1.91 s  <tspan fill="#c3c2b7">(7× faster)</tspan></text>
+<text x="178" y="357" fill="#f2f1ea" text-anchor="end" font-weight="600">Yoast SEO</text>
+<path d="M190,333 h132.84 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-132.84 z" fill="#3987e5"/>
+<text x="334.84000000000003" y="347" fill="#f2f1ea">9.84 s</text>
+<path d="M190,353 h17.55 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-17.55 z" fill="#d95926"/>
+<text x="219.55" y="367" fill="#f2f1ea">1.30 s  <tspan fill="#c3c2b7">(8× faster)</tspan></text>
+<text x="178" y="421" fill="#f2f1ea" text-anchor="end" font-weight="600">WPForms Lite</text>
+<path d="M190,397 h120.01500000000001 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-120.01500000000001 z" fill="#3987e5"/>
+<text x="322.015" y="411" fill="#f2f1ea">8.89 s</text>
+<path d="M190,417 h17.415 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-17.415 z" fill="#d95926"/>
+<text x="219.415" y="431" fill="#f2f1ea">1.29 s  <tspan fill="#c3c2b7">(7× faster)</tspan></text>
+<text x="178" y="485" fill="#f2f1ea" text-anchor="end" font-weight="600">LiteSpeed Cache</text>
+<path d="M190,461 h28.080000000000002 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-28.080000000000002 z" fill="#3987e5"/>
+<text x="230.08" y="475" fill="#f2f1ea">2.08 s</text>
+<path d="M190,481 h8.37 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-8.37 z" fill="#d95926"/>
+<text x="210.37" y="495" fill="#f2f1ea">0.62 s  <tspan fill="#c3c2b7">(3× faster)</tspan></text>
+<text x="178" y="549" fill="#f2f1ea" text-anchor="end" font-weight="600">WP Mail SMTP</text>
+<path d="M190,525 h22.68 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-22.68 z" fill="#3987e5"/>
+<text x="224.68" y="539" fill="#f2f1ea">1.68 s</text>
+<path d="M190,545 h6.21 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-6.21 z" fill="#d95926"/>
+<text x="208.21" y="559" fill="#f2f1ea">0.46 s  <tspan fill="#c3c2b7">(4× faster)</tspan></text>
+<text x="178" y="613" fill="#f2f1ea" text-anchor="end" font-weight="600">All-in-One WP Migration</text>
+<path d="M190,589 h18.09 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-18.09 z" fill="#3987e5"/>
+<text x="220.09" y="603" fill="#f2f1ea">1.34 s</text>
+<path d="M190,609 h3.5100000000000002 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-3.5100000000000002 z" fill="#d95926"/>
+<text x="205.51" y="623" fill="#f2f1ea">0.26 s  <tspan fill="#c3c2b7">(5× faster)</tspan></text>
+<text x="178" y="677" fill="#f2f1ea" text-anchor="end" font-weight="600">Contact Form 7</text>
+<path d="M190,653 h14.715000000000002 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-14.715000000000002 z" fill="#3987e5"/>
+<text x="216.715" y="667" fill="#f2f1ea">1.09 s</text>
+<path d="M190,673 h4.995 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-4.995 z" fill="#d95926"/>
+<text x="206.995" y="687" fill="#f2f1ea">0.37 s  <tspan fill="#c3c2b7">(3× faster)</tspan></text>
+<text x="178" y="741" fill="#f2f1ea" text-anchor="end" font-weight="600">Akismet</text>
+<path d="M190,717 h7.155 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-7.155 z" fill="#3987e5"/>
+<text x="209.155" y="731" fill="#f2f1ea">0.53 s</text>
+<path d="M190,737 h3.105 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-3.105 z" fill="#d95926"/>
+<text x="205.105" y="751" fill="#f2f1ea">0.23 s  <tspan fill="#c3c2b7">(2× faster)</tspan></text>
+<line x1="190" y1="64" x2="190" y2="768" stroke="#c3c2b7" stroke-width="1"/>
 </svg>

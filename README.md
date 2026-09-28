@@ -13,14 +13,14 @@ plugin or theme is checked in seconds instead of minutes.
 
 Formatting sniffs (whitespace, alignment, braces) are not ported: that is `mago format`'s job.
 
-## 6–16× faster than phpcs
+## 2–11× faster than phpcs
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/benchmarks-dark.svg">
-  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on Elementor (12.8 s vs 2.1 s), Yoast SEO (15.5 s vs 1.7 s) and WooCommerce (71.2 s vs 4.4 s)" src="docs/benchmarks-light.svg" width="760">
+  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on the top 10 WordPress.org plugins by active installs and WordPress core, from WooCommerce (35.73 s vs 3.37 s) down to Akismet (0.53 s vs 0.23 s)" src="docs/benchmarks-light.svg" width="800">
 </picture>
 
-Same machine, same code, mean of three runs; details and the reproducible script are in [Benchmarks](#benchmarks).
+Same machine, same code, mean of three runs, on the top 10 WordPress.org plugins by active installs plus WordPress core itself; details and the reproducible script are in [Benchmarks](#benchmarks).
 
 ## Install
 
@@ -249,19 +249,37 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 
 `bench/run.sh <project> <text-domain> <prefix>` times phpcs (`WordPress-Extra`, WPCS 3.4.1,
 `--parallel=8`) against `mago lint` running only this extension's rules, mean of three runs after a
-warm-up, on the same machine (Apple M-series, PHP 8.4, Mago 1.50). This is not an apples-to-apples
-comparison of the same rule set: `WordPress-Extra` also runs WPCS's formatting and generic sniffs,
-while the mago side runs this extension's rules only.
+warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.50.0). This is not an
+apples-to-apples comparison of the same rule set: `WordPress-Extra` also runs WPCS's formatting and
+generic sniffs, while the mago side runs this extension's rules only.
 
-| Codebase | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
-|:---|---:|---:|---:|---:|
-| Elementor | 1,460 | 12.8 s | 2.1 s | 6.0× |
-| Yoast SEO | 1,511 | 15.5 s | 1.7 s | 9.1× |
-| WooCommerce | 3,528 | 71.2 s | 4.4 s | 16.1× |
+The bake-off covers the top 10 plugins on WordPress.org by active installs, plus WordPress core
+itself (`src/` from [wordpress-develop](https://github.com/WordPress/wordpress-develop), text
+domain `default`, prefix `wp`). WPCS ships a narrower `WordPress-Core` ruleset for core, but this
+table runs the same `WordPress-Extra` comparison as the plugins throughout, for consistency.
+`classic-editor`, next in active-install rank, was skipped (1 PHP file after excludes) in favour of
+`wp-mail-smtp`, the next plugin down the list.
 
-Measured 2026-09-28 on the plugins' release zips (vendor and tests excluded), `mago` at 1.50.0 and this
-package at 1.0.0 (37 rules, phpcs suppression comments honoured). The mago column includes starting
-the PHP worker.
+| Codebase | Version | Active installs | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
+|:---|:---|---:|---:|---:|---:|---:|
+| WooCommerce | 11.1.2 | 7,000,000+ | 3,528 | 35.73 s | 3.37 s | 10.6× |
+| WordPress core | trunk | — | 1,868 | 22.53 s | 3.08 s | 7.3× |
+| Elementor | 4.3.2 | 10,000,000+ | 1,460 | 14.29 s | 1.97 s | 7.3× |
+| Google Site Kit | 1.188.0 | 5,000,000+ | 1,869 | 13.60 s | 1.91 s | 7.1× |
+| Yoast SEO | 28.5 | 10,000,000+ | 1,511 | 9.84 s | 1.30 s | 7.6× |
+| WPForms Lite | 2.0.2.1 | 5,000,000+ | 963 | 8.89 s | 1.29 s | 6.9× |
+| LiteSpeed Cache | 7.9.1 | 7,000,000+ | 212 | 2.08 s | 0.62 s | 3.4× |
+| WP Mail SMTP | 4.9.0 | 4,000,000+ | 185 | 1.68 s | 0.46 s | 3.7× |
+| All-in-One WP Migration | 7.111 | 5,000,000+ | 147 | 1.34 s | 0.26 s | 5.2× |
+| Contact Form 7 | 6.1.7 | 10,000,000+ | 111 | 1.09 s | 0.37 s | 2.9× |
+| Akismet | 5.7.2 | 5,000,000+ | 29 | 0.53 s | 0.23 s | 2.3× |
+| **Total** | | | **11,883** | **111.60 s** | **14.86 s** | **7.5×** |
+
+Measured 2026-09-28 on the plugins' release zips (vendor and tests excluded) and a fresh
+wordpress-develop checkout, `mago` at 1.50.0 and this package at 1.0.0 (37 rules, phpcs suppression
+comments honoured). The mago column includes starting the PHP worker. mago never lost a single-codebase
+comparison. Full output, per-codebase mago issue counts by rule, and exact reproduction commands are
+in [`bench/results/2026-09-bakeoff.md`](bench/results/2026-09-bakeoff.md).
 
 ## Development
 
