@@ -72,46 +72,51 @@ run_phpcs() {
         --parallel=8 -d memory_limit=2G --report=summary "$project"
 }
 
-# A linter that finds issues exits 1 (phpcs: 2 when some are auto-fixable); only those or 0
-# (clean) are acceptable. But phpcs also exits 2 on some runtime errors, and mago's worker can
-# crash mid-run while mago itself still exits its "found issues" code (1) — exit status alone
-# doesn't prove the run was clean, so callers also pass a crash pattern to grep for in the
-# output. That grep is a heuristic (mago's/phpcs's exact wording isn't a stable contract), not
-# a real parse of either tool's report.
+# Exit status alone doesn't prove a clean run: phpcs exits 2 both when it found fixable
+# violations and on some runtime errors, and mago exits 1 for findings even if its worker died.
+# So each tool gets its highest acceptable status plus a pattern its findings report always prints;
+# a run that exceeds the status, lacks the report, or shows a crash message fails the script.
+# The patterns are heuristics (neither tool's wording is a stable contract), not a parse.
 # Output goes to a file rather than a captured variable, so timed runs pay no subshell.
-run_checked() { # name, function, crash-pattern (grep -E)
-    local name=$1 fn=$2 crash=$3 status=0
+run_checked() { # name, function, max-status, report-pattern, crash-pattern (grep -E)
+    local name=$1 fn=$2 max=$3 report=$4 crash=$5 status=0
     "$fn" > "$work/out" 2>&1 || status=$?
-    if (( status > 2 )) || grep -qiE "$crash" "$work/out"; then
+    if (( status > max )) || { (( status > 0 )) && ! grep -qE "$report" "$work/out"; } || grep -qiE "$crash" "$work/out"; then
         echo "error: $name exited with status $status:" >&2
         cat "$work/out" >&2
         exit 1
     fi
 }
+mago_max=1
+mago_report='^(error|warning|help|note)\[|No issues found'
 mago_crash='extension host|worker (crashed|panicked|failed|exited unexpectedly)'
-phpcs_crash='PHP Fatal error|Uncaught (Error|Exception)'
+phpcs_max=2
+phpcs_report='PHP CODE SNIFFER REPORT SUMMARY'
+phpcs_crash='PHP Fatal error|Uncaught (Error|Exception)|^ERROR: '
 
 files=$(find "$project" -name '*.php' -not -path '*/vendor/*' -not -path '*/vendor_prefixed/*' -not -path '*/node_modules/*' -not -path '*/tests/*' | wc -l | tr -d ' ')
-mago_version=$("$mago" --version 2>&1 | tail -1)
-phpcs_version=$("$phpcs" --version 2>&1 | tail -1)
+mago_version=$("$mago" --version 2>&1) || { echo "error: $mago --version failed: $mago_version" >&2; exit 1; }
+mago_version=$(tail -1 <<< "$mago_version")
+phpcs_version=$("$phpcs" --version 2>&1) || { echo "error: $phpcs --version failed: $phpcs_version" >&2; exit 1; }
+phpcs_version=$(tail -1 <<< "$phpcs_version")
 
 echo "## $(basename "$project") ($files PHP files)"
 echo
 echo "$mago_version / $phpcs_version"
 echo
 echo "mago issue counts by rule:"
-run_checked mago run_mago "$mago_crash"
+run_checked mago run_mago "$mago_max" "$mago_report" "$mago_crash"
 cat "$work/out"
 echo
 
 # Mean of 3 timed runs after 1 warm-up (hyperfine hangs on mago's worker protocol). Each
 # run is re-checked so a crash mid-benchmark fails the script instead of skewing the mean.
-timed() { # name, function, crash-pattern
-    local name=$1 fn=$2 crash=$3 total=0 t0 t1
-    run_checked "$name" "$fn" "$crash"
+timed() { # name, function, max-status, report-pattern, crash-pattern
+    local name=$1 fn=$2 max=$3 report=$4 crash=$5 total=0 t0 t1
+    run_checked "$name" "$fn" "$max" "$report" "$crash"
     for _ in 1 2 3; do
         t0=$(perl -MTime::HiRes=time -e 'printf "%.3f", time')
-        run_checked "$name" "$fn" "$crash"
+        run_checked "$name" "$fn" "$max" "$report" "$crash"
         t1=$(perl -MTime::HiRes=time -e 'printf "%.3f", time')
         total=$(perl -e "print $total + ($t1 - $t0)")
     done
@@ -119,5 +124,5 @@ timed() { # name, function, crash-pattern
 }
 echo "| Tool | Mean of 3 runs |"
 echo "|:---|---:|"
-timed "phpcs WordPress-Extra (WPCS 3.4.1, --parallel=8)" run_phpcs "$phpcs_crash"
-timed "mago + mago-wordpress" run_mago "$mago_crash"
+timed "phpcs WordPress-Extra (WPCS 3.4.1, --parallel=8)" run_phpcs "$phpcs_max" "$phpcs_report" "$phpcs_crash"
+timed "mago + mago-wordpress" run_mago "$mago_max" "$mago_report" "$mago_crash"
