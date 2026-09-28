@@ -276,4 +276,3 @@ PHPCS=/path/to/phpcs bench/run.sh /path/to/plugins/akismet akismet akismet  # Ak
 ```
 
 `PHPCS` must point at a phpcs install with `wp-coding-standards/wpcs` 3.4.1 registered (`phpcs --config-set installed_paths ...` or a project-local `composer require --dev wp-coding-standards/wpcs`).
-
