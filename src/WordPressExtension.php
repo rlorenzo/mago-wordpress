@@ -51,7 +51,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\YodaConditionsRule;
  */
 final class WordPressExtension
 {
-    private const VERSION = '1.0.0';
+    private const VERSION = '1.0.1';
 
     private function __construct() {}
 
