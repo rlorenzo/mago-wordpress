@@ -18,6 +18,12 @@
     "wpcs",
     "coding-standards"
   ],
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/rlorenzo"
+    }
+  ],
   "require": {
     "php": "^8.1",
     "ext-dom": "*",
