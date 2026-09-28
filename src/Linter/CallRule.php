@@ -11,10 +11,6 @@ use Mago\Sdk\Syntax\Node;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 
-use function array_map;
-use function implode;
-use function preg_quote;
-
 /**
  * Base for a rule that reports a call to one of a fixed set of names.
  *
@@ -85,11 +81,6 @@ abstract class CallRule implements Rule
      */
     private static function buildGate(array $names): FileGate
     {
-        $alternation = implode('|', array_map(static fn(string $name): string => preg_quote(
-            $name,
-            delimiter: '/',
-        ), $names));
-
-        return new FileGate(pattern: "/(?<!\\w)(?:{$alternation})(?!\\w)|\\buse\\s[^;]*\\bfunction\\b/i");
+        return FileGate::forWords($names, pattern: '/\buse\s[^;]*\bfunction\b/i');
     }
 }
