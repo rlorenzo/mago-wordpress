@@ -59,7 +59,7 @@ final class DbRestrictedFunctionsRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= new FileGate(pattern: $this->buildGatePattern());
+        $this->gate ??= new FileGate([$this->buildGatePattern()]);
         if (!$this->gate->passes($context->file)) {
             return;
         }

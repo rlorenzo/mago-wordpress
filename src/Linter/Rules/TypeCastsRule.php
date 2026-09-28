@@ -61,7 +61,7 @@ final class TypeCastsRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= new FileGate(pattern: '/\(\s*(?:double|real|unset|binary)\s*\)|\bb["\']/i');
+        $this->gate ??= new FileGate(['/\(\s*(?:double|real|unset|binary)\s*\)|\bb["\']/i']);
         if (!$this->gate->passes($context->file)) {
             return;
         }

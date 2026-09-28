@@ -5,8 +5,9 @@
 #   bench/profile-rules.sh --counts <project-dir> [<text-domain>] [<prefix>]  # per-rule issue counts
 #
 # Timings are the median of $RUNS runs (default 5) and print slowest first. The counts mode
-# prints `--reporting-format code-count` (or $FORMAT, e.g. short) for all rules, sorted; diff it before and after a change to
-# prove the change kept behaviour. Needs vendor/bin/mago (composer install) and php.
+# prints `--reporting-format code-count` (or $FORMAT, e.g. short) for all rules, sorted; diff
+# it before and after a change to prove the change kept behaviour. Needs vendor/bin/mago
+# (composer install) and php.
 set -euo pipefail
 
 counts=false
@@ -17,6 +18,7 @@ project=$(cd "$1" && pwd -P)
 here=$(cd "$(dirname "$0")/.." && pwd -P)
 mago=${MAGO:-$here/vendor/bin/mago}
 runs=${RUNS:-5}
+[[ $runs =~ ^[1-9][0-9]*$ ]] || { echo "RUNS must be an integer >= 1" >&2; exit 1; }
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT

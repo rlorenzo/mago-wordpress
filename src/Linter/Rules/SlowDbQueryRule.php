@@ -37,7 +37,7 @@ final class SlowDbQueryRule implements Rule
     public function __construct(
         private readonly Report $report,
     ) {
-        $this->gate = new FileGate('/meta_query|tax_query|meta_key|meta_value|set_query_var/i');
+        $this->gate = new FileGate(['/meta_query|tax_query|meta_key|meta_value|set_query_var/i']);
         $this->wanted = Calls::normalizeAll([self::SET_QUERY_VAR]);
     }
 

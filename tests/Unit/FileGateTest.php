@@ -46,6 +46,12 @@ final class FileGateTest extends TestCase
             $gate = FileGate::forWords(self::WORDS, pattern: self::OR_PATTERN);
             self::assertSame(preg_match($regex, $source) === 1, $gate->passes(self::file($source)), $source);
         }
+
+        // One gate across the files, as in a worker: each new file is screened again.
+        $gate = FileGate::forWords(self::WORDS, pattern: self::OR_PATTERN);
+        foreach ([...$sources, ...$sources] as $source) {
+            self::assertSame(preg_match($regex, $source) === 1, $gate->passes(self::file($source)), $source);
+        }
     }
 
     private static function file(string $source): SourceFile

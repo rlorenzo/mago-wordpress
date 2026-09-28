@@ -9,9 +9,9 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use WeakMap;
 
-use function array_merge;
+use function array_values;
 use function in_array;
-use function usort;
+use function ksort;
 
 /**
  * The nodes of one kind under a file's program, for the rules that target
@@ -44,12 +44,16 @@ final class NodeIndex
      */
     public static function ofKind(SourceFile $file, Node $program, NodeKind $kind): array
     {
+        if ($file->getNode(0) !== $program) {
+            return $file->getDescendants($program, $kind);
+        }
+
         self::$cache ??= new WeakMap();
         /** @var array<string, list<Node>> $lists */
         $lists = self::$cache[$file] ?? [];
         $nodes = $lists[$kind->value] ?? null;
         if ($nodes === null) {
-            $nodes = $file->getNode(0) === $program ? $file->getNodes($kind) : $file->getDescendants($program, $kind);
+            $nodes = $file->getNodes($kind);
             $lists[$kind->value] = $nodes;
             self::$cache[$file] = $lists;
         }
@@ -79,14 +83,16 @@ final class NodeIndex
             return $nodes;
         }
 
-        $lists = [];
+        // Node ids are pre-order, so sorting by id restores source order.
+        $nodes = [];
         foreach ($kinds as $kind) {
-            $lists[] = self::ofKind($file, $program, $kind);
+            foreach (self::ofKind($file, $program, $kind) as $node) {
+                $nodes[$node->id] = $node;
+            }
         }
 
-        $nodes = array_merge(...$lists);
-        usort($nodes, static fn(Node $a, Node $b): int => $a->id <=> $b->id);
+        ksort($nodes);
 
-        return $nodes;
+        return array_values($nodes);
     }
 }

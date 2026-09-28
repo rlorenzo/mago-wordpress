@@ -44,7 +44,7 @@ final class PostsPerPageRule implements Rule
     ) {
         $this->max = $settings->maxPostsPerPage;
         // The escape branch keeps in a key spelled with a hex, unicode, or octal escape, like `"posts_per_pag\x65"`.
-        $this->gate = new FileGate('/posts_per_page|numberposts|nopaging|\\\\(?:x[0-9a-f]|u\{|[0-7])/i');
+        $this->gate = new FileGate(['/posts_per_page|numberposts|nopaging|\\\\(?:x[0-9a-f]|u\{|[0-7])/i']);
     }
 
     public function getDefinition(): RuleDefinition

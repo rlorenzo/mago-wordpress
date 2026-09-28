@@ -59,7 +59,7 @@ final class EnqueuedResourcesRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= new FileGate(pattern: '/<(?:script|link)\b/i');
+        $this->gate ??= new FileGate(['/<(?:script|link)\b/i']);
         if (!$this->gate->passes($context->file)) {
             return;
         }

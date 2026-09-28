@@ -57,7 +57,7 @@ final class CronIntervalRule implements Rule
         Settings $settings,
     ) {
         $this->minInterval = $settings->minCronInterval;
-        $this->gate = new FileGate('/cron_schedules/i');
+        $this->gate = new FileGate(['/cron_schedules/i']);
         $this->wanted = Calls::normalizeAll([self::ADD_FILTER]);
     }
 

@@ -39,11 +39,11 @@ final class FileGate
     private bool $passes = true;
 
     /**
-     * @param string|list<string> $pattern Regexes that pass a file when one matches.
+     * @param list<string> $patterns Regexes that pass a file when one matches.
      * @param array<string, true> $words Lowercase words that pass a file containing one as a whole word.
      */
     public function __construct(
-        private readonly string|array $pattern,
+        private readonly array $patterns,
         private readonly array $words = [],
     ) {}
 
@@ -89,7 +89,7 @@ final class FileGate
 
     private function matchesPattern(string $contents): bool
     {
-        foreach ((array) $this->pattern as $pattern) {
+        foreach ($this->patterns as $pattern) {
             if (preg_match($pattern, $contents) === 1) {
                 return true;
             }
