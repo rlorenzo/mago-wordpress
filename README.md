@@ -12,11 +12,11 @@ plugin or theme can be checked in a fraction of a second instead of minutes.
 
 Formatting sniffs (whitespace, alignment, braces) are not ported: that is `mago format`'s job.
 
-## 4–7× faster than phpcs
+## 6–16× faster than phpcs
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/benchmarks-dark.svg">
-  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on Elementor (16.7 s vs 3.6 s), Yoast SEO (12.5 s vs 2.9 s) and WooCommerce (66.7 s vs 9.7 s)" src="docs/benchmarks-light.svg" width="760">
+  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on Elementor (12.8 s vs 2.1 s), Yoast SEO (15.5 s vs 1.7 s) and WooCommerce (71.2 s vs 4.4 s)" src="docs/benchmarks-light.svg" width="760">
 </picture>
 
 Same machine, same code, mean of three runs; details and the reproducible script are in [Benchmarks](#benchmarks).
@@ -249,17 +249,18 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 `bench/run.sh <project> <text-domain> <prefix>` times phpcs (`WordPress-Extra`, WPCS 3.4.1,
 `--parallel=8`) against `mago lint` running only this extension's rules, mean of three runs after a
 warm-up, on the same machine (Apple M-series, PHP 8.4, Mago 1.50). This is not an apples-to-apples
-comparison of the same rule set: `WordPress-Extra` is the full phpcs standard (all of `WordPress`,
-`WordPress-Core`, and `WordPress-Docs`), while the mago side only runs this extension's rules.
+comparison of the same rule set: `WordPress-Extra` also runs WPCS's formatting and generic sniffs,
+while the mago side runs this extension's rules only.
 
 | Codebase | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
 |:---|---:|---:|---:|---:|
-| Elementor | 1,460 | 16.7 s | 3.6 s | 4.7× |
-| Yoast SEO | 1,511 | 12.5 s | 2.9 s | 4.4× |
-| WooCommerce | 3,528 | 66.7 s | 9.7 s | 6.9× |
+| Elementor | 1,460 | 12.8 s | 2.1 s | 6.0× |
+| Yoast SEO | 1,511 | 15.5 s | 1.7 s | 9.1× |
+| WooCommerce | 3,528 | 71.2 s | 4.4 s | 16.1× |
 
-Measured 2026-09-27 on the plugins' release zips (vendor and tests excluded), `mago` at 1.50.0 and this
-package at 0.2.0 (28 rules). The mago column includes starting the PHP worker.
+Measured 2026-09-28 on the plugins' release zips (vendor and tests excluded), `mago` at 1.50.0 and this
+package at 1.0.0 (37 rules, phpcs suppression comments honoured). The mago column includes starting
+the PHP worker.
 
 ## Development
 
