@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\GlobalWrites;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
@@ -30,22 +31,10 @@ use const PHP_INT_MAX;
  * without declaring each of them as a target too.
  *
  * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect
  */
 final class GlobalVariablesOverrideRule implements Rule
 {
     private const SNIFF = 'WordPress.WP.GlobalVariablesOverride';
-
-    /**
-     * Function-like scopes. An assignment outside all of these is top-level.
-     */
-    private const SCOPE_KINDS = [
-        NodeKind::Function,
-        NodeKind::Method,
-        NodeKind::Closure,
-        NodeKind::ArrowFunction,
-        NodeKind::PropertyHook,
-    ];
 
     /**
      * Globals themes and plugins are expected to set (WPCS `$override_allowed`).
@@ -72,109 +61,20 @@ final class GlobalVariablesOverrideRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
-        // One walk of the whole program; each pass below filters it by kind.
+        // One walk of the whole program, shared by both passes below.
         $nodes = $file->getDescendants($context->node);
+        $imports = GlobalWrites::imports($file, $nodes);
 
-        /** @var array<int, array<string, int>> $importsByScope scope node id => variable name => earliest global-statement start offset */
-        $importsByScope = [];
-        foreach ($nodes as $global) {
-            if ($global->kind !== NodeKind::Global) {
+        foreach (GlobalWrites::targets($file, $nodes) as $target) {
+            if ($target->kind === NodeKind::ArrayAccess) {
+                $this->checkGlobalsWrite($context, $file, $target);
                 continue;
             }
 
-            $scope = $this->nearestScope($file, $global);
-            if ($scope === null) {
-                continue;
-            }
-
-            foreach ($file->getDescendants($global, NodeKind::DirectVariable) as $variable) {
-                // Descendants arrive in source order, so the first import is the earliest.
-                $importsByScope[$scope->id][$file->getText($variable)] ??= $global->span->start;
-            }
-        }
-
-        foreach ($nodes as $node) {
-            $targets = match ($node->kind) {
-                // `$post = ...` and `foreach ($x as $post)`: the first child binds.
-                NodeKind::Assignment, NodeKind::ForeachValueTarget => [$file->getChildren($node)[0] ?? $node],
-                // `foreach ($x as $post => $item)`: both the key and the value bind.
-                NodeKind::ForeachKeyValueTarget => $file->getChildren($node),
-                default => [],
-            };
-
-            foreach ($targets as $target) {
-                $this->checkTarget($context, $file, $target, $importsByScope);
-            }
-        }
-    }
-
-    /**
-     * Checks a single write target: a plain variable, a `$GLOBALS[...]`
-     * write, or a list/array destructuring pattern, which is walked
-     * recursively since each of its elements is itself a write target.
-     *
-     * @param array<int, array<string, int>> $importsByScope
-     */
-    private function checkTarget(LintContext $context, SourceFile $file, Node $targetChild, array $importsByScope): void
-    {
-        $target = Values::unwrap($file, $targetChild);
-
-        // `foreach ($x as &$post)`: the by-reference operand is the write target.
-        if ($target->kind === NodeKind::UnaryPrefix) {
-            [$operator, $operand] = $file->getChildren($target) + [null, null];
-            if ($operator !== null && $operand !== null && $file->getText($operator) === '&') {
-                $this->checkTarget($context, $file, $operand, $importsByScope);
-            }
-
-            return;
-        }
-
-        if ($target->kind === NodeKind::Variable) {
             $variable = $file->getChildren($target)[0] ?? $target;
-            if ($variable->kind !== NodeKind::DirectVariable) {
-                return;
+            if ($target->kind === NodeKind::Variable && $variable->kind === NodeKind::DirectVariable) {
+                $this->checkVariableTarget($context, $file, $target, $variable, $imports);
             }
-
-            $this->checkVariableTarget($context, $file, $target, $variable, $importsByScope);
-            return;
-        }
-
-        if ($target->kind === NodeKind::ArrayAccess) {
-            $this->checkGlobalsWrite($context, $file, $target);
-            return;
-        }
-
-        if (in_array($target->kind, [NodeKind::Array, NodeKind::LegacyArray, NodeKind::List], strict: true)) {
-            foreach ($file->getChildren($target) as $element) {
-                $this->checkDestructuringElement($context, $file, $element, $importsByScope);
-            }
-        }
-    }
-
-    /**
-     * @param array<int, array<string, int>> $importsByScope
-     */
-    private function checkDestructuringElement(
-        LintContext $context,
-        SourceFile $file,
-        Node $element,
-        array $importsByScope,
-    ): void {
-        $wrapped = $file->getChildren($element)[0] ?? null;
-        if ($wrapped === null) {
-            return;
-        }
-
-        // A key-value element's target is its value; the key is a plain
-        // expression selecting the source offset, never a write target.
-        $valueChild = match ($wrapped->kind) {
-            NodeKind::KeyValueArrayElement => $file->getChildren($wrapped)[1] ?? null,
-            NodeKind::ValueArrayElement => $file->getChildren($wrapped)[0] ?? null,
-            default => null, // A missing (skipped) slot has nothing to check.
-        };
-
-        if ($valueChild !== null) {
-            $this->checkTarget($context, $file, $valueChild, $importsByScope);
         }
     }
 
@@ -196,7 +96,7 @@ final class GlobalVariablesOverrideRule implements Rule
             return;
         }
 
-        $scope = $this->nearestScope($file, $variable);
+        $scope = GlobalWrites::nearestScope($file, $variable);
         if ($scope !== null && ($importsByScope[$scope->id][$text] ?? PHP_INT_MAX) >= $variable->span->start) {
             return;
         }
@@ -244,23 +144,6 @@ final class GlobalVariablesOverrideRule implements Rule
             )->withHelp('Use a differently named local variable, or the appropriate WordPress API instead.'),
             [self::SNIFF],
         );
-    }
-
-    /**
-     * Returns the nearest enclosing function-like scope, or null in the top-level scope.
-     */
-    private function nearestScope(SourceFile $file, Node $node): ?Node
-    {
-        $parent = $file->getParent($node);
-        while ($parent !== null) {
-            if (in_array($parent->kind, self::SCOPE_KINDS, strict: true)) {
-                return $parent;
-            }
-
-            $parent = $file->getParent($parent);
-        }
-
-        return null;
     }
 
     /**

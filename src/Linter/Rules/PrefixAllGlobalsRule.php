@@ -16,6 +16,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\DocBlocks;
+use Rlorenzo\MagoWordPress\Internal\GlobalWrites;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
@@ -78,15 +79,6 @@ final class PrefixAllGlobalsRule implements Rule
         NodeKind::Trait,
         NodeKind::Enum,
         NodeKind::AnonymousClass,
-    ];
-
-    /** Scopes whose variables are local; an arrow function's are skipped entirely, as WPCS does. */
-    private const SCOPE_KINDS = [
-        NodeKind::Function,
-        NodeKind::Method,
-        NodeKind::Closure,
-        NodeKind::ArrowFunction,
-        NodeKind::PropertyHook,
     ];
 
     private const SUPERGLOBALS = [
@@ -303,71 +295,17 @@ final class PrefixAllGlobalsRule implements Rule
      * Checks global variable writes: assignments, foreach bindings and
      * destructuring targets in the top-level scope, writes to variables a
      * function imported with `global`, and `$GLOBALS[...]` writes anywhere.
+     * An array element write counts as a write to its base variable.
      */
     private function checkVariables(LintContext $context): void
     {
         $file = $context->file;
         $nodes = $file->getDescendants($context->node);
+        $imports = GlobalWrites::imports($file, $nodes);
 
-        /** @var array<int, array<string, int>> $imports scope node id => variable => earliest `global` statement start */
-        $imports = [];
-        foreach ($nodes as $global) {
-            if ($global->kind !== NodeKind::Global) {
-                continue;
-            }
-
-            $scope = $this->nearestScope($file, $global);
-            if ($scope === null) {
-                continue;
-            }
-
-            // A variable variable may resolve to any imported name.
-            $imports[$scope->id]['$$'] ??= $global->span->start;
-            foreach ($file->getDescendants($global, NodeKind::DirectVariable) as $variable) {
-                $imports[$scope->id][$file->getText($variable)] ??= $global->span->start;
-            }
+        foreach (GlobalWrites::targets($file, $nodes) as $target) {
+            $this->checkVariableWrite($context, $target, $imports);
         }
-
-        foreach ($nodes as $node) {
-            $targets = match ($node->kind) {
-                NodeKind::Assignment, NodeKind::ForeachValueTarget => [$file->getChildren($node)[0] ?? $node],
-                NodeKind::ForeachKeyValueTarget => $file->getChildren($node),
-                default => [],
-            };
-
-            foreach ($targets as $target) {
-                $this->checkWrite($context, $target, $imports);
-            }
-        }
-    }
-
-    /**
-     * Checks one write target. An array element write counts as a write to
-     * its base variable; a destructuring pattern is walked element by element.
-     *
-     * @param array<int, array<string, int>> $imports
-     */
-    private function checkWrite(LintContext $context, Node $target, array $imports): void
-    {
-        $file = $context->file;
-        $target = Values::unwrap($file, $target);
-        $children = $file->getChildren($target);
-
-        if ($target->kind === NodeKind::UnaryPrefix) {
-            if (($children[1] ?? null) !== null && $file->getText($children[0]) === '&') {
-                $this->checkWrite($context, $children[1], $imports);
-            }
-
-            return;
-        }
-
-        if (in_array($target->kind, [NodeKind::Array, NodeKind::LegacyArray, NodeKind::List], strict: true)) {
-            $this->checkDestructuring($context, $children, $imports);
-
-            return;
-        }
-
-        $this->checkVariableWrite($context, $target, $imports);
     }
 
     /**
@@ -388,7 +326,8 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        $scope = $this->nearestScope($file, $variable);
+        // An arrow function's variables are skipped entirely, as WPCS does.
+        $scope = GlobalWrites::nearestScope($file, $variable);
         if ($scope?->kind === NodeKind::ArrowFunction) {
             return;
         }
@@ -402,16 +341,10 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        $isDynamic = $variable->kind !== NodeKind::DirectVariable;
-        if (!$isDynamic && $this->isAllowedVariable(substr($name, offset: 1))) {
-            return;
-        }
-
         // A function's variables are local unless imported with `global` before the write.
-        if (
-            $scope !== null
-            && ($imports[$scope->id][$isDynamic ? '$$' : $name] ?? PHP_INT_MAX) >= $variable->span->start
-        ) {
+        $isDynamic = $variable->kind !== NodeKind::DirectVariable;
+        $importKey = $isDynamic ? GlobalWrites::ANY_IMPORT : $name;
+        if ($scope !== null && ($imports[$scope->id][$importKey] ?? PHP_INT_MAX) >= $variable->span->start) {
             return;
         }
 
@@ -421,27 +354,8 @@ final class PrefixAllGlobalsRule implements Rule
             return;
         }
 
-        $this->reportVariable($context, $name, $variable);
-    }
-
-    /**
-     * @param list<Node> $elements
-     * @param array<int, array<string, int>> $imports
-     */
-    private function checkDestructuring(LintContext $context, array $elements, array $imports): void
-    {
-        $file = $context->file;
-        foreach ($elements as $element) {
-            $wrapped = $file->getChildren($element)[0] ?? null;
-            // A key-value element writes to its value; the key only selects the source offset.
-            $value = match ($wrapped?->kind) {
-                NodeKind::KeyValueArrayElement => $file->getChildren($wrapped)[1] ?? null,
-                NodeKind::ValueArrayElement => $file->getChildren($wrapped)[0] ?? null,
-                default => null,
-            };
-            if ($value !== null) {
-                $this->checkWrite($context, $value, $imports);
-            }
+        if (!$this->isAllowedVariable(substr($name, offset: 1))) {
+            $this->reportVariable($context, $name, $variable);
         }
     }
 
@@ -452,17 +366,15 @@ final class PrefixAllGlobalsRule implements Rule
     private function checkGlobalsKey(LintContext $context, Node $key): void
     {
         $leading = $this->leadingLiteral($context->file, $key);
-        if ($leading !== null && $this->isAllowedVariable($leading)) {
-            return;
-        }
-
         if ($leading === null) {
             $this->reportDynamicVariable($context, $context->file->getText($key), $key);
 
             return;
         }
 
-        $this->reportVariable($context, '$' . $leading, $key);
+        if (!$this->isAllowedVariable($leading)) {
+            $this->reportVariable($context, '$' . $leading, $key);
+        }
     }
 
     private function isAllowedVariable(string $name): bool
@@ -518,20 +430,6 @@ final class PrefixAllGlobalsRule implements Rule
                 ->withHelp("Rename it to start with your prefix, e.g. `\${$this->prefixes[0]}_name`."),
             [self::SNIFF . '.NonPrefixedVariableFound'],
         );
-    }
-
-    /**
-     * Returns the nearest enclosing function-like scope, or null in the top-level scope.
-     */
-    private function nearestScope(SourceFile $file, Node $node): ?Node
-    {
-        foreach ($file->getAncestors($node) as $ancestor) {
-            if (in_array($ancestor->kind, self::SCOPE_KINDS, strict: true)) {
-                return $ancestor;
-            }
-        }
-
-        return null;
     }
 
     /**
