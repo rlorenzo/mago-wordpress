@@ -261,7 +261,6 @@ final class WpI18nRule extends CallRule
         $allowed = $this->settings->textDomains;
         // WordPress core's own `default` domain, per WPCS's `$text_domain_is_default`/`$text_domain_contains_default`.
         $isDefaultOnly = $allowed === ['default'];
-        $containsDefault = in_array('default', $allowed, strict: true);
 
         if ($argument === null) {
             if ($isDefaultOnly) {
@@ -269,24 +268,7 @@ final class WpI18nRule extends CallRule
                 return;
             }
 
-            if ($containsDefault) {
-                $this->report->issue(
-                    $context,
-                    Issue::new(
-                        'Missing text domain in translation function call',
-                        $context->node->span,
-                        sprintf('This call to `%s()` does not pass a text domain', $name),
-                    )->withNote(
-                        'If this text string is supposed to use the WordPress core translation, pass `default` as the text domain explicitly.',
-                    )->withHelp(
-                        "Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`, or `'default'` for a WordPress core string.",
-                    ),
-                    [self::SNIFF . '.MissingArgDomainDefault'],
-                );
-
-                return;
-            }
-
+            $containsDefault = in_array('default', $allowed, strict: true);
             $this->report->issue(
                 $context,
                 Issue::new(
@@ -294,9 +276,17 @@ final class WpI18nRule extends CallRule
                     $context->node->span,
                     sprintf('This call to `%s()` does not pass a text domain', $name),
                 )->withNote(
-                    'Without a text domain, WordPress falls back to the `default` (core) domain and the string will not be translated with your plugin or theme.',
-                )->withHelp("Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`."),
-                [self::SNIFF . '.MissingArgDomain', self::SNIFF . '.MissingArgDomainDefault'],
+                    $containsDefault
+                        ? 'If this text string is supposed to use the WordPress core translation, pass `default` as the text domain explicitly.'
+                        : 'Without a text domain, WordPress falls back to the `default` (core) domain and the string will not be translated with your plugin or theme.',
+                )->withHelp(
+                    $containsDefault
+                        ? "Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`, or `'default'` for a WordPress core string."
+                        : "Pass your plugin or theme text domain as the last argument, e.g. `'my-plugin'`.",
+                ),
+                $containsDefault
+                    ? [self::SNIFF . '.MissingArgDomainDefault']
+                    : [self::SNIFF . '.MissingArgDomain', self::SNIFF . '.MissingArgDomainDefault'],
             );
 
             return;
@@ -319,22 +309,24 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        if ($allowed === [] || in_array($domain, $allowed, strict: true)) {
-            if ($isDefaultOnly && $domain === 'default') {
-                $this->report->issue(
-                    $context,
-                    Issue::new(
-                        'Superfluous `default` text domain in translation function call',
-                        $argument->span,
-                        sprintf(
-                            'No need to supply the text domain in a call to `%s()` when `default` is the only accepted text domain',
-                            $name,
-                        ),
-                    )->withHelp('Remove the text domain argument.'),
-                    [self::SNIFF . '.SuperfluousDefaultTextDomain'],
-                );
-            }
+        if ($isDefaultOnly && $domain === 'default') {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Superfluous `default` text domain in translation function call',
+                    $argument->span,
+                    sprintf(
+                        'No need to supply the text domain in a call to `%s()` when `default` is the only accepted text domain',
+                        $name,
+                    ),
+                )->withHelp('Remove the text domain argument.'),
+                [self::SNIFF . '.SuperfluousDefaultTextDomain'],
+            );
 
+            return;
+        }
+
+        if ($allowed === [] || in_array($domain, $allowed, strict: true)) {
             return;
         }
 
