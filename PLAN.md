@@ -256,12 +256,15 @@ the README. Port only if a team asks; WordPress core is the main consumer of `Wo
 
 ## Sprint H: maintenance
 
-- **Commit the `Lists.php` generator** (`bin/generate-lists.php` reading `~/Projects/wpcs-src`)
-  before the first WPCS bump. It is still uncommitted; PLAN has said so since 1.0.
-- **WPCS version tracking**: a CI job that diffs `Lists.php` against the pinned WPCS tag and
-  fails when WPCS tags a new release. Pin `WPCS_VERSION` in one place.
-- **Mago version tracking**: `lowest-mago` CI job exists; add `latest-mago` so a schema change
-  (rule rename, option rename) surfaces before users hit it.
+- **`Lists.php` generator**: done (2026-09-30), `bin/generate-lists.php <wpcs-dir> [--check]`
+  regenerates `Lists.php` and `CoreClasses.php` from the WPCS source (tokenizer, no phpcs
+  needed). The original script was never committed and was lost; the rewrite reproduces the
+  committed files byte-for-byte except `post_id`, which WPCS lists beside `post_ID` and the
+  old script had deduped away (phpcs flags `$post_id` overrides, so this is a parity fix).
+- **WPCS version tracking**: done, `wpcs-lists` CI job clones the `WPCS_VERSION` tag (pinned in
+  `bin/generate-lists.php`), runs `--check`, and fails when WPCS tags a newer release.
+- **Mago version tracking**: done, `latest-mago` CI job (beside `lowest-mago`) runs `just check`
+  after `composer update carthage-software/mago`.
 - **Bake-off automation**: done, `bench/bakeoff.sh` (2026-09-29); `--report` regenerates the
   markdown from saved outputs.
 - **`phpcs.xml` config name**: `PhpcsRuleset` now reads WPCS 3's `minimum_wp_version` as well as

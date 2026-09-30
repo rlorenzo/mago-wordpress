@@ -35,7 +35,7 @@ namespace {
     $is_IE = false;
 
     // lowercased_mixed_case_global_is_not_flagged
-    $post_id = 123;
+    $is_ie = true;
 
     // override_allowed_globals_are_not_flagged
     $content_width = 800;
