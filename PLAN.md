@@ -165,21 +165,22 @@ a message-code ref re-includes its whole sniff when the standard leaves it out (
 
 ## Sprint D: `phpcbf` parity
 
-WPCS fixes five things; the extension fixes one:
+**Done (2026-09-30).** Every fix WPCS makes outside its formatting sniffs is now a Mago edit,
+byte-identical to WPCS's `.inc.fixed` files (CapitalPDangit .1/.2, CurrentTimeTimestamp, I18n .1
+minus its deliberate parse error); `tests/Unit/RuleFixesTest.php` runs `mago lint --fix` on each.
 
-| WPCS fixable | Extension |
-|:---|:---|
-| `PHP.TypeCasts` (`(double)`→`(float)`) | fixed |
-| `WP.CapitalPDangit` (`Wordpress`→`WordPress`) | report only |
-| `DateTime.CurrentTimeTimestamp` (`current_time('timestamp')`→`time()`) | report only |
-| `WP.I18n.MissingSingularPlaceholder` / `TranslatorsCommentWrongStyle` | report only |
-| `Utils.I18nTextDomainFixer` | out of scope (migration tool) |
+| WPCS fixable | Extension | Safety |
+|:---|:---|:---|
+| `PHP.TypeCasts.DoubleRealFound` | fixed (before) | Safe |
+| `WP.CapitalPDangit.MisspelledInComment` | fixed | Safe |
+| `WP.CapitalPDangit.MisspelledInText` | fixed | PotentiallyUnsafe (changes output) |
+| `DateTime.CurrentTimeTimestamp.RequestedUTC` (no comment in the call) | fixed | Safe |
+| `WP.I18n.SuperfluousDefaultTextDomain` (no comment in the removed range) | fixed | Safe |
+| `WP.I18n.UnorderedPlaceholders*` (plain string literal) | fixed | PotentiallyUnsafe (changes the msgid) |
+| `Utils.I18nTextDomainFixer` | out of scope (not in the `WordPress` ruleset) | |
 
-**D.1 Add `withEdit()`** to `capital-p-dangit` (string and comment spans, `Safety::Safe`),
-`wp-date-time` (the timestamp form, `Safety::Safe`; the `'U'` form maps to `time()` too),
-`wp-i18n` translators-comment style (`Safety::Unsafe`, comment rewrite). Corpus fixtures assert
-the edit text via `mago lint --fix` on a copy, or by a `@mago-expect` plus a PHPUnit test of the
-issue's edits if the corpus runner cannot see edits.
+The earlier plan listed `MissingSingularPlaceholder` and `TranslatorsCommentWrongStyle`; WPCS
+fixes neither. The other fixable WPCS sniffs are formatting (`WhiteSpace.*`, `Arrays.*`): Sprint B.
 
 ## Sprint E: parity inside ported rules
 

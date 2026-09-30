@@ -8,15 +8,18 @@ use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function preg_match;
+use function str_starts_with;
 use function trim;
 
 /**
@@ -115,15 +118,20 @@ final class WpDateTimeRule extends CallRule
         $gmt = $this->argument($context, $call, 1, 'gmt');
         $gmtValue = $gmt === null ? null : trim($context->file->getText($gmt));
         if ($gmtValue === 'true' || $gmtValue === '1') {
-            $this->report->issue(
-                $context,
-                Issue::new(
-                    '`current_time()` should not be used to retrieve a Unix (UTC) timestamp.',
-                    $context->node->span,
-                    'Use `time()` instead',
-                )->withHelp('Replace this call with `time()`.'),
-                ['WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC'],
-            );
+            $issue = Issue::new(
+                '`current_time()` should not be used to retrieve a Unix (UTC) timestamp.',
+                $context->node->span,
+                'Use `time()` instead',
+            )->withHelp('Replace this call with `time()`.');
+
+            // Fixable, as in the sniff, unless the call holds a comment the fix would drop.
+            $span = $context->node->span;
+            if (!Calls::hasComment($context->file, $span)) {
+                $leadingSlash = str_starts_with($context->file->getText($context->node), '\\') ? '\\' : '';
+                $issue = $issue->withEdit(TextEdit::replace($span, $leadingSlash . 'time()'));
+            }
+
+            $this->report->issue($context, $issue, ['WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC']);
 
             return;
         }

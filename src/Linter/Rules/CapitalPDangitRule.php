@@ -9,6 +9,8 @@ use Mago\Sdk\Linter\Rule;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Reporting\Safety;
+use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
@@ -223,19 +225,30 @@ final class CapitalPDangitRule implements Rule
                 continue;
             }
 
+            // Fixable, as in the sniff: each misspelling becomes `WordPress`. In a string or inline HTML
+            // that changes runtime output, so only the comment fix is safe.
+            $safety = $code === 'MisspelledInComment' ? Safety::Safe : Safety::PotentiallyUnsafe;
+            $edits = [];
+            foreach ($misspelled as $wordOffset => $word) {
+                $wordSpan = new Span($start + $wordOffset, $start + $wordOffset + strlen($word));
+                $edits[] = TextEdit::replace($wordSpan, self::CORRECT_SPELLING)->withSafety($safety);
+            }
+
             $this->report(
                 $context,
                 new Span($start, $start + strlen(rtrim($line, characters: "\r"))),
                 $misspelled,
                 $code,
+                $edits,
             );
         }
     }
 
     /**
-     * The misspelled matches in one line, after the sniff's false-positive filters.
+     * The misspelled matches in one line, after the sniff's false-positive filters, keyed by
+     * their byte offset in the line.
      *
-     * @return list<string>
+     * @return array<int, string>
      */
     private static function misspellings(string $content): array
     {
@@ -262,7 +275,7 @@ final class CapitalPDangitRule implements Rule
             $offset = $end;
 
             if (!$falsePositive && $word !== self::CORRECT_SPELLING) {
-                $found[] = $word;
+                $found[$end - strlen($word)] = $word;
             }
         }
 
@@ -293,17 +306,19 @@ final class CapitalPDangitRule implements Rule
     }
 
     /**
-     * @param list<string> $misspelled
+     * @param array<string> $misspelled
+     * @param list<TextEdit> $edits
      */
-    private function report(LintContext $context, Span $span, array $misspelled, string $code): void
+    private function report(LintContext $context, Span $span, array $misspelled, string $code, array $edits = []): void
     {
         $found = implode('`, `', $misspelled);
-        $this->report->issue(
-            $context,
-            Issue::new('Misspelled `WordPress`', $span, "`{$found}` should be `WordPress`")->withNote(
-                'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',
-            )->withHelp('Replace the misspelling with `WordPress`.'),
-            [self::SNIFF . '.' . $code],
-        );
+        $issue = Issue::new('Misspelled `WordPress`', $span, "`{$found}` should be `WordPress`")->withNote(
+            'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',
+        )->withHelp('Replace the misspelling with `WordPress`.');
+        foreach ($edits as $edit) {
+            $issue = $issue->withEdit($edit);
+        }
+
+        $this->report->issue($context, $issue, [self::SNIFF . '.' . $code]);
     }
 }
