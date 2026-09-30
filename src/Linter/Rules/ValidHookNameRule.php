@@ -10,7 +10,9 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallExpression;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
+use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
@@ -23,9 +25,12 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function implode;
+use function in_array;
 use function preg_match;
 use function preg_match_all;
 use function preg_quote;
+use function str_starts_with;
+use function strtolower;
 
 /**
  * Ports `WordPress.NamingConventions.ValidHookName`.
@@ -39,6 +44,17 @@ final class ValidHookNameRule extends CallRule
     private const SNIFF = 'WordPress.NamingConventions.ValidHookName';
 
     private const SKIPPED = ['do_action_deprecated', 'apply_filters_deprecated'];
+
+    /**
+     * Wrapper and operator nodes whose string operands are part of the hook name.
+     */
+    private const TRAVERSED = [
+        NodeKind::Expression,
+        NodeKind::Literal,
+        NodeKind::Binary,
+        NodeKind::Parenthesized,
+        NodeKind::Conditional,
+    ];
 
     /**
      * Matches one byte that is not a valid hook-name character.
@@ -72,36 +88,63 @@ final class ValidHookNameRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        // WPCS cannot resolve `namespace\` relative calls, so it never reports them.
+        if (str_starts_with(strtolower($context->file->getText($call->callee)), 'namespace\\')) {
+            return;
+        }
+
         $position = Lists::HOOK_NAME_ARGUMENT_POSITION[$name] - 1;
         $value = $this->argument($context, $call, $position, 'hook_name');
         if ($value === null) {
             return;
         }
 
-        $text = Values::literalString($context->file, $value);
-        if ($text !== null) {
-            $this->validate($context, $text, $value->span);
-
-            return;
-        }
-
-        if ($value->kind !== NodeKind::CompositeString) {
-            return;
-        }
-
-        // Dynamic parts (variables, `{$expr}`) are skipped, matching the Rust rule.
-        foreach (Strings::compositeParts($context->file, $value) as $part => $partText) {
-            if ($partText === null) {
-                continue;
-            }
-
-            $this->validate($context, $partText, $part->span);
-        }
+        $this->validate($context, implode('', $this->literalParts($context->file, $value)), $value->span);
     }
 
     /**
-     * Reports uppercase letters and non-underscore word separators in one
-     * decoded hook-name fragment. Non-ASCII bytes (e.g. UTF-8 letters) are
+     * Collects the literal text of a hook-name expression, like WPCS: string
+     * literals inside concatenations, parentheses and ternaries count, while
+     * variables, array keys and call arguments are skipped. Dynamic parts of
+     * interpolated strings are skipped too.
+     *
+     * @return list<string>
+     */
+    private function literalParts(SourceFile $file, Node $node): array
+    {
+        $text = Values::literalString($file, $node);
+        if ($text !== null) {
+            return [$text];
+        }
+
+        if ($node->kind === NodeKind::CompositeString) {
+            $parts = [];
+            foreach (Strings::compositeParts($file, $node) as $partText) {
+                if ($partText === null) {
+                    continue;
+                }
+
+                $parts[] = $partText;
+            }
+
+            return $parts;
+        }
+
+        if (!in_array($node->kind, self::TRAVERSED, strict: true)) {
+            return [];
+        }
+
+        $parts = [];
+        foreach ($file->getChildren($node) as $child) {
+            $parts = [...$parts, ...$this->literalParts($file, $child)];
+        }
+
+        return $parts;
+    }
+
+    /**
+     * Reports uppercase letters and non-underscore word separators in the
+     * decoded literal hook-name fragments, once per problem, as WPCS does. Non-ASCII bytes (e.g. UTF-8 letters) are
      * not treated as delimiters.
      */
     private function validate(LintContext $context, string $name, Span $span): void
