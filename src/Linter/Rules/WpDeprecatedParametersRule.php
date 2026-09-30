@@ -81,10 +81,6 @@ final class WpDeprecatedParametersRule extends CallRule
         int $position,
         array $parameter,
     ): void {
-        if (!WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $parameter['version'])) {
-            return;
-        }
-
         $argument = $this->argument($context, $call, $position - 1, $parameter['name']);
         if ($argument === null || self::valueMatchesDefault($context->file, $argument, $parameter['value'])) {
             return;
@@ -98,17 +94,19 @@ final class WpDeprecatedParametersRule extends CallRule
 
         $paramName = self::namesLabel($parameter['name']);
 
-        $this->report->issue(
-            $context,
-            Issue::new(
-                "The \"{$paramName}\" parameter (position #{$position}) of `{$name}()` has been deprecated "
-                . "since WordPress {$parameter['version']}.",
-                $argument->span,
-            )->withNote(
-                'Deprecated parameters are ignored; passing anything but their default has no effect.',
-            )->withHelp($help),
-            [self::SNIFF . '.' . ucfirst($name) . "Param{$position}Found"],
+        $issue = Issue::new(
+            "The \"{$paramName}\" parameter (position #{$position}) of `{$name}()` has been deprecated "
+            . "since WordPress {$parameter['version']}.",
+            $argument->span,
+        )->withNote('Deprecated parameters are ignored; passing anything but their default has no effect.')->withHelp(
+            $help,
         );
+        $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $parameter['version']);
+        if ($pending !== null) {
+            $issue = $issue->withNote($pending);
+        }
+
+        $this->report->issue($context, $issue, [self::SNIFF . '.' . ucfirst($name) . "Param{$position}Found"]);
     }
 
     /**

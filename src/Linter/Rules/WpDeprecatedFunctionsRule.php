@@ -21,8 +21,9 @@ use function array_keys;
 /**
  * Ports `WordPress.WP.DeprecatedFunctions`.
  *
- * The `minimum-wp-version` setting restricts reports to functions that were
- * already deprecated in the project's oldest supported WordPress version.
+ * Every deprecated function is reported, as in WPCS; a deprecation newer than
+ * the `minimum-wp-version` setting carries a note saying so (WPCS lowers it to
+ * a warning, which a Mago issue cannot do per report).
  */
 final class WpDeprecatedFunctionsRule extends CallRule
 {
@@ -53,21 +54,20 @@ final class WpDeprecatedFunctionsRule extends CallRule
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
         $entry = Lists::DEPRECATED_FUNCTIONS[$name];
-        if (!WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $entry['version'])) {
-            return;
-        }
+        $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $entry['version']);
 
         $help = $entry['alt'] === ''
             ? 'There is no direct replacement; remove the call or implement the behavior manually.'
             : "Use `{$entry['alt']}` instead.";
 
-        $this->report->issue(
-            $context,
-            Issue::new(
-                "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
-                $context->node->span,
-            )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help),
-            [self::SNIFF . ".{$name}Found"],
-        );
+        $issue = Issue::new(
+            "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
+            $context->node->span,
+        )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help);
+        if ($pending !== null) {
+            $issue = $issue->withNote($pending);
+        }
+
+        $this->report->issue($context, $issue, [self::SNIFF . ".{$name}Found"]);
     }
 }

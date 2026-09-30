@@ -25,4 +25,19 @@ final class WpVersion
     {
         return $minimum === null || version_compare($minimum, $version, operator: '>=');
     }
+
+    /**
+     * A note for a deprecation the project's minimum WordPress version has not
+     * reached, or NULL once it has. WPCS reports such a usage as a warning
+     * instead of an error; the rules here report it with this note, since a
+     * Mago issue carries the rule's level.
+     */
+    public static function pendingNote(?string $minimum, string $version): ?string
+    {
+        if (self::reached($minimum, $version)) {
+            return null;
+        }
+
+        return "Deprecated after the configured minimum-wp-version ({$minimum}); WPCS reports this as a warning until the minimum reaches {$version}.";
+    }
 }

@@ -43,9 +43,10 @@ namespace {
     // @mago-expect lint:wordpress/wp-deprecated-functions
     $page = get_page_by_title('About');
 
-    // deprecated_after_default_minimum_wp_version_is_not_flagged
-    // seems_utf8() has been deprecated since WordPress 6.9, which the default
-    // minimum-wp-version (6.7) has not reached yet.
+    // deprecated_after_default_minimum_wp_version_is_still_flagged
+    // seems_utf8() has been deprecated since WordPress 6.9, after the default
+    // minimum-wp-version (6.7): reported with a note, as WPCS reports it as a warning.
+    // @mago-expect lint:wordpress/wp-deprecated-functions
     $utf8 = seems_utf8($value);
 }
 

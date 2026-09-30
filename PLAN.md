@@ -26,10 +26,14 @@ The target is the out-of-the-box `WordPress` ruleset (Core + Docs + Extra) on co
 - **WP deprecation lists are not trimmed.** A function deprecated in WP 2.8 is still a bug in
   WP 6.7 code and WPCS reports it (as an error once the minimum reaches it); the lists are gated
   data, not rules, and cost nothing to keep.
-- **Parity gap to fix (Sprint E):** WPCS reports every deprecated usage, as an error when the
-  minimum WP version has reached the deprecation and a warning otherwise. The extension reports
-  only the reached ones. Mago issues carry no per-issue level, so either add a `-pending` rule
-  code at `Warning` for the not-yet-reached case, or accept the gap and document it.
+- **Deprecations are reported regardless of `minimum-wp-version`** (fixed 2026-09-30). WPCS
+  reports every deprecated usage, as an error once the minimum reaches the deprecation and a
+  warning before. Mago issues carry no per-issue level, so a not-yet-reached deprecation is
+  reported at the rule's level with a note saying WPCS would lower it to a warning.
+- **`namespace\foo()` relative calls are never matched** (fixed 2026-09-30, in `Calls`). Mago
+  resolves them; WPCS cannot and documents it as a limitation to lift. Strict parity wins until
+  WPCS lifts it, at which point removing the one check in `Calls::matchWanted` restores Mago's
+  behaviour.
 
 A team can drop phpcs + WPCS when all of these hold:
 

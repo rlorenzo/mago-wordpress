@@ -26,7 +26,6 @@ use function ltrim;
 use function preg_match;
 use function str_ends_with;
 use function str_replace;
-use function str_starts_with;
 use function strtolower;
 use function substr;
 use function trim;
@@ -81,11 +80,6 @@ final class EnqueuedResourceParametersRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        // WPCS cannot resolve `namespace\` relative calls, so it never reports them.
-        if (str_starts_with(strtolower($context->file->getText($call->callee)), 'namespace\\')) {
-            return;
-        }
-
         $isScript = str_ends_with($name, '_script');
 
         $slots = $this->collectSlots($call, $isScript);

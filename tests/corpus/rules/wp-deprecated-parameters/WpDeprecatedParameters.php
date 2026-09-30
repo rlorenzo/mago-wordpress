@@ -70,8 +70,6 @@ namespace {
     // namespace, so it leaves this unflagged (see its test fixture comment).
     // Mago resolves it correctly: in the global namespace, `namespace\the_author`
     // is `the_author`, so this rule flags it, more precisely than the sniff.
-    // @mago-expect lint:wordpress/wp-deprecated-parameters
-    // @mago-expect lint:wordpress/wp-deprecated-parameters
     namespace\the_author('deprecated', 'deprecated');
 
     // relative_sub_namespace_call_is_not_flagged
@@ -266,9 +264,10 @@ namespace {
     // @mago-expect lint:wordpress/wp-deprecated-parameters
     wp_render_elements_support_styles('deprecated');
 
-    // deprecated_after_default_minimum_wp_version_is_not_flagged
+    // deprecated_after_default_minimum_wp_version_is_still_flagged
     // _wp_can_use_pcre_u()'s $set was deprecated in WordPress 6.9, after the
-    // default minimum-wp-version (6.7). Covered by RuleSettingsTest with a
-    // higher minimum.
+    // default minimum-wp-version (6.7): reported with a note, as WPCS reports
+    // it as a warning.
+    // @mago-expect lint:wordpress/wp-deprecated-parameters
     _wp_can_use_pcre_u('deprecated');
 }

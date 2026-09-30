@@ -27,8 +27,8 @@ use function strtolower;
  *
  * Flags an instantiation, a static method call, a class constant access, an
  * `extends` clause, and an `instanceof` check that reference a deprecated
- * WordPress core class. The `minimum-wp-version` setting restricts reports
- * to classes already deprecated in the project's oldest supported version.
+ * WordPress core class. Every deprecated class is reported, as in WPCS; a
+ * deprecation newer than `minimum-wp-version` carries a note saying so.
  */
 final class WpDeprecatedClassesRule implements Rule
 {
@@ -115,17 +115,20 @@ final class WpDeprecatedClassesRule implements Rule
         }
 
         $since = Lists::DEPRECATED_CLASSES[strtolower($normalized)] ?? null;
-        if ($since === null || !WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $since)) {
+        if ($since === null) {
             return;
         }
 
         $name = $file->getText($identifier);
-        $this->report->issue(
-            $context,
-            Issue::new("Class `{$name}` has been deprecated since WordPress {$since}.", $identifier->span)->withNote(
-                'Deprecated classes may be removed in a future WordPress release.',
-            ),
-            [self::SNIFF . '.' . strtolower($normalized) . 'Found'],
-        );
+        $issue = Issue::new(
+            "Class `{$name}` has been deprecated since WordPress {$since}.",
+            $identifier->span,
+        )->withNote('Deprecated classes may be removed in a future WordPress release.');
+        $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $since);
+        if ($pending !== null) {
+            $issue = $issue->withNote($pending);
+        }
+
+        $this->report->issue($context, $issue, [self::SNIFF . '.' . strtolower($normalized) . 'Found']);
     }
 }

@@ -14,6 +14,7 @@ use function chr;
 use function count;
 use function in_array;
 use function str_starts_with;
+use function stripos;
 use function strspn;
 use function strtolower;
 use function substr;
@@ -145,7 +146,14 @@ final class Calls
         $id = $node->id;
         if (!array_key_exists($id, $names)) {
             $name = null;
-            if ($node->kind === NodeKind::FunctionCall) {
+            $written = self::writtenNameFast($file, $node);
+            if ($written !== null && stripos($written, needle: 'namespace\\') === 0) {
+                // A `namespace\foo()` relative call is the global function only in the
+                // global namespace. WPCS cannot resolve relative names and never reports
+                // them, so the rules match that (WPCS documents this as a limitation it
+                // means to lift).
+                $written = null;
+            } elseif ($node->kind === NodeKind::FunctionCall) {
                 $imported = $file->getResolvedName($node);
                 if ($imported !== null && $imported->imported) {
                     $name = $imported->name;
@@ -153,7 +161,7 @@ final class Calls
                 }
             }
 
-            $names[$id] = $name ?? self::writtenNameFast($file, $node);
+            $names[$id] = $name ?? $written;
         }
 
         $name = $names[$id];

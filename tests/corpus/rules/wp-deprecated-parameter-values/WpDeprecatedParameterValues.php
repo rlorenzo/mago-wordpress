@@ -148,7 +148,6 @@ namespace {
     // namespace, so it leaves this unflagged (see its test fixture comment).
     // Mago resolves it correctly: in the global namespace, `namespace\get_option`
     // is `get_option`, so this rule flags it, more precisely than the sniff.
-    // @mago-expect lint:wordpress/wp-deprecated-parameter-values
     namespace\get_option('blacklist_keys');
 
     // relative_sub_namespace_call_is_not_flagged

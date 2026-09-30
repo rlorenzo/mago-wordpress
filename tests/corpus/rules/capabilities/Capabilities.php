@@ -112,6 +112,5 @@ $obj->current_user_can('foo_bar_baz');
 My\NamespaceS\current_user_can('administrator');
 \MyNamespace\add_comments_page('page_title', 'menu_title', 'administrator', 'menu_slug', 'function');
 // In the global namespace this is the core function, which WPCS cannot resolve yet.
-// @mago-expect lint:wordpress/capabilities
 namespace\author_can($post, 'administrator');
 namespace\Sub\add_posts_page('page_title', 'menu_title', 'administrator', 'menu_slug', 'function');

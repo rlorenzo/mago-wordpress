@@ -92,10 +92,7 @@ final class WpDeprecatedParameterValuesRule extends CallRule
         }
 
         $deprecation = $parameter['values'][$value] ?? null;
-        if (
-            $deprecation === null
-            || !WpVersion::reached($this->settings->normalizedMinimumWpVersion(), $deprecation['version'])
-        ) {
+        if ($deprecation === null) {
             return;
         }
 
@@ -107,6 +104,11 @@ final class WpDeprecatedParameterValuesRule extends CallRule
 
         if ($deprecation['alt'] !== '') {
             $issue = $issue->withHelp("Use {$deprecation['alt']} instead.");
+        }
+
+        $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $deprecation['version']);
+        if ($pending !== null) {
+            $issue = $issue->withNote($pending);
         }
 
         $this->report->issue($context, $issue, [self::SNIFF . '.Found']);
