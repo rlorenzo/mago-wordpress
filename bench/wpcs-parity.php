@@ -10,9 +10,9 @@
  * workspace (keeping its name, so file-name checks see the original), the `phpcs:set`
  * directives and test-class CLI overrides that map to this package's settings are written to
  * the workspace's composer.json, and `mago lint --only <rules>` runs on it once per settings
- * state the file passes through; each line is judged by the state active at that line. A line WPCS expects
- * a report on that Mago reports on is a match; expected lines with no report are misses; reported
- * lines WPCS does not expect are extras. Error/warning levels are not compared: they differ by
+ * state the file passes through; each line is judged by the state active at that line. An expected
+ * line that some Mago report's primary span covers is a match; expected lines no span covers are
+ * misses; reports whose span covers no expected line are extras. Error/warning levels are not compared: they differ by
  * design.
  *
  * Prints a markdown table (paste into bench/results/wpcs-parity.md); --verbose lists every
@@ -121,6 +121,9 @@ namespace {
 
     const CORE_DISABLED = ['nonce-verification', 'validated-sanitized-input', 'prepared-sql'];
 
+    /** Test files that depend on groups the test class injects into the sniff; no setting reproduces them. */
+    const SKIP_FILES = ['RestrictedClassesUnitTest.2.inc', 'RestrictedClassesUnitTest.3.inc'];
+
     (static function (array $argv): void {
         $wpcs = null;
         $only = null;
@@ -171,6 +174,11 @@ namespace {
             $notes = [];
             foreach ($files as $path) {
                 $base = basename($path);
+                if (in_array($base, SKIP_FILES, true)) {
+                    $notes[] = "$base skipped: test-only sniff groups";
+                    continue;
+                }
+
                 $expected = expectedLines($test, $base);
                 $regions = settingsRegions($path, $sniff);
                 if (count($regions) > 1) {
@@ -179,24 +187,51 @@ namespace {
 
                 // One lint per distinct settings state; each line is judged by the state active there.
                 $runs = [];
-                $reported = [];
+                $spans = [];
                 $starts = array_keys($regions);
                 foreach ($starts as $position => $start) {
                     $settings = [...$regions[$start], ...(CLI_OVERRIDES[$base] ?? [])];
                     $state = json_encode($settings);
-                    $runs[$state] ??= lintLines($mago, $here, $work, $path, $rules, $settings);
+                    $runs[$state] ??= lintSpans($mago, $here, $work, $path, $rules, $settings);
                     $end = $starts[$position + 1] ?? PHP_INT_MAX;
-                    foreach ($runs[$state] as $line => $_) {
-                        if ($line >= $start && $line < $end) {
-                            $reported[$line] = true;
+                    foreach ($runs[$state] as [$from, $to]) {
+                        if ($from >= $start && $from < $end) {
+                            $spans[] = [$from, $to];
                         }
                     }
                 }
 
-                ksort($reported);
-                $matched = array_intersect_key($expected, $reported);
-                $missed = array_diff_key($expected, $reported);
-                $extra = array_diff_key($reported, $expected);
+                // WPCS anchors a report on the offending line inside a multi-line string or
+                // comment; Mago anchors the node. An expected line anywhere inside a reported
+                // span counts as matched, and a span that covers no expected line is an extra.
+                $covers = static fn(array $span, int $line): bool => $line >= $span[0] && $line <= $span[1];
+                $matched = [];
+                foreach ($expected as $line => $_) {
+                    foreach ($spans as $span) {
+                        if ($covers($span, $line)) {
+                            $matched[$line] = true;
+                            break;
+                        }
+                    }
+                }
+
+                $missed = array_diff_key($expected, $matched);
+                $extra = [];
+                foreach ($spans as $span) {
+                    $hit = false;
+                    foreach ($expected as $line => $_) {
+                        if ($covers($span, $line)) {
+                            $hit = true;
+                            break;
+                        }
+                    }
+
+                    if (!$hit) {
+                        $extra[$span[0]] = true;
+                    }
+                }
+
+                ksort($extra);
 
                 $sum['files']++;
                 $sum['expected'] += count($expected);
@@ -310,13 +345,14 @@ namespace {
     }
 
     /**
-     * Lines Mago reports on when linting the file with the given rules in a scratch workspace.
+     * Primary spans (first to last line) Mago reports when linting the file with the given
+     * rules in a scratch workspace.
      *
      * @param list<string> $rules
      * @param array<string, mixed> $settings
-     * @return array<int, true>
+     * @return list<array{int, int}>
      */
-    function lintLines(string $mago, string $here, string $work, string $path, array $rules, array $settings): array
+    function lintSpans(string $mago, string $here, string $work, string $path, array $rules, array $settings): array
     {
         array_map('unlink', glob("$work/src/*") ?: []);
         copy($path, "$work/src/" . basename($path));
@@ -356,19 +392,17 @@ namespace {
             return [];
         }
 
-        $lines = [];
+        $spans = [];
         foreach ($report['issues'] ?? [] as $issue) {
             foreach ($issue['annotations'] ?? [] as $annotation) {
                 if (($annotation['kind'] ?? '') === 'Primary') {
                     // Mago's JSON report counts lines from 0.
-                    $lines[(int) $annotation['span']['start']['line'] + 1] = true;
+                    $spans[] = [(int) $annotation['span']['start']['line'] + 1, (int) $annotation['span']['end']['line'] + 1];
                     break;
                 }
             }
         }
 
-        ksort($lines);
-
-        return $lines;
+        return $spans;
     }
 }
