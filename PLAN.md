@@ -93,11 +93,9 @@ at all, and they are the ones with the weakest parity:
 Set a deadline (two weeks from the issue date); if no answer, take the first path. Ports are
 the higher-value outcome regardless, because they also restore message codes and phpcs comments.
 
-**A.2 Verify core-rule parity** on WPCS's own test cases: run
-`~/Projects/wpcs-src/Tests/Security/EscapeOutputUnitTest.inc`, `NonceVerificationUnitTest.inc`,
-`ValidatedSanitizedInputUnitTest.inc`, `DB/PreparedSQLUnitTest.inc` through Mago and record
-per-line agreement in `bench/results/core-rule-parity.md`. This tells us what a port must fix
-and gives the README a number instead of "covers".
+**A.2 Verify core-rule parity — done** via `bench/wpcs-parity.php` (table under E.1): the four
+security-critical core rules sit at 34–58% line recall on WPCS's own tests, with dozens of
+extras. That is the case for porting them, whatever upstream decides.
 
 ## Sprint B: formatter preset
 
@@ -209,10 +207,27 @@ gets a WPCS `.inc` case added to the corpus.
   Any future rule whose sniff is not in `WordPress` ships disabled too.
 - `wordpress/file-name`: WPCS properties `strict_class_file_names` (default true) and `is_theme` are not read.
 
-**E.1 WPCS `.inc` sweep**: for every ported rule, run its WPCS `Tests/<Cat>/<Sniff>UnitTest.inc`
-through the extension and diff the flagged lines against `UnitTest.php`'s `getErrorList()` /
-`getWarningList()`. Commit the harness under `tests/wpcs-parity/` and the results table in
-`bench/results/wpcs-parity.md`. This is the one number that says "replacement".
+**E.1 WPCS `.inc` sweep — done (2026-09-30).** `bench/wpcs-parity.php` runs every WPCS sniff's
+own test files through the mapped rule; results in `bench/results/wpcs-parity.md`. Suite recall
+went 76% → 89% over four waves of rule fixes (PRs #2 and #3). Every extension rule with a WPCS
+test is at 100% except the accepted cases: test-only sniff groups (`RestrictedClasses` .1/.2/.3,
+`RestrictedFunctions` line 94), `phpcs:set exclude[]` / `custom_test_classes` /
+`treat_files_as_scoped` (no setting; candidates for Sprint C), WPCS's deliberate parse-error
+files, and severity-3 "undetermined" warnings phpcs hides at its default severity
+(`Capabilities`, `ValidPostTypeSlug`). What remains short is Mago's core rules, which is Sprint
+A's evidence:
+
+| Core rule | WPCS sniff | Recall |
+|:---|:---|---:|
+| `validated-sanitized-input` | `Security.ValidatedSanitizedInput` | 34% |
+| `use-wp-functions` | `WP.AlternativeFunctions` | 32% (no `minimum_wp_version` gating) |
+| `no-unescaped-output` | `Security.EscapeOutput` | 57% (75 missed, 65 extra) |
+| `nonce-verification` | `Security.NonceVerification` | 58% |
+| `require-preg-quote-delimiter` | `PHP.PregQuoteDelimiter` | 80% |
+| `prepared-sql` | `DB.PreparedSQL` | 85% |
+| `no-direct-db-query` | `DB.DirectDatabaseQuery` | 97% |
+
+Re-run after every rule change; a row that drops is a regression.
 
 ## Sprint F: generic sniffs that `WordPress-Extra` pulls in
 
