@@ -69,3 +69,18 @@ urlencode($value);
 // development_group_is_flagged
 // @mago-expect lint:wordpress/discouraged-wp-functions
 var_dump($value);
+
+// use_function_import_is_flagged
+// @mago-expect lint:wordpress/discouraged-wp-functions
+use function wp_reset_query;
+
+// aliased_use_function_import_is_flagged
+// @mago-expect lint:wordpress/discouraged-wp-functions
+use function wp_reset_query as myFunction;
+
+// alias_named_like_a_discouraged_function_is_not_flagged
+use function someOtherFunction as wp_reset_query;
+
+// first_class_callable_is_flagged
+// @mago-expect lint:wordpress/discouraged-wp-functions
+call_user_func(query_posts(...), $param);

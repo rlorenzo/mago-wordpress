@@ -9,6 +9,7 @@ use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
@@ -42,7 +43,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
             description: 'Reports calls to WordPress core functions that have been deprecated. A deprecated function may be removed in a future release and often has a modern replacement.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
-            targets: [NodeKind::FunctionCall],
+            targets: [NodeKind::FunctionCall, NodeKind::FunctionPartialApplication, NodeKind::TypedUseItemSequence],
         );
     }
 
@@ -53,6 +54,11 @@ final class WpDeprecatedFunctionsRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        $this->inspectReference($context, $context->node, $name);
+    }
+
+    protected function inspectReference(LintContext $context, Node $reference, string $name): void
+    {
         $entry = Lists::DEPRECATED_FUNCTIONS[$name];
         $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $entry['version']);
 
@@ -62,7 +68,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
 
         $issue = Issue::new(
             "`{$name}()` has been deprecated since WordPress {$entry['version']}.",
-            $context->node->span,
+            $reference->span,
         )->withNote('Deprecated WordPress functions may be removed in a future release.')->withHelp($help);
         if ($pending !== null) {
             $issue = $issue->withNote($pending);

@@ -25,10 +25,12 @@ use function strtolower;
 /**
  * Ports `WordPress.WP.DeprecatedClasses`.
  *
- * Flags an instantiation, a static method call, a class constant access, an
- * `extends` clause, and an `instanceof` check that reference a deprecated
- * WordPress core class. Every deprecated class is reported, as in WPCS; a
- * deprecation newer than `minimum-wp-version` carries a note saying so.
+ * Flags an instantiation, a static method call, a static property access, a
+ * class constant access, and an `extends` or `implements` clause that
+ * reference a deprecated WordPress core class. An `instanceof` check is not
+ * reported, as WPCS does not check it. Every deprecated class is reported, as
+ * in WPCS; a deprecation newer than `minimum-wp-version` carries a note
+ * saying so.
  */
 final class WpDeprecatedClassesRule implements Rule
 {
@@ -46,15 +48,16 @@ final class WpDeprecatedClassesRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/wp-deprecated-classes',
             name: 'WordPress deprecated classes',
-            description: 'Reports instantiations, static calls, class constant accesses, extends clauses, and instanceof checks that reference a deprecated WordPress core class.',
+            description: 'Reports instantiations, static calls, static property accesses, class constant accesses, and extends and implements clauses that reference a deprecated WordPress core class.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [
                 NodeKind::Instantiation,
                 NodeKind::StaticMethodCall,
+                NodeKind::StaticPropertyAccess,
                 NodeKind::ClassConstantAccess,
                 NodeKind::Extends,
-                NodeKind::Binary,
+                NodeKind::Implements,
             ],
         );
     }
@@ -81,28 +84,13 @@ final class WpDeprecatedClassesRule implements Rule
     {
         return match ($node->kind) {
             NodeKind::Instantiation => ClassReferences::identifier($file, $file->getChildren($node)[1] ?? null),
-            NodeKind::StaticMethodCall, NodeKind::ClassConstantAccess => ClassReferences::identifier(
-                $file,
-                $file->getChildren($node)[0] ?? null,
-            ),
-            NodeKind::Extends => ClassReferences::heritage($file, $node),
-            NodeKind::Binary => self::instanceofRhs($file, $node),
+            NodeKind::StaticMethodCall,
+            NodeKind::StaticPropertyAccess,
+            NodeKind::ClassConstantAccess,
+                => ClassReferences::identifier($file, $file->getChildren($node)[0] ?? null),
+            NodeKind::Extends, NodeKind::Implements => ClassReferences::heritage($file, $node),
             default => [],
         };
-    }
-
-    /**
-     * @return list<Node>
-     */
-    private static function instanceofRhs(SourceFile $file, Node $node): array
-    {
-        $children = $file->getChildren($node);
-        $operator = $children[1] ?? null;
-        if ($operator === null || strtolower($file->getText($operator)) !== 'instanceof') {
-            return [];
-        }
-
-        return ClassReferences::identifier($file, $children[2] ?? null);
     }
 
     private function checkIdentifier(LintContext $context, Node $identifier): void

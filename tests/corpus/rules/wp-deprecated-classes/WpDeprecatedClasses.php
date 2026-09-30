@@ -27,8 +27,8 @@ namespace {
     // @mago-expect lint:wordpress/wp-deprecated-classes
     class My_Settings_Section extends WP_Customize_New_Menu_Control {}
 
-    // instanceof_deprecated_class
-    // @mago-expect lint:wordpress/wp-deprecated-classes
+    // instanceof_deprecated_class_is_not_flagged
+    // WPCS checks only `::`, `new`, `extends` and `implements`.
     if ($item instanceof WP_Privacy_Data_Removal_Requests_Table) {
         return true;
     }
@@ -48,6 +48,14 @@ namespace {
     // minimum-wp-version (6.7, as in WPCS 3.4.1) has reached it.
     // @mago-expect lint:wordpress/wp-deprecated-classes
     $transport = new WP_Http_Curl();
+
+    // static_property_access_is_flagged
+    // @mago-expect lint:wordpress/wp-deprecated-classes
+    echo WP_User_Search::$users_per_page;
+
+    // implements_deprecated_class_is_flagged
+    // @mago-expect lint:wordpress/wp-deprecated-classes
+    class Our_User_Search implements WP_User_Search {}
 }
 
 // same_named_class_in_namespace_is_not_flagged

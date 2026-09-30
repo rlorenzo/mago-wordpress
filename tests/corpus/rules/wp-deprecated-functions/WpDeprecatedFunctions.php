@@ -48,6 +48,10 @@ namespace {
     // minimum-wp-version (6.7): reported with a note, as WPCS reports it as a warning.
     // @mago-expect lint:wordpress/wp-deprecated-functions
     $utf8 = seems_utf8($value);
+
+    // aliased_use_function_import_is_flagged
+    // @mago-expect lint:wordpress/wp-deprecated-functions
+    use function popuplinks as something_else;
 }
 
 // imported_namespaced_function_is_not_flagged
