@@ -9,6 +9,9 @@ use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Reporting\Safety;
+use Mago\Sdk\Reporting\TextEdit;
+use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
@@ -33,11 +36,13 @@ use function ltrim;
 use function preg_match;
 use function preg_match_all;
 use function preg_replace;
+use function preg_replace_callback;
 use function sort;
 use function sprintf;
 use function str_contains;
 use function str_ends_with;
 use function str_starts_with;
+use function strpos;
 use function strtolower;
 use function substr;
 use function substr_count;
@@ -214,7 +219,7 @@ final class WpI18nRule extends CallRule
             );
         }
 
-        $this->checkDomain($context, $name, $arguments['domain']);
+        $this->checkDomain($context, $call, $name, $arguments['domain']);
         $this->checkTranslatorsComment($context, $name, $texts);
 
         if (count($texts) !== 2) {
@@ -276,7 +281,7 @@ final class WpI18nRule extends CallRule
         }
     }
 
-    private function checkDomain(LintContext $context, string $name, ?Node $argument): void
+    private function checkDomain(LintContext $context, CallExpression $call, string $name, ?Node $argument): void
     {
         $allowed = $this->settings->textDomains;
         // WordPress core's own `default` domain, per WPCS's `$text_domain_is_default`/`$text_domain_contains_default`.
@@ -344,18 +349,20 @@ final class WpI18nRule extends CallRule
         }
 
         if ($isDefaultOnly && $domain === 'default') {
-            $this->report->issue(
-                $context,
-                Issue::new(
-                    'Superfluous `default` text domain in translation function call',
-                    $argument->span,
-                    sprintf(
-                        'No need to supply the text domain in a call to `%s()` when `default` is the only accepted text domain',
-                        $name,
-                    ),
-                )->withHelp('Remove the text domain argument.'),
-                [self::SNIFF . '.SuperfluousDefaultTextDomain'],
-            );
+            $issue = Issue::new(
+                'Superfluous `default` text domain in translation function call',
+                $argument->span,
+                sprintf(
+                    'No need to supply the text domain in a call to `%s()` when `default` is the only accepted text domain',
+                    $name,
+                ),
+            )->withHelp('Remove the text domain argument.');
+            $removal = self::domainRemoval($context->file, $call, $argument);
+            if ($removal !== null) {
+                $issue = $issue->withEdit(TextEdit::delete($removal));
+            }
+
+            $this->report->issue($context, $issue, [self::SNIFF . '.SuperfluousDefaultTextDomain']);
 
             return;
         }
@@ -378,6 +385,61 @@ final class WpI18nRule extends CallRule
             )))),
             [self::SNIFF . '.TextDomainMismatch'],
         );
+    }
+
+    /**
+     * What the sniff's fixer removes for a superfluous `default` domain: from the comma before the argument
+     * through the string, or, when it is the first (named) argument, from after `(` through the comma after it.
+     * Null when that would drop a comment or the argument is not a plain string literal.
+     */
+    private static function domainRemoval(SourceFile $file, CallExpression $call, Node $value): ?Span
+    {
+        if ($value->kind !== NodeKind::LiteralString) {
+            return null;
+        }
+
+        foreach ($call->arguments as $index => $argument) {
+            if (
+                $argument->value->span->start > $value->span->start
+                || $argument->value->span->end < $value->span->end
+            ) {
+                continue;
+            }
+
+            $argumentSpan = $argument->node->span;
+            if ($index > 0) {
+                $comma = self::separator($file, $call->arguments[$index - 1]->node->span->end, $argumentSpan->start);
+                $span = $comma === null ? null : new Span($comma, $value->span->end);
+            } else {
+                $list = $file->getParent($argument->node);
+                $next = $call->arguments[1] ?? null;
+                $comma = $next === null ? null : self::separator($file, $argumentSpan->end, $next->node->span->start);
+                $end = $comma === null ? ($list?->span->end ?? 1) - 1 : $comma + 1;
+                $span = $list === null ? null : new Span($list->span->start + 1, $end);
+            }
+
+            return $span === null || Calls::hasComment($file, $span) ? null : $span;
+        }
+
+        return null;
+    }
+
+    /**
+     * The offset of the argument-separating comma between two arguments, skipping commas inside comments.
+     */
+    private static function separator(SourceFile $file, int $start, int $end): ?int
+    {
+        $text = $file->getText(new Span($start, $end));
+        $offset = 0;
+        while (($comma = strpos($text, needle: ',', offset: $offset)) !== false) {
+            if (!Calls::hasComment($file, new Span($start + $comma, $start + $comma + 1))) {
+                return $start + $comma;
+            }
+
+            $offset = $comma + 1;
+        }
+
+        return null;
     }
 
     /**
@@ -549,18 +611,35 @@ final class WpI18nRule extends CallRule
             $expected[] = '%' . ($index + 1) . '$' . substr($placeholder, offset: 1);
         }
 
-        $this->report->issue(
-            $context,
-            Issue::new(
-                'Multiple placeholders in translatable strings should be ordered',
-                $argument->span,
-                sprintf('Found %s', implode(', ', $found)),
-            )->withHelp(sprintf('Number the placeholders so translators can reorder them: %s.', implode(
-                ', ',
-                $expected,
-            ))),
-            [self::SNIFF . '.UnorderedPlaceholders' . ucfirst($parameter)],
+        $issue = Issue::new(
+            'Multiple placeholders in translatable strings should be ordered',
+            $argument->span,
+            sprintf('Found %s', implode(', ', $found)),
+        )->withHelp(sprintf('Number the placeholders so translators can reorder them: %s.', implode(', ', $expected)));
+
+        // Fixable, as in the sniff: number each unordered placeholder in turn. It changes the msgid, so existing
+        // translations of the string stop matching. Positions come from the detection regex, so a literal `%%s`
+        // is never numbered (the sniff's fixer numbers it).
+        $raw = $context->file->getText($argument);
+        $dollar = str_starts_with($raw, '"') ? '\$' : '$';
+        $number = 0;
+        $numbered = 0;
+        $fixed = (string) preg_replace_callback(
+            self::WPCS_UNORDERED_PLACEHOLDER,
+            static function (array $match) use (&$number, $dollar): string {
+                return '%' . ++$number . $dollar . substr($match[0], offset: 1);
+            },
+            $raw,
+            count: $numbered,
         );
+        if ($argument->kind === NodeKind::LiteralString && $numbered === count($found)) {
+            $issue = $issue->withEdit(TextEdit::replace(
+                $argument->span,
+                $fixed,
+            )->withSafety(Safety::PotentiallyUnsafe));
+        }
+
+        $this->report->issue($context, $issue, [self::SNIFF . '.UnorderedPlaceholders' . ucfirst($parameter)]);
     }
 
     /**

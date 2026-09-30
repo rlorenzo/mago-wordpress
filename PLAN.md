@@ -165,21 +165,27 @@ a message-code ref re-includes its whole sniff when the standard leaves it out (
 
 ## Sprint D: `phpcbf` parity
 
-WPCS fixes five things; the extension fixes one:
+**Done (2026-09-30).** Every fix WPCS makes outside its formatting sniffs is now a Mago edit. A
+one-off manual check ran `mago lint --fix` on WPCS's own test files and diffed against their
+`.inc.fixed` (CapitalPDangit .1/.2 and CurrentTimeTimestamp identical; I18n .1 identical once its
+deliberate parse error is removed, apart from `phpcs:set` regions a single run cannot reproduce);
+that comparison is not automated. `tests/Unit/RuleFixesTest.php` covers handwritten cases through
+a real worker, including where this package deliberately does not follow WPCS's fixer: no edit
+inside an interpolated `{$...}`, `\time()` when the file is namespaced or imports a `time`
+function, commas inside comments are not separators, and a literal `%%` is never numbered.
 
-| WPCS fixable | Extension |
-|:---|:---|
-| `PHP.TypeCasts` (`(double)`→`(float)`) | fixed |
-| `WP.CapitalPDangit` (`Wordpress`→`WordPress`) | report only |
-| `DateTime.CurrentTimeTimestamp` (`current_time('timestamp')`→`time()`) | report only |
-| `WP.I18n.MissingSingularPlaceholder` / `TranslatorsCommentWrongStyle` | report only |
-| `Utils.I18nTextDomainFixer` | out of scope (migration tool) |
+| WPCS fixable | Extension | Safety |
+|:---|:---|:---|
+| `PHP.TypeCasts.DoubleRealFound` | fixed (before) | Safe |
+| `WP.CapitalPDangit.MisspelledInComment` | fixed | Safe |
+| `WP.CapitalPDangit.MisspelledInText` | fixed | PotentiallyUnsafe (changes output) |
+| `DateTime.CurrentTimeTimestamp.RequestedUTC` (no comment in the call) | fixed | Safe |
+| `WP.I18n.SuperfluousDefaultTextDomain` (no comment in the removed range) | fixed | Safe |
+| `WP.I18n.UnorderedPlaceholders*` (plain string literal) | fixed | PotentiallyUnsafe (changes the msgid) |
+| `Utils.I18nTextDomainFixer` | out of scope (not in the `WordPress` ruleset) | |
 
-**D.1 Add `withEdit()`** to `capital-p-dangit` (string and comment spans, `Safety::Safe`),
-`wp-date-time` (the timestamp form, `Safety::Safe`; the `'U'` form maps to `time()` too),
-`wp-i18n` translators-comment style (`Safety::Unsafe`, comment rewrite). Corpus fixtures assert
-the edit text via `mago lint --fix` on a copy, or by a `@mago-expect` plus a PHPUnit test of the
-issue's edits if the corpus runner cannot see edits.
+The earlier plan listed `MissingSingularPlaceholder` and `TranslatorsCommentWrongStyle`; WPCS
+fixes neither. The other fixable WPCS sniffs are formatting (`WhiteSpace.*`, `Arrays.*`): Sprint B.
 
 ## Sprint E: parity inside ported rules
 

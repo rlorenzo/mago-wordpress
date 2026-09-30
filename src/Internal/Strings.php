@@ -114,6 +114,29 @@ final class Strings
     }
 
     /**
+     * The sorted `[start, end)` ranges of the variables and `{$...}` expressions interpolated in a
+     * double-quoted string or heredoc; empty for any other node.
+     *
+     * @return list<array{int, int}>
+     */
+    public static function interpolatedRanges(SourceFile $file, Node $string): array
+    {
+        if ($string->kind !== NodeKind::InterpolatedString && $string->kind !== NodeKind::DocumentString) {
+            return [];
+        }
+
+        $ranges = [];
+        foreach ($file->getChildren($string) as $part) {
+            $inner = $file->getChildren($part)[0] ?? $part;
+            if ($inner->kind !== NodeKind::LiteralStringPart) {
+                $ranges[] = [$part->span->start, $part->span->end];
+            }
+        }
+
+        return $ranges;
+    }
+
+    /**
      * Decodes PHP's double-quoted/heredoc escape sequences: control
      * characters, octal and hex byte escapes, and `\u{...}` code points.
      * Unlike stripcslashes(), an unknown escape keeps its backslash.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal;
 
+use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
@@ -364,6 +365,20 @@ final class Calls
         }
 
         return self::positionalArguments($file, $call)[$index] ?? null;
+    }
+
+    /**
+     * Whether a comment overlaps the span, so a fix that rewrites it would drop or break the comment.
+     */
+    public static function hasComment(SourceFile $file, Span $span): bool
+    {
+        foreach ($file->getTrivia() as $trivia) {
+            if ($trivia->span->start < $span->end && $trivia->span->end > $span->start) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

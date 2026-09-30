@@ -8,15 +8,18 @@ use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
 use function preg_match;
+use function str_starts_with;
 use function trim;
 
 /**
@@ -31,6 +34,9 @@ final class WpDateTimeRule extends CallRule
     private const SNIFF = 'WordPress.DateTime.RestrictedFunctions';
 
     private const CURRENT_TIME_FUNCTION = 'current_time';
+
+    // A namespace declaration, or a `use function` import that could name `time`.
+    private const TIME_REBINDS = '/\bnamespace\s+[\w\\\\]+\s*[;{]|\buse\s+function\b[^;]*\btime\b/i';
 
     /** @var array<string, array{reason: string, help: string}> */
     private const RESTRICTED_MESSAGES = [
@@ -115,15 +121,26 @@ final class WpDateTimeRule extends CallRule
         $gmt = $this->argument($context, $call, 1, 'gmt');
         $gmtValue = $gmt === null ? null : trim($context->file->getText($gmt));
         if ($gmtValue === 'true' || $gmtValue === '1') {
-            $this->report->issue(
-                $context,
-                Issue::new(
-                    '`current_time()` should not be used to retrieve a Unix (UTC) timestamp.',
-                    $context->node->span,
-                    'Use `time()` instead',
-                )->withHelp('Replace this call with `time()`.'),
-                ['WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC'],
-            );
+            $issue = Issue::new(
+                '`current_time()` should not be used to retrieve a Unix (UTC) timestamp.',
+                $context->node->span,
+                'Use `time()` instead',
+            )->withHelp('Replace this call with `time()`.');
+
+            // Fixable, as in the sniff, unless the call holds a comment the fix would drop. An unqualified
+            // `time()` could resolve to a namespaced or imported function, so it is qualified then (a false match
+            // in a string or comment only adds a harmless `\`).
+            $span = $context->node->span;
+            if (!Calls::hasComment($context->file, $span)) {
+                $prefix = str_starts_with($context->file->getText($context->node), '\\') ? '\\' : '';
+                if (preg_match(self::TIME_REBINDS, $context->file->contents) === 1) {
+                    $prefix = '\\';
+                }
+
+                $issue = $issue->withEdit(TextEdit::replace($span, $prefix . 'time()'));
+            }
+
+            $this->report->issue($context, $issue, ['WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC']);
 
             return;
         }
