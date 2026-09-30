@@ -1,6 +1,6 @@
 # Gap plan: mago-wordpress as a full replacement for phpcs + WPCS
 
-State as of 2026-09-29: `main` at v1.0.1 (37 rules) plus the `rules/posix-functions` branch.
+State as of 2026-09-30: `main` at v1.1.0 (37 rules; WPCS test-suite recall 89 %).
 WPCS 3.4.1 is the current WPCS release (nothing unreleased). Every `WordPress.*` sniff that is
 not a formatting sniff is covered by an extension rule or a Mago core rule, or is deliberately
 outside the support cut-off below; the remaining gaps are in *how well* they replace phpcs, not
