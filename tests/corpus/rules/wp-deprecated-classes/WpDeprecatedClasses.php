@@ -43,9 +43,11 @@ namespace {
     $object->WP_User_Search();
     $object->WP_User_Search;
 
-    // deprecated_after_default_minimum_wp_version_is_not_flagged
-    // WP_Http_Curl has been deprecated since WordPress 6.4, but the default
-    // minimum-wp-version (6.0) has not reached it yet.
+    // deprecated_before_default_minimum_wp_version_is_flagged
+    // WP_Http_Curl has been deprecated since WordPress 6.4; the default
+    // minimum-wp-version (6.7, as in WPCS 3.4.1) has reached it. No core class
+    // is deprecated after 6.7, so the not-reached case lives in RuleSettingsTest.
+    // @mago-expect lint:wordpress/wp-deprecated-classes
     $transport = new WP_Http_Curl();
 }
 

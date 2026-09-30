@@ -11,7 +11,7 @@ use Rlorenzo\MagoWordPress\Settings;
 
 /**
  * Corpus fixtures share one `minimum-wp-version` (the project default,
- * `6.0`), so thresholds other than the default are asserted here, against
+ * `6.7`, WPCS 3.4.1's default), so thresholds other than the default are asserted here, against
  * the gate every deprecation rule and the `%i` check share.
  */
 final class WpVersionTest extends TestCase
@@ -29,7 +29,7 @@ final class WpVersionTest extends TestCase
         yield 'deprecated before the minimum' => ['4.4', '3.1.0', true];
         yield 'numeric, not lexical, before' => ['4.10', '4.6.0', true];
         yield 'numeric, not lexical, after' => ['4.10', '6.2.0', false];
-        yield 'default minimum skips 6.1' => [null, '6.1.0', false];
+        yield 'default minimum reaches 6.1' => [null, '6.1.0', true];
         yield 'default minimum skips 6.9' => [null, '6.9.0', false];
         yield 'minimum reaches a patch release' => ['6.9', '6.5.3', true];
         yield 'minimum equals the version' => ['6.6', '6.6.0', true];

@@ -97,7 +97,7 @@ namespace {
     // @mago-expect lint:wordpress/wp-deprecated-parameter-values
     get_bloginfo(filter: $filter, show: 'text_direction');
 
-    // Parameter values deprecated in WordPress 5.5, at or before the default minimum-wp-version (6.0).
+    // Parameter values deprecated in WordPress 5.5, at or before the default minimum-wp-version (6.7).
 
     // @mago-expect lint:wordpress/wp-deprecated-parameter-values
     add_option('blacklist_keys');
@@ -127,9 +127,8 @@ namespace {
     update_option(autoload: true, value: $value, option: 'blacklist_keys');
 
     // wp_get_typography_font_size_value()'s boolean $settings values were deprecated in WordPress
-    // 6.6, after the default minimum-wp-version (6.0), so they are not flagged here. Covered
-    // instead by WpDeprecatedRulesTest with a higher minimum. An empty-array $settings is not a
-    // deprecated value at all.
+    // 6.6, within the default minimum-wp-version (6.7). An empty-array $settings is not a
+    // deprecated value at all, so this call is not flagged.
     wp_get_typography_font_size_value($preset, array());
 
     // Safeguard correct handling of all types of namespaced function calls.

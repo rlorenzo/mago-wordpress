@@ -37,10 +37,16 @@ namespace {
     // namespaced_function_call_is_not_flagged
     \MyPlugin\Compat\get_settings('siteurl');
 
-    // deprecated_after_default_minimum_wp_version_is_not_flagged
-    // get_page_by_title() has been deprecated since WordPress 6.2, but the
-    // default minimum-wp-version (6.0) has not reached it yet.
+    // deprecated_before_default_minimum_wp_version_is_flagged
+    // get_page_by_title() has been deprecated since WordPress 6.2; the default
+    // minimum-wp-version (6.7, as in WPCS 3.4.1) has reached it.
+    // @mago-expect lint:wordpress/wp-deprecated-functions
     $page = get_page_by_title('About');
+
+    // deprecated_after_default_minimum_wp_version_is_not_flagged
+    // seems_utf8() has been deprecated since WordPress 6.9, which the default
+    // minimum-wp-version (6.7) has not reached yet.
+    $utf8 = seems_utf8($value);
 }
 
 // imported_namespaced_function_is_not_flagged

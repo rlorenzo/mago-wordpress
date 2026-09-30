@@ -149,7 +149,11 @@ final class PhpcsRuleset
 
     private static function minimumVersion(DOMXPath $xpath): ?string
     {
-        $configs = self::elements($xpath, '//config[@name="minimum_supported_wp_version"]');
+        // WPCS 3.0 renamed the config to minimum_wp_version; the old name is still read.
+        $configs = self::elements(
+            $xpath,
+            '//config[@name="minimum_wp_version" or @name="minimum_supported_wp_version"]',
+        );
 
         return $configs === [] ? null : $configs[count($configs) - 1]->getAttribute('value');
     }

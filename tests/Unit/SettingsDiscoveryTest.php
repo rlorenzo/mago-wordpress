@@ -70,7 +70,7 @@ final class SettingsDiscoveryTest extends TestCase
         $settings = SettingsDiscovery::in($this->directory);
 
         self::assertSame([], $settings->prefixes);
-        self::assertSame('6.0', $settings->minimumWpVersion);
+        self::assertSame('6.7', $settings->minimumWpVersion);
     }
 
     public function testEmptyComposerExtraDoesNotFallBackToPhpcs(): void

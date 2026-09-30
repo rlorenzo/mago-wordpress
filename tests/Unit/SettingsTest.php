@@ -16,7 +16,7 @@ final class SettingsTest extends TestCase
 
         self::assertSame(['My-Plugin'], $settings->textDomains);
         self::assertSame(['mp', 'mp_'], $settings->prefixes);
-        self::assertSame('6.0', $settings->minimumWpVersion);
+        self::assertSame('6.7', $settings->minimumWpVersion);
         self::assertSame([], $settings->customList('custom-escaping-functions'));
     }
 
@@ -44,7 +44,7 @@ final class SettingsTest extends TestCase
         $xml = <<<'XML'
             <?xml version="1.0"?>
             <ruleset name="Example">
-              <config name="minimum_supported_wp_version" value="6.8"/>
+              <config name="minimum_wp_version" value="6.8"/>
               <rule ref="WordPress.WP.I18n">
                 <properties>
                   <property name="text_domain" type="array"><element value="example"/></property>

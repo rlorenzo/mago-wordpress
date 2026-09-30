@@ -145,12 +145,12 @@ final class PreparedSqlPlaceholdersParams
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("SELECT * FROM my_table WHERE name = '%s' AND ID = %d", $name, $id, $extra);
 
-// identifier_placeholder_before_wp_6_2
-// @mago-expect lint:wordpress/prepared-sql-placeholders
+// identifier_placeholder_supported_at_default_minimum
+// `%i` arrived in WordPress 6.2; the default minimum-wp-version (6.7) has it.
+// The pre-6.2 report is covered by RuleSettingsTest with a lower minimum.
 $wpdb->prepare("SELECT * FROM %i WHERE ID = %d", $table, $id);
 
-// quoted_identifier_placeholder_before_wp_6_2
-// @mago-expect lint:wordpress/prepared-sql-placeholders
+// quoted_identifier_placeholder_is_still_reported
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare('SELECT * FROM `%1$i` WHERE ID = %2$d', $table, $id);
 
