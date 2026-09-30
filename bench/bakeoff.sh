@@ -34,6 +34,8 @@ codebases=(
 if ! $report_only; then
 data=${BAKEOFF_DATA:?set BAKEOFF_DATA to the directory holding plugins/ and wordpress-develop/}
 mkdir -p "$out"
+# Recorded now so a later --report labels these measurements with the versions that produced them.
+echo "PHP $(php -r 'echo PHP_VERSION;'), this package at $(git -C "$here" describe --tags --always)" > "$out/versions.txt"
 for entry in "${codebases[@]}"; do
     IFS='|' read -r name path domain prefix _ <<< "$entry"
     echo "== $name" >&2
@@ -50,7 +52,8 @@ first=$(ls "$out"/*.out | head -1)
 echo "# Bake-off $(basename "$out"): top 10 WordPress.org plugins + WordPress core"
 echo
 echo "\`bench/bakeoff.sh\` (phpcs WordPress-Extra vs mago + mago-wordpress), mean of 3 runs after a warm-up."
-echo "Versions: $(grep -m1 "^mago " "$first"), PHP $(php -r 'echo PHP_VERSION;'), this package at $(git -C "$here" describe --tags --always)."
+[[ -f "$out/versions.txt" ]] || { echo "error: $out/versions.txt is missing; run the benchmarks first" >&2; exit 1; }
+echo "Versions: $(grep -m1 "^mago " "$first"), $(cat "$out/versions.txt")."
 echo
 echo "## Results"
 echo
