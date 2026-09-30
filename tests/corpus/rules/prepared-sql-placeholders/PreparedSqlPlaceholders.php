@@ -278,6 +278,16 @@ $wpdb->prepare(sprintf("{$wpdb->posts}.post_type IN (%s)", implode(',', array_fi
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 $wpdb->prepare("{$wpdb->posts}.post_type IN ('" . implode(',', array_fill(0, count($types), '%s')) . "')", $types);
 
+// quoted_implode_after_a_multi_line_string_is_not_flagged
+// phpcs tokenizes the string per line and WPCS only examines the last, which keeps its
+// closing quote, as in wordpress-develop's class-wp-posts-list-table.php.
+$wpdb->prepare(
+    "SELECT COUNT( 1 ) FROM $wpdb->posts
+    WHERE post_type = %s
+    AND post_status NOT IN ( '" . implode("','", $exclude_states) . "' )",
+    $post_type,
+);
+
 // identifier_within_in
 // @mago-expect lint:wordpress/prepared-sql-placeholders
 // @mago-expect lint:wordpress/prepared-sql-placeholders

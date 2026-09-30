@@ -59,6 +59,10 @@ final class DbRestrictedFunctionsRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'mysql')) {
+            return;
+        }
+
         $this->gate ??= new FileGate([$this->buildGatePattern()]);
         if (!$this->gate->passes($context->file)) {
             return;

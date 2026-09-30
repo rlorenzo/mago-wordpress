@@ -25,6 +25,7 @@ use function trim;
  * Ports `WordPress.DB.SlowDBQuery`.
  *
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class SlowDbQueryRule implements Rule
 {
@@ -60,6 +61,10 @@ final class SlowDbQueryRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'slow_db_query')) {
+            return;
+        }
+
         if (!$this->gate->passes($context->file)) {
             return;
         }

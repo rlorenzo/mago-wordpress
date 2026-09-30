@@ -61,17 +61,17 @@ final class WordPressExtension
     public static function create(?Settings $settings = null): Extension
     {
         $settings ??= new Settings();
-        $report = new Report($settings->honorPhpcsComments, $settings->excludePatterns);
+        $report = new Report($settings->honorPhpcsComments, $settings->excludePatterns, $settings->excludeGroups);
 
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',
             name: 'WordPress',
             version: self::VERSION,
             linterRules: [
-                new GlobalVariablesOverrideRule($report),
+                new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
                 new EnqueuedResourcesRule($report),
-                new FileNameRule($report),
+                new FileNameRule($report, $settings),
                 new PreparedSqlPlaceholdersRule($report, $settings),
                 new PreparedSqlUnquotedComplexPlaceholderRule($report),
                 new SafeRedirectRule($report),

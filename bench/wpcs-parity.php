@@ -55,6 +55,13 @@ namespace {
         'customAutoEscapedFunctions' => 'custom-auto-escaped-functions',
         'customSanitizingFunctions' => 'custom-sanitizing-functions',
         'customUnslashingSanitizingFunctions' => 'custom-unslashing-sanitizing-functions',
+        'allowed_custom_properties' => 'allowed-custom-properties',
+        'custom_test_classes' => 'custom-test-classes',
+        'treat_files_as_scoped' => 'treat-files-as-scoped',
+        'strict_class_file_names' => 'strict-class-file-names',
+        'is_theme' => 'is-theme',
+        // Keyed by the sniff the directive names (settingsRegions()).
+        'exclude' => 'exclude-groups',
     ];
 
     /** What the test classes' setCliValues() set per file, mirrored here. */
@@ -115,6 +122,7 @@ namespace {
 
             $files = glob("$dir/$class.inc") ?: [];
             $files = [...$files, ...(glob("$dir/$class.*.inc") ?: [])];
+            $files = glob("$dir/{$class}s{/,/*/}*.{inc,php3}", GLOB_BRACE) ?: $files;
             $sum = ['files' => 0, 'expected' => 0, 'matched' => 0, 'missed' => 0, 'extra' => 0];
             $notes = [];
             foreach ($files as $path) {
@@ -127,6 +135,19 @@ namespace {
                 $expected = expectedLines($test, $base);
                 $unmapped = [];
                 $regions = settingsRegions($path, $sniff, $unmapped);
+                if ($sniff === 'WordPress.Files.FileName') {
+                    // The sniff runs once, at the first open tag, and reports on line 1: the
+                    // directives before that tag apply to the whole file.
+                    $before = strstr((string) file_get_contents($path), '<?php', true);
+                    $open = $before === false ? 1 : substr_count($before, "\n") + 1;
+                    $active = [];
+                    foreach ($regions as $line => $state) {
+                        if ($line <= $open) {
+                            $active = $state;
+                        }
+                    }
+                    $regions = [1 => $active];
+                }
                 if (count($regions) > 1) {
                     $notes[] = "$base: " . (count($regions) - 1) . ' phpcs:set directive(s), honoured by region';
                 }
@@ -289,7 +310,9 @@ namespace {
 
             [, , $property, $isList, $value] = $match;
             $key = SETTING_KEYS[$property];
-            if ($isList !== '') {
+            if ($key === 'exclude-groups') {
+                $current[$key] = [$sniff => array_values(array_filter(explode(',', $value), 'strlen'))];
+            } elseif ($isList !== '') {
                 $current[$key] = array_values(array_filter(explode(',', $value), 'strlen'));
             } elseif ($value === '') {
                 unset($current[$key]);
@@ -314,8 +337,10 @@ namespace {
      */
     function lintSpans(string $mago, string $here, string $work, string $path, array $rules, array $settings): array
     {
-        array_map('unlink', glob("$work/src/*") ?: []);
-        copy($path, "$work/src/" . basename($path));
+        exec('rm -rf ' . escapeshellarg("$work/src"));
+        $relative = preg_match('`UnitTests/(.+)$`', $path, $m) === 1 ? $m[1] : basename($path);
+        mkdir(dirname("$work/src/$relative"), 0777, true);
+        copy($path, "$work/src/$relative");
 
         $enabled = implode("\n", array_map(
             static fn(string $rule): string => "$rule = { enabled = true }",
@@ -326,7 +351,7 @@ namespace {
             php-version = "8.1"
             [source]
             paths = ["src"]
-            extensions = ["inc"]
+            extensions = ["inc", "php3"]
             [linter]
             integrations = ["wordpress"]
             [linter.rules]

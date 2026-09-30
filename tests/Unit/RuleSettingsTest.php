@@ -227,6 +227,60 @@ final class RuleSettingsTest extends TestCase
             '$count = $node->childNodes;',
             0,
         ];
+        yield 'excluded_group_is_skipped' => [
+            'wordpress/discouraged-wp-functions',
+            ['exclude-groups' => ['WordPress.PHP.DiscouragedPHPFunctions' => ['serialize']]],
+            'serialize($a); base64_encode($b);',
+            1,
+        ];
+        yield 'excluded_only_group_silences_the_sniff' => [
+            'wordpress/safe-redirect',
+            ['exclude-groups' => ['WordPress.Security.SafeRedirect' => ['wp_redirect']]],
+            'wp_redirect($url);',
+            0,
+        ];
+        yield 'excluded_class_group_is_skipped' => [
+            'wordpress/class-name-case',
+            ['exclude-groups' => ['WordPress.WP.ClassNameCase' => ['wp_classes']]],
+            '$query = new wp_query();',
+            0,
+        ];
+        yield 'class_file_prefix_is_checked_by_default' => [
+            'wordpress/file-name',
+            [],
+            'class My_Thing {}',
+            1,
+        ];
+        yield 'non_strict_class_file_names_skip_the_prefix_check' => [
+            'wordpress/file-name',
+            ['strict-class-file-names' => false],
+            'class My_Thing {}',
+            0,
+        ];
+        yield 'custom_test_class_is_skipped' => [
+            'wordpress/global-variables-override',
+            ['custom-test-classes' => ['\\My_TestClass']],
+            'class T extends My_TestClass { function t() { global $post; $post = 1; } }',
+            0,
+        ];
+        yield 'files_as_scoped_skip_file_scope_writes' => [
+            'wordpress/global-variables-override',
+            ['treat-files-as-scoped' => true],
+            '$post = 1;',
+            0,
+        ];
+        yield 'files_as_scoped_still_check_globals_writes' => [
+            'wordpress/global-variables-override',
+            ['treat-files-as-scoped' => true],
+            '$GLOBALS[\'post\'] = 1;',
+            1,
+        ];
+        yield 'files_as_scoped_check_writes_after_a_file_scope_import' => [
+            'wordpress/global-variables-override',
+            ['treat-files-as-scoped' => true],
+            'global $wp_query; $wp_query = 2;',
+            1,
+        ];
         yield 'mixed_default_domain_allows_explicit_default' => [
             'wordpress/wp-i18n',
             ['text-domains' => ['default', 'my-plugin']],

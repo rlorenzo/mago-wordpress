@@ -44,6 +44,10 @@ final class RestrictedPhpFunctionsRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'create_function')) {
+            return;
+        }
+
         $this->report->issue(
             $context,
             Issue::new(

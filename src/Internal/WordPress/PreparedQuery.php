@@ -22,7 +22,9 @@ use function preg_quote;
 use function preg_replace;
 use function str_contains;
 use function str_ends_with;
+use function strrpos;
 use function strtolower;
+use function substr;
 
 /**
  * Ports the `process_token()` walk of WPCS
@@ -238,13 +240,12 @@ final class PreparedQuery
             return false;
         }
 
-        // An embed that ends the string is not `IN (`.
-        $match = [];
-        if (preg_match('`\s+IN\s*\(\s*(["\'])?$`i', $this->content($previous, self::GAP), $match) !== 1) {
+        $quoted = $this->inClause($previous);
+        if ($quoted === null) {
             return false;
         }
 
-        if (count($match) > 1) {
+        if ($quoted) {
             $this->add('QuotedDynamicPlaceholderGeneration', $previous);
         }
 
@@ -256,6 +257,30 @@ final class PreparedQuery
         ++$this->implodeFill;
 
         return true;
+    }
+
+    /**
+     * Whether the string before an `implode()` ends in `IN (`: NULL when it does not, else
+     * whether a quote follows the parenthesis.
+     */
+    private function inClause(Node $previous): ?bool
+    {
+        $text = $this->file->getText($previous);
+        $newline = strrpos($text, needle: "\n");
+        if ($newline !== false) {
+            // phpcs splits a multi-line string into one token per line and WPCS looks back at
+            // the last: it keeps the closing quote but not the opening one, so it is never
+            // unquoted. `IN (` then only matches right before the closing quote, unreported.
+            return preg_match('`\s+IN\s*\(\s*(["\'])?$`i', substr($text, offset: $newline + 1)) === 1 ? false : null;
+        }
+
+        // An embed that ends the string is not `IN (`.
+        $match = [];
+        if (preg_match('`\s+IN\s*\(\s*(["\'])?$`i', $this->content($previous, self::GAP), $match) !== 1) {
+            return null;
+        }
+
+        return count($match) > 1;
     }
 
     private function sprintf(CallExpression $call): bool

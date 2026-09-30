@@ -12,8 +12,10 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function is_array;
+use function is_bool;
 use function is_int;
 use function is_string;
+use function ltrim;
 use function preg_match;
 use function strtolower;
 use function trim;
@@ -47,6 +49,7 @@ final class Settings
         'custom-unslashing-sanitizing-functions' => 'customUnslashingSanitizingFunctions',
         'custom-capabilities' => 'custom_capabilities',
         'allowed-custom-properties' => 'allowed_custom_properties',
+        'custom-test-classes' => 'custom_test_classes',
     ];
 
     /**
@@ -54,6 +57,7 @@ final class Settings
      * @param list<string> $prefixes
      * @param array<string, list<string>> $customLists keyed by composer.json option name
      * @param array<string, list<string>> $excludePatterns WPCS code => phpcs `<exclude-pattern>` values
+     * @param array<string, list<string>> $excludeGroups WPCS sniff => names of its function groups to skip
      * @mago-expect lint:excessive-parameter-list
      */
     public function __construct(
@@ -66,6 +70,10 @@ final class Settings
         public readonly string $additionalWordDelimiters = '',
         public readonly bool $honorPhpcsComments = true,
         public readonly array $excludePatterns = [],
+        public readonly array $excludeGroups = [],
+        public readonly bool $treatFilesAsScoped = false,
+        public readonly bool $strictClassFileNames = true,
+        public readonly bool $isTheme = false,
     ) {}
 
     /**
@@ -109,6 +117,10 @@ final class Settings
             $customLists[$option] = $caseSensitive ? $list : self::lowercased($list);
         }
 
+        // WPCS takes test class names as FQNs without a leading `\`, and tolerates one.
+        $unrooted = static fn(string $class): string => ltrim($class, characters: '\\');
+        $customLists['custom-test-classes'] = self::unique(array_map($unrooted, $customLists['custom-test-classes']));
+
         return new self(
             textDomains: self::unique(self::stringList($values['text-domains'] ?? [])),
             prefixes: self::lowercased(self::stringList($values['prefixes'] ?? [])),
@@ -118,14 +130,18 @@ final class Settings
             minCronInterval: self::integer($values['min-cron-interval'] ?? null) ?? self::DEFAULT_MIN_CRON_INTERVAL,
             additionalWordDelimiters: Shape::string($values['additional-word-delimiters'] ?? null) ?? '',
             honorPhpcsComments: ($values['honor-phpcs-comments'] ?? true) !== false,
-            excludePatterns: self::excludePatterns($values['exclude-patterns'] ?? []),
+            excludePatterns: self::stringListMap($values['exclude-patterns'] ?? []),
+            excludeGroups: self::stringListMap($values['exclude-groups'] ?? []),
+            treatFilesAsScoped: self::boolean($values['treat-files-as-scoped'] ?? null) ?? false,
+            strictClassFileNames: self::boolean($values['strict-class-file-names'] ?? null) ?? true,
+            isTheme: self::boolean($values['is-theme'] ?? null) ?? false,
         );
     }
 
     /**
      * @return array<string, list<string>>
      */
-    private static function excludePatterns(mixed $value): array
+    private static function stringListMap(mixed $value): array
     {
         if (!is_array($value)) {
             return [];
@@ -142,6 +158,19 @@ final class Settings
         }
 
         return $patterns;
+    }
+
+    /**
+     * Accepts a boolean, or the `true`/`false` string a phpcs.xml property carries.
+     */
+    private static function boolean(mixed $value): ?bool
+    {
+        return match (true) {
+            is_bool($value) => $value,
+            $value === 'true' => true,
+            $value === 'false' => false,
+            default => null,
+        };
     }
 
     /**

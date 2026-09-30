@@ -171,14 +171,10 @@ foreach (ksorted(wpcs_array($wpcs, 'Sniffs/WP/DeprecatedParameterValuesSniff.php
 }
 
 $classNameCase = 'Sniffs/WP/ClassNameCaseSniff.php';
-$bundled = '';
+$bundled = [];
 foreach (wpcs_array($wpcs, $classNameCase, 'class_groups') as $group) {
-    if ($group === 'wp_classes') {
-        continue;
-    }
-    $bundled .= "        // \${$group}\n";
-    foreach (wpcs_array($wpcs, $classNameCase, $group) as $class) {
-        $bundled .= '        ' . literal($class) . ",\n";
+    if ($group !== 'wp_classes') {
+        $bundled[$group] = wpcs_array($wpcs, $classNameCase, $group);
     }
 }
 
@@ -301,14 +297,16 @@ foreach ($constants as $constant) {
 }
 $lists .= <<<PHP
         /**
-         * Bundled-library and default-theme class names in their properly cased
-         * form; the WP core group lives in `CoreClasses`.
+         * Bundled-library and default-theme class names in their properly cased form, by the
+         * sniff's group name (its `exclude` property drops groups); the WP core group
+         * (`wp_classes`) lives in `CoreClasses`.
          *
-         * @var list<string>
+         * @var array<string, list<string>>
          * Source: WPCS Sniffs/WP/ClassNameCaseSniff.php (every class group except \$wp_classes)
          */
-        public const CLASS_NAME_CASE_BUNDLED_CLASSES = [
-    {$bundled}    ];
+        public const CLASS_NAME_CASE_BUNDLED_CLASSES = 
+    PHP . render($bundled) . <<<PHP
+    ;
 
         private function __construct() {}
     }

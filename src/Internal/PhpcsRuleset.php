@@ -14,6 +14,7 @@ use function array_filter;
 use function array_keys;
 use function array_values;
 use function count;
+use function explode;
 use function in_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
@@ -48,15 +49,31 @@ final class PhpcsRuleset
      */
     public const OWNED_PROPERTIES = [
         'WordPress.WP.I18n' => ['text_domain'],
-        'WordPress.NamingConventions.PrefixAllGlobals' => ['prefixes'],
+        'WordPress.NamingConventions.PrefixAllGlobals' => ['prefixes', 'custom_test_classes'],
         'WordPress.Security.EscapeOutput' => ['customEscapingFunctions', 'customAutoEscapedFunctions'],
         'WordPress.Security.NonceVerification' => self::SANITIZING_PROPERTIES,
         'WordPress.Security.ValidatedSanitizedInput' => self::SANITIZING_PROPERTIES,
         'WordPress.WP.Capabilities' => ['custom_capabilities'],
-        'WordPress.WP.PostsPerPage' => ['posts_per_page'],
         'WordPress.WP.CronInterval' => ['min_interval'],
         'WordPress.NamingConventions.ValidHookName' => ['additionalWordDelimiters'],
         'WordPress.NamingConventions.ValidVariableName' => ['allowed_custom_properties'],
+        'WordPress.Files.FileName' => ['strict_class_file_names', 'is_theme', 'custom_test_classes'],
+        'WordPress.WP.GlobalVariablesOverride' => ['treat_files_as_scoped', 'custom_test_classes'],
+        // The restriction sniffs this package ports; each `exclude` is read per sniff (excludeGroups()).
+        'WordPress.DateTime.RestrictedFunctions' => ['exclude'],
+        'WordPress.DB.RestrictedClasses' => ['exclude'],
+        'WordPress.DB.RestrictedFunctions' => ['exclude'],
+        'WordPress.DB.SlowDBQuery' => ['exclude'],
+        'WordPress.PHP.DevelopmentFunctions' => ['exclude'],
+        'WordPress.PHP.DiscouragedPHPFunctions' => ['exclude'],
+        'WordPress.PHP.DontExtract' => ['exclude'],
+        'WordPress.PHP.RestrictedPHPFunctions' => ['exclude'],
+        'WordPress.Security.SafeRedirect' => ['exclude'],
+        'WordPress.WP.ClassNameCase' => ['exclude'],
+        'WordPress.WP.DeprecatedClasses' => ['exclude'],
+        'WordPress.WP.DeprecatedFunctions' => ['exclude'],
+        'WordPress.WP.DiscouragedFunctions' => ['exclude'],
+        'WordPress.WP.PostsPerPage' => ['posts_per_page', 'exclude'],
     ];
 
     /**
@@ -154,6 +171,10 @@ final class PhpcsRuleset
             'max-posts-per-page' => self::last($properties['posts_per_page'] ?? []),
             'min-cron-interval' => self::last($properties['min_interval'] ?? []),
             'additional-word-delimiters' => self::last($properties['additionalWordDelimiters'] ?? []),
+            'treat-files-as-scoped' => self::flag(self::last($properties['treat_files_as_scoped'] ?? [])),
+            'strict-class-file-names' => self::flag(self::last($properties['strict_class_file_names'] ?? [])),
+            'is-theme' => self::flag(self::last($properties['is_theme'] ?? [])),
+            'exclude-groups' => self::excludeGroups($xpath),
         ];
         foreach (Settings::CUSTOM_LISTS as $option => $property) {
             $values[$option] = $properties[$property] ?? [];
@@ -282,6 +303,36 @@ final class PhpcsRuleset
     }
 
     /**
+     * Each restriction sniff's `exclude` property: the function groups it drops. Read per
+     * sniff, since every one of them has its own `exclude`.
+     *
+     * @return array<string, list<string>>
+     */
+    private static function excludeGroups(DOMXPath $xpath): array
+    {
+        $groups = [];
+        foreach (self::elements($xpath, '//rule[@ref]') as $rule) {
+            $sniff = $rule->getAttribute('ref');
+            foreach (self::ownedProperties($xpath, $rule) as $property) {
+                if ($property->getAttribute('name') !== 'exclude') {
+                    continue;
+                }
+
+                // An array property can also be given as a comma-separated `value`.
+                $inline = explode(',', $property->getAttribute('value'));
+                foreach ([...self::elementValues($xpath, $property), ...$inline] as $group) {
+                    $group = trim($group);
+                    if ($group !== '') {
+                        $groups[$sniff][] = $group;
+                    }
+                }
+            }
+        }
+
+        return $groups;
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     private static function properties(DOMXPath $xpath): array
@@ -326,6 +377,18 @@ final class PhpcsRuleset
     private static function last(array $values): ?string
     {
         return $values === [] ? null : $values[count($values) - 1];
+    }
+
+    /**
+     * phpcs turns a `true`/`false` property value into a boolean.
+     */
+    private static function flag(?string $value): ?bool
+    {
+        return match ($value) {
+            'true' => true,
+            'false' => false,
+            default => null,
+        };
     }
 
     /**
