@@ -205,8 +205,10 @@ Yoast SEO ([results](bench/results/2026-09-30-formatter.md)), formatting with th
 | **Hugged last argument.** Mago keeps `foo( $a, array(` on one line; PEAR wants one argument per line once a call breaks. | `PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket`, `.CloseBracketLine`, `.MultipleArguments`, `.Indent` | 2 % |
 | **Templates and alternative syntax.** Mago prints `if ( $x ):` without the space before `:`, and breaks long `<?php echo … ?>` lines inside HTML. | `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceBetweenStructureColon`; `Squiz.ControlStructures.ControlSignature.SpaceAfterCloseParenthesis`; `Squiz.PHP.EmbeddedPhp.*`; `Generic.WhiteSpace.LanguageConstructSpacing.IncorrectSingle` | < 1 % |
 
-If you keep running phpcs for formatting while you move to Mago, exclude those codes from your
-ruleset, or stop running `mago format` on the files phpcs still checks.
+On code already formatted for phpcs, `mago format` makes the phpcs result worse, not better:
+Akismet goes from 88 reports to 5,594. Adopt the preset only if you are switching formatting to
+Mago and accept its style. If you keep running phpcs for formatting while you move, either exclude
+those codes from your ruleset or don't run `mago format` on the files phpcs still checks.
 
 ## Coming from WPCS
 

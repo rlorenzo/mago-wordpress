@@ -23,9 +23,9 @@ array-style = { style = "long" }
 # see the README's Formatting section for the sniff codes that remain.
 [formatter]
 use-tabs = true
-function-brace-style = "same_line"
-method-brace-style = "same_line"
-classlike-brace-style = "same_line"
+function-brace-style = "same-line"
+method-brace-style = "same-line"
+classlike-brace-style = "same-line"
 space-after-logical-not-unary-prefix-operator = true
 space-within-grouping-parenthesis = true
 align-assignment-like = true
