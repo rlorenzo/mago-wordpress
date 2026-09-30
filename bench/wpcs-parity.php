@@ -105,7 +105,7 @@ namespace {
         'custom_capabilities' => 'custom-capabilities',
         'posts_per_page' => 'max-posts-per-page',
         'min_interval' => 'min-cron-interval',
-        'additional_word_delimiters' => 'additional-word-delimiters',
+        'additionalWordDelimiters' => 'additional-word-delimiters',
         'customEscapingFunctions' => 'custom-escaping-functions',
         'customAutoEscapedFunctions' => 'custom-auto-escaped-functions',
         'customSanitizingFunctions' => 'custom-sanitizing-functions',
@@ -180,9 +180,14 @@ namespace {
                 }
 
                 $expected = expectedLines($test, $base);
-                $regions = settingsRegions($path, $sniff);
+                $unmapped = [];
+                $regions = settingsRegions($path, $sniff, $unmapped);
                 if (count($regions) > 1) {
                     $notes[] = "$base: " . (count($regions) - 1) . ' phpcs:set directive(s), honoured by region';
+                }
+
+                if ($unmapped !== []) {
+                    $notes[] = "$base: no setting for phpcs:set " . implode(', ', array_keys($unmapped));
                 }
 
                 // One lint per distinct settings state; each line is judged by the state active there.
@@ -312,9 +317,10 @@ namespace {
      * one entry per state, keyed by the first line it applies to. State 1 (before any directive)
      * has no settings. Directives are cumulative within the file, as in phpcs.
      *
+     * @param array<string, true> $unmapped Receives phpcs:set properties this package has no setting for.
      * @return array<int, array<string, mixed>> line => settings active from that line on
      */
-    function settingsRegions(string $path, string $sniff): array
+    function settingsRegions(string $path, string $sniff, array &$unmapped): array
     {
         $regions = [1 => []];
         $current = [];
@@ -322,8 +328,12 @@ namespace {
             if (
                 preg_match('/phpcs:set\s+(\S+)\s+([A-Za-z_]\w*)(\[\])?[ \t]*([^*\n]*?)\s*(?:\*\/)?\s*$/', $text, $match) !== 1
                 || $match[1] !== $sniff
-                || !isset(SETTING_KEYS[$match[2]])
             ) {
+                continue;
+            }
+
+            if (!isset(SETTING_KEYS[$match[2]])) {
+                $unmapped[$match[2]] = true;
                 continue;
             }
 
@@ -392,8 +402,13 @@ namespace {
             return [];
         }
 
+        // Mago also reports parser and semantics errors regardless of --only; only the rules count.
         $spans = [];
         foreach ($report['issues'] ?? [] as $issue) {
+            if (!in_array($issue['code'] ?? '', $rules, true)) {
+                continue;
+            }
+
             foreach ($issue['annotations'] ?? [] as $annotation) {
                 if (($annotation['kind'] ?? '') === 'Primary') {
                     // Mago's JSON report counts lines from 0.

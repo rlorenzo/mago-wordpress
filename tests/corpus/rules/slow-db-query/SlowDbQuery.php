@@ -27,18 +27,13 @@ $args = array('meta_key' => 'color', 'post_type' => 'product');
 $args = ['meta_value' => 'blue'];
 
 // nested_meta_query_is_flagged
-$args = ['post_type' => 'post', 'inner' => [
-    // @mago-expect lint:wordpress/slow-db-query
-    'meta_query' => [],
-]];
-
-// set_query_var_with_meta_key_is_flagged
-// @mago-expect lint:wordpress/slow-db-query
-set_query_var('meta_key', 'color');
-
-// fully_qualified_set_query_var_is_flagged
-// @mago-expect lint:wordpress/slow-db-query
-\set_query_var('meta_query', []);
+$args = [
+    'post_type' => 'post',
+    'inner' => [
+        // @mago-expect lint:wordpress/slow-db-query
+        'meta_query' => [],
+    ],
+];
 
 // regular_query_args_are_allowed
 $query = new WP_Query([
@@ -50,12 +45,29 @@ $query = new WP_Query([
 // meta_query_as_value_is_allowed
 $keys = ['meta_query', 'tax_query'];
 
-// named_set_query_var_is_flagged
-// @mago-expect lint:wordpress/slow-db-query
-set_query_var(query_var: 'meta_query', value: []);
-
-// set_query_var_with_safe_key_is_allowed
-set_query_var('paged', 2);
-
 // variable_key_is_allowed
 $args = [$key => 'value'];
+
+// array_key_assignment_is_flagged
+// @mago-expect lint:wordpress/slow-db-query
+$args['meta_key'] = 'color';
+
+// coalesce_array_key_assignment_is_flagged
+// @mago-expect lint:wordpress/slow-db-query
+$args['tax_query'] ??= [];
+
+// array_key_read_is_allowed
+$color = $args['meta_key'];
+
+// query_string_reports_each_slow_key
+// @mago-expect lint:wordpress/slow-db-query
+// @mago-expect lint:wordpress/slow-db-query
+$query = 'foo=bar&meta_key=foo&meta_value=bar';
+
+// query_string_with_empty_values_is_flagged
+// @mago-expect lint:wordpress/slow-db-query
+// @mago-expect lint:wordpress/slow-db-query
+$query = 'foo=bar&meta_key=&meta_value=';
+
+// query_string_without_slow_keys_is_allowed
+$query = 'foo=bar&post_type=page';
