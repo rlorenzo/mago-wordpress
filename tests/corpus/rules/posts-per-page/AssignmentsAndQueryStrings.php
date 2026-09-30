@@ -38,6 +38,16 @@ _query_posts('numberposts=-1');
 _query_posts('numberposts');
 _query_posts('posts_per_page=999&nopaging=true&posts_per_page=50');
 _query_posts('nopaging=true&posts_per_page=');
+
+// query_string_numbers_in_any_form_are_parsed_like_wpcs
+// @mago-expect lint:wordpress/posts-per-page
+_query_posts('posts_per_page=150.0');
+// @mago-expect lint:wordpress/posts-per-page
+_query_posts('numberposts=0x96');
+// @mago-expect lint:wordpress/posts-per-page
+_query_posts('posts_per_page=1_000');
+_query_posts('posts_per_page=1e2');
+_query_posts('posts_per_page=abc');
 $query = 'posts_per_page=' . (int) $_POST['limit'];
 
 $args = [

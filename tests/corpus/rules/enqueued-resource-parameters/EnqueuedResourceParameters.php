@@ -120,6 +120,11 @@ namespace {
     // @mago-expect lint:wordpress/enqueued-resource-parameters
     wp_register_script('s', $src, [], <<<'EOD'
         EOD, true);
+
+    // padded_document_version_is_truthy_like_wpcs
+    wp_register_script('s', $src, [], <<<'EOD'
+         0 
+        EOD, true);
     // @mago-expect lint:wordpress/enqueued-resource-parameters
     wp_register_script('s', $src, [], <<<EOD
         0

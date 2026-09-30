@@ -217,7 +217,8 @@ final class EnqueuedResourceParametersRule extends CallRule
             $text .= $part;
         }
 
-        return in_array(trim($text), ['', '0'], strict: true);
+        // WPCS compares the complete text exactly; a padded ' 0 ' is a truthy version.
+        return $text === '' || $text === '0';
     }
 
     /**

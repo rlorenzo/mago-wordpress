@@ -26,6 +26,7 @@ use function hexdec;
 use function in_array;
 use function is_float;
 use function is_int;
+use function is_numeric;
 use function ltrim;
 use function octdec;
 use function preg_match;
@@ -368,7 +369,8 @@ final class CronIntervalRule implements Rule
                 preg_match('/^0[xX][0-9a-fA-F]+$/', $text) === 1 => hexdec($text),
                 preg_match('/^0[bB][01]+$/', $text) === 1 => bindec($text),
                 preg_match('/^0[oO]?[0-7]+$/', $text) === 1 => octdec(ltrim($text, characters: '0oO')),
-                default => Values::literalInteger($file, $node),
+                // A decimal literal past PHP_INT_MAX is a float, as at run time.
+                default => Values::literalInteger($file, $node) ?? (is_numeric($text) ? (float) $text : null),
             };
         }
 

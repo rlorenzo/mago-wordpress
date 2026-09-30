@@ -287,6 +287,11 @@ namespace {
 
         $recall = $totals['expected'] === 0 ? '-' : sprintf('%d%%', round(100 * $totals['matched'] / $totals['expected']));
         echo "| **Total** | **{$totals['files']}** | **{$totals['expected']}** | **{$totals['matched']}** | **{$totals['missed']}** | **{$totals['extra']}** | **$recall** | |\n";
+
+        if (($GLOBALS['wpcsParityFailures'] ?? 0) > 0) {
+            fwrite(STDERR, "{$GLOBALS['wpcsParityFailures']} file(s) produced no report; the table above under-counts them.\n");
+            exit(2);
+        }
     })($argv);
 
     /**
@@ -394,10 +399,12 @@ namespace {
             escapeshellarg($work),
             escapeshellarg(implode(',', $rules)),
         );
-        exec($command, $output);
+        exec($command, $output, $status);
         $report = json_decode(implode("\n", $output), true);
         if (!is_array($report)) {
-            fwrite(STDERR, "warning: no JSON report for $path\n");
+            // A crashed or misconfigured Mago would otherwise read as "everything missed".
+            fwrite(STDERR, "error: no JSON report for $path (mago exit $status)\n");
+            $GLOBALS['wpcsParityFailures'] = ($GLOBALS['wpcsParityFailures'] ?? 0) + 1;
 
             return [];
         }

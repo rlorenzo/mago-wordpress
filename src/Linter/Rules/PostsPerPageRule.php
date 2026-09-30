@@ -38,6 +38,7 @@ use const PREG_SET_ORDER;
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class PostsPerPageRule implements Rule
 {
@@ -160,9 +161,9 @@ final class PostsPerPageRule implements Rule
         }
 
         foreach (Lists::POSTS_PER_PAGE_KEYS as $key) {
-            $value = $params[$key] ?? '';
-            if (preg_match('/^[+-]?\d+$/', $value) === 1) {
-                $this->checkLimit($context, $key, $context->node->span, (int) $value);
+            $number = self::numberText($params[$key] ?? '');
+            if ($number !== null) {
+                $this->checkLimit($context, $key, $context->node->span, $number);
             }
         }
     }
@@ -236,20 +237,37 @@ final class PostsPerPageRule implements Rule
      */
     private function numberLiteral(SourceFile $file, Node $value): ?int
     {
-        $text = str_replace(search: '_', replace: '', subject: trim($file->getText($value)));
-        if ($value->kind === NodeKind::LiteralFloat) {
-            return is_numeric($text) ? (int) (float) $text : null;
-        }
-
-        if ($value->kind !== NodeKind::LiteralInteger) {
+        if ($value->kind !== NodeKind::LiteralFloat && $value->kind !== NodeKind::LiteralInteger) {
             return null;
         }
 
-        return (int) match (true) {
-            preg_match('/^0x/i', $text) === 1 => hexdec(substr($text, offset: 2)),
-            preg_match('/^0b/i', $text) === 1 => bindec(substr($text, offset: 2)),
+        return self::numberText($file->getText($value));
+    }
+
+    /**
+     * Reads a PHP number written as text: an optional sign, then an integer
+     * in any base or a float, with `_` separators. A float is truncated the
+     * way WPCS's `(int)` cast does. This is the value set WPCS's
+     * `Numbers::getDecimalValue()` accepts for a query-string parameter.
+     */
+    private static function numberText(string $text): ?int
+    {
+        $text = str_replace(search: '_', replace: '', subject: trim($text));
+        $sign = 1;
+        if ($text !== '' && ($text[0] === '-' || $text[0] === '+')) {
+            $sign = $text[0] === '-' ? -1 : 1;
+            $text = substr($text, offset: 1);
+        }
+
+        $magnitude = match (true) {
+            preg_match('/^0x[0-9a-f]+$/i', $text) === 1 => hexdec(substr($text, offset: 2)),
+            preg_match('/^0b[01]+$/i', $text) === 1 => bindec(substr($text, offset: 2)),
             preg_match('/^0o?[0-7]+$/i', $text) === 1 => octdec(ltrim(substr($text, offset: 1), characters: 'oO')),
-            default => $text,
+            preg_match('/^\d+$/', $text) === 1 => (int) $text,
+            is_numeric($text) => (int) (float) $text,
+            default => null,
         };
+
+        return $magnitude === null ? null : $sign * (int) $magnitude;
     }
 }
