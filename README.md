@@ -70,8 +70,13 @@ takes as sniff properties from your project instead. Put them in `composer.json`
 }
 ```
 
+Defaults mirror WPCS 3.4.1 out of the box: `minimum-wp-version` is `6.7` (deprecations newer
+than that are not reported until you raise it), and rules for PHP features removed before PHP 8.1
+are limited to the ones `WordPress-Core` itself runs. The extension targets PHP 8.1+ and the
+WordPress versions that support it.
+
 If there is no `extra.mago-wordpress` block, the worker reads the same values from your existing
-`phpcs.xml` (`text_domain`, `prefixes`, `minimum_supported_wp_version`, `customEscapingFunctions`,
+`phpcs.xml` (`text_domain`, `prefixes`, `minimum_wp_version`, `customEscapingFunctions`,
 `posts_per_page`, `min_interval`, `additional_word_delimiters`, ...), so a project migrating from phpcs needs no new configuration. An explicitly present but empty `extra.mago-wordpress` block
 (`{"extra": {"mago-wordpress": {}}}`) means "use the defaults" and does not fall back to `phpcs.xml`.
 
@@ -169,6 +174,15 @@ them on so a project keeps the security checks WPCS gave it.
 | `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) | on |
 | `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` | on |
 | `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part; overlaps `wordpress/capabilities` above) | on |
+
+Four of Mago's core PHP rules, on for every project, cover the remaining `WordPress.PHP` sniffs:
+
+| Mago rule | Covers |
+|:---|:---|
+| `no-error-control-operator` | `WordPress.PHP.NoSilencedErrors` |
+| `require-preg-quote-delimiter` | `WordPress.PHP.PregQuoteDelimiter` |
+| `no-ini-set` | `WordPress.PHP.IniSet` (partial: it reports every `ini_set()`, without WPCS's safe-option allowlist) |
+| `no-debug-symbols` | `WordPress.PHP.DevelopmentFunctions` (partial; `wordpress/discouraged-wp-functions` covers the rest) |
 
 ## Coming from WPCS
 
@@ -280,6 +294,8 @@ wordpress-develop checkout, `mago` at 1.50.0 and this package at 1.0.1 (37 rules
 comments honoured). The mago column includes starting the PHP worker. mago never lost a single-codebase
 comparison. Full output, per-codebase mago issue counts by rule, and exact reproduction commands are
 in [`bench/results/2026-09-bakeoff.md`](bench/results/2026-09-bakeoff.md).
+Every rule PR re-runs the bake-off (`bench/bakeoff.sh`) and commits the per-rule counts next to it;
+the latest is [`bench/results/2026-09-29-bakeoff.md`](bench/results/2026-09-29-bakeoff.md).
 
 ## Development
 

@@ -254,15 +254,21 @@ namespace {
     // @mago-expect lint:wordpress/wp-deprecated-parameters
     xfn_check('', '', 'deprecated');
 
-    // deprecated_after_default_minimum_wp_version_is_not_flagged
+    // deprecated_before_default_minimum_wp_version_is_flagged
     // global_terms()'s $deprecated parameter was deprecated in WordPress 6.1,
-    // inject_ignored_hooked_blocks_metadata_attributes()'s in 6.5.3, and
-    // wp_render_elements_support_styles()'s in 6.6 and _wp_can_use_pcre_u()'s
-    // $set in 6.9 -- all after the default minimum-wp-version (6.0), so none
-    // of these four are flagged here. Covered instead by
-    // WpDeprecatedParameterRulesTest with a higher minimum.
+    // inject_ignored_hooked_blocks_metadata_attributes()'s in 6.5.3 and
+    // wp_render_elements_support_styles()'s in 6.6 -- all reached by the
+    // default minimum-wp-version (6.7, as in WPCS 3.4.1).
+    // @mago-expect lint:wordpress/wp-deprecated-parameters
     global_terms($foo, 'deprecated');
+    // @mago-expect lint:wordpress/wp-deprecated-parameters
     inject_ignored_hooked_blocks_metadata_attributes('', 'deprecated');
+    // @mago-expect lint:wordpress/wp-deprecated-parameters
     wp_render_elements_support_styles('deprecated');
+
+    // deprecated_after_default_minimum_wp_version_is_not_flagged
+    // _wp_can_use_pcre_u()'s $set was deprecated in WordPress 6.9, after the
+    // default minimum-wp-version (6.7). Covered by RuleSettingsTest with a
+    // higher minimum.
     _wp_can_use_pcre_u('deprecated');
 }

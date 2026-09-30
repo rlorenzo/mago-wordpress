@@ -29,7 +29,7 @@ use function trim;
  */
 final class Settings
 {
-    private const DEFAULT_MINIMUM_WP_VERSION = '6.0';
+    private const DEFAULT_MINIMUM_WP_VERSION = '6.7';
 
     private const DEFAULT_MAX_POSTS_PER_PAGE = 100;
 
