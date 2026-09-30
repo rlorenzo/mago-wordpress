@@ -135,10 +135,19 @@ abstract class CallRule implements Rule
      */
     private static function referencedName(SourceFile $file, Node $node): ?string
     {
+        // Mago 1.47 does not narrow a nullsafe comparison, so the checks are explicit.
         $identifier = $file->getChildren($node)[0] ?? null;
-        $identifier = $identifier === null ? null : Values::unwrap($file, $identifier);
-        $written = $identifier?->kind === NodeKind::Identifier ? $file->getChildren($identifier)[0] ?? null : null;
-        if ($identifier === null || $written === null) {
+        if ($identifier === null) {
+            return null;
+        }
+
+        $identifier = Values::unwrap($file, $identifier);
+        if ($identifier->kind !== NodeKind::Identifier) {
+            return null;
+        }
+
+        $written = $file->getChildren($identifier)[0] ?? null;
+        if ($written === null) {
             return null;
         }
 
@@ -151,8 +160,11 @@ abstract class CallRule implements Rule
         }
 
         $resolved = $file->getResolvedName($identifier);
+        if ($resolved !== null && $resolved->imported) {
+            return Calls::normalize($resolved->name);
+        }
 
-        return Calls::normalize($resolved?->imported === true ? $resolved->name : $file->getText($written));
+        return Calls::normalize($file->getText($written));
     }
 
     /**

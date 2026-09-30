@@ -343,16 +343,22 @@ final class PreparedQuery
             $parent = $this->file->getParent($child);
         }
 
-        $children = $parent === null ? [] : $this->file->getChildren($parent);
+        if ($parent === null || $parent->kind !== NodeKind::Binary) {
+            return null;
+        }
+
+        $children = $this->file->getChildren($parent);
+        $operator = $children[1] ?? null;
+        $left = $children[0] ?? null;
         if (
-            $parent?->kind !== NodeKind::Binary
+            $left === null
+            || $operator === null
             || ($children[2] ?? null) !== $child
-            || $this->file->getText($children[1]) !== '.'
+            || $this->file->getText($operator) !== '.'
         ) {
             return null;
         }
 
-        $left = $children[0];
         while (true) {
             $left = Values::unwrap($this->file, $left);
             if ($left->kind === NodeKind::LiteralString || $left->kind === NodeKind::CompositeString) {
