@@ -9,13 +9,14 @@ use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 
-use function strtolower;
+use function preg_match;
 use function trim;
 
 /**
@@ -67,9 +68,7 @@ final class WpDateTimeRule extends CallRule
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
         if ($name === self::CURRENT_TIME_FUNCTION) {
-            if ($this->isTimestampRetrieval($context, $call)) {
-                $this->reportCurrentTimeTimestamp($context);
-            }
+            $this->inspectCurrentTime($context, $call);
 
             return;
         }
@@ -95,8 +94,40 @@ final class WpDateTimeRule extends CallRule
         );
     }
 
-    private function reportCurrentTimeTimestamp(LintContext $context): void
+    /**
+     * Reports a `current_time()` call whose first argument is the literal
+     * `'timestamp'` or `'U'`. A `$gmt` of literal `true`/`1` asks for a UTC
+     * timestamp, which `time()` gives directly; any other `$gmt` yields a
+     * "local" pseudo-timestamp.
+     */
+    private function inspectCurrentTime(LintContext $context, CallExpression $call): void
     {
+        $format = $this->argument($context, $call, 0, 'type');
+        if ($format === null) {
+            return;
+        }
+
+        $formatValue = $this->formatValue($context, $format);
+        if ($formatValue !== 'timestamp' && $formatValue !== 'U') {
+            return;
+        }
+
+        $gmt = $this->argument($context, $call, 1, 'gmt');
+        $gmtValue = $gmt === null ? null : trim($context->file->getText($gmt));
+        if ($gmtValue === 'true' || $gmtValue === '1') {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    '`current_time()` should not be used to retrieve a Unix (UTC) timestamp.',
+                    $context->node->span,
+                    'Use `time()` instead',
+                )->withHelp('Replace this call with `time()`.'),
+                ['WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC'],
+            );
+
+            return;
+        }
+
         $this->report->issue(
             $context,
             Issue::new(
@@ -111,29 +142,27 @@ final class WpDateTimeRule extends CallRule
     }
 
     /**
-     * Whether a `current_time()` call retrieves a (pseudo-)timestamp: the
-     * first argument is the literal `'timestamp'` or `'U'`, and the `$gmt`
-     * argument is absent or a literal `false`/`0`.
+     * Returns the trimmed value of a literal string or a heredoc/nowdoc
+     * without interpolation, as WPCS reads the `$type` argument.
      */
-    private function isTimestampRetrieval(LintContext $context, CallExpression $call): bool
+    private function formatValue(LintContext $context, Node $format): ?string
     {
-        $format = $this->argument($context, $call, 0, 'type');
-        if ($format === null) {
-            return false;
+        $value = Values::literalString($context->file, Values::unwrap($context->file, $format));
+        if ($value !== null) {
+            return trim($value);
         }
 
-        $formatValue = Values::literalString($context->file, $format);
-        if ($formatValue === null || $formatValue !== 'timestamp' && $formatValue !== 'U') {
-            return false;
+        $matches = [];
+        if (
+            preg_match(
+                '/^<<<\s*([\'"]?)(\w+)\1\r?\n([^$]*?)\r?\n\s*\2$/',
+                trim($context->file->getText($format)),
+                $matches,
+            ) !== 1
+        ) {
+            return null;
         }
 
-        $gmt = $this->argument($context, $call, 1, 'gmt');
-        if ($gmt === null) {
-            return true;
-        }
-
-        $gmtValue = strtolower(trim($context->file->getText($gmt)));
-
-        return $gmtValue === 'false' || $gmtValue === '0';
+        return trim($matches[3]);
     }
 }

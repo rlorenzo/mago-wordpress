@@ -10,23 +10,36 @@ use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
+use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
-use function ord;
-use function strcspn;
+use function count;
+use function explode;
+use function implode;
+use function preg_match;
+use function preg_match_all;
+use function preg_quote;
+use function preg_split;
+use function rtrim;
+use function sort;
+use function str_starts_with;
 use function strlen;
-use function strpos;
 use function strtolower;
-use function substr;
 
-use const PHP_INT_MAX;
+use const PREG_SPLIT_DELIM_CAPTURE;
 
 /**
  * Ports `WordPress.WP.CapitalPDangit`.
  *
+ * Text is checked line by line, as PHPCS tokenizes multi-line strings,
+ * comments and inline HTML into one token per line.
+ *
  * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:too-many-methods
+ * @mago-expect lint:kan-defect
  */
 final class CapitalPDangitRule implements Rule
 {
@@ -34,9 +47,31 @@ final class CapitalPDangitRule implements Rule
 
     private const CORRECT_SPELLING = 'WordPress';
 
-    private const LOWERCASE_SPELLING = 'wordpress';
+    // Verbatim from the sniff: skips URLs, e-mail addresses, variables, paths,
+    // file names and dash-joined tokens such as CSS classes.
+    private const WP_REGEX = '#(?<![\\\\/\$@`-])\b(Word[ _-]*Pres+)\b(?![@/`-]|\.(?:org|com|net|test|tv)|[^\s<>\'"()]*?\.(?:php|js|css|png|j[e]?pg|gif|pot))#i';
 
-    private const SPACED_SPELLING = 'word press';
+    private const WP_CLASSNAME_REGEX = '`(?:^|_)(Word[_]*Pres+)(?:_|$)`i';
+
+    private const TEXT_KINDS = [
+        NodeKind::LiteralString,
+        NodeKind::InterpolatedString,
+        NodeKind::DocumentString,
+        NodeKind::Inline,
+    ];
+
+    private const CLASS_LIKE_KINDS = [NodeKind::Class_, NodeKind::Interface, NodeKind::Trait, NodeKind::Enum];
+
+    // The sniff skips everything inside these, including comments.
+    private const SKIPPED_KINDS = [
+        NodeKind::Array,
+        NodeKind::LegacyArray,
+        NodeKind::List,
+        NodeKind::ArrayAccess,
+        NodeKind::Constant,
+        NodeKind::ClassLikeConstant,
+        NodeKind::FunctionCall,
+    ];
 
     public function __construct(
         private readonly Report $report,
@@ -47,143 +82,225 @@ final class CapitalPDangitRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/capital-p-dangit',
             name: 'Capital P dangit',
-            description: 'Detects the misspelling of WordPress (such as Wordpress, wordPress, or Word Press) in string literals and comments. The correct spelling uses a capital W and a capital P. All-lowercase "wordpress" is never flagged, since it is legitimate in slugs, URLs and identifiers, and occurrences inside URLs or class-like tokens (e.g. Wordpress_Plugin) are ignored too.',
+            description: 'Detects the misspelling of WordPress (such as Wordpress, wordpress, or Word Press) in string literals, inline HTML, comments, and class-like and namespace names. The correct spelling uses a capital W and a capital P. Occurrences inside URLs, paths, file names, e-mail addresses, dash-joined tokens (e.g. fa-wordpress), HTML attribute values, arrays, and constant declarations are ignored.',
             defaultLevel: Level::Note,
             defaultEnabled: true,
-            targets: [NodeKind::Program, NodeKind::LiteralString, NodeKind::LiteralStringPart],
+            targets: [NodeKind::Program],
         );
     }
 
     public function lint(LintContext $context): void
     {
-        match ($context->node->kind) {
-            NodeKind::Program => $this->scanTrivia($context),
-            NodeKind::LiteralString, NodeKind::LiteralStringPart => $this->scanText(
-                $context,
-                $context->file->getText($context->node),
-                $context->node->span,
-                'MisspelledInText',
-            ),
-            default => null,
-        };
-    }
+        $file = $context->file;
+        $program = $context->node;
+        $skipped = self::skippedRanges($file, $program);
 
-    private function scanTrivia(LintContext $context): void
-    {
-        foreach ($context->file->getTrivia() as $trivia) {
-            $this->scanText($context, $context->file->getText($trivia->span), $trivia->span, 'MisspelledInComment');
+        foreach ($file->getTrivia() as $trivia) {
+            $this->scanText($context, $trivia->span, $skipped, 'MisspelledInComment');
         }
-    }
 
-    private function scanText(LintContext $context, string $text, Span $span, string $code): void
-    {
-        $this->scanFor($context, $text, $span, self::LOWERCASE_SPELLING, $code);
-        $this->scanFor($context, $text, $span, self::SPACED_SPELLING, $code);
-    }
+        foreach (NodeIndex::ofKinds($file, $program, self::TEXT_KINDS) as $node) {
+            $this->scanText($context, $node->span, $skipped, 'MisspelledInText');
+        }
 
-    private function scanFor(LintContext $context, string $text, Span $span, string $needle, string $code): void
-    {
-        // The all-lowercase spelling is legitimate in slugs, URLs and identifiers, and never flagged.
-        $exemptCorrect = $needle === self::LOWERCASE_SPELLING;
-
-        $lower = strtolower($text);
-        $length = strlen($needle);
-        $offset = 0;
-        $urls = self::urlRanges($lower);
-        $url = 0;
-        while (($start = strpos($lower, $needle, $offset)) !== false) {
-            $end = $start + $length;
-            $offset = $end;
-            $word = substr($text, $start, $length);
-
-            if ($exemptCorrect && ($word === self::CORRECT_SPELLING || $word === self::LOWERCASE_SPELLING)) {
-                continue;
+        foreach (NodeIndex::ofKinds($file, $program, self::CLASS_LIKE_KINDS) as $node) {
+            $name = $file->getFirstDescendant($node, NodeKind::LocalIdentifier);
+            if ($name !== null && $file->getParent($name) === $node) {
+                $this->checkName($context, $name, [$file->getText($name)], 'MisspelledClassName');
             }
+        }
 
-            // Matches arrive in order, so the URL cursor only moves forward.
-            while (($urls[$url][1] ?? PHP_INT_MAX) <= $start) {
-                ++$url;
+        foreach (NodeIndex::ofKind($file, $program, NodeKind::Namespace) as $node) {
+            $name = $file->getChildren($node)[1] ?? null;
+            if ($name !== null && $name->kind === NodeKind::Identifier) {
+                $this->checkName($context, $name, explode('\\', $file->getText($name)), 'MisspelledNamespaceName');
             }
-
-            $insideUrl = ($urls[$url][0] ?? PHP_INT_MAX) <= $start;
-            if ($insideUrl || !self::isStandaloneWord($text, $start, $end)) {
-                continue;
-            }
-
-            $this->report($context, $word, $span, $code);
         }
     }
 
     /**
-     * The match is standalone when the characters directly before and after
-     * it are non-word bytes or the edge of the text. A `.` joins the match
-     * only when a word byte sits on its far side, so `Wordpress.org` is
-     * part of a domain while a sentence-ending `Wordpress.` is standalone.
-     */
-    private static function isStandaloneWord(string $text, int $start, int $end): bool
-    {
-        $beforeOk = $start === 0 || !self::joinsWord($text, $start - 1, $start - 2);
-        $afterOk = $end === strlen($text) || !self::joinsWord($text, $end, $end + 1);
-
-        return $beforeOk && $afterOk;
-    }
-
-    private static function joinsWord(string $text, int $adjacent, int $beyond): bool
-    {
-        if ($text[$adjacent] !== '.') {
-            return self::isWordByte($text[$adjacent]);
-        }
-
-        return $beyond >= 0 && $beyond < strlen($text) && self::isWordByte($text[$beyond]);
-    }
-
-    /**
-     * Returns the `[start, end)` ranges that follow a URL scheme separator
-     * (`://`) up to the end of its whitespace-delimited token.
+     * The merged, sorted `[start, end)` ranges the sniff never reports in:
+     * array and list literals, array access keys, constant declarations
+     * and the arguments of global define() calls.
      *
      * @return list<array{int, int}>
      */
-    private static function urlRanges(string $lower): array
+    private static function skippedRanges(SourceFile $file, Node $program): array
     {
         $ranges = [];
-        $offset = 0;
-        while (($separator = strpos($lower, needle: '://', offset: $offset)) !== false) {
-            $start = $separator + 3;
-            $offset = $start + strcspn($lower, characters: " \t\n\v\f\r", offset: $start);
-            $ranges[] = [$start, $offset];
+        foreach (NodeIndex::ofKinds($file, $program, self::SKIPPED_KINDS) as $node) {
+            $start = self::skippedStart($file, $node);
+            if ($start !== null) {
+                $ranges[] = [$start, $node->span->end];
+            }
         }
 
-        return $ranges;
+        sort($ranges);
+        // Node spans nest or are disjoint, so dropping each range inside the last kept one merges them.
+        $merged = [];
+        $end = -1;
+        foreach ($ranges as $range) {
+            if ($range[0] < $end) {
+                continue;
+            }
+
+            $merged[] = $range;
+            $end = $range[1];
+        }
+
+        return $merged;
+    }
+
+    private static function skippedStart(SourceFile $file, Node $node): ?int
+    {
+        $start = $node->span->start;
+
+        return match ($node->kind) {
+            // Only the key, from the `[` on.
+            NodeKind::ArrayAccess => ($file->getChildren($node)[0] ?? $node)->span->end,
+            NodeKind::FunctionCall => match (strtolower(Calls::leadingIdentifier($file->contents, $start) ?? '')) {
+                'define', '\\define' => $start,
+                default => null,
+            },
+            default => $start,
+        };
     }
 
     /**
-     * Besides alphanumerics, `_`, `-`, `/` and `=` count as word bytes, so
-     * slugs, URLs, file paths, query strings and class-like tokens
-     * (e.g. `Wordpress_Plugin`) are never flagged.
+     * @param list<array{int, int}> $ranges
      */
-    private static function isWordByte(string $byte): bool
+    private static function isSkipped(array $ranges, int $offset): bool
     {
-        $code = ord($byte);
+        $low = 0;
+        $high = count($ranges) - 1;
+        while ($low <= $high) {
+            $mid = ($low + $high) >> 1;
+            [$start, $end] = $ranges[$mid];
+            if ($offset >= $start && $offset < $end) {
+                return true;
+            }
 
-        return (
-            $code >= 0x30
-            && $code <= 0x39
-            || $code >= 0x41
-            && $code <= 0x5a
-            || $code >= 0x61
-            && $code <= 0x7a
-            || $byte === '_'
-            || $byte === '-'
-            || $byte === '/'
-            || $byte === '='
-        );
+            if ($offset < $start) {
+                $high = $mid - 1;
+                continue;
+            }
+
+            $low = $mid + 1;
+        }
+
+        return false;
     }
 
-    private function report(LintContext $context, string $word, Span $span, string $code): void
+    /**
+     * @param list<array{int, int}> $skipped
+     */
+    private function scanText(LintContext $context, Span $span, array $skipped, string $code): void
     {
+        if (self::isSkipped($skipped, $span->start)) {
+            return;
+        }
+
+        $text = $context->file->getText($span);
+        $docBlock = $code === 'MisspelledInComment' && str_starts_with($text, '/**');
+        $inLink = false;
+        $tag = [];
+        $offset = 0;
+        foreach (explode("\n", $text) as $line) {
+            $start = $span->start + $offset;
+            $offset += strlen($line) + 1;
+
+            // Doc text after an `@link` tag, up to the next tag, is ignored.
+            if ($docBlock && preg_match('/^\s*(?:\/\*\*)?\s*\*?\s*(@\S+)/', $line, $tag) === 1) {
+                $inLink = $tag[1] === '@link';
+            }
+
+            if ($inLink) {
+                continue;
+            }
+
+            $misspelled = self::misspellings($line);
+            if ($misspelled === []) {
+                continue;
+            }
+
+            $this->report(
+                $context,
+                new Span($start, $start + strlen(rtrim($line, characters: "\r"))),
+                $misspelled,
+                $code,
+            );
+        }
+    }
+
+    /**
+     * The misspelled matches in one line, after the sniff's false-positive filters.
+     *
+     * @return list<string>
+     */
+    private static function misspellings(string $content): array
+    {
+        // The whole match is the captured word, so the split alternates text and matches.
+        $parts = preg_split(self::WP_REGEX, $content, flags: PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false) {
+            return [];
+        }
+
+        // Verbatim from the sniff, including searching from the end of the previous match.
+        $found = [];
+        $offset = 0;
+        $end = 0;
+        $count = count($parts);
+        for ($index = 1; $index < $count; $index += 2) {
+            $word = $parts[$index];
+            $end += strlen($parts[$index - 1]) + strlen($word);
+            $quoted = preg_quote($word, delimiter: '`');
+            $falsePositive =
+                preg_match('`http[s]?://[^\s<>\'"()]*' . $quoted . '`', $content, offset: $offset) === 1
+                || preg_match('`[a-z]+=(["\'])' . $quoted . '\1`', $content, offset: $offset) === 1
+                || preg_match('`\\\\\'' . $quoted . '\\\\\'`', $content, offset: $offset) === 1
+                || preg_match('`(?:\?|&amp;|&)[a-z0-9_]+=' . $quoted . '(?:&|$)`', $content, offset: $offset) === 1;
+            $offset = $end;
+
+            if (!$falsePositive && $word !== self::CORRECT_SPELLING) {
+                $found[] = $word;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * @param list<string> $levels
+     */
+    private function checkName(LintContext $context, Node $name, array $levels, string $code): void
+    {
+        $misspelled = [];
+        $matches = [];
+        foreach ($levels as $level) {
+            preg_match_all(self::WP_CLASSNAME_REGEX, $level, $matches);
+            foreach ($matches[1] as $word) {
+                if ($word === self::CORRECT_SPELLING) {
+                    continue;
+                }
+
+                $misspelled[] = $word;
+            }
+        }
+
+        if ($misspelled !== []) {
+            $this->report($context, $name->span, $misspelled, $code);
+        }
+    }
+
+    /**
+     * @param list<string> $misspelled
+     */
+    private function report(LintContext $context, Span $span, array $misspelled, string $code): void
+    {
+        $found = implode('`, `', $misspelled);
         $this->report->issue(
             $context,
-            Issue::new('Misspelled `WordPress`', $span, "`{$word}` should be `WordPress`")->withNote(
+            Issue::new('Misspelled `WordPress`', $span, "`{$found}` should be `WordPress`")->withNote(
                 'The correct spelling of `WordPress` uses a capital `W` and a capital `P`.',
             )->withHelp('Replace the misspelling with `WordPress`.'),
             [self::SNIFF . '.' . $code],

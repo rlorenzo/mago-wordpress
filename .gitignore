@@ -2,3 +2,4 @@
 /.mago/
 /.phpunit.cache/
 
+.DS_Store

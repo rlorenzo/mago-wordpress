@@ -105,4 +105,28 @@ namespace {
 
     // deprecated_dispatchers_are_not_checked
     do_action_deprecated('MyPlugin-Old', [], '1.0');
+
+    // concatenated_literal_parts_are_validated
+    // @mago-expect lint:wordpress/valid-hook-name
+    do_action('admin_Head_' . $type . '_Action');
+    // @mago-expect lint:wordpress/valid-hook-name
+    do_action('admin_Head_' . get_id() . '_action');
+    // @mago-expect lint:wordpress/valid-hook-name
+    do_action('prefix_block_' . $block['blockName'] . '_More_hookname');
+
+    // lowercase_concatenation_is_valid
+    do_action('admin_head_' . $post->ID . '_action');
+
+    // array_keys_and_call_arguments_are_ignored
+    do_action('prefix_block_' . $block['blockName']);
+    $value = apply_filters(get_filter_name('UPPERCASE', 'wrong-delimiter'), $value);
+
+    // ternary_literals_are_validated
+    // @mago-expect lint:wordpress/valid-hook-name(2)
+    $value = apply_filters($name ? 'UPPERCASE' : 'wrong-delimiter', $value);
+}
+
+namespace MyPlugin {
+    // relative_namespace_call_is_skipped
+    namespace\apply_filters_ref_array('adminHead', [$value]);
 }

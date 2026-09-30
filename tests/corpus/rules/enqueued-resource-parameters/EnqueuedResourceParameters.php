@@ -15,10 +15,14 @@ namespace {
     wp_enqueue_script('jquery');
     wp_enqueue_style('common');
 
-    // alias_handles_without_src_are_fine
+    // empty_src_is_still_checked_like_wpcs
+    // @mago-expect lint:wordpress/enqueued-resource-parameters(2)
     wp_register_script('my-bundle', false, ['a', 'b']);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
     wp_register_style('my-inline', null);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters(2)
     wp_register_script('my-inline', '');
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
     wp_register_style('my-inline-2', (''));
 
     // dynamic_version_values_are_fine
@@ -90,6 +94,62 @@ namespace {
     // parenthesized_false_version_is_flagged
     // @mago-expect lint:wordpress/enqueued-resource-parameters
     wp_enqueue_style('my-style', $src, [], (false));
+    // falsy_version_literals_are_flagged
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], 0, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], 00.00, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], 0x0, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], 0o0, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], 0_0.0_0, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], /* comment */ '0' /* another */, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], "", true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], array(), true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], [/* comment */], true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], \FALSE, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], ver: 0, in_footer: true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], <<<'EOD'
+        EOD, true);
+
+    // padded_document_version_is_truthy_like_wpcs
+    wp_register_script('s', $src, [], <<<'EOD'
+         0 
+        EOD, true);
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], <<<EOD
+        0
+        EOD, true);
+
+    // fully_qualified_null_version_is_flagged
+    // @mago-expect lint:wordpress/enqueued-resource-parameters
+    wp_register_script('s', $src, [], \Null, true);
+
+    // non_falsy_version_literals_are_fine
+    wp_register_script('s', $src, [], 0x1, true);
+    wp_register_script('s', $src, [], 052, true);
+    wp_register_script('s', $src, [], 0.1, true);
+    wp_register_script('s', $src, [], '0.0.0', true);
+    wp_register_script('s', $src, [], '0' . '0', true);
+    wp_register_script('s', $src, [], (bool) 0, true);
+    wp_register_script('s', $src, [], ['1.0.0'], true);
+    wp_register_script('s', $src, [], [] + [1], true);
+    wp_register_script('s', $src, [], "{$ver}", true);
+    wp_register_script('s', $src, [], <<<EOD
+        {$ver}
+        EOD, true);
+
+    // relative_namespace_call_is_not_resolved_like_wpcs
+    namespace\wp_register_script('s', 'https://example.com/js/app.js', [], '1.1.0');
 }
 
 namespace App {

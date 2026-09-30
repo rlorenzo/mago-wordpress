@@ -16,9 +16,14 @@ use Rlorenzo\MagoWordPress\Internal\GlobalWrites;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
+use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 
+use function array_filter;
+use function array_values;
 use function in_array;
+use function strtolower;
 use function substr;
+use function trim;
 
 use const PHP_INT_MAX;
 
@@ -31,6 +36,7 @@ use const PHP_INT_MAX;
  * without declaring each of them as a target too.
  *
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class GlobalVariablesOverrideRule implements Rule
 {
@@ -46,6 +52,14 @@ final class GlobalVariablesOverrideRule implements Rule
      */
     private const EXTRA_GLOBALS = ['query_string'];
 
+    private const CLASS_LIKE_KINDS = [
+        NodeKind::Class_,
+        NodeKind::Interface,
+        NodeKind::Trait,
+        NodeKind::Enum,
+        NodeKind::AnonymousClass,
+    ];
+
     public function __construct(
         private readonly Report $report,
     ) {}
@@ -55,7 +69,7 @@ final class GlobalVariablesOverrideRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/global-variables-override',
             name: 'Global variables override',
-            description: 'Reports writes that overwrite WordPress-protected global variables such as $post, $wp_query, or $wpdb. This covers direct assignments (including compound assignments), foreach key/value bindings, and list/array destructuring targets, however deeply nested. A write is flagged in the top-level scope, or inside a function-like scope where the variable was imported with a global statement. Writes to $GLOBALS[...] with a protected key are flagged anywhere; the key is compared verbatim, so $GLOBALS[\'$post\'] is a different key from $GLOBALS[\'post\'].',
+            description: 'Reports writes that overwrite WordPress-protected global variables such as $post, $wp_query, or $wpdb. This covers direct assignments (including compound assignments), foreach key/value bindings, list/array destructuring targets, however deeply nested, and writes to an element of the variable such as $post[\'key\'] = .... A write is flagged in the top-level scope, or inside a function-like scope where the variable was imported with a global statement. Writes to $GLOBALS[...] with a protected key (a string literal, or a concatenation of them) are flagged anywhere; the key is compared verbatim, so $GLOBALS[\'$post\'] is a different key from $GLOBALS[\'post\']. Code inside unit-test classes (those extending WP_UnitTestCase, PHPUnit\'s TestCase and the like) is skipped.',
             defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::Program],
@@ -68,14 +82,27 @@ final class GlobalVariablesOverrideRule implements Rule
         $imports = GlobalWrites::imports($file, $context->node);
 
         foreach (GlobalWrites::targets($file, $context->node) as $target) {
-            if ($target->kind === NodeKind::ArrayAccess) {
-                $this->checkGlobalsWrite($context, $file, $target);
+            // `$var[...] = ...` overwrites part of `$var`, which WPCS counts as a write to it.
+            $base = $target;
+            $key = null;
+            while ($base->kind === NodeKind::ArrayAccess || $base->kind === NodeKind::ArrayAppend) {
+                $parts = $file->getChildren($base);
+                $key = $base->kind === NodeKind::ArrayAccess ? $parts[1] ?? null : null;
+                $base = Values::unwrap($file, $parts[0] ?? $base);
+            }
+
+            $variable = $file->getChildren($base)[0] ?? $base;
+            if ($base->kind !== NodeKind::Variable || $variable->kind !== NodeKind::DirectVariable) {
                 continue;
             }
 
-            $variable = $file->getChildren($target)[0] ?? $target;
-            if ($target->kind === NodeKind::Variable && $variable->kind === NodeKind::DirectVariable) {
+            if ($file->getText($variable) !== '$GLOBALS') {
                 $this->checkVariableTarget($context, $file, $target, $variable, $imports);
+                continue;
+            }
+
+            if ($key !== null) {
+                $this->checkGlobalsKey($context, $file, $target, $key);
             }
         }
     }
@@ -106,21 +133,9 @@ final class GlobalVariablesOverrideRule implements Rule
         $this->report($context, $spanNode, $name);
     }
 
-    private function checkGlobalsWrite(LintContext $context, SourceFile $file, Node $arrayAccess): void
+    private function checkGlobalsKey(LintContext $context, SourceFile $file, Node $spanNode, Node $key): void
     {
-        $children = $file->getChildren($arrayAccess);
-
-        $base = Values::unwrap($file, $children[0] ?? $arrayAccess);
-        if ($base->kind === NodeKind::Variable) {
-            $base = $file->getChildren($base)[0] ?? $base;
-        }
-
-        if ($base->kind !== NodeKind::DirectVariable || $file->getText($base) !== '$GLOBALS') {
-            return;
-        }
-
-        $key = Values::unwrap($file, $children[1] ?? $arrayAccess);
-        $keyValue = Values::literalString($file, $key);
+        $keyValue = self::literalKey($file, $key);
         if ($keyValue === null) {
             return;
         }
@@ -130,11 +145,38 @@ final class GlobalVariablesOverrideRule implements Rule
             return;
         }
 
-        $this->report($context, $arrayAccess, $name);
+        $this->report($context, $spanNode, $name);
+    }
+
+    /**
+     * The key's value when it is a string literal or a `.` concatenation of
+     * them, as WPCS joins `'p' . 'age'`; null for anything dynamic.
+     */
+    private static function literalKey(SourceFile $file, Node $key): ?string
+    {
+        $key = Values::unparenthesize($file, $key);
+        if ($key->kind !== NodeKind::Binary) {
+            return Values::literalString($file, $key);
+        }
+
+        [$lhs, $operator, $rhs] = $file->getChildren($key) + [null, null, null];
+        if ($lhs === null || $operator === null || $rhs === null || trim($file->getText($operator)) !== '.') {
+            return null;
+        }
+
+        $left = self::literalKey($file, $lhs);
+        $right = self::literalKey($file, $rhs);
+
+        return $left === null || $right === null ? null : $left . $right;
     }
 
     private function report(LintContext $context, Node $spanNode, string $name): void
     {
+        // WPCS skips test classes whole, so tests may set up any global.
+        if (self::inTestClass($context->file, $spanNode)) {
+            return;
+        }
+
         $this->report->issue(
             $context,
             Issue::new(
@@ -146,6 +188,36 @@ final class GlobalVariablesOverrideRule implements Rule
             )->withHelp('Use a differently named local variable, or the appropriate WordPress API instead.'),
             [self::SNIFF . '.Prohibited'],
         );
+    }
+
+    private static function inTestClass(SourceFile $file, Node $node): bool
+    {
+        $namespace = '';
+        $classLikes = [];
+        foreach ($file->getAncestors($node) as $ancestor) {
+            if ($ancestor->kind === NodeKind::Namespace) {
+                $names = array_filter(
+                    $file->getChildren($ancestor),
+                    static fn(Node $child): bool => $child->kind === NodeKind::Identifier,
+                );
+                $identifier = array_values($names)[0] ?? null;
+                $namespace = $identifier === null ? '' : strtolower($file->getText($identifier));
+
+                break;
+            }
+
+            if (in_array($ancestor->kind, self::CLASS_LIKE_KINDS, strict: true)) {
+                $classLikes[] = $ancestor;
+            }
+        }
+
+        foreach ($classLikes as $classLike) {
+            if (TestClasses::is($file, $classLike, $namespace)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

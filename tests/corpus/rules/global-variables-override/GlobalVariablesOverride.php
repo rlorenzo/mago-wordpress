@@ -130,9 +130,10 @@ namespace {
     $arrow_variable_assignment = fn() => $post = get_post(123);
 
     // globals_write_in_arrow_function_is_flagged
-    $arrow_globals_write = fn() =>
+    $arrow_globals_write = fn() => (
         // @mago-expect lint:wordpress/global-variables-override
-        $GLOBALS['post'] = get_post(123);
+        $GLOBALS['post'] = get_post(123)
+    );
 
     // override_after_global_import_is_flagged
     function my_plugin_setup_with_import()
@@ -198,10 +199,11 @@ namespace {
         return $post->post_title;
     }
 
-    // array_element_write_is_not_flagged
+    // array_element_write_after_global_import_is_flagged
     function my_plugin_array_element()
     {
         global $wp_filter;
+        // @mago-expect lint:wordpress/global-variables-override
         $wp_filter['init'] = 'something';
     }
 
@@ -232,6 +234,45 @@ namespace {
             $current_user = wp_get_current_user();
         }
     }
+
+    // top_level_array_element_write_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $wp_filter['init'][] = 'something';
+
+    // globals_nested_element_write_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $GLOBALS['wp_filter']['init'] = 'something';
+
+    // globals_concatenated_key_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $GLOBALS['p' . 'a' . 'ge'] = 'test';
+
+    // globals_partly_dynamic_concatenated_key_is_not_flagged
+    $GLOBALS['p' . $a . 'ge'] = 'test';
+
+    // array_element_destructuring_target_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    [$wp_filter['init']] = my_plugin_get_pair();
+
+    // override_in_test_class_is_not_flagged
+    class MyPluginTest extends \WP_UnitTestCase
+    {
+        public function test_setup()
+        {
+            global $post;
+            $post = get_post(123);
+            $GLOBALS['wp_query'] = new \WP_Query();
+        }
+    }
+
+    // override_in_anonymous_test_class_is_not_flagged
+    $my_plugin_test = new class extends PHPUnit_Framework_TestCase {
+        public function test_setup()
+        {
+            global $post;
+            $post = get_post(123);
+        }
+    };
 }
 
 namespace MyPlugin {

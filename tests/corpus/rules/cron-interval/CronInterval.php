@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 // closure_with_low_interval_is_flagged
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['every_minute'] = [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 60,
         'display' => 'Every Minute',
     ];
@@ -14,18 +14,18 @@ add_filter('cron_schedules', function ($schedules) {
 });
 
 // arrow_function_with_low_interval_is_flagged
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', fn($schedules) => array_merge($schedules, [
     'every_five_minutes' => [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 5 * 60,
         'display' => 'Every 5 Minutes',
     ],
 ]));
 
 // minute_in_seconds_constant_is_recognized
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['every_minute'] = [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => MINUTE_IN_SECONDS,
         'display' => 'Every Minute',
     ];
@@ -34,9 +34,9 @@ add_filter('cron_schedules', function ($schedules) {
 });
 
 // arithmetic_with_constant_is_evaluated
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['every_two_minutes'] = [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 2 * MINUTE_IN_SECONDS,
         'display' => 'Every 2 Minutes',
     ];
@@ -45,9 +45,9 @@ add_filter('cron_schedules', function ($schedules) {
 });
 
 // legacy_array_syntax_is_checked
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['every_30_seconds'] = array(
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 30,
         'display' => 'Every 30 Seconds',
     );
@@ -56,9 +56,9 @@ add_filter('cron_schedules', function ($schedules) {
 });
 
 // addition_expression_is_evaluated
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['odd_schedule'] = [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 60 + 60,
         'display' => 'Every 2 Minutes',
     ];
@@ -96,7 +96,8 @@ add_filter('cron_schedules', function ($schedules) {
     return $schedules;
 });
 
-// variable_interval_is_skipped
+// variable_interval_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) use ($interval) {
     $schedules['custom'] = [
         'interval' => $interval,
@@ -106,7 +107,8 @@ add_filter('cron_schedules', function ($schedules) use ($interval) {
     return $schedules;
 });
 
-// function_call_interval_is_skipped
+// function_call_interval_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['custom'] = [
         'interval' => (int) get_option('my_plugin_interval'),
@@ -116,7 +118,8 @@ add_filter('cron_schedules', function ($schedules) {
     return $schedules;
 });
 
-// unknown_constant_is_skipped
+// unknown_constant_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['custom'] = [
         'interval' => MY_PLUGIN_CRON_INTERVAL,
@@ -127,9 +130,9 @@ add_filter('cron_schedules', function ($schedules) {
 });
 
 // named_arguments_are_supported
+// @mago-expect lint:wordpress/cron-interval
 add_filter(hook_name: 'cron_schedules', callback: function ($schedules) {
     $schedules['every_minute'] = [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 60,
         'display' => 'Every Minute',
     ];
@@ -138,9 +141,9 @@ add_filter(hook_name: 'cron_schedules', callback: function ($schedules) {
 });
 
 // numeric_separator_is_evaluated
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['every_ten_minutes'] = [
-        // @mago-expect lint:wordpress/cron-interval
         'interval' => 6_00,
         'display' => 'Every Ten Minutes',
     ];
@@ -148,7 +151,8 @@ add_filter('cron_schedules', function ($schedules) {
     return $schedules;
 });
 
-// octal_literal_is_not_evaluated
+// octal_literal_is_evaluated
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', function ($schedules) {
     $schedules['custom'] = [
         'interval' => 0600,
@@ -158,7 +162,7 @@ add_filter('cron_schedules', function ($schedules) {
     return $schedules;
 });
 
-// integer_overflow_is_not_evaluated
+// integer_overflow_is_above_minimum
 add_filter('cron_schedules', function ($schedules) {
     $schedules['custom'] = [
         'interval' => 9223372036854775807 * 2,
@@ -168,7 +172,8 @@ add_filter('cron_schedules', function ($schedules) {
     return $schedules;
 });
 
-// string_callback_is_not_resolved
+// undeclared_string_callback_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
 add_filter('cron_schedules', 'my_plugin_cron_schedules');
 
 // other_filters_are_ignored
@@ -179,6 +184,83 @@ add_filter('the_content', function ($content) {
 // non_literal_hook_name_is_skipped
 add_filter($hook, function ($schedules) {
     $schedules['custom'] = ['interval' => 1];
+
+    return $schedules;
+});
+
+// named_function_callback_is_resolved
+function my_plugin_every_minute(array $schedules): array
+{
+    $schedules['every_minute'] = ['interval' => 60, 'display' => 'Every Minute'];
+
+    return $schedules;
+}
+
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', 'my_plugin_every_minute');
+
+// first_class_callable_is_resolved
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', my_plugin_every_minute(...));
+
+final class My_Plugin_Cron
+{
+    public function register(): void
+    {
+        // array_callable_method_is_resolved
+        // @mago-expect lint:wordpress/cron-interval
+        add_filter('cron_schedules', [$this, 'every_five_minutes']);
+
+        // array_callable_method_above_minimum_is_allowed
+        add_filter('cron_schedules', array($this, 'hourly'));
+
+        // method_first_class_callable_is_resolved
+        // @mago-expect lint:wordpress/cron-interval
+        add_filter('cron_schedules', $this->every_five_minutes(...));
+    }
+
+    public function every_five_minutes(array $schedules): array
+    {
+        $schedules['every_five_minutes'] = ['interval' => 5 * MINUTE_IN_SECONDS, 'display' => 'Every 5 Minutes'];
+
+        return $schedules;
+    }
+
+    public static function hourly(array $schedules): array
+    {
+        $schedules['hourly_custom'] = ['interval' => HOUR_IN_SECONDS, 'display' => 'Hourly'];
+
+        return $schedules;
+    }
+}
+
+// static_array_callable_is_resolved
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', ['My_Plugin_Cron', 'Every_Five_Minutes']);
+
+// array_callable_with_undeclared_method_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', [$other, 'some_method']);
+
+// array_callable_with_variable_method_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', [$other, $method]);
+
+// variable_callback_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', $callback);
+
+// interval_without_value_is_undetermined
+// @mago-expect lint:wordpress/cron-interval
+add_filter('cron_schedules', function ($schedules) {
+    $schedules['custom'] = ['interval'];
+
+    return $schedules;
+});
+
+// callback_without_interval_is_ignored
+add_filter('cron_schedules', function ($schedules) {
+    unset($schedules['hourly']);
 
     return $schedules;
 });

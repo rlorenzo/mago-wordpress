@@ -54,10 +54,37 @@ namespace {
     // current_time_with_dynamic_format_is_not_flagged
     $timestamp2 = current_time($format);
 
-    // current_time_timestamp_with_gmt_true_is_not_flagged
+    // current_time_utc_timestamp_is_flagged_to_use_time
+    // @mago-expect lint:wordpress/wp-date-time
     $timestamp3 = current_time('timestamp', true);
-    $timestamp4 = current_time('timestamp', $gmt);
-    $timestamp5 = current_time('timestamp', gmt: true);
+    // @mago-expect lint:wordpress/wp-date-time
+    $timestamp4 = \current_time('timestamp', true);
+    // @mago-expect lint:wordpress/wp-date-time
+    $timestamp5 = current_time(gmt: true, type: 'timestamp');
+
+    // current_time_nowdoc_u_format_is_flagged
+    // @mago-expect lint:wordpress/wp-date-time
+    $timestamp6 = current_Time(<<<'EOD'
+        U
+        EOD, 1);
+
+    // current_time_multi_line_call_with_comments_is_flagged
+    // @mago-expect lint:wordpress/wp-date-time
+    $timestamp7 = current_time(
+        'timestamp', // Timestamp format.
+        true, // Use GMT timezone.
+    );
+
+    // current_time_timestamp_with_dynamic_gmt_is_flagged
+    // @mago-expect lint:wordpress/wp-date-time
+    $timestamp8 = current_time('timestamp', $gmt);
+
+    // current_time_named_non_timestamp_type_is_not_flagged
+    $mysql2 = current_time(gmt: true, type: 'mysql');
+
+    // namespaced_current_time_is_not_flagged
+    $timestamp9 = MyNamespace\current_time('timestamp', true);
+    $timestamp10 = \MyNamespace\current_time('timestamp', true);
 }
 
 namespace App {

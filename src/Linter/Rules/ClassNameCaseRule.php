@@ -16,25 +16,29 @@ use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\CoreClasses;
+use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function array_combine;
 use function array_map;
+use function array_pop;
+use function explode;
+use function ltrim;
 use function strtolower;
 
 /**
  * Ports `WordPress.WP.ClassNameCase`.
  *
- * Only the sniff's `$wp_classes` group is ported (see `CoreClasses`); the
- * bundled-library groups (`wp_themes_classes`, `aiclient_classes`,
- * `avif_classes`, `getid3_classes`, `phpmailer_classes`, `requests_classes`,
- * `simplepie_classes`) are out of scope.
+ * The sniff's `$wp_classes` group lives in `CoreClasses`; its other groups
+ * (default themes and bundled libraries such as getID3, PHPMailer, Requests,
+ * SimplePie, Avifinfo and the AI Client) in
+ * `Lists::CLASS_NAME_CASE_BUNDLED_CLASSES`.
  *
  * The class name is resolved with `SourceFile::getResolvedName()`, which
- * plays the part of the sniff's own `get_namespaced_classname()`: a bare
- * name qualifies against the file's namespace and `use` imports, so it only
- * matches a WP core class when it actually resolves to the global
- * namespace. `self`/`parent`/`static` arrive as a `Keyword` node, never an
- * identifier, so they are skipped without special-casing.
+ * plays the part of the sniff's own `get_namespaced_classname()`: a bare,
+ * qualified or `namespace\`-relative name qualifies against the file's
+ * namespace and `use` imports, and the fully qualified result is compared
+ * case-insensitively. `self`/`parent`/`static` arrive as a `Keyword` node,
+ * never an identifier, so they are skipped without special-casing.
  */
 final class ClassNameCaseRule implements Rule
 {
@@ -54,7 +58,7 @@ final class ClassNameCaseRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/class-name-case',
             name: 'WordPress class name case',
-            description: 'Reports an instantiation, static call, class constant access, extends clause, or implements clause that references a WordPress core class with the wrong case.',
+            description: 'Reports an instantiation, static call, class constant access, extends clause, or implements clause that references a WordPress core or bundled-library class with the wrong case.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [
@@ -70,8 +74,12 @@ final class ClassNameCaseRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        // Every match puts a core class name directly in the source.
-        $this->gate ??= FileGate::forWords(CoreClasses::NAMES);
+        // Every match puts a listed class's last name segment directly in the source.
+        $this->gate ??= FileGate::forWords(array_map(static function (string $name): string {
+            $segments = explode(separator: '\\', string: $name);
+
+            return array_pop($segments);
+        }, self::names()));
         if (!$this->gate->passes($context->file)) {
             return;
         }
@@ -101,21 +109,23 @@ final class ClassNameCaseRule implements Rule
 
     private function checkIdentifier(LintContext $context, Node $identifier): void
     {
-        $name = ClassReferences::globalName($context->file, $identifier);
-        if ($name === null) {
+        $resolved = $context->file->getResolvedName($identifier)?->name;
+        if ($resolved === null) {
             return;
         }
 
+        $name = ltrim($resolved, characters: '\\');
+
         $properCase = self::properCaseMap()[strtolower($name)] ?? null;
         if ($properCase === null || $properCase === $name) {
-            // Not a WP core class, or already using the proper case.
+            // Not a listed class, or already using the proper case.
             return;
         }
 
         $this->report->issue(
             $context,
             Issue::new(
-                "References the WordPress core class `{$name}` with the wrong case; expected `{$properCase}`.",
+                "References the WordPress class `{$name}` with the wrong case; expected `{$properCase}`.",
                 $identifier->span,
             )->withHelp("Use the properly cased name: `{$properCase}`."),
             [self::SNIFF . '.Incorrect'],
@@ -123,10 +133,18 @@ final class ClassNameCaseRule implements Rule
     }
 
     /**
+     * @return list<string>
+     */
+    private static function names(): array
+    {
+        return [...CoreClasses::NAMES, ...Lists::CLASS_NAME_CASE_BUNDLED_CLASSES];
+    }
+
+    /**
      * @return array<string, string>
      */
     private static function properCaseMap(): array
     {
-        return self::$properCase ??= array_combine(array_map(strtolower(...), CoreClasses::NAMES), CoreClasses::NAMES);
+        return self::$properCase ??= array_combine(array_map(strtolower(...), self::names()), self::names());
     }
 }

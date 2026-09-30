@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
-// posts_per_page_minus_one_is_flagged
-// @mago-expect lint:wordpress/posts-per-page
+// posts_per_page_minus_one_is_allowed (WPCS only checks value > limit)
 $query = new WP_Query(['posts_per_page' => -1]);
-
-// parenthesized_minus_one_is_flagged
-// @mago-expect lint:wordpress/posts-per-page
 $query = new WP_Query(['posts_per_page' => (-1)]);
-
-// posts_per_page_minus_one_string_is_flagged
-// @mago-expect lint:wordpress/posts-per-page
 $query = new WP_Query(['posts_per_page' => '-1']);
+
+// parenthesized_over_limit_is_flagged
+// @mago-expect lint:wordpress/posts-per-page
+$query = new WP_Query(['posts_per_page' => (500)]);
 
 // posts_per_page_over_limit_is_flagged
 // @mago-expect lint:wordpress/posts-per-page
@@ -22,12 +19,14 @@ $query = new WP_Query(['posts_per_page' => 500]);
 // @mago-expect lint:wordpress/posts-per-page
 $query = new WP_Query(['posts_per_page' => '500']);
 
-// numberposts_minus_one_is_flagged
+// numberposts_over_limit_is_flagged
 // @mago-expect lint:wordpress/posts-per-page
+$posts = get_posts(array('numberposts' => 500));
+
+// numberposts_minus_one_is_allowed
 $posts = get_posts(array('numberposts' => -1));
 
-// nopaging_true_is_flagged
-// @mago-expect lint:wordpress/posts-per-page
+// nopaging_is_allowed (WPCS moved the nopaging check out of this sniff in 1.0)
 $query = new WP_Query(['nopaging' => true]);
 
 // posts_per_page_numeric_separator_over_limit_is_flagged
@@ -43,9 +42,6 @@ $query = new WP_Query(['posts_per_page' => 20, 'paged' => 2]);
 
 // limit_boundary_is_allowed
 $query = new WP_Query(['posts_per_page' => 100]);
-
-// nopaging_false_is_allowed
-$query = new WP_Query(['nopaging' => false]);
 
 // variable_value_is_allowed
 $query = new WP_Query(['posts_per_page' => $limit]);

@@ -15,21 +15,38 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function bindec;
 use function count;
+use function hexdec;
 use function in_array;
+use function is_float;
 use function is_int;
+use function is_numeric;
 use function ltrim;
+use function octdec;
+use function preg_match;
+use function round;
+use function str_replace;
+use function strcasecmp;
+use function strrchr;
+use function substr;
 use function trim;
 
 /**
  * Ports `WordPress.WP.CronInterval`.
  *
+ * Like the sniff, a callback referenced by name resolves to the first function
+ * or method of that name (case-insensitively, namespace ignored) declared in
+ * the same file, and the first `'interval'` string in the callback body decides.
+ *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class CronIntervalRule implements Rule
 {
@@ -41,9 +58,22 @@ final class CronIntervalRule implements Rule
 
     private const INTERVAL_KEY = 'interval';
 
-    private const STOP_KINDS = [NodeKind::Function, NodeKind::Method, NodeKind::Closure, NodeKind::ArrowFunction];
+    private const ARRAY_KINDS = [NodeKind::Array, NodeKind::LegacyArray];
 
-    private const CONSTANTS = ['MINUTE_IN_SECONDS' => 60, 'HOUR_IN_SECONDS' => 3600, 'DAY_IN_SECONDS' => 86_400];
+    private const PARTIAL_KINDS = [
+        NodeKind::FunctionPartialApplication,
+        NodeKind::MethodPartialApplication,
+        NodeKind::StaticMethodPartialApplication,
+    ];
+
+    private const CONSTANTS = [
+        'MINUTE_IN_SECONDS' => 60,
+        'HOUR_IN_SECONDS' => 3600,
+        'DAY_IN_SECONDS' => 86_400,
+        'WEEK_IN_SECONDS' => 604_800,
+        'MONTH_IN_SECONDS' => 2_592_000,
+        'YEAR_IN_SECONDS' => 31_536_000,
+    ];
 
     private readonly FileGate $gate;
 
@@ -68,33 +98,45 @@ final class CronIntervalRule implements Rule
             name: 'Cron interval',
             description: "Flags custom cron schedules registered via add_filter('cron_schedules', ...) whose interval "
             . 'is shorter than the configured minimum (default 900 seconds, min-cron-interval). Cron schedules that run too often can severely degrade site '
-            . 'performance. Only inline callbacks (closures and arrow functions) are inspected, and only interval values '
-            . 'that are simple constant integer expressions: integer literals, */+ arithmetic on them, and the WordPress '
-            . 'time constants MINUTE_IN_SECONDS, HOUR_IN_SECONDS, and DAY_IN_SECONDS. Callbacks referenced by name and '
-            . 'dynamic interval values are not resolved.',
+            . 'performance. The callback may be a closure, an arrow function, or a function or method named by a string, '
+            . 'an array callable, or a first-class callable and declared in the same file. Interval values are evaluated '
+            . 'when they are constant integer expressions: integer literals, arithmetic on them, and the WordPress time '
+            . 'constants (MINUTE_IN_SECONDS through YEAR_IN_SECONDS). When the callback or its interval cannot be '
+            . 'determined, a separate warning says the schedule change was detected.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
-            targets: [NodeKind::FunctionCall],
+            targets: [NodeKind::Program],
         );
     }
 
     public function lint(LintContext $context): void
     {
-        if (!$this->gate->passes($context->file)) {
-            return;
-        }
-
         $file = $context->file;
-        if (Calls::matchWanted($file, $context->node, $this->wanted) === null) {
+        if (!$this->gate->passes($file)) {
             return;
         }
 
-        $call = CallExpression::fromNode($file, $context->node);
+        // Named callbacks resolve to declarations anywhere in the file, which
+        // only a `Program` snapshot is guaranteed to hold.
+        foreach (NodeIndex::ofKind($file, $context->node, NodeKind::FunctionCall) as $node) {
+            $this->checkCall($context, $node);
+        }
+    }
+
+    private function checkCall(LintContext $context, Node $node): void
+    {
+        $file = $context->file;
+        if (Calls::matchWanted($file, $node, $this->wanted) === null) {
+            return;
+        }
+
+        $call = CallExpression::fromNode($file, $node);
         $hook = Calls::argument($file, $call, index: 0, parameter: 'hook_name');
         if ($hook === null) {
             return;
         }
 
+        $hook = Values::unparenthesize($file, $hook);
         if (Values::literalString($file, $hook) !== self::HOOK_NAME) {
             return;
         }
@@ -104,94 +146,232 @@ final class CronIntervalRule implements Rule
             return;
         }
 
-        $callback = Values::unparenthesize($file, $callback);
-        if ($callback->kind === NodeKind::Closure) {
-            $children = $file->getChildren($callback);
-            $body = $children[count($children) - 1] ?? null;
-            if ($body !== null && $body->kind === NodeKind::Block) {
-                foreach ($file->getChildren($body) as $statement) {
-                    $this->scanForIntervals($context, $statement);
-                }
-            }
+        $body = $this->resolveBody($context, $callback);
+        if ($body === null) {
+            $this->confused($context, $hook);
 
             return;
         }
 
-        if ($callback->kind === NodeKind::ArrowFunction) {
-            $children = $file->getChildren($callback);
-            $expression = $children[count($children) - 1] ?? null;
-            if ($expression !== null) {
-                $this->scanForIntervals($context, $expression);
-            }
-        }
-
-        // A callback referenced by name (string, first-class callable, method
-        // reference) is not resolved; the Rust rule leaves those alone too.
-    }
-
-    /**
-     * Recursively looks for `'interval' => ...` entries, without descending
-     * into a nested function-like scope.
-     */
-    private function scanForIntervals(LintContext $context, Node $node): void
-    {
-        if (in_array($node->kind, self::STOP_KINDS, strict: true)) {
+        $value = $this->findIntervalValue($file, $body);
+        if ($value === false) {
             return;
         }
 
-        if ($node->kind === NodeKind::KeyValueArrayElement) {
-            $this->checkIntervalElement($context, $node);
-        }
+        $interval = $value === null ? null : $this->evaluate($file, $value);
+        if ($value === null || $interval === null) {
+            $this->confused($context, $hook);
 
-        foreach ($context->file->getChildren($node) as $child) {
-            $this->scanForIntervals($context, $child);
-        }
-    }
-
-    private function checkIntervalElement(LintContext $context, Node $element): void
-    {
-        $file = $context->file;
-        $children = $file->getChildren($element);
-        $key = $children[0] ?? null;
-        $value = $children[1] ?? null;
-        if ($key === null || $value === null) {
             return;
         }
 
-        $key = Values::unparenthesize($file, $key);
-        if (Values::literalString($file, $key) !== self::INTERVAL_KEY) {
+        if ($interval >= $this->minInterval) {
             return;
         }
 
-        $interval = $this->evaluateConstantInteger($file, $value);
-        if ($interval === null || $interval >= $this->minInterval) {
-            return;
-        }
-
+        $minutes = round($this->minInterval / 60, precision: 1);
         $this->report->issue(
             $context,
             Issue::new(
-                "Cron schedule interval of {$interval} seconds is below the minimum of {$this->minInterval} seconds.",
-                $value->span,
-                "This interval evaluates to {$interval} seconds",
-            )->withNote('Cron schedules that run too frequently can severely degrade site performance.')->withHelp(
-                "Use a longer interval ({$this->minInterval} seconds or more).",
-            ),
+                "Scheduling crons at {$interval} sec ( less than {$minutes} minutes ) is discouraged.",
+                $hook->span,
+            )
+                ->withSecondaryAnnotation($value->span, "This interval evaluates to {$interval} seconds")
+                ->withNote('Cron schedules that run too frequently can severely degrade site performance.')
+                ->withHelp("Use a longer interval ({$this->minInterval} seconds or more)."),
             [self::SNIFF . '.CronSchedulesInterval'],
         );
     }
 
+    private function confused(LintContext $context, Node $hook): void
+    {
+        $this->report->issue(
+            $context,
+            Issue::new(
+                'Detected changing of cron_schedules, but could not detect the interval value.',
+                $hook->span,
+            )->withHelp('Make sure the schedule interval is at least ' . $this->minInterval . ' seconds.'),
+            [self::SNIFF . '.ChangeDetected'],
+        );
+    }
+
     /**
-     * Evaluates simple constant integer expressions: integer literals, `*`/`+`
-     * arithmetic on them, and the WordPress time constants `MINUTE_IN_SECONDS`,
-     * `HOUR_IN_SECONDS`, and `DAY_IN_SECONDS`. Anything else yields NULL.
+     * The body to search for the interval: a closure or arrow function in the
+     * callback, or the declaration it names. NULL when it cannot be resolved.
+     *
+     * Mirrors the sniff's token search: an array callable narrows to its second
+     * element, then the first string, closure, arrow function, or first-class
+     * callable found in source order decides.
      */
-    private function evaluateConstantInteger(SourceFile $file, Node $node): ?int
+    private function resolveBody(LintContext $context, Node $callback): ?Node
+    {
+        $file = $context->file;
+        $array = $this->leftmostArray($file, $callback);
+        if ($array !== null) {
+            $callback = $file->getChildren($array)[1] ?? null;
+            if ($callback === null) {
+                return null;
+            }
+        }
+
+        foreach ([$callback, ...$file->getDescendants($callback)] as $node) {
+            if ($node->kind === NodeKind::Closure || $node->kind === NodeKind::ArrowFunction) {
+                return $this->lastChild($file, $node);
+            }
+
+            if ($node->kind === NodeKind::LiteralString) {
+                return $this->findDeclaration($context, (string) Values::literalString($file, $node));
+            }
+
+            if (in_array($node->kind, self::PARTIAL_KINDS, strict: true)) {
+                $name = $this->partialName($file, $node);
+
+                return $name === null ? null : $this->findDeclaration($context, $name);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The array literal the callback starts with, as in `array( $this, 'm' )`
+     * or `[ $this, 'm' ](...)`.
+     */
+    private function leftmostArray(SourceFile $file, Node $node): ?Node
+    {
+        while (!in_array($node->kind, self::ARRAY_KINDS, strict: true)) {
+            $first = $file->getChildren($node)[0] ?? null;
+            if ($first === null || $first->span->start !== $node->span->start) {
+                return null;
+            }
+
+            $node = $first;
+        }
+
+        return $node;
+    }
+
+    /**
+     * The function or method name of a first-class callable. Like the sniff,
+     * only the last segment of a qualified name counts.
+     */
+    private function partialName(SourceFile $file, Node $node): ?string
+    {
+        $children = $file->getChildren($node);
+        if ($node->kind === NodeKind::FunctionPartialApplication) {
+            $callee = Values::unparenthesize($file, $children[0] ?? $node);
+            $literal = Values::literalString($file, $callee);
+            if ($literal !== null) {
+                return $literal;
+            }
+
+            $callee = $callee->kind === NodeKind::Identifier ? $file->getChildren($callee)[0] ?? $callee : $callee;
+            if (!in_array(
+                $callee->kind,
+                [NodeKind::LocalIdentifier, NodeKind::QualifiedIdentifier, NodeKind::FullyQualifiedIdentifier],
+                strict: true,
+            )) {
+                return null;
+            }
+
+            $name = $file->getText($callee);
+            $last = strrchr($name, needle: '\\');
+
+            return $last === false ? $name : substr($last, offset: 1);
+        }
+
+        $selector = $children[1] ?? null;
+        $identifier = $selector === null ? null : $file->getChildren($selector)[0] ?? null;
+
+        return $identifier !== null && $identifier->kind === NodeKind::LocalIdentifier
+            ? $file->getText($identifier)
+            : null;
+    }
+
+    /**
+     * The body of the first function or method declared in this file with the
+     * name, case-insensitively.
+     */
+    private function findDeclaration(LintContext $context, string $name): ?Node
+    {
+        $file = $context->file;
+        $program = $file->getNode(0);
+        foreach (NodeIndex::ofKinds($file, $program, [NodeKind::Function, NodeKind::Method]) as $declaration) {
+            foreach ($file->getChildren($declaration) as $child) {
+                if ($child->kind !== NodeKind::LocalIdentifier) {
+                    continue;
+                }
+
+                if (strcasecmp($file->getText($child), $name) === 0) {
+                    return $this->lastChild($file, $declaration);
+                }
+
+                break;
+            }
+        }
+
+        return null;
+    }
+
+    private function lastChild(SourceFile $file, Node $node): ?Node
+    {
+        $children = $file->getChildren($node);
+
+        return $children[count($children) - 1] ?? null;
+    }
+
+    /**
+     * The value of the first `'interval'` string in the body when that string
+     * is an array key, NULL when it is not, and FALSE when there is none.
+     */
+    private function findIntervalValue(SourceFile $file, Node $body): Node|false|null
+    {
+        foreach ($file->getDescendants($body, NodeKind::LiteralString) as $string) {
+            if (Values::literalString($file, $string) !== self::INTERVAL_KEY) {
+                continue;
+            }
+
+            $key = $string;
+            $parent = $file->getParent($key);
+            while (
+                $parent !== null
+                && ($parent->kind === NodeKind::Literal || $parent->kind === NodeKind::Expression)
+            ) {
+                $key = $parent;
+                $parent = $file->getParent($key);
+            }
+
+            if ($parent === null || $parent->kind !== NodeKind::KeyValueArrayElement) {
+                return null;
+            }
+
+            $children = $file->getChildren($parent);
+
+            return $children[0] === $key ? $children[1] ?? null : null;
+        }
+
+        return false;
+    }
+
+    /**
+     * Evaluates constant numeric expressions: integer literals in any base,
+     * `+ - * /` arithmetic on them, and the WordPress time constants. Anything
+     * else yields NULL.
+     */
+    private function evaluate(SourceFile $file, Node $node): int|float|null
     {
         $node = Values::unparenthesize($file, $node);
 
         if ($node->kind === NodeKind::LiteralInteger) {
-            return Values::literalInteger($file, $node);
+            $text = str_replace(search: '_', replace: '', subject: $file->getText($node));
+
+            return match (true) {
+                preg_match('/^0[xX][0-9a-fA-F]+$/', $text) === 1 => hexdec($text),
+                preg_match('/^0[bB][01]+$/', $text) === 1 => bindec($text),
+                preg_match('/^0[oO]?[0-7]+$/', $text) === 1 => octdec(ltrim($text, characters: '0oO')),
+                // A decimal literal past PHP_INT_MAX is a float, as at run time.
+                default => Values::literalInteger($file, $node) ?? (is_numeric($text) ? (float) $text : null),
+            };
         }
 
         if ($node->kind === NodeKind::ConstantAccess) {
@@ -209,8 +389,8 @@ final class CronIntervalRule implements Rule
                 return null;
             }
 
-            $left = $this->evaluateConstantInteger($file, $lhs);
-            $right = $this->evaluateConstantInteger($file, $rhs);
+            $left = $this->evaluate($file, $lhs);
+            $right = $this->evaluate($file, $rhs);
             if ($left === null || $right === null) {
                 return null;
             }
@@ -218,10 +398,12 @@ final class CronIntervalRule implements Rule
             $result = match (trim($file->getText($operator))) {
                 '*' => $left * $right,
                 '+' => $left + $right,
+                '-' => $left - $right,
+                '/' => (float) $right === 0.0 ? null : $left / $right,
                 default => null,
             };
 
-            return is_int($result) ? $result : null;
+            return is_int($result) || is_float($result) ? $result : null;
         }
 
         return null;
