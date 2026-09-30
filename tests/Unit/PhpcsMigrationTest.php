@@ -86,6 +86,8 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('prepared-sql = { enabled = true, level = "warning" }', $toml);
         // WordPress-Extra leaves out the three WordPress-only sniffs.
         self::assertStringContainsString('validated-sanitized-input = { enabled = false }', $toml);
+        // ...and WordPress-Docs, which the shipped missing-docs stands in for.
+        self::assertStringContainsString('missing-docs = { enabled = false }', $toml);
 
         self::assertSame(['my-plugin'], $result['extra']['text-domains'] ?? null);
         self::assertSame('6.2', $result['extra']['minimum-wp-version'] ?? null);
@@ -155,6 +157,21 @@ final class PhpcsMigrationTest extends TestCase
 
         // An empty pattern would exclude the code in every file.
         self::assertSame([], PhpcsRuleset::excludePatterns($xpath));
+    }
+
+    public function testDocsStandardKeepsMissingDocs(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress-Extra"/>
+              <rule ref="WordPress-Docs"/>
+            </ruleset>
+            XML;
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+
+        self::assertStringNotContainsString('missing-docs', $result['toml']);
     }
 
     public function testWordPressStandardExcludesNothing(): void

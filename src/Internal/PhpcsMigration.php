@@ -351,9 +351,34 @@ final class PhpcsMigration
             }
         }
 
+        if ($this->leavesOutDocs()) {
+            $rules['missing-docs'] = ['enabled' => false];
+        }
+
         ksort($rules);
 
         return $rules;
+    }
+
+    /**
+     * The shipped config enables `missing-docs` for WordPress-Docs; a ruleset built on
+     * WordPress-Core or -Extra alone does not run those sniffs. A custom standard is not followed.
+     */
+    private function leavesOutDocs(): bool
+    {
+        $standards = PhpcsRuleset::standards($this->xpath);
+        if ($standards === [] || in_array('WordPress', $standards, strict: true)) {
+            return false;
+        }
+
+        foreach (PhpcsRuleset::elements($this->xpath, '/ruleset/rule[@ref]') as $rule) {
+            $ref = $rule->getAttribute('ref');
+            if ($ref === 'WordPress-Docs' || str_starts_with($ref, 'Squiz.Commenting')) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -464,7 +489,7 @@ final class PhpcsMigration
         $parts = explode('.', $ref);
         $sniff = implode('.', array_slice($parts, offset: 0, length: 3));
         $reason = match (true) {
-            $ref === 'WordPress-Docs' => 'documentation sniffs are not ported',
+            $ref === 'WordPress-Docs' => "only missing docblocks are checked (Mago's missing-docs); see the README",
             str_starts_with($ref, 'PHPCompatibility') => 'ignored (the package targets PHP 8.1+)',
             !str_starts_with($ref, 'WordPress.') && count($parts) === 1 && !str_contains($ref, '/')
                 => 'custom or third-party standard; its contents are not followed',

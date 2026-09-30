@@ -251,10 +251,20 @@ output, and the rest need a decision:
 
 ## Sprint G: `WordPress-Docs`
 
-Nothing is ported. Map what exists: Mago `valid-docblock` and `missing-docs` cover the
-structural half of `Squiz.Commenting.FunctionComment` / `Generic.Commenting.DocComment`.
-Document the mapping and the unported half (`@since` tags, `FileComment`, capitalisation) in
-the README. Port only if a team asks; WordPress core is the main consumer of `WordPress-Docs`.
+**Mapping done (2026-09-30).** README "WordPress-Docs" maps all eleven sniffs, checked by running
+phpcs and Mago on the same snippets. The shipped config now enables Mago's `missing-docs` for
+functions, methods, classes and properties, the declarations `FunctionComment`/`ClassComment`/
+`VariableComment` check; on Akismet and Contact Form 7 it gives phpcs's `Missing` + `WrongStyle`
+counts exactly (156, 512), at `help` level so it fails no build. `mago-wordpress migrate` turns
+it off for a `WordPress-Core`/`-Extra` ruleset without `WordPress-Docs`. Other overlaps:
+`no-hash-comment`, `no-empty-comment`, `valid-docblock`, `mago format` (star alignment), and
+`mago analyze` (`invalid-param-tag`; `check-throws` for thrown exceptions).
+
+Not covered, port only if a team asks (WordPress core is the main consumer): `FileComment`,
+docblock contents (`@param` presence/type/comment, return and `@throws` tags, capitalisation and
+full stops), and `EmptyCatchComment` (Mago's `no-empty-catch-clause` is stricter: it reports a
+`catch` holding only a comment). The phpcs.xml fallback cannot turn `missing-docs` off, as with
+every Mago core rule.
 
 ## Sprint H: maintenance
 
