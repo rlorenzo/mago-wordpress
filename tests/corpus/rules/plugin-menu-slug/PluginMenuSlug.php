@@ -50,5 +50,4 @@ namespace\Sub\add_submenu_page($parent_slug, $page_title, $menu_title, $capabili
 // Unlike the sniff, which cannot resolve `namespace\` at the token level,
 // this rule sees that an unnamespaced file's `namespace\add_menu_page` is
 // the global add_menu_page().
-// @mago-expect lint:wordpress/plugin-menu-slug
 namespace\add_menu_page($page_title, $menu_title, $capability, __FILE__, $function, $icon_url, $position);

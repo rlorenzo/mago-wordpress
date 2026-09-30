@@ -29,8 +29,6 @@ use function in_array;
 use function preg_match;
 use function preg_match_all;
 use function preg_quote;
-use function str_starts_with;
-use function strtolower;
 
 /**
  * Ports `WordPress.NamingConventions.ValidHookName`.
@@ -88,11 +86,6 @@ final class ValidHookNameRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        // WPCS cannot resolve `namespace\` relative calls, so it never reports them.
-        if (str_starts_with(strtolower($context->file->getText($call->callee)), 'namespace\\')) {
-            return;
-        }
-
         $position = Lists::HOOK_NAME_ARGUMENT_POSITION[$name] - 1;
         $value = $this->argument($context, $call, $position, 'hook_name');
         if ($value === null) {

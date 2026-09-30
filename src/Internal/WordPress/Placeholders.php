@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal\WordPress;
 
-use function preg_replace;
-
 /**
  * The `$wpdb->prepare()` placeholder grammar of WPCS
  * `WordPress.DB.PreparedSQLPlaceholders`.
@@ -28,19 +26,19 @@ final class Placeholders
      */
     public const PLACEHOLDER = '(?<![^%]%)%' . self::SPEC . '[dfFsi]';
 
-    private function __construct() {}
+    /**
+     * WPCS `UNSUPPORTED_PLACEHOLDER_REGEX`: a `%` that is neither a literal
+     * `%%` nor a supported placeholder, with the text that follows it up to
+     * a space or quote. The possessive specifier parts make `%1$ 10.3i`
+     * stop at `%1$`.
+     */
+    public const UNSUPPORTED = '`(?<!%)(%(?!%[^%]|%%[dfFsi])(?:[0-9]+\\\\??\$)?+[+-]?+(?:(?:0|\'.)?+-?+[0-9]*+(?:\.(?:[ 0]|\'.)?[0-9]+)?+|(?:[ ])?+-?+[0-9]++(?:\.(?:[ 0]|\'.)?[0-9]+)?+)(?![dfFsi])(?:[^ \'"]*|$))`';
 
     /**
-     * Removes the quoted or `CONCAT()` operand of each `LIKE` that is not
-     * a bare `%s`. WPCS: its SQL wildcards, as in `LIKE '%foo%'`, are not
-     * placeholders to validate, though `wpdb::prepare()` still counts them.
+     * WPCS: the quoted (group 2) or `CONCAT()` (group 3) operand of a
+     * `LIKE` that is not a bare `%s`.
      */
-    public static function withoutLikeOperands(string $text): string
-    {
-        return (string) preg_replace(
-            '`(\s+LIKE\s*)(?:(["\'])(?!%s(?:\2|$)).*?(\2|$)|(concat\()(?![^\)]*%s[^\)]*\))[^\)]*(\)))`i',
-            replacement: '$1$2$3$4$5',
-            subject: $text,
-        );
-    }
+    public const LIKE = '`\s+LIKE\s*(?:(["\'])(?!%s(?:\1|$))(?P<content>.*?)(?:\1|$)|(?:concat\((?![^\)]*%s[^\)]*\))(?P<concat>[^\)]*))\))`i';
+
+    private function __construct() {}
 }

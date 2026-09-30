@@ -24,6 +24,7 @@ $wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE post_title = %1\$s", $title);
 
 // unquoted_placeholder_in_concatenation
 // @mago-expect lint:wordpress/prepared-sql-unquoted-complex-placeholder
+// @mago-expect lint:wordpress/prepared-sql-unquoted-complex-placeholder
 $wpdb->prepare('SELECT * FROM ' . $table . ' WHERE ID = %2$d AND name = %1$s', $name, $id);
 
 // nullsafe_and_named_query_argument

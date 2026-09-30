@@ -11,18 +11,8 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
-use Rlorenzo\MagoWordPress\Internal\WordPress\Placeholders;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PreparedQuery;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
-
-use function array_filter;
-use function array_map;
-use function array_unique;
-use function array_values;
-use function implode;
-use function preg_match;
-use function preg_match_all;
-use function str_ends_with;
 
 /**
  * Ports `WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder`.
@@ -43,7 +33,7 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
             description: 'Reports complex value placeholders such as %1$s, %05s or %\'.10s that are not quoted in a $wpdb->prepare() query. WordPress quotes only the simple %s, %d, %f and %F placeholders, so the value of a complex one lands in the query unquoted. Identifier placeholders (%i) are always quoted by WordPress and are not reported.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
-            targets: [NodeKind::MethodCall, NodeKind::NullSafeMethodCall],
+            targets: [NodeKind::MethodCall, NodeKind::NullSafeMethodCall, NodeKind::StaticMethodCall],
         );
     }
 
@@ -54,39 +44,22 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
-        $prepared = PreparedQuery::fromCall($context->file, $call);
-        if ($prepared === null) {
-            return;
-        }
+        foreach (PreparedQuery::analyze($context->file, $call, identifierSupported: true) as [$code, $node, $found]) {
+            if ($code !== 'UnquotedComplexPlaceholder') {
+                continue;
+            }
 
-        $matches = [];
-        preg_match_all(
-            '`(?<![\'"])' . Placeholders::PLACEHOLDER . '(?![\'"])`',
-            Placeholders::withoutLikeOperands($prepared->text),
-            $matches,
-        );
-        $complex = array_values(array_unique(array_filter(
-            $matches[0],
-            static fn(string $placeholder): bool => (
-                !str_ends_with($placeholder, 'i')
-                && preg_match('`^%[dfFs]$`', $placeholder) !== 1
-            ),
-        )));
-        if ($complex === []) {
-            return;
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    "Complex placeholders in `\$wpdb->prepare()` are not quoted: `{$found}`",
+                    $node->span,
+                    'Unquoted complex placeholder found in this SQL query',
+                )->withNote(
+                    '`$wpdb->prepare()` quotes only the simple `%s`, `%d`, `%f` and `%F` placeholders; the value of a complex placeholder is inserted without quotes.',
+                )->withHelp("Quote the placeholder in the query (e.g. `'{$found}'`), or use a simple placeholder."),
+                [self::SNIFF],
+            );
         }
-
-        $found = implode(', ', array_map(static fn(string $placeholder): string => "`{$placeholder}`", $complex));
-        $this->report->issue(
-            $context,
-            Issue::new(
-                "Complex placeholders in `\$wpdb->prepare()` are not quoted: {$found}",
-                $prepared->argument->value->span,
-                'Unquoted complex placeholder found in this SQL query',
-            )->withNote(
-                '`$wpdb->prepare()` quotes only the simple `%s`, `%d`, `%f` and `%F` placeholders; the value of a complex placeholder is inserted without quotes.',
-            )->withHelp("Quote the placeholder in the query (e.g. `'{$complex[0]}'`), or use a simple placeholder."),
-            [self::SNIFF],
-        );
     }
 }

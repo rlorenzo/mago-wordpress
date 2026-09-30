@@ -26,10 +26,14 @@ The target is the out-of-the-box `WordPress` ruleset (Core + Docs + Extra) on co
 - **WP deprecation lists are not trimmed.** A function deprecated in WP 2.8 is still a bug in
   WP 6.7 code and WPCS reports it (as an error once the minimum reaches it); the lists are gated
   data, not rules, and cost nothing to keep.
-- **Parity gap to fix (Sprint E):** WPCS reports every deprecated usage, as an error when the
-  minimum WP version has reached the deprecation and a warning otherwise. The extension reports
-  only the reached ones. Mago issues carry no per-issue level, so either add a `-pending` rule
-  code at `Warning` for the not-yet-reached case, or accept the gap and document it.
+- **Deprecations are reported regardless of `minimum-wp-version`** (fixed 2026-09-30). WPCS
+  reports every deprecated usage, as an error once the minimum reaches the deprecation and a
+  warning before. Mago issues carry no per-issue level, so a not-yet-reached deprecation is
+  reported at the rule's level with a note saying WPCS would lower it to a warning.
+- **`namespace\foo()` relative calls are never matched** (fixed 2026-09-30, in `Calls`). Mago
+  resolves them; WPCS cannot and documents it as a limitation to lift. Strict parity wins until
+  WPCS lifts it, at which point removing the one check in `Calls::matchWanted` restores Mago's
+  behaviour.
 
 A team can drop phpcs + WPCS when all of these hold:
 
@@ -89,11 +93,9 @@ at all, and they are the ones with the weakest parity:
 Set a deadline (two weeks from the issue date); if no answer, take the first path. Ports are
 the higher-value outcome regardless, because they also restore message codes and phpcs comments.
 
-**A.2 Verify core-rule parity** on WPCS's own test cases: run
-`~/Projects/wpcs-src/Tests/Security/EscapeOutputUnitTest.inc`, `NonceVerificationUnitTest.inc`,
-`ValidatedSanitizedInputUnitTest.inc`, `DB/PreparedSQLUnitTest.inc` through Mago and record
-per-line agreement in `bench/results/core-rule-parity.md`. This tells us what a port must fix
-and gives the README a number instead of "covers".
+**A.2 Verify core-rule parity — done** via `bench/wpcs-parity.php` (table under E.1): the four
+security-critical core rules sit at 34–58% line recall on WPCS's own tests, with dozens of
+extras. That is the case for porting them, whatever upstream decides.
 
 ## Sprint B: formatter preset
 
@@ -205,10 +207,27 @@ gets a WPCS `.inc` case added to the corpus.
   Any future rule whose sniff is not in `WordPress` ships disabled too.
 - `wordpress/file-name`: WPCS properties `strict_class_file_names` (default true) and `is_theme` are not read.
 
-**E.1 WPCS `.inc` sweep**: for every ported rule, run its WPCS `Tests/<Cat>/<Sniff>UnitTest.inc`
-through the extension and diff the flagged lines against `UnitTest.php`'s `getErrorList()` /
-`getWarningList()`. Commit the harness under `tests/wpcs-parity/` and the results table in
-`bench/results/wpcs-parity.md`. This is the one number that says "replacement".
+**E.1 WPCS `.inc` sweep — done (2026-09-30).** `bench/wpcs-parity.php` runs every WPCS sniff's
+own test files through the mapped rule; results in `bench/results/wpcs-parity.md`. Suite recall
+went 76% → 89% over four waves of rule fixes (PRs #2 and #3). Every extension rule with a WPCS
+test is at 100% except the accepted cases: test-only sniff groups (`RestrictedClasses` .1/.2/.3,
+`RestrictedFunctions` line 94), `phpcs:set exclude[]` / `custom_test_classes` /
+`treat_files_as_scoped` (no setting; candidates for Sprint C), WPCS's deliberate parse-error
+files, and severity-3 "undetermined" warnings phpcs hides at its default severity
+(`Capabilities`, `ValidPostTypeSlug`). What remains short is Mago's core rules, which is Sprint
+A's evidence:
+
+| Core rule | WPCS sniff | Recall |
+|:---|:---|---:|
+| `validated-sanitized-input` | `Security.ValidatedSanitizedInput` | 34% |
+| `use-wp-functions` | `WP.AlternativeFunctions` | 32% (no `minimum_wp_version` gating) |
+| `no-unescaped-output` | `Security.EscapeOutput` | 57% (75 missed, 65 extra) |
+| `nonce-verification` | `Security.NonceVerification` | 58% |
+| `require-preg-quote-delimiter` | `PHP.PregQuoteDelimiter` | 80% |
+| `prepared-sql` | `DB.PreparedSQL` | 85% |
+| `no-direct-db-query` | `DB.DirectDatabaseQuery` | 97% |
+
+Re-run after every rule change; a row that drops is a regression.
 
 ## Sprint F: generic sniffs that `WordPress-Extra` pulls in
 

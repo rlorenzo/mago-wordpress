@@ -88,5 +88,4 @@ namespace\Sub\get_comment_meta($comment_id, $meta_key);
 // Unlike the sniff, which cannot resolve `namespace\` at the token level,
 // this rule sees that an unnamespaced file's `namespace\get_metadata` is
 // the global get_metadata().
-// @mago-expect lint:wordpress/get-meta-single
 namespace\get_metadata('post', $post_id, $meta_key);

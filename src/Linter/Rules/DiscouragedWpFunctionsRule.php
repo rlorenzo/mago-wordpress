@@ -9,6 +9,7 @@ use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\CallExpression;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
@@ -100,7 +101,7 @@ final class DiscouragedWpFunctionsRule extends CallRule
             description: 'Reports calls to WordPress functions that are discouraged because they break the main query, are deprecated, are expensive without caching, or rely on unreliable user-agent sniffing, plus calls in the wider WPCS-restricted PHP function groups (obfuscation, runtime configuration, serialize, system calls, urlencode) and development/debugging functions.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
-            targets: [NodeKind::FunctionCall],
+            targets: [NodeKind::FunctionCall, NodeKind::FunctionPartialApplication, NodeKind::TypedUseItemSequence],
         );
     }
 
@@ -114,13 +115,18 @@ final class DiscouragedWpFunctionsRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        $this->inspectReference($context, $context->node, $name);
+    }
+
+    protected function inspectReference(LintContext $context, Node $reference, string $name): void
+    {
         $details = self::DISCOURAGED_FUNCTIONS[$name] ?? null;
         if ($details !== null) {
             $this->report->issue(
                 $context,
                 Issue::new(
                     "Discouraged WordPress function `{$name}()`",
-                    $context->node->span,
+                    $reference->span,
                     "`{$name}()` is discouraged",
                 )->withNote($details['reason'])->withHelp($details['alternative']),
                 [self::SNIFF . ".{$name}_{$name}"],
@@ -139,7 +145,7 @@ final class DiscouragedWpFunctionsRule extends CallRule
             $context,
             Issue::new(
                 "Discouraged PHP function `{$name}()` ({$group})",
-                $context->node->span,
+                $reference->span,
                 "`{$name}()` is discouraged by the WordPress Coding Standards \"{$group}\" function group",
             )->withNote($messages['note'])->withHelp($messages['help']),
             [self::groupCode($group, $name)],
