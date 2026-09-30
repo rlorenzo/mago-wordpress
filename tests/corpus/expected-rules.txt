@@ -35,3 +35,11 @@ wordpress/wp-deprecated-parameter-values
 wordpress/wp-deprecated-parameters
 wordpress/wp-i18n
 wordpress/yoda-conditions
+generic/byte-order-mark
+generic/disallow-alternative-php-tags
+generic/disallow-size-functions-in-loops
+generic/for-loop-with-test-function-call
+generic/foreach-unique-assignment
+generic/git-merge-conflict
+generic/jumbled-incrementer
+generic/require-explicit-boolean-operator-precedence

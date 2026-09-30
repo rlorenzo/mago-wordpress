@@ -5,6 +5,10 @@
  * reports per-line agreement with the sniff's getErrorList()/getWarningList().
  *
  *   php bench/wpcs-parity.php /path/to/WordPress-Coding-Standards [--only=Sniff.Name] [--verbose]
+ *       [--phpcs=/path/to/php_codesniffer/src/Standards]
+ *
+ * Non-WordPress sniffs are run against phpcs's own tests (`--phpcs`, default the global
+ * Composer install) and totalled on a separate line.
  *
  * For every mapped sniff, each `<Sniff>UnitTest[.N].inc` is copied into a scratch Mago
  * workspace (keeping its name, so file-name checks see the original), the `phpcs:set`
@@ -80,9 +84,12 @@ namespace {
         $wpcs = null;
         $only = null;
         $verbose = false;
+        $phpcs = getenv('HOME') . '/.config/composer/vendor/squizlabs/php_codesniffer/src/Standards';
         foreach (array_slice($argv, 1) as $arg) {
             if (str_starts_with($arg, '--only=')) {
                 $only = substr($arg, 7);
+            } elseif (str_starts_with($arg, '--phpcs=')) {
+                $phpcs = rtrim(substr($arg, 8), '/');
             } elseif ($arg === '--verbose') {
                 $verbose = true;
             } else {
@@ -103,21 +110,24 @@ namespace {
 
         $rows = [];
         $totals = ['files' => 0, 'expected' => 0, 'matched' => 0, 'missed' => 0, 'extra' => 0];
+        $genericTotals = $totals;
         foreach (Report::SNIFF_RULES as $sniff => $rules) {
             if ($only !== null && $sniff !== $only) {
                 continue;
             }
 
-            [, $category, $name] = explode('.', $sniff, 3);
-            $dir = "$wpcs/WordPress/Tests/$category";
+            [$standard, $category, $name] = explode('.', $sniff, 3);
             $class = "{$name}UnitTest";
+            // Non-WordPress sniffs are tested by phpcs itself (PHPCSExtra ships no tests).
+            [$dir, $fqcn] = $standard === 'WordPress'
+                ? ["$wpcs/WordPress/Tests/$category", "WordPressCS\\WordPress\\Tests\\$category\\$class"]
+                : ["$phpcs/$standard/Tests/$category", "PHP_CodeSniffer\\Standards\\$standard\\Tests\\$category\\$class"];
             if (!is_file("$dir/$class.php")) {
-                $rows[] = [$sniff, '-', '-', '-', '-', '-', 'no WPCS test'];
+                $rows[] = [$sniff, '-', '-', '-', '-', '-', 'no upstream test'];
                 continue;
             }
 
             require_once "$dir/$class.php";
-            $fqcn = "WordPressCS\\WordPress\\Tests\\$category\\$class";
             $test = new $fqcn();
 
             $files = glob("$dir/$class.inc") ?: [];
@@ -221,8 +231,13 @@ namespace {
                 }
             }
 
+            // The suite total stays WPCS's own tests; generic sniffs get their own line.
             foreach ($sum as $key => $value) {
-                $totals[$key] += $value;
+                if ($standard === 'WordPress') {
+                    $totals[$key] += $value;
+                } else {
+                    $genericTotals[$key] += $value;
+                }
             }
 
             $recall = $sum['expected'] === 0 ? '-' : sprintf('%d%%', round(100 * $sum['matched'] / $sum['expected']));
@@ -251,8 +266,10 @@ namespace {
             echo "| `$sniff` | $files | $expected | $matched | $missed | $extra | $recall | $note |\n";
         }
 
-        $recall = $totals['expected'] === 0 ? '-' : sprintf('%d%%', round(100 * $totals['matched'] / $totals['expected']));
-        echo "| **Total** | **{$totals['files']}** | **{$totals['expected']}** | **{$totals['matched']}** | **{$totals['missed']}** | **{$totals['extra']}** | **$recall** | |\n";
+        foreach (['Total' => $totals, 'Generic sniffs (phpcs tests)' => $genericTotals] as $label => $sum) {
+            $recall = $sum['expected'] === 0 ? '-' : sprintf('%d%%', round(100 * $sum['matched'] / $sum['expected']));
+            echo "| **$label** | **{$sum['files']}** | **{$sum['expected']}** | **{$sum['matched']}** | **{$sum['missed']}** | **{$sum['extra']}** | **$recall** | |\n";
+        }
 
         if (($GLOBALS['wpcsParityFailures'] ?? 0) > 0) {
             fwrite(STDERR, "{$GLOBALS['wpcsParityFailures']} file(s) produced no report; the table above under-counts them.\n");

@@ -310,7 +310,7 @@ final class PhpcsMigration
         foreach (Report::SNIFF_RULES as $sniff => $codes) {
             $core = array_values(array_filter(
                 $codes,
-                static fn(string $code): bool => !str_starts_with($code, 'wordpress/'),
+                static fn(string $code): bool => !Report::isExtensionRule($code),
             ));
             if ($core === []) {
                 continue;
@@ -493,8 +493,8 @@ final class PhpcsMigration
             str_starts_with($ref, 'PHPCompatibility') => 'ignored (the package targets PHP 8.1+)',
             !str_starts_with($ref, 'WordPress.') && count($parts) === 1 && !str_contains($ref, '/')
                 => 'custom or third-party standard; its contents are not followed',
-            !str_starts_with($ref, 'WordPress.')
-                => 'not a WPCS WordPress sniff, so not mapped (a Mago core rule may cover it)',
+            !str_starts_with($ref, 'WordPress.') && (Report::SNIFF_RULES[$sniff] ?? null) === null
+                => 'non-WordPress sniff with no Mago rule mapped to it',
             count($parts) >= 3 && (Report::SNIFF_RULES[$sniff] ?? null) === null
                 => 'WPCS sniff with no Mago port (formatting sniffs are `mago fmt`\'s job)',
             default => null,
@@ -510,10 +510,7 @@ final class PhpcsMigration
         }
 
         $rules = Report::SNIFF_RULES[$sniff] ?? [];
-        $extension = array_values(array_filter($rules, static fn(string $code): bool => str_starts_with(
-            $code,
-            'wordpress/',
-        )));
+        $extension = array_values(array_filter($rules, Report::isExtensionRule(...)));
         // A <type> on a whole sniff that only core rules port becomes their level.
         if (PhpcsRuleset::elements($this->xpath, 'type', $rule) !== [] && ($ref !== $sniff || $extension !== [])) {
             $this->unmapped[] =
@@ -628,10 +625,7 @@ final class PhpcsMigration
             foreach (Report::SNIFF_RULES as $sniff => $rules) {
                 $related =
                     $code === $sniff || str_starts_with($sniff, $code . '.') || str_starts_with($code, $sniff . '.');
-                $toExtension = array_filter($rules, static fn(string $rule): bool => str_starts_with(
-                    $rule,
-                    'wordpress/',
-                )) !== [];
+                $toExtension = array_filter($rules, Report::isExtensionRule(...)) !== [];
                 if ($related && $toExtension) {
                     $extensionPatterns[$code] = $list;
                     break;

@@ -45,6 +45,9 @@ final class PhpcsMigrationTest extends TestCase
             <properties><property name="customAllowedFunctionsList" type="array"><element value="ftp_connect"/></property></properties>
           </rule>
           <rule ref="Generic.PHP.DiscourageGoto"/>
+          <rule ref="Generic.WhiteSpace.ScopeIndent"/>
+          <rule ref="Generic.CodeAnalysis.JumbledIncrementer"><exclude-pattern>/legacy/*</exclude-pattern></rule>
+          <rule ref="Generic.PHP.BacktickOperator"><severity>0</severity></rule>
           <rule ref="WooCommerce-Core"/>
         </ruleset>
         XML;
@@ -100,7 +103,14 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('json_encode_json_encode', $unmapped);
         self::assertStringContainsString('<type> on WordPress.Files.FileName.InvalidClassFileName', $unmapped);
         self::assertStringContainsString('customAllowedFunctionsList', $unmapped);
-        self::assertStringContainsString('Generic.PHP.DiscourageGoto', $unmapped);
+        // Generic sniffs map to this package's generic/* rules and Mago core rules.
+        self::assertStringNotContainsString('Generic.PHP.DiscourageGoto', $unmapped);
+        self::assertStringContainsString('Generic.WhiteSpace.ScopeIndent', $unmapped);
+        self::assertStringContainsString('no-shell-execute-string = { enabled = false }', $toml);
+        self::assertSame(
+            ['/legacy/*'],
+            $result['extra']['exclude-patterns']['Generic.CodeAnalysis.JumbledIncrementer'] ?? null,
+        );
         self::assertStringContainsString('WooCommerce-Core', $unmapped);
         self::assertStringContainsString('testVersion', $unmapped);
         self::assertStringContainsString('parallel', $unmapped);
@@ -141,6 +151,9 @@ final class PhpcsMigrationTest extends TestCase
         self::assertSame(['/tests/*'], $patterns['WordPress.Files.FileName.InvalidClassFileName'] ?? null);
         self::assertSame(['*'], $patterns['WordPress.WP.I18n.MissingTranslatorsComment'] ?? null);
         self::assertArrayNotHasKey('Generic.Files.LineEndings', $patterns);
+        // The generic/* ports follow the same standard membership.
+        self::assertSame(['*'], $patterns['Generic.CodeAnalysis.JumbledIncrementer'] ?? null);
+        self::assertArrayNotHasKey('Generic.Files.ByteOrderMark', $patterns);
     }
 
     public function testBlankExcludePatternIsSkipped(): void

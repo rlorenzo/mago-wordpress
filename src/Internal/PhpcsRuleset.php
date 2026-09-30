@@ -11,10 +11,13 @@ use DOMXPath;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_filter;
+use function array_key_exists;
 use function array_keys;
+use function array_slice;
 use function array_values;
 use function count;
 use function explode;
+use function implode;
 use function in_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
@@ -77,7 +80,7 @@ final class PhpcsRuleset
     ];
 
     /**
-     * The WPCS sniffs that `Report::SNIFF_RULES` maps, by the WPCS 3.4.1 standard that
+     * The sniffs that `Report::SNIFF_RULES` maps, by the WPCS 3.4.1 standard that
      * pulls them in. `WordPress-Extra` includes `WordPress-Core`; `WordPress` includes
      * every sniff, including the three neither group lists (DirectDatabaseQuery,
      * SlowDBQuery, ValidatedSanitizedInput).
@@ -103,6 +106,25 @@ final class PhpcsRuleset
         'WordPress.WP.CapitalPDangit',
         'WordPress.WP.ClassNameCase',
         'WordPress.WP.I18n',
+        'Generic.CodeAnalysis.AssignmentInCondition',
+        'Generic.CodeAnalysis.EmptyPHPStatement',
+        'Generic.Files.ByteOrderMark',
+        'Generic.Files.OneObjectStructurePerFile',
+        'Generic.NamingConventions.UpperCaseConstantName',
+        'Generic.PHP.BacktickOperator',
+        'Generic.PHP.DisallowAlternativePHPTags',
+        'Generic.PHP.DisallowShortOpenTag',
+        'Generic.PHP.DiscourageGoto',
+        'Generic.PHP.LowerCaseConstant',
+        'Generic.PHP.LowerCaseKeyword',
+        'Generic.PHP.LowerCaseType',
+        'Generic.VersionControl.GitMergeConflict',
+        'PEAR.NamingConventions.ValidClassName',
+        'PSR2.Files.ClosingTag',
+        'Squiz.PHP.DisallowMultipleAssignments',
+        'Squiz.PHP.Eval',
+        'Universal.Arrays.DisallowShortArraySyntax',
+        'Universal.Operators.DisallowShortTernary',
     ];
 
     private const EXTRA_SNIFFS = [
@@ -131,6 +153,17 @@ final class PhpcsRuleset
         'WordPress.WP.GetMetaSingle',
         'WordPress.WP.GlobalVariablesOverride',
         'WordPress.WP.PostsPerPage',
+        'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop',
+        'Generic.CodeAnalysis.ForLoopWithTestFunctionCall',
+        'Generic.CodeAnalysis.JumbledIncrementer',
+        'Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence',
+        'Generic.CodeAnalysis.UnconditionalIfStatement',
+        'Generic.CodeAnalysis.UnnecessaryFinalModifier',
+        'Generic.CodeAnalysis.UselessOverridingMethod',
+        'Generic.PHP.ForbiddenFunctions',
+        'Generic.Strings.UnnecessaryStringConcat',
+        'Squiz.PHP.DisallowSizeFunctionsInLoops',
+        'Universal.CodeAnalysis.ForeachUniqueAssignment',
     ];
 
     /** phpcs hides reports below this severity by default. */
@@ -204,6 +237,18 @@ final class PhpcsRuleset
         return $standards;
     }
 
+    /** A WPCS code, or a code of a non-WordPress sniff that `Report::SNIFF_RULES` maps. */
+    private static function isMapped(string $code): bool
+    {
+        return (
+            str_starts_with($code, 'WordPress.')
+            || array_key_exists(
+                implode('.', array_slice(explode('.', $code), offset: 0, length: 3)),
+                Report::SNIFF_RULES,
+            )
+        );
+    }
+
     /**
      * WPCS codes the ruleset turns off, everywhere (`*`) or for some paths, as phpcs
      * `<exclude-pattern>` values: mapped sniffs its standards leave out, `<exclude name>`,
@@ -221,14 +266,14 @@ final class PhpcsRuleset
 
         foreach (self::elements($xpath, '/ruleset/rule[@ref]/exclude[@name]') as $exclude) {
             $name = $exclude->getAttribute('name');
-            if (str_starts_with($name, 'WordPress.') && $exclude->getAttribute('phpcbf-only') !== 'true') {
+            if (self::isMapped($name) && $exclude->getAttribute('phpcbf-only') !== 'true') {
                 $patterns[$name] = ['*'];
             }
         }
 
         foreach (self::elements($xpath, '/ruleset/rule[@ref]') as $rule) {
             $ref = $rule->getAttribute('ref');
-            if (!str_starts_with($ref, 'WordPress.') || $rule->getAttribute('phpcbf-only') === 'true') {
+            if (!self::isMapped($ref) || $rule->getAttribute('phpcbf-only') === 'true') {
                 continue;
             }
 
