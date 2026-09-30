@@ -28,7 +28,7 @@ jobs:
           tools: composer:v2
 
       - name: Set up Just
-        uses: extractions/setup-just@v3
+        uses: extractions/setup-just@v4
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
@@ -52,7 +52,7 @@ jobs:
           tools: composer:v2
 
       - name: Set up Just
-        uses: extractions/setup-just@v3
+        uses: extractions/setup-just@v4
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
