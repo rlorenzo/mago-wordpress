@@ -103,7 +103,7 @@ final class SettingsTest extends TestCase
                 <properties><property name="min_interval" value="600"/></properties>
               </rule>
               <rule ref="WordPress.NamingConventions.ValidHookName">
-                <properties><property name="additional_word_delimiters" value="-/"/></properties>
+                <properties><property name="additionalWordDelimiters" value="-/"/></properties>
               </rule>
             </ruleset>
             XML;

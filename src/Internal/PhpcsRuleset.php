@@ -11,15 +11,18 @@ use DOMXPath;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_filter;
+use function array_keys;
 use function array_values;
 use function count;
 use function in_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
+use function str_starts_with;
+use function trim;
 
 /**
- * Reads the WPCS properties a `phpcs.xml` ruleset sets on its sniffs, in the shape
- * `Settings::fromArray()` accepts.
+ * Reads the WPCS properties a `phpcs.xml` ruleset sets on its sniffs, and the codes it
+ * turns off (`exclude-patterns`), in the shape `Settings::fromArray()` accepts.
  *
  * Only properties set directly on one of the sniff refs below are read, and only the
  * property names that sniff actually accepts. A `<rule ref="SomeGroup">` that merely
@@ -29,6 +32,8 @@ use function libxml_use_internal_errors;
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class PhpcsRuleset
 {
@@ -41,7 +46,7 @@ final class PhpcsRuleset
      *
      * @var array<string, list<string>>
      */
-    private const OWNED_PROPERTIES = [
+    public const OWNED_PROPERTIES = [
         'WordPress.WP.I18n' => ['text_domain'],
         'WordPress.NamingConventions.PrefixAllGlobals' => ['prefixes'],
         'WordPress.Security.EscapeOutput' => ['customEscapingFunctions', 'customAutoEscapedFunctions'],
@@ -50,26 +55,96 @@ final class PhpcsRuleset
         'WordPress.WP.Capabilities' => ['custom_capabilities'],
         'WordPress.WP.PostsPerPage' => ['posts_per_page'],
         'WordPress.WP.CronInterval' => ['min_interval'],
-        'WordPress.NamingConventions.ValidHookName' => ['additional_word_delimiters'],
+        'WordPress.NamingConventions.ValidHookName' => ['additionalWordDelimiters'],
+        'WordPress.NamingConventions.ValidVariableName' => ['allowed_custom_properties'],
     ];
+
+    /**
+     * The WPCS sniffs that `Report::SNIFF_RULES` maps, by the WPCS 3.4.1 standard that
+     * pulls them in. `WordPress-Extra` includes `WordPress-Core`; `WordPress` includes
+     * every sniff, including the three neither group lists (DirectDatabaseQuery,
+     * SlowDBQuery, ValidatedSanitizedInput).
+     */
+    private const CORE_SNIFFS = [
+        'WordPress.CodeAnalysis.AssignmentInTernaryCondition',
+        'WordPress.DateTime.CurrentTimeTimestamp',
+        'WordPress.DateTime.RestrictedFunctions',
+        'WordPress.DB.PreparedSQL',
+        'WordPress.DB.PreparedSQLPlaceholders',
+        'WordPress.DB.RestrictedClasses',
+        'WordPress.DB.RestrictedFunctions',
+        'WordPress.Files.FileName',
+        'WordPress.NamingConventions.ValidFunctionName',
+        'WordPress.NamingConventions.ValidHookName',
+        'WordPress.NamingConventions.ValidVariableName',
+        'WordPress.PHP.DontExtract',
+        'WordPress.PHP.NoSilencedErrors',
+        'WordPress.PHP.RestrictedPHPFunctions',
+        'WordPress.PHP.StrictInArray',
+        'WordPress.PHP.TypeCasts',
+        'WordPress.PHP.YodaConditions',
+        'WordPress.WP.CapitalPDangit',
+        'WordPress.WP.ClassNameCase',
+        'WordPress.WP.I18n',
+    ];
+
+    private const EXTRA_SNIFFS = [
+        'WordPress.CodeAnalysis.EscapedNotTranslated',
+        'WordPress.NamingConventions.PrefixAllGlobals',
+        'WordPress.NamingConventions.ValidPostTypeSlug',
+        'WordPress.PHP.DevelopmentFunctions',
+        'WordPress.PHP.DiscouragedPHPFunctions',
+        'WordPress.PHP.IniSet',
+        'WordPress.PHP.PregQuoteDelimiter',
+        'WordPress.Security.EscapeOutput',
+        'WordPress.Security.NonceVerification',
+        'WordPress.Security.PluginMenuSlug',
+        'WordPress.Security.SafeRedirect',
+        'WordPress.WP.AlternativeFunctions',
+        'WordPress.WP.Capabilities',
+        'WordPress.WP.CronInterval',
+        'WordPress.WP.DeprecatedClasses',
+        'WordPress.WP.DeprecatedFunctions',
+        'WordPress.WP.DeprecatedParameters',
+        'WordPress.WP.DeprecatedParameterValues',
+        'WordPress.WP.DiscouragedConstants',
+        'WordPress.WP.DiscouragedFunctions',
+        'WordPress.WP.EnqueuedResourceParameters',
+        'WordPress.WP.EnqueuedResources',
+        'WordPress.WP.GetMetaSingle',
+        'WordPress.WP.GlobalVariablesOverride',
+        'WordPress.WP.PostsPerPage',
+    ];
+
+    /** phpcs hides reports below this severity by default. */
+    private const DEFAULT_SEVERITY = 5;
 
     private function __construct() {}
 
     /**
-     * @return array<string, mixed>
+     * Parses a ruleset, or returns NULL when it is empty or not well-formed XML.
      */
-    public static function values(string $xml): array
+    public static function load(string $xml): ?DOMXPath
     {
         $previous = libxml_use_internal_errors(true);
         $document = new DOMDocument();
         $loaded = $xml !== '' && $document->loadXML($xml);
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
-        if (!$loaded) {
+
+        return $loaded ? new DOMXPath($document) : null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function values(string $xml): array
+    {
+        $xpath = self::load($xml);
+        if ($xpath === null) {
             return [];
         }
 
-        $xpath = new DOMXPath($document);
         $properties = self::properties($xpath);
 
         $values = [
@@ -78,13 +153,132 @@ final class PhpcsRuleset
             'minimum-wp-version' => self::minimumVersion($xpath),
             'max-posts-per-page' => self::last($properties['posts_per_page'] ?? []),
             'min-cron-interval' => self::last($properties['min_interval'] ?? []),
-            'additional-word-delimiters' => self::last($properties['additional_word_delimiters'] ?? []),
+            'additional-word-delimiters' => self::last($properties['additionalWordDelimiters'] ?? []),
         ];
         foreach (Settings::CUSTOM_LISTS as $option => $property) {
             $values[$option] = $properties[$property] ?? [];
         }
 
+        $values['exclude-patterns'] = self::excludePatterns($xpath);
+
         return $values;
+    }
+
+    /**
+     * The WPCS standards the ruleset pulls in by name, or none when it only includes
+     * custom or third-party standards (which may include WPCS in turn).
+     *
+     * @return list<string>
+     */
+    public static function standards(DOMXPath $xpath): array
+    {
+        $standards = [];
+        foreach (self::elements($xpath, '/ruleset/rule[@ref]') as $rule) {
+            $ref = $rule->getAttribute('ref');
+            if (in_array($ref, ['WordPress', 'WordPress-Extra', 'WordPress-Core'], strict: true)) {
+                $standards[] = $ref;
+            }
+        }
+
+        return $standards;
+    }
+
+    /**
+     * WPCS codes the ruleset turns off, everywhere (`*`) or for some paths, as phpcs
+     * `<exclude-pattern>` values: mapped sniffs its standards leave out, `<exclude name>`,
+     * a `<severity>` below phpcs's default of 5, and `<exclude-pattern>` inside a
+     * `<rule ref>`. `type="relative"` patterns and phpcbf-only entries are skipped.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function excludePatterns(DOMXPath $xpath): array
+    {
+        $patterns = [];
+        foreach (self::excludedByStandard($xpath) as $sniff) {
+            $patterns[$sniff] = ['*'];
+        }
+
+        foreach (self::elements($xpath, '/ruleset/rule[@ref]/exclude[@name]') as $exclude) {
+            $name = $exclude->getAttribute('name');
+            if (str_starts_with($name, 'WordPress.') && $exclude->getAttribute('phpcbf-only') !== 'true') {
+                $patterns[$name] = ['*'];
+            }
+        }
+
+        foreach (self::elements($xpath, '/ruleset/rule[@ref]') as $rule) {
+            $ref = $rule->getAttribute('ref');
+            if (!str_starts_with($ref, 'WordPress.') || $rule->getAttribute('phpcbf-only') === 'true') {
+                continue;
+            }
+
+            if (self::isSilenced($xpath, $rule)) {
+                $patterns[$ref] = ['*'];
+                continue;
+            }
+
+            foreach (self::elements($xpath, 'exclude-pattern', $rule) as $pattern) {
+                if ($pattern->getAttribute('type') === 'relative' || $pattern->getAttribute('phpcbf-only') === 'true') {
+                    continue;
+                }
+
+                $value = trim($pattern->textContent);
+                if ($value !== '' && ($patterns[$ref] ?? []) !== ['*']) {
+                    $patterns[$ref][] = $value;
+                }
+            }
+        }
+
+        return $patterns;
+    }
+
+    /**
+     * A `<severity>` below phpcs's default threshold hides the code's reports.
+     */
+    public static function isSilenced(DOMXPath $xpath, DOMElement $rule): bool
+    {
+        $severity = self::elements($xpath, 'severity', $rule);
+
+        return $severity !== [] && (int) trim($severity[count($severity) - 1]->textContent) < self::DEFAULT_SEVERITY;
+    }
+
+    /**
+     * Mapped sniffs outside every WPCS standard the ruleset names, unless a `<rule ref>`
+     * names the sniff, its category, or one of its message codes.
+     *
+     * @return list<string>
+     */
+    private static function excludedByStandard(DOMXPath $xpath): array
+    {
+        $standards = self::standards($xpath);
+        if ($standards === [] || in_array('WordPress', $standards, strict: true)) {
+            return [];
+        }
+
+        $included = in_array('WordPress-Extra', $standards, strict: true)
+            ? [...self::CORE_SNIFFS, ...self::EXTRA_SNIFFS]
+            : self::CORE_SNIFFS;
+        $refs = [];
+        foreach (self::elements($xpath, '/ruleset/rule[@ref]') as $rule) {
+            $refs[] = $rule->getAttribute('ref');
+        }
+
+        $excluded = [];
+        foreach (array_keys(Report::SNIFF_RULES) as $sniff) {
+            if (in_array($sniff, $included, strict: true)) {
+                continue;
+            }
+
+            foreach ($refs as $ref) {
+                // ponytail: a message-code ref re-includes its whole sniff; phpcs includes only that code.
+                if (str_starts_with($sniff . '.', $ref . '.') || str_starts_with($ref, $sniff . '.')) {
+                    continue 2;
+                }
+            }
+
+            $excluded[] = $sniff;
+        }
+
+        return $excluded;
     }
 
     /**
@@ -161,7 +355,7 @@ final class PhpcsRuleset
     /**
      * @return list<DOMElement>
      */
-    private static function elements(DOMXPath $xpath, string $query, ?DOMElement $context = null): array
+    public static function elements(DOMXPath $xpath, string $query, ?DOMElement $context = null): array
     {
         return self::elementsIn($xpath->query($query, $context));
     }

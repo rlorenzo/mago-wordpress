@@ -1,4 +1,4 @@
-/bin export-ignore
+/bin/generate-lists.php export-ignore
 /.github export-ignore
 /tests export-ignore
 /.editorconfig export-ignore

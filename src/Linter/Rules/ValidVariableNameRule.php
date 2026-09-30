@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
+use Rlorenzo\MagoWordPress\Settings;
 
 use function in_array;
 use function sprintf;
@@ -24,8 +25,8 @@ use function substr;
  * Ports `WordPress.NamingConventions.ValidVariableName`.
  *
  * `Program` is the only target so every variable has its full parent chain in
- * the snapshot. The sniff's `allowed_custom_properties` has no setting here, so
- * only its built-in allow lists apply (the WPCS default).
+ * the snapshot. The sniff's `allowed_custom_properties` is the
+ * `allowed-custom-properties` setting, added to its built-in allow list.
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
@@ -106,9 +107,18 @@ final class ValidVariableNameRule implements Rule
 
     private const STRING_KINDS = [NodeKind::InterpolatedString, NodeKind::DocumentString];
 
+    /** @var list<string> */
+    private readonly array $allowedMemberNames;
+
     public function __construct(
         private readonly Report $report,
-    ) {}
+        Settings $settings,
+    ) {
+        $this->allowedMemberNames = [
+            ...self::ALLOWED_MEMBER_NAMES,
+            ...$settings->customList('allowed-custom-properties'),
+        ];
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -180,14 +190,14 @@ final class ValidVariableNameRule implements Rule
             return;
         }
 
-        if (!in_array($name, self::ALLOWED_MEMBER_NAMES, strict: true)) {
+        if (!in_array($name, $this->allowedMemberNames, strict: true)) {
             $this->reportIfNotSnakeCase($context, $variable, 'Object property', $name, 'UsedPropertyNotSnakeCase');
         }
     }
 
     private function checkMemberVar(LintContext $context, Node $variable, Node $item, string $name): void
     {
-        if (in_array($name, self::ALLOWED_MEMBER_NAMES, strict: true)) {
+        if (in_array($name, $this->allowedMemberNames, strict: true)) {
             return;
         }
 
@@ -220,7 +230,7 @@ final class ValidVariableNameRule implements Rule
         }
 
         $name = $file->getText($identifier);
-        if (in_array($name, self::ALLOWED_MEMBER_NAMES, strict: true)) {
+        if (in_array($name, $this->allowedMemberNames, strict: true)) {
             return;
         }
 

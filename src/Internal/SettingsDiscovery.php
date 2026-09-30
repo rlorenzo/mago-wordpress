@@ -18,7 +18,7 @@ use function json_decode;
  */
 final class SettingsDiscovery
 {
-    private const RULESETS = ['.phpcs.xml', 'phpcs.xml', '.phpcs.xml.dist', 'phpcs.xml.dist'];
+    public const RULESETS = ['.phpcs.xml', 'phpcs.xml', '.phpcs.xml.dist', 'phpcs.xml.dist'];
 
     private function __construct() {}
 

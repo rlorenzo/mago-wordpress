@@ -62,10 +62,15 @@ takes as sniff properties from your project instead. Put them in `composer.json`
       "custom-sanitizing-functions": [],
       "custom-unslashing-sanitizing-functions": [],
       "custom-capabilities": [],
+      "allowed-custom-properties": [],
       "max-posts-per-page": 100,
       "min-cron-interval": 900,
       "additional-word-delimiters": "",
-      "honor-phpcs-comments": true
+      "honor-phpcs-comments": true,
+      "exclude-patterns": {
+        "WordPress.Files.FileName": ["/tests/*"],
+        "WordPress.PHP.YodaConditions": ["*"]
+      }
     }
   }
 }
@@ -78,7 +83,8 @@ WordPress versions that support it.
 
 If there is no `extra.mago-wordpress` block, the worker reads the same values from your existing
 `phpcs.xml` (`text_domain`, `prefixes`, `minimum_wp_version`, `customEscapingFunctions`,
-`posts_per_page`, `min_interval`, `additional_word_delimiters`, ...), so a project migrating from phpcs needs no new configuration. An explicitly present but empty `extra.mago-wordpress` block
+`posts_per_page`, `min_interval`, `additionalWordDelimiters`, `allowed_custom_properties`, ...) and the
+codes it turns off (see `exclude-patterns` below), so a project migrating from phpcs needs no new configuration. An explicitly present but empty `extra.mago-wordpress` block
 (`{"extra": {"mago-wordpress": {}}}`) means "use the defaults" and does not fall back to `phpcs.xml`.
 
 Properties are read only when set directly on the sniff's own `<rule ref="WordPress.WP.I18n">` (and
@@ -102,13 +108,19 @@ The rules honour the phpcs suppression comments already in your code, as PHP_Cod
 `WordPress.WP.I18n.MissingTranslatorsComment`. Set `"honor-phpcs-comments": false` to report
 everything regardless. There is no `phpcs.xml` equivalent.
 
-Rules can be disabled or re-levelled from `mago.toml` like any other rule:
+`allowed-custom-properties` lists mixed-case object properties `wordpress/valid-variable-name`
+accepts (WPCS's `allowed_custom_properties`), such as `childNodes` for `DOMDocument`.
 
-```toml
-[linter.rules]
-"wordpress/capital-p-dangit" = { enabled = false }
-"wordpress/posts-per-page" = { level = "error" }
-```
+Mago (as of 1.50) rejects extension rule codes under `[linter.rules]` in `mago.toml` (`unknown field
+"wordpress/..."`), so this package's rules are turned off with `exclude-patterns` instead: WPCS code
+(standard, category, sniff or message code) mapped to phpcs `<exclude-pattern>` values, with phpcs's
+semantics (a regex in which `*` means `.*`, matched case-insensitively anywhere in the path). `"*"`
+turns the code off everywhere. So `"WordPress.WP.I18n.MissingTranslatorsComment": ["/tests/*"]`
+silences one message under `tests/` and leaves the rest of `wordpress/wp-i18n` alone. Without an
+`extra.mago-wordpress` block the same exclusions are read from `phpcs.xml`: the sniffs its
+`WordPress-Core` or `WordPress-Extra` ref leaves out, `<exclude name>`, a `<severity>` below 5, and
+`<exclude-pattern>` inside a `<rule ref>`. Levels of extension rules cannot be changed. Mago's own
+core rules are configured in `mago.toml` as usual.
 
 ## Rules
 
@@ -209,6 +221,53 @@ On code already formatted for phpcs, `mago format` makes the phpcs result worse,
 Akismet goes from 88 reports to 5,594. Adopt the preset only if you are switching formatting to
 Mago and accept its style. If you keep running phpcs for formatting while you move, either exclude
 those codes from your ruleset or don't run `mago format` on the files phpcs still checks.
+
+## Migrating from phpcs
+
+`vendor/bin/mago-wordpress migrate` reads `phpcs.xml` (or `.phpcs.xml`, `phpcs.xml.dist`,
+`.phpcs.xml.dist`, or a path you pass) and prints the `mago.toml` and composer.json
+`extra.mago-wordpress` block that reproduce it, followed by everything it could not migrate and why.
+`--write` saves both next to the ruleset (it merges into composer.json, keeping its indentation, and
+refuses to replace an existing `mago.toml` without `--force`).
+
+```sh
+vendor/bin/mago-wordpress migrate            # dry run
+vendor/bin/mago-wordpress migrate --write
+```
+
+| phpcs.xml | Becomes |
+|:---|:---|
+| `<file>` | `[source] paths` (`vendor/*` is excluded when the whole project is listed) |
+| `<exclude-pattern>` | `[source] excludes`, translated to a glob; a pattern a glob cannot express (lookarounds, alternation, classes) is listed for you to handle |
+| `<rule ref="WordPress-Core">` / `WordPress-Extra` | `exclude-patterns: "*"` for the extension sniffs that standard leaves out, `enabled = false` for Mago core rules whose sniffs it leaves out (`WordPress` keeps everything) |
+| `<exclude name="WordPress...">`, `<severity>0</severity>` | the same, for that code |
+| `<exclude-pattern>` inside `<rule ref="WordPress...">` | `exclude-patterns` for this package's rules; `exclude` on a Mago core rule when the ref is the whole sniff |
+| `<type>` on a whole sniff ported by a Mago core rule | `level` on that rule |
+| WPCS properties | the matching `extra.mago-wordpress` setting |
+| `<config name="minimum_wp_version">` | `minimum-wp-version` |
+
+Listed as not migrated: `<type>` on this package's rules or on a single message code, exclusions of
+a message code that only a Mago core rule ports (core rules have no message codes), `<include-pattern>`,
+`type="relative"` patterns inside a rule, properties with no setting (`customAllowedFunctionsList`, ...),
+custom or third-party standards (`WooCommerce-Core`, `Jetpack`: their contents are not followed, so
+every extension rule stays on), non-WordPress sniffs (see the table below for Mago rules that cover
+some), `PHPCompatibility` and `testVersion` (PHP 8.1+ target), and `<arg>`/`<ini>`. Inline
+`// phpcs:set` comments are not read.
+
+On wordpress-develop's `phpcs.xml.dist` (`WordPress-Core`): 54 of 55 `<exclude-pattern>`s become
+globs (`/themes/(?!twenty)*` does not), the Extra-only and WordPress-only rules are turned off, and the
+file- and message-scoped exclusions carry over. Linting the migrated project, every rule this package
+ports reports the same count as phpcs with that ruleset (file-name 10, valid-hook-name 1,
+wp-date-time 1, valid-variable-name 0) except one extra `prepared-sql-placeholders` report; the gaps
+are Mago's core rules (`prepared-sql` 242 vs phpcs's 215, `no-error-control-operator` 151 because
+`customAllowedFunctionsList` has no setting). 16 items are listed as not migrated, mostly
+`Generic`/`PEAR` sniff refs and `<type>` on extension rules.
+
+On WooCommerce's `phpcs.xml` (`WooCommerce-Core`): all 17 path exclusions, the text domain,
+`minimum_supported_wp_version`, the 18 custom capabilities and the file-name and hook-name exclusions
+migrate; the custom standard, its own sniffs, `PHPCompatibility` and 13 generic sniff refs are listed.
+On the 11.1.1 release zip the migrated config drops `wordpress/file-name` from 4,536 to 691 reports
+and `wordpress/capabilities` from 189 to 0.
 
 ## Coming from WPCS
 

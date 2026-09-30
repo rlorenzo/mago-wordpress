@@ -34,6 +34,9 @@
   "require-dev": {
     "phpunit/phpunit": "^10.5 || ^11.5 || ^12.0"
   },
+  "bin": [
+    "bin/mago-wordpress"
+  ],
   "autoload": {
     "psr-4": {
       "Rlorenzo\\MagoWordPress\\": "src/"

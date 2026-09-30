@@ -38,64 +38,9 @@ namespace PHPCSUtils\BackCompat {
 
 namespace {
     use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
+    use Rlorenzo\MagoWordPress\Internal\Report;
 
-    /**
-     * Sniff => Mago rule codes. 'core' rules need the wordpress integration; the three that
-     * Mago ships disabled are enabled in the scratch workspace.
-     */
-    const SNIFF_RULES = [
-        'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => ['wordpress/assignment-in-ternary-condition'],
-        'WordPress.CodeAnalysis.EscapedNotTranslated' => ['wordpress/escaped-not-translated'],
-        'WordPress.DateTime.CurrentTimeTimestamp' => ['wordpress/wp-date-time'],
-        'WordPress.DateTime.RestrictedFunctions' => ['wordpress/wp-date-time'],
-        'WordPress.DB.DirectDatabaseQuery' => ['no-direct-db-query', 'no-db-schema-change'],
-        'WordPress.DB.PreparedSQL' => ['prepared-sql'],
-        'WordPress.DB.PreparedSQLPlaceholders' => [
-            'wordpress/prepared-sql-placeholders',
-            'wordpress/prepared-sql-unquoted-complex-placeholder',
-        ],
-        'WordPress.DB.RestrictedClasses' => ['wordpress/db-restricted-classes'],
-        'WordPress.DB.RestrictedFunctions' => ['wordpress/db-restricted-functions'],
-        'WordPress.DB.SlowDBQuery' => ['wordpress/slow-db-query'],
-        'WordPress.Files.FileName' => ['wordpress/file-name'],
-        'WordPress.NamingConventions.PrefixAllGlobals' => ['wordpress/prefix-all-globals'],
-        'WordPress.NamingConventions.ValidFunctionName' => ['wordpress/valid-function-name'],
-        'WordPress.NamingConventions.ValidHookName' => ['wordpress/valid-hook-name'],
-        'WordPress.NamingConventions.ValidPostTypeSlug' => ['wordpress/valid-post-type-slug'],
-        'WordPress.NamingConventions.ValidVariableName' => ['wordpress/valid-variable-name'],
-        'WordPress.PHP.DevelopmentFunctions' => ['wordpress/discouraged-wp-functions', 'no-debug-symbols'],
-        'WordPress.PHP.DiscouragedPHPFunctions' => ['wordpress/discouraged-wp-functions'],
-        'WordPress.PHP.DontExtract' => ['wordpress/dont-extract'],
-        'WordPress.PHP.IniSet' => ['no-ini-set'],
-        'WordPress.PHP.NoSilencedErrors' => ['no-error-control-operator'],
-        'WordPress.PHP.PregQuoteDelimiter' => ['require-preg-quote-delimiter'],
-        'WordPress.PHP.RestrictedPHPFunctions' => ['wordpress/restricted-php-functions'],
-        'WordPress.PHP.StrictInArray' => ['wordpress/strict-in-array'],
-        'WordPress.PHP.TypeCasts' => ['wordpress/type-casts'],
-        'WordPress.PHP.YodaConditions' => ['wordpress/yoda-conditions'],
-        'WordPress.Security.EscapeOutput' => ['no-unescaped-output'],
-        'WordPress.Security.NonceVerification' => ['nonce-verification'],
-        'WordPress.Security.PluginMenuSlug' => ['wordpress/plugin-menu-slug'],
-        'WordPress.Security.SafeRedirect' => ['wordpress/safe-redirect'],
-        'WordPress.Security.ValidatedSanitizedInput' => ['validated-sanitized-input'],
-        'WordPress.WP.AlternativeFunctions' => ['use-wp-functions'],
-        'WordPress.WP.Capabilities' => ['wordpress/capabilities', 'no-roles-as-capabilities'],
-        'WordPress.WP.CapitalPDangit' => ['wordpress/capital-p-dangit'],
-        'WordPress.WP.ClassNameCase' => ['wordpress/class-name-case'],
-        'WordPress.WP.CronInterval' => ['wordpress/cron-interval'],
-        'WordPress.WP.DeprecatedClasses' => ['wordpress/wp-deprecated-classes'],
-        'WordPress.WP.DeprecatedFunctions' => ['wordpress/wp-deprecated-functions'],
-        'WordPress.WP.DeprecatedParameters' => ['wordpress/wp-deprecated-parameters'],
-        'WordPress.WP.DeprecatedParameterValues' => ['wordpress/wp-deprecated-parameter-values'],
-        'WordPress.WP.DiscouragedConstants' => ['wordpress/discouraged-constants'],
-        'WordPress.WP.DiscouragedFunctions' => ['wordpress/discouraged-wp-functions'],
-        'WordPress.WP.EnqueuedResourceParameters' => ['wordpress/enqueued-resource-parameters'],
-        'WordPress.WP.EnqueuedResources' => ['wordpress/enqueued-resources'],
-        'WordPress.WP.GetMetaSingle' => ['wordpress/get-meta-single'],
-        'WordPress.WP.GlobalVariablesOverride' => ['wordpress/global-variables-override'],
-        'WordPress.WP.I18n' => ['wordpress/wp-i18n'],
-        'WordPress.WP.PostsPerPage' => ['wordpress/posts-per-page'],
-    ];
+    require dirname(__DIR__) . '/vendor/autoload.php';
 
     /** phpcs:set property => composer.json extra.mago-wordpress key. */
     const SETTING_KEYS = [
@@ -151,7 +96,7 @@ namespace {
 
         $rows = [];
         $totals = ['files' => 0, 'expected' => 0, 'matched' => 0, 'missed' => 0, 'extra' => 0];
-        foreach (SNIFF_RULES as $sniff => $rules) {
+        foreach (Report::SNIFF_RULES as $sniff => $rules) {
             if ($only !== null && $sniff !== $only) {
                 continue;
             }
