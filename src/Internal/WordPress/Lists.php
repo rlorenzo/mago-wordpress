@@ -411,6 +411,7 @@ final class Lists
         'post_default_category',
         'post_default_title',
         'post_ID',
+        'post_id',
         'post_mime_types',
         'post_type',
         'post_type_object',

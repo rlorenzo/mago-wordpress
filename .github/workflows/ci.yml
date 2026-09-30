@@ -63,6 +63,34 @@ jobs:
       - name: Check
         run: just check
 
+  latest-mago:
+    name: Latest mago
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      # Surfaces a Mago rule/option rename or schema change before consumers hit it.
+      - name: Upgrade to the latest mago
+        run: composer update carthage-software/mago --with-all-dependencies --no-interaction
+
+      - name: Check
+        run: just check
+
   consumer-smoke:
     name: Consumer smoke test
     runs-on: ubuntu-latest
@@ -121,3 +149,31 @@ jobs:
             }
           done
 
+  wpcs-lists:
+    name: WPCS lists
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      # Lists.php and CoreClasses.php must be exactly what bin/generate-lists.php produces
+      # from the pinned WPCS tag, and the pin must be the latest WPCS release.
+      - name: Check generated lists against WPCS
+        run: |
+          set -euo pipefail
+          pinned=$(sed -n "s/^const WPCS_VERSION = '\(.*\)';/\1/p" bin/generate-lists.php)
+          repo=https://github.com/WordPress/WordPress-Coding-Standards
+          git clone --quiet --depth 1 --branch "$pinned" "$repo" "$RUNNER_TEMP/wpcs"
+          php bin/generate-lists.php "$RUNNER_TEMP/wpcs" --check
+          latest=$(git ls-remote --tags --refs "$repo" | sed 's#.*/##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+          if [ "$latest" != "$pinned" ]; then
+            echo "::error::WPCS $latest is out (pinned $pinned): bump WPCS_VERSION in bin/generate-lists.php and regenerate"
+            exit 1
+          fi
