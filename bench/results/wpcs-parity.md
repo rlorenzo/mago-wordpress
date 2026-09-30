@@ -13,6 +13,8 @@ measure Mago's own rules, not this package's.
 Matching is by span (an expected line inside a report's primary span matches) and `RestrictedClasses`
 files 2 and 3, which depend on test-only sniff groups, are skipped.
 
+Snapshots below are newest first; the top table is the current state.
+
 Only reports carrying the mapped rule codes count (Mago's parser/semantics errors on WPCS's
 deliberately odd test files no longer count as matches or extras), so numbers from this run on
 are slightly lower and exact.

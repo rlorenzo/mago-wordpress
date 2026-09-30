@@ -366,7 +366,12 @@ final class PreparedQuery
             }
 
             $parts = $this->file->getChildren($left);
-            if ($left->kind !== NodeKind::Binary || $this->file->getText($parts[1]) !== '.') {
+            if (
+                $left->kind !== NodeKind::Binary
+                || ($parts[1] ?? null) === null
+                || ($parts[2] ?? null) === null
+                || $this->file->getText($parts[1]) !== '.'
+            ) {
                 return null;
             }
 

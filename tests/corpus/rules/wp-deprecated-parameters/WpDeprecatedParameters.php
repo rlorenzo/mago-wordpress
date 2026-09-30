@@ -65,11 +65,9 @@ namespace {
     // fully_namespace_qualified_call_is_not_flagged
     \MyNamespace\get_wp_title_rss('deprecated');
 
-    // relative_namespace_call_is_flagged (count = 2)
-    // WPCS's own sniff cannot resolve `namespace\...` relative to the file's
-    // namespace, so it leaves this unflagged (see its test fixture comment).
-    // Mago resolves it correctly: in the global namespace, `namespace\the_author`
-    // is `the_author`, so this rule flags it, more precisely than the sniff.
+    // relative_namespace_call_is_not_flagged
+    // WPCS cannot resolve `namespace\...` relative names and never reports them;
+    // the rules skip them for parity, even in the global namespace.
     namespace\the_author('deprecated', 'deprecated');
 
     // relative_sub_namespace_call_is_not_flagged

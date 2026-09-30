@@ -36,6 +36,8 @@ use function preg_replace;
 use function sort;
 use function sprintf;
 use function str_contains;
+use function str_ends_with;
+use function str_starts_with;
 use function strtolower;
 use function substr;
 use function substr_count;
@@ -484,6 +486,11 @@ final class WpI18nRule extends CallRule
      */
     private static function isHtmlWrapped(string $text): bool
     {
+        // Plain text cannot be one element; skip the XML parse for it.
+        if (!str_starts_with($text, '<') || !str_ends_with($text, '>')) {
+            return false;
+        }
+
         $document = new DOMDocument();
         if (!$document->loadXML($text, LIBXML_NOERROR | LIBXML_NOWARNING)) {
             return false;
