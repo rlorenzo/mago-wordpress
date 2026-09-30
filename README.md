@@ -11,7 +11,8 @@ WordPress Coding Standards for [Mago](https://github.com/carthage-software/mago)
 It ports the WPCS lint sniffs (the `WordPress.*` rules phpcs runs) to Mago's linter, so a WordPress
 plugin or theme is checked in seconds instead of minutes.
 
-Formatting sniffs (whitespace, alignment, braces) are not ported: that is `mago format`'s job.
+Formatting sniffs (whitespace, alignment, braces) are not ported: that is `mago format`'s job, and
+the shipped config sets it as close to WordPress style as it goes (see [Formatting](#formatting)).
 
 ## 2–11× faster than phpcs
 
@@ -185,6 +186,28 @@ Four of Mago's core PHP rules, on for every project, cover the remaining `WordPr
 | `no-ini-set` | `WordPress.PHP.IniSet` (partial: it reports every `ini_set()`, without WPCS's safe-option allowlist) |
 | `no-debug-symbols` | `WordPress.PHP.DevelopmentFunctions` (partial; `wordpress/discouraged-wp-functions` covers the rest) |
 
+## Formatting
+
+The `extends` in [Install](#install) also sets Mago's formatter to the closest it gets to
+`WordPress-Core`: tabs, braces on the same line, `! $x`, spaces inside grouping parentheses
+`( $a + $b )`, aligned `=` and `=>`, and argument and parameter lists kept broken where you broke them.
+It also sets `array-style` to `long`; `mago lint --fix --only array-style` rewrites `[]` as `array()`.
+Override any of these under `[formatter]` in your own `mago.toml`.
+
+`mago format` cannot produce WordPress formatting exactly. Measured on Akismet, Contact Form 7 and
+Yoast SEO ([results](bench/results/2026-09-30-formatter.md)), formatting with this preset leaves
+95,040 phpcs-fixable `WordPress-Core` reports, against 334,577 with Mago's defaults. What remains:
+
+| Cause | `WordPress-Core` sniff codes | Share |
+|:---|:---|---:|
+| **No spaces inside call, declaration, control-structure and array parentheses** (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]`). Mago has no option for this and upstream declined one ([#446](https://github.com/carthage-software/mago/issues/446), [#490](https://github.com/carthage-software/mago/issues/490)). The `!` and cast reports are the same cause: `(! $x)` has no space after the parenthesis. | `PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket`, `.SpaceBeforeCloseBracket`; `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceAfterOpenParenthesis`, `.NoSpaceBeforeCloseParenthesis`; `Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen`, `.SpacingBeforeClose`; `WordPress.Arrays.ArrayKeySpacingRestrictions.NoSpacesAroundArrayKeys`; `NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine`, `.SpaceBeforeArrayCloserSingleLine`, `.SpaceAfterArrayOpenerMultiLine`, `.SpaceBeforeArrayCloserMultiLine`; `WordPress.WhiteSpace.OperatorSpacing.NoSpaceBefore`; `WordPress.WhiteSpace.CastStructureSpacing.NoSpaceBeforeOpenParenthesis` | 92 % |
+| **Alignment limits.** WPCS stops aligning `=>` past column 60 and `=` past 40 spaces of padding, and aligns across comments and blank lines; Mago aligns each run without a limit. | `WordPress.Arrays.MultipleStatementAlignment.LongIndexSpaceBeforeDoubleArrow`, `.DoubleArrowNotAligned`; `Generic.Formatting.MultipleStatementAlignment.NotSameWarning` | 5 % |
+| **Hugged last argument.** Mago keeps `foo( $a, array(` on one line; PEAR wants one argument per line once a call breaks. | `PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket`, `.CloseBracketLine`, `.MultipleArguments`, `.Indent` | 2 % |
+| **Templates and alternative syntax.** Mago prints `if ( $x ):` without the space before `:`, and breaks long `<?php echo … ?>` lines inside HTML. | `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceBetweenStructureColon`; `Squiz.ControlStructures.ControlSignature.SpaceAfterCloseParenthesis`; `Squiz.PHP.EmbeddedPhp.*`; `Generic.WhiteSpace.LanguageConstructSpacing.IncorrectSingle` | < 1 % |
+
+If you keep running phpcs for formatting while you move to Mago, exclude those codes from your
+ruleset, or stop running `mago format` on the files phpcs still checks.
+
 ## Coming from WPCS
 
 `WordPress-Extra` and `WordPress-Core` also pull in generic (non-`WordPress.*`) sniffs from
@@ -214,7 +237,7 @@ integration:
 | `PSR2.Files.ClosingTag` | `no-closing-tag` |
 | `Squiz.PHP.DisallowMultipleAssignments` | `no-multi-assignments` |
 | `Squiz.PHP.Eval.Discouraged` | `no-eval` |
-| `Universal.Arrays.DisallowShortArraySyntax` | `array-style` |
+| `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) |
 | `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` |
 
 Enable these (and the rest of Mago's ~100 core rules) the normal way, in `mago.toml`:
@@ -227,7 +250,7 @@ Enable these (and the rest of Mago's ~100 core rules) the normal way, in `mago.t
 ## Not ported
 
 Formatting sniffs (whitespace, alignment, braces, quote style, keyword and tag casing not listed
-above) are not ported: that is `mago format`'s job.
+above) are not ported: that is `mago format`'s job (see [Formatting](#formatting)).
 
 <details>
 <summary>Remaining WPCS sniffs with no Mago equivalent</summary>

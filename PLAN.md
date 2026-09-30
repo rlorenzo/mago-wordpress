@@ -100,24 +100,23 @@ extras. That is the case for porting them, whatever upstream decides.
 ## Sprint B: formatter preset
 
 `WordPress-Core` is roughly two-thirds formatting sniffs (`WhiteSpace`, `Arrays`, brace and
-spacing rules from `Generic`/`Squiz`/`PSR2`/`Universal`). The README says "that is `mago fmt`'s
-job", but ships no `[formatter]` block, so a team running `mago fmt` gets Mago's default style
-and then fails `phpcs --standard=WordPress-Core` on every file.
+spacing rules from `Generic`/`Squiz`/`PSR2`/`Universal`). Until B.1 the README said "that is
+`mago fmt`'s job" but shipped no `[formatter]` block, so a team running `mago fmt` got Mago's
+default style and then failed `phpcs --standard=WordPress-Core` on every file.
 
-**B.1 `[formatter]` block in `wordpress.mago.toml`** built from existing Mago settings:
-`use-tabs = true`, `tab-width = 4`, K&R brace styles (`function-brace-style`,
-`method-brace-style`, `classlike-brace-style`, `control-brace-style` = same line),
-`space-after-logical-not-unary-prefix-operator = true` (`! $x`), `space-after-cast-unary-prefix-operators = true`,
-`single-quote = true`, `array-style = "long"` (`array()`), `trailing-comma`, `print-width`,
-`space-around-concatenation-binary-operator`, `align-assignment-like` and `array-table-style-alignment` for
-`MultipleStatementAlignment`, `parentheses-in-exit-and-die`, `null-type-hint`, `lowercase keywords`.
-Measure: `mago fmt` a bake-off plugin, then `phpcs --standard=WordPress-Core` on the result;
-the remaining sniff codes are the divergence list.
+**B.1 `[formatter]` block in `wordpress.mago.toml`: done (2026-09-30).** Tabs, same-line braces
+for functions, methods and classes, `! $x`, spaces inside grouping parentheses, `align-assignment-like`,
+and preserved argument and parameter line breaks. All of these exist in Mago 1.47.1. It also sets
+`array-style = { style = "long" }`: Mago's default of `short` flagged every `array()`, the opposite
+of `Universal.Arrays.DisallowShortArraySyntax`. Measured on Akismet, Contact Form 7 and Yoast SEO
+(`bench/results/2026-09-30-formatter.md`): 334,577 phpcs-fixable `WordPress-Core` reports after
+`mago format` with Mago's defaults, 95,040 with the preset. Mago has no formatter option for
+`array()`, the 60-column `=>` alignment limit, or unhugging the last argument.
 
-**B.2 Document the divergences.** Spaces inside parentheses (`foo( $a, $b )`) and inside array
-brackets are refused upstream (#446, #490); Yoda and `elseif` are lint, not fmt. README gets a
-"Formatting" section with the exact `WordPress-Core` codes `mago fmt` cannot satisfy, so a team
-knows to exclude them from phpcs if they keep phpcs for formatting during the transition.
+**B.2 Divergences documented: done (2026-09-30).** The README's Formatting section groups the codes
+that remain by cause: spaces inside parentheses and brackets are 92 % of what's left (refused
+upstream, #446 and #490); then alignment limits (5 %), the hugged last argument (2 %), and
+templates or alternative syntax (under 1 %).
 
 **B.3 Upstream a `wordpress` preset** once B.1 stabilizes (issue #2399, question 2). A preset
 survives Mago's option renames; a TOML block in this package does not.
