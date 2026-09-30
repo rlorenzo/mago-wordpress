@@ -160,7 +160,11 @@ namespace {
         return static fn() => __($text, 'my-plugin');
     }
 
-    // skipped_function_is_ignored
+    // low_level_function_is_checked (count = 4)
+    // @mago-expect lint:wordpress/wp-i18n
+    // @mago-expect lint:wordpress/wp-i18n
+    // @mago-expect lint:wordpress/wp-i18n
+    // @mago-expect lint:wordpress/wp-i18n
     $label = translate_with_gettext_context($text, $context);
 
     // translate_method_call_is_ignored
@@ -370,4 +374,73 @@ namespace {
 // Translators comment on the same line as the call.
 namespace {
     /* translators: %s: name. */ __('Hello %s', 'my-plugin');
+}
+
+// Ported from WPCS Tests/WP/I18nUnitTest.1.inc.
+namespace {
+    // @mago-expect lint:wordpress/wp-i18n
+    translate('foo', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    \translate_with_gettext_context('foo', 'bar', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    _('foo', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    \_('foo', 'my-plugin');
+
+    // @mago-expect lint:wordpress/wp-i18n
+    __('foo', 'my-plugin', 'too-many-args');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    \_Nx_Noop('I have %d cat.', 'I have %d cats.', 'Not really.', 'my-plugin', 'too-many-args');
+    // @mago-expect lint:wordpress/wp-i18n
+    // @mago-expect lint:wordpress/wp-i18n
+    translate(domain: 'my-plugin', text: 'translate me', extra: 'default');
+
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %s: thing. */
+    __('%s', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    _n('I have %d cat.', '%d', $number, 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %s: thing. */
+    __('   %s    ', 'my-plugin');
+    /* translators: 1: first, 2: second. */
+    __('%1$s %2$s', 'my-plugin');
+    __('0', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %s: thing. */
+    _ex(domain: 'my-plugin', text: '%s', context: 'context');
+
+    // @mago-expect lint:wordpress/wp-i18n
+    __('<address>123 Fake Street</address>', 'my-plugin');
+    __('I live at <address>123 Fake Street</address>', 'my-plugin');
+    __('<span>Text</span> More text <span>Text</span>', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    __('<div class="my-class">Translatable content</div>', 'my-plugin');
+    /* translators: 1: id, 2: value. */
+    __('<option id="%1$s" value="%2$s">Translatable option name</option>', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    __('<b><i>Foo</i></b>', 'my-plugin');
+    __('<a href="https://wordpress.org">WordPress</a>', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    __('<a id="anchor">translatable text</a>', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    __('<a>translatable text</a>', 'my-plugin');
+    __('<div data-type=">foo">my address</div>', 'my-plugin');
+    __('<b><i>Foo</b></i>', 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    esc_attr_x(domain: 'my-plugin', context: 'context', text: '<div>translate me</div>');
+
+    // @mago-expect lint:wordpress/wp-i18n
+    /* translators: %d: number. */
+    _n_noop('I have %1$d cat and %2$d dog.', domain: 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    __(domain: 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    __(single: 'translate me', domain: 'my-plugin');
+    // @mago-expect lint:wordpress/wp-i18n
+    esc_attr_e(domain: 'my-plugin', translate: 'Text to translate to %1$d languages.');
+    // @mago-expect lint:wordpress/wp-i18n
+    _x('Post', domain: 'my-plugin');
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Linter\Rules;
 
+use DOMDocument;
 use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
@@ -20,7 +21,6 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
-use function array_diff;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -32,6 +32,7 @@ use function in_array;
 use function ltrim;
 use function preg_match;
 use function preg_match_all;
+use function preg_replace;
 use function sort;
 use function sprintf;
 use function str_contains;
@@ -41,6 +42,8 @@ use function substr_count;
 use function trim;
 use function ucfirst;
 
+use const LIBXML_NOERROR;
+use const LIBXML_NOWARNING;
 use const SORT_NATURAL;
 
 /**
@@ -74,9 +77,9 @@ final class WpI18nRule extends CallRule
     private const TEXT_PARAMETERS = ['text', 'single', 'singular', 'plural'];
 
     /**
-     * WPCS lists this one, but the ported rule does not check it.
+     * Functions reserved for the low-level API.
      */
-    private const SKIPPED = 'translate_with_gettext_context';
+    private const LOW_LEVEL = ['translate', 'translate_with_gettext_context'];
 
     /**
      * WPCS's `SPRINTF_PLACEHOLDER_REGEX`, which finds the placeholders for the translators comment and the singular/plural comparison.
@@ -127,7 +130,7 @@ final class WpI18nRule extends CallRule
 
     protected function names(): array
     {
-        return array_values(array_diff(array_keys(Lists::I18N_FUNCTIONS), [self::SKIPPED]));
+        return [...array_keys(Lists::I18N_FUNCTIONS), '_'];
     }
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
@@ -142,15 +145,25 @@ final class WpI18nRule extends CallRule
             return;
         }
 
+        if ($this->checkFunction($context, $call, $name)) {
+            return;
+        }
+
+        $parameters = self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]];
         $arguments = [];
-        foreach (self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]] as $index => $parameter) {
+        foreach ($parameters as $index => $parameter) {
             $arguments[$parameter] = $this->argument($context, $call, $index, $parameter);
         }
 
         $texts = [];
         foreach (self::TEXT_PARAMETERS as $parameter) {
-            $argument = $arguments[$parameter] ?? null;
+            if (!array_key_exists($parameter, $arguments)) {
+                continue;
+            }
+
+            $argument = $arguments[$parameter];
             if ($argument === null) {
+                $this->reportMissing($context, $name, $parameter);
                 continue;
             }
 
@@ -158,6 +171,7 @@ final class WpI18nRule extends CallRule
             $texts[] = [$argument, $text];
             if ($text !== null) {
                 $this->checkOrder($context, $argument, $parameter, $text);
+                $this->checkContent($context, $argument, $text);
                 continue;
             }
 
@@ -180,6 +194,10 @@ final class WpI18nRule extends CallRule
         }
 
         $gettextContext = $arguments['context'] ?? null;
+        if ($gettextContext === null && array_key_exists('context', $arguments)) {
+            $this->reportMissing($context, $name, 'context');
+        }
+
         if ($gettextContext !== null && $this->literal($context, $gettextContext) === null) {
             $this->report->issue(
                 $context,
@@ -263,8 +281,8 @@ final class WpI18nRule extends CallRule
         $isDefaultOnly = $allowed === ['default'];
 
         if ($argument === null) {
-            if ($isDefaultOnly) {
-                // The only accepted domain is `default`, which may be omitted.
+            if ($allowed === [] || $isDefaultOnly) {
+                // With no known text domain WPCS presumes WordPress core; `default` alone may be omitted.
                 return;
             }
 
@@ -309,6 +327,20 @@ final class WpI18nRule extends CallRule
             return;
         }
 
+        if ($allowed === [] && $domain === '') {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Empty text domain in translation function call',
+                    $argument->span,
+                    'This text domain is empty',
+                )->withHelp('Pass a text domain or remove the argument.'),
+                [self::SNIFF . '.EmptyTextDomain'],
+            );
+
+            return;
+        }
+
         if ($isDefaultOnly && $domain === 'default') {
             $this->report->issue(
                 $context,
@@ -344,6 +376,135 @@ final class WpI18nRule extends CallRule
             )))),
             [self::SNIFF . '.TextDomainMismatch'],
         );
+    }
+
+    /**
+     * Reports `_()`, the low-level functions and extra arguments; true when `_()` ends the check.
+     */
+    private function checkFunction(LintContext $context, CallExpression $call, string $name): bool
+    {
+        if ($name === '_') {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Single-underscore `_()` gettext function',
+                    $context->node->span,
+                    'Found `_()` where `__()` is expected',
+                )->withHelp('Use `__()` with a text domain.'),
+                [self::SNIFF . '.SingleUnderscoreGetTextFunction'],
+            );
+
+            return true;
+        }
+
+        if (in_array($name, self::LOW_LEVEL, strict: true)) {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Low-level translation function',
+                    $context->node->span,
+                    sprintf('`%s()` is reserved for low-level API usage', $name),
+                )->withHelp('Use `__()`, `_x()` or one of their escaping variants instead.'),
+                [self::SNIFF . '.LowLevelTranslationFunction'],
+            );
+        }
+
+        $parameters = self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]];
+        if (count($call->arguments) > count($parameters)) {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Too many arguments in translation function call',
+                    $context->node->span,
+                    sprintf(
+                        '`%s()` expects %d arguments, received %d',
+                        $name,
+                        count($parameters),
+                        count($call->arguments),
+                    ),
+                )->withHelp('Remove the extra arguments.'),
+                [self::SNIFF . '.TooManyFunctionArgs'],
+            );
+        }
+
+        return false;
+    }
+
+    private function reportMissing(LintContext $context, string $name, string $parameter): void
+    {
+        $this->report->issue(
+            $context,
+            Issue::new(
+                sprintf('Missing `$%s` argument in translation function call', $parameter),
+                $context->node->span,
+                sprintf('This call to `%s()` does not pass `$%s`', $name, $parameter),
+            ),
+            [self::SNIFF . '.MissingArg' . ucfirst($parameter)],
+        );
+    }
+
+    /**
+     * Reports a string with nothing but placeholders, or wrapped entirely in one HTML element.
+     */
+    private function checkContent(LintContext $context, Node $argument, string $text): void
+    {
+        $text = trim($text);
+        if (preg_replace(self::WPCS_PLACEHOLDER, replacement: '', subject: $text) === '') {
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Translatable string has no translatable content',
+                    $argument->span,
+                    'Only placeholders here',
+                )->withHelp('Move the formatting out of the translation, or add the text translators need.'),
+                [self::SNIFF . '.NoEmptyStrings'],
+            );
+
+            return;
+        }
+
+        if (!self::isHtmlWrapped($text)) {
+            return;
+        }
+
+        $this->report->issue(
+            $context,
+            Issue::new(
+                'Translatable string should not be wrapped in HTML',
+                $argument->span,
+                'The whole string is one element',
+            )->withHelp('Move the wrapping element out of the translatable string.'),
+            [self::SNIFF . '.NoHtmlWrappedStrings'],
+        );
+    }
+
+    /**
+     * WPCS's XMLReader test: the string is one well-formed element, without placeholders in its attributes
+     * and not a link with an `href`.
+     */
+    private static function isHtmlWrapped(string $text): bool
+    {
+        $document = new DOMDocument();
+        if (!$document->loadXML($text, LIBXML_NOERROR | LIBXML_NOWARNING)) {
+            return false;
+        }
+
+        $element = $document->documentElement;
+        if ($element === null || $document->firstChild !== $element) {
+            return false;
+        }
+
+        foreach ($element->attributes ?? [] as $attribute) {
+            if (preg_match(self::WPCS_PLACEHOLDER, $attribute->value) === 1) {
+                return false;
+            }
+        }
+
+        if ($element->nodeName === 'a' && $element->getAttribute('href') !== '') {
+            return false;
+        }
+
+        return $document->saveXML($element) === $text;
     }
 
     /**
@@ -515,7 +676,7 @@ final class WpI18nRule extends CallRule
 
                 $declared = strtolower($context->file->getText($child));
 
-                return $declared !== self::SKIPPED && array_key_exists($declared, Lists::I18N_FUNCTIONS);
+                return array_key_exists($declared, Lists::I18N_FUNCTIONS);
             }
 
             return false;
