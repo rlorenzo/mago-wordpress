@@ -14,6 +14,23 @@ integrations = ["wordpress"]
 nonce-verification = { enabled = true }
 validated-sanitized-input = { enabled = true }
 prepared-sql = { enabled = true }
+# WordPress-Core requires long arrays (Universal.Arrays.DisallowShortArraySyntax); Mago's
+# default is the opposite. `mago lint --fix --only array-style` converts `[]` to `array()`.
+array-style = { style = "long" }
+
+# The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
+# call, declaration, control-structure and array parentheses (refused upstream, mago #446/#490);
+# see the README's Formatting section for the sniff codes that remain.
+[formatter]
+use-tabs = true
+function-brace-style = "same-line"
+method-brace-style = "same-line"
+classlike-brace-style = "same-line"
+space-after-logical-not-unary-prefix-operator = true
+space-within-grouping-parenthesis = true
+align-assignment-like = true
+preserve-breaking-argument-list = true
+preserve-breaking-parameter-list = true
 
 [extension-hosts.wordpress]
 command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php"]
