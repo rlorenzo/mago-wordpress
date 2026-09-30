@@ -551,12 +551,12 @@ final class PhpcsMigration
             foreach ($coreRules as $rule => $settings) {
                 $pairs = [];
                 foreach ($settings as $key => $value) {
-                    $pairs[] =
-                        $key . ' = ' . match (true) {
-                            is_array($value) => self::list($value, inline: true),
-                            is_bool($value) => $value ? 'true' : 'false',
-                            default => self::string($value),
-                        };
+                    $literal = match (true) {
+                        is_array($value) => self::list($value, inline: true),
+                        is_bool($value) => $value ? 'true' : 'false',
+                        default => self::string($value),
+                    };
+                    $pairs[] = $key . ' = ' . $literal;
                 }
 
                 $toml .= $rule . ' = { ' . implode(', ', $pairs) . " }\n";
