@@ -35,6 +35,9 @@ final class WpDateTimeRule extends CallRule
 
     private const CURRENT_TIME_FUNCTION = 'current_time';
 
+    // A namespace declaration, or a `use function` import that could name `time`.
+    private const TIME_REBINDS = '/\bnamespace\s+[\w\\\\]+\s*[;{]|\buse\s+function\b[^;]*\btime\b/i';
+
     /** @var array<string, array{reason: string, help: string}> */
     private const RESTRICTED_MESSAGES = [
         'date' => [
@@ -124,11 +127,17 @@ final class WpDateTimeRule extends CallRule
                 'Use `time()` instead',
             )->withHelp('Replace this call with `time()`.');
 
-            // Fixable, as in the sniff, unless the call holds a comment the fix would drop.
+            // Fixable, as in the sniff, unless the call holds a comment the fix would drop. An unqualified
+            // `time()` could resolve to a namespaced or imported function, so it is qualified then (a false match
+            // in a string or comment only adds a harmless `\`).
             $span = $context->node->span;
             if (!Calls::hasComment($context->file, $span)) {
-                $leadingSlash = str_starts_with($context->file->getText($context->node), '\\') ? '\\' : '';
-                $issue = $issue->withEdit(TextEdit::replace($span, $leadingSlash . 'time()'));
+                $prefix = str_starts_with($context->file->getText($context->node), '\\') ? '\\' : '';
+                if (preg_match(self::TIME_REBINDS, $context->file->contents) === 1) {
+                    $prefix = '\\';
+                }
+
+                $issue = $issue->withEdit(TextEdit::replace($span, $prefix . 'time()'));
             }
 
             $this->report->issue($context, $issue, ['WordPress.DateTime.CurrentTimeTimestamp.RequestedUTC']);

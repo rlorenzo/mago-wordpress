@@ -368,12 +368,12 @@ final class Calls
     }
 
     /**
-     * Whether a comment lies inside the span, so a fix that rewrites it would drop the comment.
+     * Whether a comment overlaps the span, so a fix that rewrites it would drop or break the comment.
      */
     public static function hasComment(SourceFile $file, Span $span): bool
     {
         foreach ($file->getTrivia() as $trivia) {
-            if ($trivia->span->start >= $span->start && $trivia->span->end <= $span->end) {
+            if ($trivia->span->start < $span->end && $trivia->span->end > $span->start) {
                 return true;
             }
         }

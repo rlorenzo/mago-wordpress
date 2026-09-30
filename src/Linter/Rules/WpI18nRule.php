@@ -36,11 +36,11 @@ use function ltrim;
 use function preg_match;
 use function preg_match_all;
 use function preg_replace;
+use function preg_replace_callback;
 use function sort;
 use function sprintf;
 use function str_contains;
 use function str_ends_with;
-use function str_replace;
 use function str_starts_with;
 use function strpos;
 use function strtolower;
@@ -408,20 +408,35 @@ final class WpI18nRule extends CallRule
 
             $argumentSpan = $argument->node->span;
             if ($index > 0) {
-                $previousEnd = $call->arguments[$index - 1]->node->span->end;
-                $comma = strpos($file->getText(new Span($previousEnd, $argumentSpan->start)), ',');
-                $span = $comma === false ? null : new Span($previousEnd + $comma, $value->span->end);
+                $comma = self::separator($file, $call->arguments[$index - 1]->node->span->end, $argumentSpan->start);
+                $span = $comma === null ? null : new Span($comma, $value->span->end);
             } else {
                 $list = $file->getParent($argument->node);
                 $next = $call->arguments[1] ?? null;
-                $comma = $next === null
-                    ? false
-                    : strpos($file->getText(new Span($argumentSpan->end, $next->node->span->start)), ',');
-                $end = $comma === false ? ($list?->span->end ?? 1) - 1 : $argumentSpan->end + $comma + 1;
+                $comma = $next === null ? null : self::separator($file, $argumentSpan->end, $next->node->span->start);
+                $end = $comma === null ? ($list?->span->end ?? 1) - 1 : $comma + 1;
                 $span = $list === null ? null : new Span($list->span->start + 1, $end);
             }
 
             return $span === null || Calls::hasComment($file, $span) ? null : $span;
+        }
+
+        return null;
+    }
+
+    /**
+     * The offset of the argument-separating comma between two arguments, skipping commas inside comments.
+     */
+    private static function separator(SourceFile $file, int $start, int $end): ?int
+    {
+        $text = $file->getText(new Span($start, $end));
+        $offset = 0;
+        while (($comma = strpos($text, needle: ',', offset: $offset)) !== false) {
+            if (!Calls::hasComment($file, new Span($start + $comma, $start + $comma + 1))) {
+                return $start + $comma;
+            }
+
+            $offset = $comma + 1;
         }
 
         return null;
@@ -603,21 +618,21 @@ final class WpI18nRule extends CallRule
         )->withHelp(sprintf('Number the placeholders so translators can reorder them: %s.', implode(', ', $expected)));
 
         // Fixable, as in the sniff: number each unordered placeholder in turn. It changes the msgid, so existing
-        // translations of the string stop matching.
-        if ($argument->kind === NodeKind::LiteralString) {
-            $raw = $context->file->getText($argument);
-            $dollar = str_starts_with($raw, '"') ? '\$' : '$';
-            $fixed = $raw;
-            foreach ($found as $index => $placeholder) {
-                $numbered = '%' . ($index + 1) . $dollar . substr($placeholder, offset: 1);
-                $fixed = (string) preg_replace(
-                    '`\Q' . $placeholder . '\E`',
-                    str_replace(search: ['\\', '$'], replace: ['\\\\', '\$'], subject: $numbered),
-                    $fixed,
-                    limit: 1,
-                );
-            }
-
+        // translations of the string stop matching. Positions come from the detection regex, so a literal `%%s`
+        // is never numbered (the sniff's fixer numbers it).
+        $raw = $context->file->getText($argument);
+        $dollar = str_starts_with($raw, '"') ? '\$' : '$';
+        $number = 0;
+        $numbered = 0;
+        $fixed = (string) preg_replace_callback(
+            self::WPCS_UNORDERED_PLACEHOLDER,
+            static function (array $match) use (&$number, $dollar): string {
+                return '%' . ++$number . $dollar . substr($match[0], offset: 1);
+            },
+            $raw,
+            count: $numbered,
+        );
+        if ($argument->kind === NodeKind::LiteralString && $numbered === count($found)) {
             $issue = $issue->withEdit(TextEdit::replace(
                 $argument->span,
                 $fixed,

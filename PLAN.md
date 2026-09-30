@@ -165,9 +165,14 @@ a message-code ref re-includes its whole sniff when the standard leaves it out (
 
 ## Sprint D: `phpcbf` parity
 
-**Done (2026-09-30).** Every fix WPCS makes outside its formatting sniffs is now a Mago edit,
-byte-identical to WPCS's `.inc.fixed` files (CapitalPDangit .1/.2, CurrentTimeTimestamp, I18n .1
-minus its deliberate parse error); `tests/Unit/RuleFixesTest.php` runs `mago lint --fix` on each.
+**Done (2026-09-30).** Every fix WPCS makes outside its formatting sniffs is now a Mago edit. A
+one-off manual check ran `mago lint --fix` on WPCS's own test files and diffed against their
+`.inc.fixed` (CapitalPDangit .1/.2 and CurrentTimeTimestamp identical; I18n .1 identical once its
+deliberate parse error is removed, apart from `phpcs:set` regions a single run cannot reproduce);
+that comparison is not automated. `tests/Unit/RuleFixesTest.php` covers handwritten cases through
+a real worker, including where this package deliberately does not follow WPCS's fixer: no edit
+inside an interpolated `{$...}`, `\time()` when the file is namespaced or imports a `time`
+function, commas inside comments are not separators, and a literal `%%` is never numbered.
 
 | WPCS fixable | Extension | Safety |
 |:---|:---|:---|

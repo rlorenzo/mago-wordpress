@@ -18,6 +18,7 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function count;
 use function explode;
@@ -102,7 +103,13 @@ final class CapitalPDangitRule implements Rule
         }
 
         foreach (NodeIndex::ofKinds($file, $program, self::TEXT_KINDS) as $node) {
-            $this->scanText($context, $node->span, $skipped, 'MisspelledInText');
+            $this->scanText(
+                $context,
+                $node->span,
+                $skipped,
+                'MisspelledInText',
+                Strings::interpolatedRanges($file, $node),
+            );
         }
 
         foreach (NodeIndex::ofKinds($file, $program, self::CLASS_LIKE_KINDS) as $node) {
@@ -195,9 +202,15 @@ final class CapitalPDangitRule implements Rule
 
     /**
      * @param list<array{int, int}> $skipped
+     * @param list<array{int, int}> $interpolated
      */
-    private function scanText(LintContext $context, Span $span, array $skipped, string $code): void
-    {
+    private function scanText(
+        LintContext $context,
+        Span $span,
+        array $skipped,
+        string $code,
+        array $interpolated = [],
+    ): void {
         if (self::isSkipped($skipped, $span->start)) {
             return;
         }
@@ -231,7 +244,10 @@ final class CapitalPDangitRule implements Rule
             $edits = [];
             foreach ($misspelled as $wordOffset => $word) {
                 $wordSpan = new Span($start + $wordOffset, $start + $wordOffset + strlen($word));
-                $edits[] = TextEdit::replace($wordSpan, self::CORRECT_SPELLING)->withSafety($safety);
+                // The sniff also rewrites a misspelling inside an interpolated `{$...}`, which changes the code.
+                if (!self::isSkipped($interpolated, $wordSpan->start)) {
+                    $edits[] = TextEdit::replace($wordSpan, self::CORRECT_SPELLING)->withSafety($safety);
+                }
             }
 
             $this->report(

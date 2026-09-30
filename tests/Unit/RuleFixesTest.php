@@ -107,6 +107,44 @@ final class RuleFixesTest extends TestCase
             "__( '%1\$s of %2\$d' );\n__( \"%1\\\$s of %2\\\$s\" );",
             ['default'],
         ];
+
+        // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
+        yield 'capital-p-dangit leaves interpolated expressions alone' => [
+            'wordpress/capital-p-dangit',
+            '--potentially-unsafe',
+            "echo \"{\$o->Wordpress} \$o->Wordpress Wordpress\";\necho <<<EOT\n{\$o->Wordpress} Wordpress\nEOT;",
+            "echo \"{\$o->Wordpress} \$o->Wordpress WordPress\";\necho <<<EOT\n{\$o->Wordpress} WordPress\nEOT;",
+        ];
+
+        yield 'wp-date-time qualifies time() in a namespace' => [
+            'wordpress/wp-date-time',
+            '',
+            "namespace App;\n\$a = current_time( 'timestamp', true );",
+            "namespace App;\n\$a = \\time();",
+        ];
+
+        yield 'wp-date-time qualifies time() when a function named time is imported' => [
+            'wordpress/wp-date-time',
+            '',
+            "use function Vendor\\time;\n\$a = current_time( 'U', true );",
+            "use function Vendor\\time;\n\$a = \\time();",
+        ];
+
+        yield 'wp-i18n default domain removal skips a comma inside a comment' => [
+            'wordpress/wp-i18n',
+            '',
+            "__( 'a' /* , keep */, 'default' );\n_n_noop( domain: 'default' /* , x */, singular: 'b', plural: 'c' );",
+            "__( 'a' /* , keep */ );\n_n_noop( domain: 'default' /* , x */, singular: 'b', plural: 'c' );",
+            ['default'],
+        ];
+
+        yield 'wp-i18n placeholder numbering skips a literal %%' => [
+            'wordpress/wp-i18n',
+            '--potentially-unsafe',
+            "__( 'Literal %%s; %s of %s', 'default' );",
+            "__( 'Literal %%s; %1\$s of %2\$s' );",
+            ['default'],
+        ];
     }
 
     /**
