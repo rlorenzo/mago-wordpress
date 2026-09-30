@@ -7,6 +7,7 @@ namespace Rlorenzo\MagoWordPress;
 use Rlorenzo\MagoWordPress\Internal\Shape;
 
 use function array_filter;
+use function array_keys;
 use function array_map;
 use function array_unique;
 use function array_values;
@@ -45,12 +46,14 @@ final class Settings
         'custom-sanitizing-functions' => 'customSanitizingFunctions',
         'custom-unslashing-sanitizing-functions' => 'customUnslashingSanitizingFunctions',
         'custom-capabilities' => 'custom_capabilities',
+        'allowed-custom-properties' => 'allowed_custom_properties',
     ];
 
     /**
      * @param list<string> $textDomains
      * @param list<string> $prefixes
      * @param array<string, list<string>> $customLists keyed by composer.json option name
+     * @param array<string, list<string>> $excludePatterns WPCS code => phpcs `<exclude-pattern>` values
      * @mago-expect lint:excessive-parameter-list
      */
     public function __construct(
@@ -62,6 +65,7 @@ final class Settings
         public readonly int $minCronInterval = self::DEFAULT_MIN_CRON_INTERVAL,
         public readonly string $additionalWordDelimiters = '',
         public readonly bool $honorPhpcsComments = true,
+        public readonly array $excludePatterns = [],
     ) {}
 
     /**
@@ -99,9 +103,10 @@ final class Settings
 
         $customLists = [];
         foreach (self::CUSTOM_LISTS as $option => $_property) {
-            // Capability names are case-sensitive in WordPress; function names are not.
+            // Capability and property names are case-sensitive; function names are not.
             $list = self::stringList($values[$option] ?? []);
-            $customLists[$option] = $option === 'custom-capabilities' ? $list : self::lowercased($list);
+            $caseSensitive = $option === 'custom-capabilities' || $option === 'allowed-custom-properties';
+            $customLists[$option] = $caseSensitive ? $list : self::lowercased($list);
         }
 
         return new self(
@@ -113,7 +118,30 @@ final class Settings
             minCronInterval: self::integer($values['min-cron-interval'] ?? null) ?? self::DEFAULT_MIN_CRON_INTERVAL,
             additionalWordDelimiters: Shape::string($values['additional-word-delimiters'] ?? null) ?? '',
             honorPhpcsComments: ($values['honor-phpcs-comments'] ?? true) !== false,
+            excludePatterns: self::excludePatterns($values['exclude-patterns'] ?? []),
         );
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private static function excludePatterns(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $patterns = [];
+        foreach (array_keys($value) as $code) {
+            $list = self::stringList($value[$code]);
+            if (!is_string($code) || $code === '' || $list === []) {
+                continue;
+            }
+
+            $patterns[$code] = $list;
+        }
+
+        return $patterns;
     }
 
     /**

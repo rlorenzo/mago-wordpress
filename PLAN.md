@@ -121,50 +121,47 @@ templates or alternative syntax (under 1 %).
 **B.3 Upstream a `wordpress` preset** once B.1 stabilizes (issue #2399, question 2). A preset
 survives Mago's option renames; a TOML block in this package does not.
 
-## Sprint C: `phpcs.xml` migration
+## Sprint C: `phpcs.xml` migration — done (2026-09-30)
 
-`SettingsDiscovery` reads sniff properties from `phpcs.xml`. It ignores everything else a real
-ruleset carries:
+**C.1** `vendor/bin/mago-wordpress migrate [<ruleset|dir>] [--write] [--force]` (`PhpcsMigration`,
+shipped in composer.json `bin`). Dry run prints `mago.toml` + `extra.mago-wordpress` + a "not
+migrated" list; `--write` saves them (merges composer.json, keeps its indent; no `mago.toml`
+overwrite without `--force`). `Report::SNIFF_RULES` is now the one sniff→rule map (the parity
+harness reads it).
 
-| phpcs.xml element | Today | Mago equivalent |
-|:---|:---|:---|
-| `<exclude-pattern>` | ignored | `[source] excludes` |
-| `<file>` | ignored | `[source] paths` |
-| `<exclude name="WordPress.X.Y">` on a `<rule>` | ignored | `[linter.rules] "wordpress/x-y" = { enabled = false }` (needs the WPCS→rule map `Report` already has) |
-| `<exclude name="…MessageCode">` | ignored | no equivalent; document |
-| `<severity>`, `<type>` | ignored | `level` |
-| `<config name="testVersion">` | ignored | `php-version` |
-| `<arg name="extensions">`, `<arg name="parallel">` | ignored | n/a |
-| `// phpcs:set Sniff prop value` inline | ignored | none; document |
+Finding that shaped it: **Mago 1.50 rejects extension rule codes under `[linter.rules]`**
+(`deny_unknown_fields`; upstream #2223 was closed as "already allowed", but it is not), so the old
+README example `"wordpress/x" = { enabled = false }` never worked. Everything a ruleset turns off
+for this package's rules therefore goes into a new `exclude-patterns` setting (WPCS code → phpcs
+`<exclude-pattern>` values, `*` = everywhere) that `Report` applies with phpcs's own regex
+semantics, per message code — finer than Mago could do natively. `PhpcsRuleset` derives it
+(standard choice, `<exclude name>`, `<severity>` < 5, per-rule `<exclude-pattern>`), so the
+phpcs.xml fallback gets it too. Mago core rules get `[linter.rules]` `enabled`/`exclude`/`level`.
 
-What real rulesets contain (surveyed 2026-09-29: wordpress-develop, WooCommerce, Jetpack,
-LiteSpeed Cache; release zips of the other bake-off plugins strip their `phpcs.xml.dist`):
+| phpcs.xml element | Result |
+|:---|:---|
+| `<file>` | `[source] paths` (+ `vendor/*` excluded when `.`) |
+| global `<exclude-pattern>` | `[source] excludes` glob (Mago matches these against absolute paths); regex-only patterns listed |
+| `WordPress-Core` / `-Extra` / `WordPress` | sniffs outside the standard excluded (`WordPress` = every sniff, including DirectDatabaseQuery, SlowDBQuery, ValidatedSanitizedInput, which Core/Extra do not list) |
+| `<exclude name>`, `<severity>0` | code excluded |
+| per-rule `<exclude-pattern>` | `exclude-patterns`; core rules get two globs (per-rule `exclude` matches workspace-relative paths) |
+| `<type>` | core-rule `level` for a whole sniff; otherwise listed (extension rules cannot be re-levelled) |
+| properties | settings; `allowed_custom_properties` added (`allowed-custom-properties`); `additionalWordDelimiters` was read under the wrong name, fixed |
 
-- `<exclude-pattern>` dominates: 102 in wordpress-develop, 54 in WooCommerce. Straight map to
-  `[source] excludes` (phpcs patterns are regex-ish globs; translate `*` and anchors).
-- `<rule ref="WordPress.Files.FileName.InvalidClassFileName"><severity>0</severity>` or
-  `<exclude-pattern>` scoped to a message code: disable or scope one WPCS message code. Maps to
-  `{ enabled = false }` only when the code is the whole rule; a message-code exclusion inside a
-  rule has no Mago equivalent unless the rule exposes it (see `Report` codes) — list these in
-  the tool's "could not map" output.
-- `<type>warning</type>` on an error sniff: maps to `{ level = "warning" }`.
-- `<properties>`: `text_domain`, `prefixes`, `custom_capabilities`, `allowed_custom_properties`,
-  `customAllowedFunctionsList` (WordPress.PHP.NoSilencedErrors), `minimum_wp_version`. The first
-  three already map; the rest need `Settings` keys.
-- `<rule ref="WordPress-Extra"/>` vs `WordPress-Core` vs `WordPress`: choose which Mago core
-  rules and extension rules to enable (Extra-only rules off for a Core-only project).
-- Custom standards (`WooCommerce-Core`, `Jetpack`, `PHPCompatibility`): report as unmapped.
-- `<config name="testVersion">`, `<arg>`: ignored on purpose (PHP 8.1+ cut-off; CLI flags).
+Verified 2026-09-30: wordpress-develop — every extension rule matches phpcs's count with the
+ruleset except one `prepared-sql-placeholders` extra (`QuotedDynamicPlaceholderGeneration` on an
+`implode("','", ...)` with no placeholder; a parity gap in the rule, not the migration).
+WooCommerce (`WooCommerce-Core`, not installed locally, so no phpcs comparison): path exclusions,
+settings and scoped exclusions take effect (file-name 4,536 → 691, capabilities 189 → 0).
 
-**C.1 `bin/mago-wordpress migrate`** (or `composer exec mago-wordpress-migrate`): reads
-`phpcs.xml(.dist)`, writes `mago.toml` (`extends`, `[source] paths/excludes`, disabled rules,
-levels) and the `extra.mago-wordpress` block into `composer.json`, and prints every element it
-could not map with the reason. `Report`'s sniff→rule map is the source of truth; expose it
-(`Report::rulesFor(sniff)`). Dry-run by default; `--write` to apply. Verify by running the tool
-on wordpress-develop's and WooCommerce's rulesets and diffing `mago lint` before/after against
-`phpcs` on the same tree.
+**C.2** README "Migrating from phpcs".
 
-**C.2 Migration guide** in the README, driven by the tool's output on those two rulesets.
+Follow-ups (not done): `<include-pattern>`; `customAllowedFunctionsList` (needs Sprint A — the
+rule is Mago's `no-error-control-operator`); per-sniff `exclude` groups; `custom_test_classes`;
+`treat_files_as_scoped`; `type="relative"` patterns inside a rule; mapping generic sniff refs to
+the Mago core rules in README "Coming from WPCS" (e.g. `Generic.PHP.DiscourageGoto` → `no-goto`);
+a message-code ref re-includes its whole sniff when the standard leaves it out (`ponytail:` in
+`PhpcsRuleset::excludedByStandard`).
 
 ## Sprint D: `phpcbf` parity
 
@@ -196,8 +193,8 @@ gets a WPCS `.inc` case added to the corpus.
   so this is parity today; only add if the bake-off shows misses.
 - `wordpress/capabilities`: WPCS's `Undetermined` warning (non-literal capability) is hidden by
   phpcs's default severity and not ported. Leave it.
-- `wordpress/valid-variable-name`: WPCS's `allowed_custom_properties` property (properties on
-  objects the project does not control) is not read; add it to `Settings` and `PhpcsRuleset`.
+- `wordpress/valid-variable-name`: WPCS's `allowed_custom_properties` — done in Sprint C
+  (`allowed-custom-properties`).
 - `wordpress/discouraged-wp-functions`, `db-restricted-*`, `wp-date-time` and every other
   `AbstractFunctionRestrictionsSniff` port: WPCS's per-sniff `exclude` property drops named
   groups (`<element value="obfuscation"/>`). Not read; add `exclude-groups` keyed by sniff.

@@ -54,7 +54,7 @@ final class RuleSettingsTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, array<string, bool|int|string|list<string>>, string, int, 4?: string}>
+     * @return iterable<string, array{string, array<string, bool|int|string|list<string>|array<string, list<string>>>, string, int, 4?: string}>
      */
     public static function cases(): iterable
     {
@@ -191,6 +191,42 @@ final class RuleSettingsTest extends TestCase
             // WPCS's MissingArgDomainDefault.
             'pass `default` as the text domain explicitly',
         ];
+        yield 'exclude_pattern_silences_its_code_in_matching_files' => [
+            'wordpress/safe-redirect',
+            ['exclude-patterns' => ['WordPress.Security.SafeRedirect' => ['/fixture\\.php']]],
+            'wp_redirect($url);',
+            0,
+        ];
+        yield 'exclude_pattern_for_other_files_keeps_reports' => [
+            'wordpress/safe-redirect',
+            ['exclude-patterns' => ['WordPress.Security.SafeRedirect' => ['/tests/*']]],
+            'wp_redirect($url);',
+            1,
+        ];
+        yield 'excluded_category_covers_its_sniffs' => [
+            'wordpress/safe-redirect',
+            ['exclude-patterns' => ['WordPress.Security' => ['*']]],
+            'wp_redirect($url);',
+            0,
+        ];
+        yield 'excluded_sibling_message_code_keeps_reports' => [
+            'wordpress/safe-redirect',
+            ['exclude-patterns' => ['WordPress.Security.SafeRedirect.SomethingElse' => ['*']]],
+            'wp_redirect($url);',
+            1,
+        ];
+        yield 'mixed_case_property_is_reported_by_default' => [
+            'wordpress/valid-variable-name',
+            [],
+            '$count = $node->childNodes;',
+            1,
+        ];
+        yield 'allowed_custom_properties_are_not_reported' => [
+            'wordpress/valid-variable-name',
+            ['allowed-custom-properties' => ['childNodes']],
+            '$count = $node->childNodes;',
+            0,
+        ];
         yield 'mixed_default_domain_allows_explicit_default' => [
             'wordpress/wp-i18n',
             ['text-domains' => ['default', 'my-plugin']],
@@ -200,7 +236,7 @@ final class RuleSettingsTest extends TestCase
     }
 
     /**
-     * @param array<string, bool|int|string|list<string>> $settings
+     * @param array<string, bool|int|string|list<string>|array<string, list<string>>> $settings
      */
     #[DataProvider('cases')]
     public function testRuleHonoursSettings(

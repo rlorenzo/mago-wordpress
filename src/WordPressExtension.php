@@ -61,7 +61,7 @@ final class WordPressExtension
     public static function create(?Settings $settings = null): Extension
     {
         $settings ??= new Settings();
-        $report = new Report($settings->honorPhpcsComments);
+        $report = new Report($settings->honorPhpcsComments, $settings->excludePatterns);
 
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',
@@ -93,7 +93,7 @@ final class WordPressExtension
                 new StrictInArrayRule($report),
                 new AssignmentInTernaryConditionRule($report),
                 new ValidFunctionNameRule($report),
-                new ValidVariableNameRule($report),
+                new ValidVariableNameRule($report, $settings),
                 new DiscouragedConstantsRule($report),
                 new GetMetaSingleRule($report),
                 new PluginMenuSlugRule($report),

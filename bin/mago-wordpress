@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Rlorenzo\MagoWordPress\Internal\PhpcsMigration;
+
+$autoloaders = [
+    // Installed as a dependency: vendor/rlorenzo/mago-wordpress/bin.
+    dirname(__DIR__, levels: 3) . '/autoload.php',
+    // A clone of this package.
+    dirname(__DIR__) . '/vendor/autoload.php',
+];
+foreach ($autoloaders as $autoloader) {
+    if (is_file($autoloader)) {
+        require $autoloader;
+        break;
+    }
+}
+
+$args = array_slice($argv, 1);
+if (($args[0] ?? '') !== 'migrate') {
+    fwrite(STDERR, <<<'USAGE'
+        Usage: mago-wordpress migrate [<phpcs.xml or directory>] [--write] [--force]
+
+        Converts a phpcs ruleset into mago.toml and composer.json extra.mago-wordpress.
+        Prints the result by default; --write saves both next to the ruleset (--force
+        overwrites an existing mago.toml). Lists everything that could not be migrated.
+
+        USAGE);
+    exit(($args[0] ?? '') === '--help' ? 0 : 2);
+}
+
+$cwd = getcwd();
+$result = PhpcsMigration::run(array_slice($args, 1), $cwd === false ? '.' : $cwd);
+if (is_int($result)) {
+    exit($result);
+}
+
+echo $result;
