@@ -142,13 +142,25 @@ final class PhpcsMigration
             return 1;
         }
 
-        if (!self::mergeComposer("{$dir}/composer.json", $result['extra'])) {
-            fwrite(STDERR, "{$dir}/composer.json is not a JSON object with an object `extra`; nothing written.\n");
+        $composerPath = "{$dir}/composer.json";
+        $composer = self::mergedComposer($composerPath, $result['extra']);
+        if ($composer === null) {
+            fwrite(STDERR, "{$composerPath} is not a JSON object with an object `extra`; nothing written.\n");
 
             return 1;
         }
 
-        file_put_contents($toml, $result['toml']);
+        if (file_put_contents($toml, $result['toml']) === false) {
+            fwrite(STDERR, "Could not write {$toml}; nothing written.\n");
+
+            return 1;
+        }
+
+        if (file_put_contents($composerPath, $composer) === false) {
+            fwrite(STDERR, "Wrote {$toml} but could not write {$composerPath}.\n");
+
+            return 1;
+        }
 
         return "Wrote {$toml} and extra.mago-wordpress in {$dir}/composer.json.\n" . $unmapped;
     }
@@ -168,13 +180,13 @@ final class PhpcsMigration
     }
 
     /**
-     * Sets `extra.mago-wordpress` keys, keeping the file's other content, key order and
-     * indentation. Decoded as objects so empty `{}` blocks stay objects. Returns false,
-     * leaving the file alone, when it is not a JSON object.
+     * The composer.json contents with `extra.mago-wordpress` keys set, keeping the file's other
+     * content, key order and indentation. Decoded as objects so empty `{}` blocks stay objects.
+     * Null when the file is not a JSON object.
      *
      * @param array<string, mixed> $extra
      */
-    private static function mergeComposer(string $path, array $extra): bool
+    private static function mergedComposer(string $path, array $extra): ?string
     {
         $contents = file_exists($path) ? (string) file_get_contents($path) : '{}';
         $match = [];
@@ -183,13 +195,13 @@ final class PhpcsMigration
         $composerExtra = $composer === null ? null : self::object($composer->extra ?? new stdClass());
         $block = $composerExtra === null ? null : self::object($composerExtra->{'mago-wordpress'} ?? new stdClass());
         if ($composer === null || $composerExtra === null || $block === null) {
-            return false;
+            return null;
         }
 
         $composerExtra->{'mago-wordpress'} = (object) array_replace((array) $block, $extra);
         $composer->extra = $composerExtra;
 
-        return file_put_contents($path, self::json($composer, $indent) . "\n") !== false;
+        return self::json($composer, $indent) . "\n";
     }
 
     private static function object(mixed $value): ?stdClass

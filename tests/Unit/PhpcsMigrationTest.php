@@ -141,6 +141,22 @@ final class PhpcsMigrationTest extends TestCase
         self::assertArrayNotHasKey('Generic.Files.LineEndings', $patterns);
     }
 
+    public function testBlankExcludePatternIsSkipped(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress"/>
+              <rule ref="WordPress.WP.I18n"><exclude-pattern> </exclude-pattern></rule>
+            </ruleset>
+            XML;
+        $xpath = PhpcsRuleset::load($xml);
+        self::assertNotNull($xpath);
+
+        // An empty pattern would exclude the code in every file.
+        self::assertSame([], PhpcsRuleset::excludePatterns($xpath));
+    }
+
     public function testWordPressStandardExcludesNothing(): void
     {
         $xml = '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress"/></ruleset>';

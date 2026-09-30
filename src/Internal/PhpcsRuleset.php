@@ -221,8 +221,9 @@ final class PhpcsRuleset
                     continue;
                 }
 
-                if (($patterns[$ref] ?? []) !== ['*']) {
-                    $patterns[$ref][] = trim($pattern->textContent);
+                $value = trim($pattern->textContent);
+                if ($value !== '' && ($patterns[$ref] ?? []) !== ['*']) {
+                    $patterns[$ref][] = $value;
                 }
             }
         }
