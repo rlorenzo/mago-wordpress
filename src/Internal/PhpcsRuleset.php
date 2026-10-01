@@ -320,16 +320,20 @@ final class PhpcsRuleset
 
                 // An array property can also be given as a comma-separated `value`.
                 $inline = explode(',', $property->getAttribute('value'));
+                // As in phpcs, a later assignment replaces the array unless it says extend="true".
+                $values = $property->getAttribute('extend') === 'true' ? $groups[$sniff] ?? [] : [];
                 foreach ([...self::elementValues($xpath, $property), ...$inline] as $group) {
                     $group = trim($group);
                     if ($group !== '') {
-                        $groups[$sniff][] = $group;
+                        $values[] = $group;
                     }
                 }
+
+                $groups[$sniff] = $values;
             }
         }
 
-        return $groups;
+        return array_filter($groups, static fn(array $values): bool => $values !== []);
     }
 
     /**

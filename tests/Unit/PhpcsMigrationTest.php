@@ -223,6 +223,36 @@ final class PhpcsMigrationTest extends TestCase
         self::assertFalse($settings->strictClassFileNames);
     }
 
+    public function testRepeatedExcludePropertyReplacesUnlessExtended(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress"/>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array"><element value="error_log"/></property></properties>
+              </rule>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array"><element value="prevent_path_disclosure"/></property></properties>
+              </rule>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array" extend="true"><element value="error_log"/></property></properties>
+              </rule>
+              <rule ref="WordPress.WP.DiscouragedFunctions">
+                <properties><property name="exclude" type="array"><element value="query_posts"/></property></properties>
+              </rule>
+              <rule ref="WordPress.WP.DiscouragedFunctions">
+                <properties><property name="exclude" type="array"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        self::assertSame(
+            ['WordPress.PHP.DevelopmentFunctions' => ['prevent_path_disclosure', 'error_log']],
+            Settings::fromArray(PhpcsRuleset::values($xml))->excludeGroups,
+        );
+    }
+
     public function testWordPressStandardExcludesNothing(): void
     {
         $xml = '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress"/></ruleset>';
