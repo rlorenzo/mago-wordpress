@@ -39,17 +39,20 @@ final class Settings
     private const DEFAULT_MIN_CRON_INTERVAL = 900;
 
     /**
-     * Keys accepted in composer.json `extra.mago-wordpress` for the custom function lists,
-     * mapped to the WPCS property they mirror.
+     * Keys accepted in composer.json `extra.mago-wordpress` for the custom lists, mapped to
+     * the WPCS property they mirror and how their entries are normalized: `exact` keeps
+     * the case (capability and property names are case-sensitive), `lower` lowercases
+     * (function names are not), `class` lowercases and drops a leading `\` (WPCS takes
+     * test class names as FQNs without one, and tolerates it).
      */
     public const CUSTOM_LISTS = [
-        'custom-escaping-functions' => 'customEscapingFunctions',
-        'custom-auto-escaped-functions' => 'customAutoEscapedFunctions',
-        'custom-sanitizing-functions' => 'customSanitizingFunctions',
-        'custom-unslashing-sanitizing-functions' => 'customUnslashingSanitizingFunctions',
-        'custom-capabilities' => 'custom_capabilities',
-        'allowed-custom-properties' => 'allowed_custom_properties',
-        'custom-test-classes' => 'custom_test_classes',
+        'custom-escaping-functions' => ['customEscapingFunctions', 'lower'],
+        'custom-auto-escaped-functions' => ['customAutoEscapedFunctions', 'lower'],
+        'custom-sanitizing-functions' => ['customSanitizingFunctions', 'lower'],
+        'custom-unslashing-sanitizing-functions' => ['customUnslashingSanitizingFunctions', 'lower'],
+        'custom-capabilities' => ['custom_capabilities', 'exact'],
+        'allowed-custom-properties' => ['allowed_custom_properties', 'exact'],
+        'custom-test-classes' => ['custom_test_classes', 'class'],
     ];
 
     /**
@@ -106,20 +109,21 @@ final class Settings
      */
     public static function fromArray(array $values): self
     {
-        // A negative maximum is invalid and falls back to the default, as in the Rust rule.
+        // A negative maximum is invalid and falls back to the default.
         $maxPostsPerPage = self::integer($values['max-posts-per-page'] ?? null) ?? self::DEFAULT_MAX_POSTS_PER_PAGE;
 
         $customLists = [];
-        foreach (self::CUSTOM_LISTS as $option => $_property) {
-            // Capability and property names are case-sensitive; function names are not.
+        foreach (self::CUSTOM_LISTS as $option => [, $kind]) {
             $list = self::stringList($values[$option] ?? []);
-            $caseSensitive = $option === 'custom-capabilities' || $option === 'allowed-custom-properties';
-            $customLists[$option] = $caseSensitive ? $list : self::lowercased($list);
+            $customLists[$option] = match ($kind) {
+                'exact' => $list,
+                'lower' => self::lowercased($list),
+                default => self::unique(array_map(static fn(string $class): string => ltrim(
+                    $class,
+                    characters: '\\',
+                ), self::lowercased($list))),
+            };
         }
-
-        // WPCS takes test class names as FQNs without a leading `\`, and tolerates one.
-        $unrooted = static fn(string $class): string => ltrim($class, characters: '\\');
-        $customLists['custom-test-classes'] = self::unique(array_map($unrooted, $customLists['custom-test-classes']));
 
         return new self(
             textDomains: self::unique(self::stringList($values['text-domains'] ?? [])),

@@ -15,6 +15,7 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function explode;
 use function rtrim;
+use function str_contains;
 use function str_starts_with;
 use function strlen;
 
@@ -47,10 +48,19 @@ final class GitMergeConflictRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        $contents = $context->file->contents;
+        if (
+            !str_contains($contents, '<<<<<<< HEAD')
+            && !str_contains($contents, '>>>>>>> ')
+            && !str_contains($contents, '=======')
+        ) {
+            return;
+        }
+
         // ponytail: a line scan, so a marker line inside a multi-line quoted string is reported
         // too (phpcs skips those tokens); a token walk if that ever matters.
         $offset = 0;
-        foreach (explode("\n", $context->file->contents) as $line) {
+        foreach (explode("\n", $contents) as $line) {
             $type = match (true) {
                 str_starts_with($line, '<<<<<<< HEAD') => ['opener', 'OpenerFound'],
                 str_starts_with($line, '>>>>>>> ') => ['closer', 'CloserFound'],

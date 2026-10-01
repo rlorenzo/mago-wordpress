@@ -8,35 +8,10 @@ use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\SettingsDiscovery;
 
 use function file_put_contents;
-use function is_file;
-use function mkdir;
-use function rmdir;
-use function sys_get_temp_dir;
-use function uniqid;
-use function unlink;
 
 final class SettingsDiscoveryTest extends TestCase
 {
-    private string $directory;
-
-    protected function setUp(): void
-    {
-        $this->directory = sys_get_temp_dir() . '/' . uniqid('mago-wordpress-', more_entropy: true);
-        mkdir($this->directory);
-    }
-
-    protected function tearDown(): void
-    {
-        foreach (['composer.json', 'phpcs.xml', '.phpcs.xml.dist'] as $name) {
-            if (!is_file("{$this->directory}/{$name}")) {
-                continue;
-            }
-
-            unlink("{$this->directory}/{$name}");
-        }
-
-        rmdir($this->directory);
-    }
+    use TempProject;
 
     public function testComposerExtraWinsOverPhpcs(): void
     {

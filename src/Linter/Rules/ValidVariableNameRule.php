@@ -17,7 +17,9 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function array_fill_keys;
 use function in_array;
+use function preg_match;
 use function sprintf;
 use function substr;
 
@@ -34,6 +36,9 @@ use function substr;
 final class ValidVariableNameRule implements Rule
 {
     private const SNIFF = 'WordPress.NamingConventions.ValidVariableName';
+
+    /** @var null|array<string, true> */
+    private static ?array $exempt = null;
 
     /**
      * PHPCSUtils `Variables::$phpReservedVars`.
@@ -239,10 +244,9 @@ final class ValidVariableNameRule implements Rule
 
     private static function isExempt(string $name): bool
     {
-        return (
-            in_array($name, self::PHP_RESERVED, strict: true)
-            || in_array($name, self::WORDPRESS_MIXED_CASE_VARS, strict: true)
-        );
+        self::$exempt ??= array_fill_keys([...self::PHP_RESERVED, ...self::WORDPRESS_MIXED_CASE_VARS], value: true);
+
+        return self::$exempt[$name] ?? false;
     }
 
     private function reportIfNotSnakeCase(
@@ -252,6 +256,11 @@ final class ValidVariableNameRule implements Rule
         string $name,
         string $code,
     ): void {
+        // Lowercase ASCII, digits and underscores are already snake_case.
+        if (preg_match('/^[a-z0-9_]+$/', $name) === 1) {
+            return;
+        }
+
         $suggested = Strings::snakeCase($name);
         if ($suggested === $name) {
             return;

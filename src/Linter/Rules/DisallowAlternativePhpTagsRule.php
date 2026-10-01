@@ -15,6 +15,8 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function explode;
 use function preg_match;
+use function str_contains;
+use function stripos;
 use function strlen;
 use function strpos;
 
@@ -49,8 +51,13 @@ final class DisallowAlternativePhpTagsRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        $text = $context->getText();
+        if (!str_contains($text, '<%') && stripos($text, needle: '<script') === false) {
+            return;
+        }
+
         $offset = $context->node->span->start;
-        foreach (explode("\n", $context->getText()) as $line) {
+        foreach (explode("\n", $text) as $line) {
             $found = self::find($line);
             if ($found !== null) {
                 [$at, $tag, $message, $code] = $found;

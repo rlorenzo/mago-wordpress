@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress\Internal;
 
 use Mago\Sdk\Syntax\SourceFile;
-use WeakMap;
 
 use function array_fill_keys;
 use function count;
@@ -31,9 +30,6 @@ use function strtolower;
  */
 final class FileGate
 {
-    /** @var null|WeakMap<SourceFile, array<string, true>> */
-    private static ?WeakMap $wordSets = null;
-
     private ?string $contents = null;
 
     private bool $passes = true;
@@ -120,15 +116,11 @@ final class FileGate
      */
     private static function wordsIn(SourceFile $file): array
     {
-        self::$wordSets ??= new WeakMap();
-        $words = self::$wordSets[$file] ?? null;
-        if ($words === null) {
+        return FileCache::remember($file, 'words', static function () use ($file): array {
             $matches = [];
             preg_match_all('/\w+/', strtolower($file->contents), $matches);
-            $words = array_fill_keys($matches[0], value: true);
-            self::$wordSets[$file] = $words;
-        }
 
-        return $words;
+            return array_fill_keys($matches[0], value: true);
+        });
     }
 }

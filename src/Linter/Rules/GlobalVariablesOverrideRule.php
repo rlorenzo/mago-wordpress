@@ -19,6 +19,7 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function array_fill_keys;
 use function in_array;
 use function substr;
 use function trim;
@@ -49,6 +50,9 @@ final class GlobalVariablesOverrideRule implements Rule
      * Globals WordPress core sets that WPCS's generated list lacks.
      */
     private const EXTRA_GLOBALS = ['query_string'];
+
+    /** @var null|array<string, true> */
+    private static ?array $globals = null;
 
     private const CLASS_LIKE_KINDS = [
         NodeKind::Class_,
@@ -222,9 +226,8 @@ final class GlobalVariablesOverrideRule implements Rule
             return null;
         }
 
-        return in_array($bare, Lists::WP_GLOBAL_VARIABLES, strict: true)
-        || in_array($bare, self::EXTRA_GLOBALS, strict: true)
-            ? $bare
-            : null;
+        self::$globals ??= array_fill_keys([...Lists::WP_GLOBAL_VARIABLES, ...self::EXTRA_GLOBALS], value: true);
+
+        return self::$globals[$bare] ?? false ? $bare : null;
     }
 }

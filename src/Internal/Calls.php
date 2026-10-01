@@ -30,16 +30,6 @@ use function substr;
  */
 final class Calls
 {
-    /**
-     * Node kinds that call a named function or method.
-     */
-    public const CALL_KINDS = [
-        NodeKind::FunctionCall,
-        NodeKind::MethodCall,
-        NodeKind::NullSafeMethodCall,
-        NodeKind::StaticMethodCall,
-    ];
-
     private const IDENTIFIER_KINDS = [
         NodeKind::Identifier,
         NodeKind::LocalIdentifier,
@@ -48,61 +38,6 @@ final class Calls
     ];
 
     private function __construct() {}
-
-    /**
-     * Returns the first call to any of the named functions inside a subtree.
-     *
-     * The match includes method calls as well as plain function calls.
-     *
-     * @param list<string> $names
-     */
-    public static function findFirst(SourceFile $file, Node $node, array $names): ?Node
-    {
-        $wanted = self::normalizeAll($names);
-
-        // One depth-first walk in source order. It stops at the first match.
-        $stack = [$node];
-        while (($current = array_pop($stack)) !== null) {
-            if (
-                $current !== $node
-                && in_array($current->kind, self::CALL_KINDS, strict: true)
-                && self::matchWanted($file, $current, $wanted) !== null
-            ) {
-                return $current;
-            }
-
-            $children = $file->getChildren($current);
-            for ($index = count($children) - 1; $index >= 0; --$index) {
-                $stack[] = $children[$index];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Finds plain function calls to any of the named functions in a subtree.
-     *
-     * Method calls are excluded. A rule about procedural functions must not
-     * match `$this->foo()`. That call has the same callee name as `foo()`.
-     *
-     * @param list<string> $names
-     * @return array<string, list<Node>> Matched calls grouped by normalized name.
-     */
-    public static function findFunctions(SourceFile $file, Node $node, array $names): array
-    {
-        $wanted = self::normalizeAll($names);
-
-        $found = [];
-        foreach ($file->getDescendants($node, NodeKind::FunctionCall) as $candidate) {
-            $name = self::matchWanted($file, $candidate, $wanted);
-            if ($name !== null) {
-                $found[$name][] = $candidate;
-            }
-        }
-
-        return $found;
-    }
 
     /**
      * Returns the normalized wanted name a call node matches, or NULL.
@@ -246,44 +181,6 @@ final class Calls
     }
 
     /**
-     * Finds plain function calls to any of the named functions among the
-     * file's pre-collected target nodes.
-     *
-     * Rust puts every node whose kind an active rule targets into the
-     * snapshot's target list. That list is materialized before dispatch,
-     * so reading the calls from it takes one array pass instead of a
-     * full tree walk in PHP. The rule that calls this method must declare
-     * `NodeKind::FunctionCall` among its own targets. Without that, the
-     * list holds the calls only if some other rule that declares it is
-     * active.
-     *
-     * @param list<string> $names
-     * @return array<string, list<Node>> Matched calls grouped by normalized name.
-     */
-    public static function findFunctionsInTargets(SourceFile $file, ?Node $within, array $names): array
-    {
-        $wanted = self::normalizeAll($names);
-
-        $found = [];
-        foreach ($file->getTargetNodes() as $candidate) {
-            if ($candidate->kind !== NodeKind::FunctionCall) {
-                continue;
-            }
-
-            if ($within !== null && !$within->span->contains($candidate->span)) {
-                continue;
-            }
-
-            $name = self::matchWanted($file, $candidate, $wanted);
-            if ($name !== null) {
-                $found[$name][] = $candidate;
-            }
-        }
-
-        return $found;
-    }
-
-    /**
      * Returns the callee name of a call node, as written in the source.
      *
      * CallExpression::fromNode materializes every argument first, so a
@@ -372,13 +269,21 @@ final class Calls
      */
     public static function hasComment(SourceFile $file, Span $span): bool
     {
-        foreach ($file->getTrivia() as $trivia) {
-            if ($trivia->span->start < $span->end && $trivia->span->end > $span->start) {
-                return true;
+        // Trivia are disjoint and in source order: binary search for the first one ending after the span starts.
+        $trivia = $file->getTrivia();
+        $low = 0;
+        $high = count($trivia);
+        while ($low < $high) {
+            $mid = ($low + $high) >> 1;
+            if ($trivia[$mid]->span->end > $span->start) {
+                $high = $mid;
+                continue;
             }
+
+            $low = $mid + 1;
         }
 
-        return false;
+        return $low < count($trivia) && $trivia[$low]->span->start < $span->end;
     }
 
     /**

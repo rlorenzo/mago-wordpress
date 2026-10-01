@@ -16,6 +16,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\DocBlocks;
+use Rlorenzo\MagoWordPress\Internal\FileCache;
 use Rlorenzo\MagoWordPress\Internal\GlobalWrites;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
@@ -24,7 +25,6 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\PrefixAllowlists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 use Rlorenzo\MagoWordPress\Settings;
-use WeakMap;
 
 use function array_key_exists;
 use function array_map;
@@ -108,9 +108,6 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var null|array<string, true> */
     private ?array $wantedCalls = null;
 
-    /** @var WeakMap<SourceFile, array<int, true>> `@deprecated` docblock ends per file. */
-    private WeakMap $deprecatedStarts;
-
     public function __construct(
         private readonly Report $report,
         Settings $settings,
@@ -146,7 +143,6 @@ final class PrefixAllGlobalsRule implements Rule
         $this->prefixes = $prefixes;
         $this->prefixProblems = $problems;
         $this->namespacePatterns = array_map(self::namespacePattern(...), $prefixes);
-        $this->deprecatedStarts = new WeakMap();
     }
 
     public function getDefinition(): RuleDefinition
@@ -637,8 +633,11 @@ final class PrefixAllGlobalsRule implements Rule
      */
     private function isDeprecated(SourceFile $file, Node $function): bool
     {
-        $this->deprecatedStarts[$file] ??= DocBlocks::deprecatedStarts($file);
-        $deprecatedStarts = $this->deprecatedStarts[$file];
+        $deprecatedStarts = FileCache::remember(
+            $file,
+            'deprecated-starts',
+            static fn(): array => DocBlocks::deprecatedStarts($file),
+        );
         if ($deprecatedStarts[$function->span->start] ?? false) {
             return true;
         }
@@ -674,9 +673,9 @@ final class PrefixAllGlobalsRule implements Rule
      */
     private function inNamedNamespace(SourceFile $file, Node $node): bool
     {
-        foreach ($file->getAncestors($node) as $ancestor) {
-            if ($ancestor->kind === NodeKind::Namespace) {
-                return $this->declaredIdentifier($file, $ancestor) !== null;
+        while (($node = $file->getParent($node)) !== null) {
+            if ($node->kind === NodeKind::Namespace) {
+                return $this->declaredIdentifier($file, $node) !== null;
             }
         }
 

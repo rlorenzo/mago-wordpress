@@ -15,8 +15,8 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\FileCache;
 use Rlorenzo\MagoWordPress\Internal\Report;
-use WeakMap;
 
 use function in_array;
 use function str_contains;
@@ -137,14 +137,9 @@ final class ParenthesesSpacingRule implements Rule
 
     private const STRINGS = [NodeKind::InterpolatedString, NodeKind::DocumentString, NodeKind::ShellExecuteString];
 
-    /** @var WeakMap<SourceFile, list<Span>> */
-    private WeakMap $stringSpans;
-
     public function __construct(
         private readonly Report $report,
-    ) {
-        $this->stringSpans = new WeakMap();
-    }
+    ) {}
 
     public function getDefinition(): RuleDefinition
     {
@@ -384,7 +379,7 @@ final class ParenthesesSpacingRule implements Rule
 
     private function inString(SourceFile $file, Span $span): bool
     {
-        if (($this->stringSpans[$file] ?? null) === null) {
+        $spans = FileCache::remember($file, 'string-spans', static function () use ($file): array {
             $spans = [];
             foreach (self::STRINGS as $kind) {
                 foreach ($file->getNodes($kind) as $string) {
@@ -392,10 +387,10 @@ final class ParenthesesSpacingRule implements Rule
                 }
             }
 
-            $this->stringSpans[$file] = $spans;
-        }
+            return $spans;
+        });
 
-        foreach ($this->stringSpans[$file] as $string) {
+        foreach ($spans as $string) {
             if ($string->contains($span)) {
                 return true;
             }
