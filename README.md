@@ -235,6 +235,37 @@ Akismet goes from 88 reports to 5,594. Adopt the preset only if you are switchin
 Mago and accept its style. If you keep running phpcs for formatting while you move, either exclude
 those codes from your ruleset or don't run `mago format` on the files phpcs still checks.
 
+## WordPress-Docs
+
+The `WordPress` ruleset includes `WordPress-Docs`: eleven `Squiz.Commenting` and `Generic.Commenting`
+sniffs, with the codes WPCS excludes. This package ports none of them. The part Mago covers is
+missing docblocks: the `extends` in [Install](#install) turns on Mago's `missing-docs` for functions,
+methods, classes and properties, the declarations WPCS checks (not interfaces, traits, enums or
+constants). On Akismet and Contact Form 7 it reports as many as `FunctionComment`, `ClassComment` and
+`VariableComment` report as `Missing` or `WrongStyle` (156 and 512). It reports at Mago's
+`help` level, so it does not fail a build; raise it with `missing-docs = { level = "warning" }`, or turn
+it off with `{ enabled = false }` (`mago-wordpress migrate` does this for a `WordPress-Core` or
+`WordPress-Extra` ruleset without `WordPress-Docs`).
+
+What the docblock *contains* (tags, types, capitalisation, full stops) is mostly not checked:
+
+| Sniff | Mago | Not covered |
+|:---|:---|:---|
+| `Squiz.Commenting.FunctionComment` | `Missing`: `missing-docs`. `ParamNameNoMatch`, `ExtraParamComment`: `mago analyze` (`invalid-param-tag`). Malformed types: `valid-docblock` | `MissingParamTag`, `MissingParamType`, `MissingParamComment`, `ParamCommentFullStop`, `ParamNameNoCaseMatch`, return and `@throws` tag checks, `WrongStyle` (a `//` comment where a docblock should be) |
+| `Squiz.Commenting.ClassComment` | `Missing`: `missing-docs` | `WrongStyle`, `SpacingAfter` |
+| `Squiz.Commenting.VariableComment` | `Missing`: `missing-docs` | `MissingVar`, `EmptyVar`, `DuplicateVar`, `EmptySees`, `WrongStyle` |
+| `Squiz.Commenting.FileComment` | none | every code: a file docblock, its `@package` tag, spacing and style |
+| `Squiz.Commenting.FunctionCommentThrowTag` | partial: `mago analyze` with `check-throws = true` (off by default) reports unhandled exceptions, not a missing `@throws` tag | `Missing`, `WrongNumber` |
+| `Squiz.Commenting.EmptyCatchComment` | not equivalent: `no-empty-catch-clause` (on) reports an empty `catch` even when it holds a comment, which is what WPCS asks for | |
+| `Squiz.Commenting.InlineComment` | `WrongStyle` (`#`): `no-hash-comment`. `Empty`: `no-empty-comment` | `InvalidEndChar` (full stop), `NoSpaceBefore`, `SpacingBefore`, `TabBefore` |
+| `Squiz.Commenting.BlockComment` | `Empty`: `no-empty-comment` | `NoCapital`, `WrongEnd`, `NoNewLine`, blank-line checks |
+| `Squiz.Commenting.DocCommentAlignment` | `SpaceBeforeStar`: `mago format` | `NoSpaceAfterStar` |
+| `Squiz.Commenting.ClosingDeclarationComment` | none | reports only malformed `//end` comments; WPCS excludes `Missing` |
+| `Generic.Commenting.DocComment` | `Empty`: `no-empty-comment` | `MissingShort`, `ShortNotCapital`, `LongNotCapital`, spacing between the short and long description and tags |
+
+`@since`, which the WordPress documentation standard asks for, is not checked by WPCS either.
+`valid-docblock` (on) also reports docblock syntax errors WPCS does not, such as an unclosed `{@see`.
+
 ## Migrating from phpcs
 
 `vendor/bin/mago-wordpress migrate` reads `phpcs.xml` (or `.phpcs.xml`, `phpcs.xml.dist`,
@@ -342,10 +373,10 @@ Generic/PHP correctness sniffs with nothing similar in Mago's core rule set: `Ge
 `Universal.UseStatements.NoUselessAliases`.
 
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
-`Generic.Commenting.DocComment`, `Generic.Strings.UnnecessaryHeredoc`, `Modernize.FunctionCalls.Dirname`,
+`Generic.Strings.UnnecessaryHeredoc`, `Modernize.FunctionCalls.Dirname`,
 `Modernize.FunctionCalls.Dirname.Nested`, `PEAR.Files.IncludingFile`, `PSR12.Files.FileHeader`,
 `PSR12.Keywords.ShortFormTypeKeywords`, `PSR2.Classes.PropertyDeclaration`, `PSR2.ControlStructures.ElseIfDeclaration`,
-`PSR2.Methods.MethodDeclaration`, `Squiz.Classes.SelfMemberReference`, `Squiz.Commenting`,
+`PSR2.Methods.MethodDeclaration`, `Squiz.Classes.SelfMemberReference`,
 `Squiz.Operators.IncrementDecrementUsage`, `Squiz.Operators.ValidLogicalOperators`, `Squiz.Strings.DoubleQuoteUsage`,
 `Universal.Attributes.DisallowAttributeParentheses`, `Universal.Classes.ModifierKeywordOrder`,
 `Universal.CodeAnalysis.NoEchoSprintf`, `Universal.CodeAnalysis.StaticInFinalClass`,
