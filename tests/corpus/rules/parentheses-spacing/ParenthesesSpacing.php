@@ -17,7 +17,7 @@ $c = function ( $x ) use ( $y ) {
 };
 $arr = array( 1, 2 );
 $s = [ 1 ];
-$e = $arr[ $i ] . $arr['k'] . $arr[0] . $arr[ -1 ];
+$e = $arr[ $i ] . $arr['k'] . $arr[0] . $arr[-1] . $arr[+1] . $arr[ - $i ];
 isset( $a );
 do {
 } while ( $x );
@@ -62,3 +62,20 @@ foo(  $a  );
 // @mago-expect lint:wordpress/parentheses-spacing
 // @mago-expect lint:wordpress/parentheses-spacing
 $literal = $arr[ 'k' ];
+
+// signed_integer_keys_take_no_spaces
+// @mago-expect lint:wordpress/parentheses-spacing
+// @mago-expect lint:wordpress/parentheses-spacing
+$signed = $arr[ -1 ];
+
+// tabs_are_not_spaces
+// @mago-expect lint:wordpress/parentheses-spacing
+// @mago-expect lint:wordpress/parentheses-spacing
+if (	$x	) {
+}
+
+// parentheses_in_comments_are_skipped
+// @mago-expect lint:wordpress/parentheses-spacing
+// @mago-expect lint:wordpress/parentheses-spacing
+if /* ( */ ($x) {
+}

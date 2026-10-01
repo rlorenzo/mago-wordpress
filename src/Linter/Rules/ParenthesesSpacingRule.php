@@ -11,13 +11,17 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use WeakMap;
 
 use function in_array;
+use function str_contains;
 use function str_repeat;
+use function str_replace;
 use function strpos;
 use function strrpos;
 use function strspn;
@@ -49,29 +53,53 @@ final class ParenthesesSpacingRule implements Rule
     private const CALL = [
         'PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket',
         'PEAR.Functions.FunctionCallSignature.SpaceBeforeCloseBracket',
+        'PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket',
+        'PEAR.Functions.FunctionCallSignature.SpaceBeforeCloseBracket',
     ];
 
     private const DECLARATION = [
         'Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen',
         'Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingBeforeClose',
+        'Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen',
+        'Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingBeforeClose',
     ];
 
+    /**
+     * Each list: the after-open and before-close codes for a missing space, then for a space that is
+     * there but wrong (too much, or a tab), which only some sniffs tell apart.
+     */
     private const CONTROL = [
         'WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceAfterOpenParenthesis',
         'WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceBeforeCloseParenthesis',
+        'WordPress.WhiteSpace.ControlStructureSpacing.ExtraSpaceAfterOpenParenthesis',
+        'WordPress.WhiteSpace.ControlStructureSpacing.ExtraSpaceBeforeCloseParenthesis',
     ];
 
     private const ARRAY = [
         'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine',
         'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceBeforeArrayCloserSingleLine',
+        'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine',
+        'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceBeforeArrayCloserSingleLine',
+    ];
+
+    /** An array whose opener and closer are on different lines (WPCS wants a newline there). */
+    private const ARRAY_MULTILINE = [
+        'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerMultiLine',
+        'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceBeforeArrayCloserMultiLine',
+        'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerMultiLine',
+        'NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceBeforeArrayCloserMultiLine',
     ];
 
     private const KEY_SPACED = [
         'WordPress.Arrays.ArrayKeySpacingRestrictions.NoSpacesAroundArrayKeys',
         'WordPress.Arrays.ArrayKeySpacingRestrictions.NoSpacesAroundArrayKeys',
+        'WordPress.Arrays.ArrayKeySpacingRestrictions.TooMuchSpaceBeforeKey',
+        'WordPress.Arrays.ArrayKeySpacingRestrictions.TooMuchSpaceAfterKey',
     ];
 
     private const KEY_BARE = [
+        'WordPress.Arrays.ArrayKeySpacingRestrictions.SpacesAroundArrayKeys',
+        'WordPress.Arrays.ArrayKeySpacingRestrictions.SpacesAroundArrayKeys',
         'WordPress.Arrays.ArrayKeySpacingRestrictions.SpacesAroundArrayKeys',
         'WordPress.Arrays.ArrayKeySpacingRestrictions.SpacesAroundArrayKeys',
     ];
@@ -184,11 +212,10 @@ final class ParenthesesSpacingRule implements Rule
             return;
         }
 
-        $text = $file->getText($node);
-        $open = strpos($text, needle: '(');
-        $close = strrpos($text, needle: ')');
-        if ($open !== false && $close !== false) {
-            $this->check($context, $node->span->start + $open, $node->span->start + $close, 1, $codes);
+        $open = self::delimiter($file, '(', $node->span->start, $node->span->end);
+        $close = self::delimiter($file, ')', $node->span->start, $node->span->end, last: true);
+        if ($open !== null && $close !== null) {
+            $this->check($context, $open, $close, 1, $codes);
         }
     }
 
@@ -202,19 +229,13 @@ final class ParenthesesSpacingRule implements Rule
             return;
         }
 
-        $open = strpos($context->file->contents, needle: '[', offset: $array->span->end);
-        if ($open === false) {
+        $file = $context->file;
+        $open = self::delimiter($file, '[', $array->span->end, $key->span->start);
+        if ($open === null) {
             return;
         }
 
-        $literal = $context->file->getChildren($key)[0] ?? null;
-        $value =
-            $literal !== null && $literal->kind === NodeKind::Literal
-                ? $context->file->getChildren($literal)[0] ?? null
-                : null;
-        $bare =
-            $value !== null
-            && in_array($value->kind, [NodeKind::LiteralString, NodeKind::LiteralInteger], strict: true);
+        $bare = self::isBareKey($file, $key);
 
         $this->check(
             $context,
@@ -255,9 +276,9 @@ final class ParenthesesSpacingRule implements Rule
             return; // for (;;)
         }
 
-        $open = strpos($file->contents, needle: '(', offset: $from);
-        $close = strpos($file->contents, needle: ')', offset: $last->span->end);
-        if ($open === false || $close === false) {
+        $open = self::delimiter($file, '(', $from, $context->node->span->end);
+        $close = self::delimiter($file, ')', $last->span->end, $context->node->span->end);
+        if ($open === null || $close === null) {
             return;
         }
 
@@ -266,24 +287,24 @@ final class ParenthesesSpacingRule implements Rule
 
     /**
      * @param 0|1 $want
-     * @param array{string, string} $codes after-open and before-close message codes
+     * @param array{string, string, string, string} $codes
      */
     private function check(LintContext $context, int $open, int $close, int $want, array $codes): void
     {
         $contents = $context->file->contents;
-        if (trim(substr($contents, $open + 1, $close - $open - 1)) === '') {
+        $inner = substr($contents, $open + 1, $close - $open - 1);
+        if (trim($inner) === '') {
             return;
         }
 
+        if ($codes === self::ARRAY && str_contains($inner, "\n")) {
+            $codes = self::ARRAY_MULTILINE;
+        }
+
         $after = strspn($contents, characters: " \t", offset: $open + 1);
-        if (!in_array($contents[$open + 1 + $after], ["\n", "\r"], strict: true) && $after !== $want) {
-            $this->flag(
-                $context,
-                new Span($open + 1, $open + 1 + $after),
-                $want,
-                'after "' . $contents[$open] . '"',
-                $codes[0],
-            );
+        if (!in_array($contents[$open + 1 + $after], ["\n", "\r"], strict: true)) {
+            $gap = new Span($open + 1, $open + 1 + $after);
+            $this->flag($context, $gap, $want, 'after "' . $contents[$open] . '"', [$codes[0], $codes[2]]);
         }
 
         $before = 0;
@@ -291,31 +312,74 @@ final class ParenthesesSpacingRule implements Rule
             ++$before;
         }
 
-        if (!in_array($contents[$close - 1 - $before], ["\n", "\r"], strict: true) && $before !== $want) {
-            $this->flag(
-                $context,
-                new Span($close - $before, $close),
-                $want,
-                'before "' . $contents[$close] . '"',
-                $codes[1],
-            );
+        if (!in_array($contents[$close - 1 - $before], ["\n", "\r"], strict: true)) {
+            $gap = new Span($close - $before, $close);
+            $this->flag($context, $gap, $want, 'before "' . $contents[$close] . '"', [$codes[1], $codes[3]]);
         }
     }
 
     /**
+     * Reports a gap that is not exactly `$want` spaces (a tab is not a space).
+     *
      * @param 0|1 $want
+     * @param array{string, string} $codes for a missing gap, and for one that is there but wrong
      */
-    private function flag(LintContext $context, Span $gap, int $want, string $where, string $code): void
+    private function flag(LintContext $context, Span $gap, int $want, string $where, array $codes): void
     {
+        $text = $context->file->getText($gap);
+        if ($text === str_repeat(' ', $want)) {
+            return;
+        }
+
         $found = $gap->end - $gap->start;
+        $shown = $found === 0 ? 'none' : '"' . str_replace(search: "\t", replace: '\t', subject: $text) . '"';
         $this->report->issue(
             $context,
             Issue::new(
-                "Expected {$want} " . ($want === 1 ? 'space' : 'spaces') . " {$where}; found {$found}.",
+                "Expected {$want} " . ($want === 1 ? 'space' : 'spaces') . " {$where}; found {$shown}.",
                 $found === 0 ? new Span($gap->start - 1, $gap->start + 1) : $gap,
             )->withEdit(TextEdit::replace($gap, str_repeat(' ', $want))),
-            [$code],
+            [$found === 0 ? $codes[0] : $codes[1]],
         );
+    }
+
+    /**
+     * The first (or last) `$char` in [$from, $to) that is not inside a comment.
+     */
+    private static function delimiter(SourceFile $file, string $char, int $from, int $to, bool $last = false): ?int
+    {
+        $text = substr($file->contents, $from, $to - $from);
+        $at = $last ? strrpos($text, $char) : strpos($text, $char);
+        while ($at !== false && Calls::hasComment($file, new Span($from + $at, $from + $at + 1))) {
+            $at = $last ? strrpos(substr($text, offset: 0, length: $at), $char) : strpos($text, $char, $at + 1);
+        }
+
+        return $at === false ? null : $from + $at;
+    }
+
+    /**
+     * Whether an array key is a lone string or integer literal, which takes no spaces. WPCS skips a
+     * sign before an integer (`$a[-1]`, `$a[+1]`).
+     */
+    private static function isBareKey(SourceFile $file, Node $key): bool
+    {
+        $node = $file->getChildren($key)[0] ?? null;
+        $kinds = [NodeKind::LiteralString, NodeKind::LiteralInteger];
+        if ($node !== null && $node->kind === NodeKind::UnaryPrefix) {
+            [$operator, $operand] = $file->getChildren($node) + [null, null];
+            $sign = $operator === null ? '' : trim($file->getText($operator));
+            $node = $sign === '-' || $sign === '+' ? $operand : null;
+            $kinds = [NodeKind::LiteralInteger];
+        }
+
+        // The operand may still be wrapped in an Expression.
+        if ($node !== null && $node->kind === NodeKind::Expression) {
+            $node = $file->getChildren($node)[0] ?? null;
+        }
+
+        $value = $node !== null && $node->kind === NodeKind::Literal ? $file->getChildren($node)[0] ?? null : null;
+
+        return $value !== null && in_array($value->kind, $kinds, strict: true);
     }
 
     private function inString(SourceFile $file, Span $span): bool
