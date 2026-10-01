@@ -310,10 +310,10 @@ final class PhpcsMigration
         $rules = [];
         /** @var array<string, array<string, array{enabled?: bool, exclude?: list<string>, level?: string}>> $bySniff */
         $bySniff = [];
-        foreach (Report::SNIFF_RULES as $sniff => $codes) {
+        foreach (SniffMap::RULES as $sniff => $codes) {
             $core = array_values(array_filter(
                 $codes,
-                static fn(string $code): bool => !Report::isExtensionRule($code),
+                static fn(string $code): bool => !SniffMap::isExtensionRule($code),
             ));
             if ($core === []) {
                 continue;
@@ -510,9 +510,9 @@ final class PhpcsMigration
             str_starts_with($ref, 'PHPCompatibility') => 'ignored (the package targets PHP 8.1+)',
             !str_starts_with($ref, 'WordPress.') && count($parts) === 1 && !str_contains($ref, '/')
                 => 'custom or third-party standard; its contents are not followed',
-            !str_starts_with($ref, 'WordPress.') && (Report::SNIFF_RULES[$sniff] ?? null) === null
+            !str_starts_with($ref, 'WordPress.') && (SniffMap::RULES[$sniff] ?? null) === null
                 => 'non-WordPress sniff with no Mago rule mapped to it',
-            count($parts) >= 3 && (Report::SNIFF_RULES[$sniff] ?? null) === null
+            count($parts) >= 3 && (SniffMap::RULES[$sniff] ?? null) === null
                 => 'WPCS sniff with no Mago port (formatting sniffs are `mago fmt`\'s job)',
             default => null,
         };
@@ -526,8 +526,8 @@ final class PhpcsMigration
             $this->unmapped[] = "<include-pattern>{$pattern->textContent}</include-pattern> on {$ref}: no per-rule include; the rule runs on every file";
         }
 
-        $rules = Report::SNIFF_RULES[$sniff] ?? [];
-        $extension = array_values(array_filter($rules, Report::isExtensionRule(...)));
+        $rules = SniffMap::RULES[$sniff] ?? [];
+        $extension = array_values(array_filter($rules, SniffMap::isExtensionRule(...)));
         // A <type> on a whole sniff that only core rules port becomes their level.
         if (PhpcsRuleset::elements($this->xpath, 'type', $rule) !== [] && ($ref !== $sniff || $extension !== [])) {
             $this->unmapped[] =
@@ -639,10 +639,10 @@ final class PhpcsMigration
 
         $extensionPatterns = [];
         foreach ($patterns as $code => $list) {
-            foreach (Report::SNIFF_RULES as $sniff => $rules) {
+            foreach (SniffMap::RULES as $sniff => $rules) {
                 $related =
                     $code === $sniff || str_starts_with($sniff, $code . '.') || str_starts_with($code, $sniff . '.');
-                $toExtension = array_filter($rules, Report::isExtensionRule(...)) !== [];
+                $toExtension = array_filter($rules, SniffMap::isExtensionRule(...)) !== [];
                 if ($related && $toExtension) {
                     $extensionPatterns[$code] = $list;
                     break;

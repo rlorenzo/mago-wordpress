@@ -69,6 +69,11 @@ final class SettingsTest extends TestCase
         self::assertSame(['ex', 'example'], $settings->prefixes);
         self::assertSame('6.8', $settings->minimumWpVersion);
         self::assertSame(['ex_esc'], $settings->customList('custom-escaping-functions'));
+
+        // `CUSTOM_LISTS` is `@api`: option => the WPCS property, as released in 1.1.0.
+        foreach (Settings::CUSTOM_LISTS as $option => $property) {
+            self::assertSame([$option, 'list'], PhpcsRuleset::PROPERTY_SETTINGS[$property] ?? null);
+        }
     }
 
     public function testThresholdSettingsDefaultAndParse(): void

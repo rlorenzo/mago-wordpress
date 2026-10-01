@@ -633,10 +633,8 @@ final class WpI18nRule extends CallRule
             count: $numbered,
         );
         if ($argument->kind === NodeKind::LiteralString && $numbered === count($found)) {
-            $issue = $issue->withEdit(TextEdit::replace(
-                $argument->span,
-                $fixed,
-            )->withSafety(Safety::PotentiallyUnsafe));
+            $edit = TextEdit::replace($argument->span, $fixed);
+            $issue = $issue->withEdit($edit->withSafety(Safety::PotentiallyUnsafe));
         }
 
         $this->report->issue($context, $issue, [self::SNIFF . '.UnorderedPlaceholders' . ucfirst($parameter)]);
