@@ -9,6 +9,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
 use function array_pop;
+use function in_array;
 use function preg_match;
 use function str_replace;
 use function trim;
@@ -18,6 +19,7 @@ use function trim;
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class Values
 {
@@ -122,5 +124,45 @@ final class Values
         }
 
         return false;
+    }
+
+    /**
+     * The `key => value` elements of an array literal, as their `KeyValueArrayElement` nodes.
+     *
+     * @return list<Node>
+     */
+    public static function keyValueElements(SourceFile $file, Node $array): array
+    {
+        $elements = [];
+        foreach ($file->getChildren($array) as $wrapper) {
+            $element = $wrapper->kind === NodeKind::ArrayElement ? $file->getChildren($wrapper)[0] ?? null : null;
+            if ($element !== null && $element->kind === NodeKind::KeyValueArrayElement) {
+                $elements[] = $element;
+            }
+        }
+
+        return $elements;
+    }
+
+    /**
+     * The key node of an `$array[key] = ...` or `$array[key] ??= ...` assignment, or NULL for
+     * any other assignment shape.
+     */
+    public static function assignedKey(SourceFile $file, Node $assignment): ?Node
+    {
+        [$target, $operator] = $file->getChildren($assignment) + [null, null];
+        if ($target === null || $operator === null) {
+            return null;
+        }
+
+        $target = self::unwrap($file, $target);
+        if (
+            $target->kind !== NodeKind::ArrayAccess
+            || !in_array(trim($file->getText($operator)), ['=', '??='], strict: true)
+        ) {
+            return null;
+        }
+
+        return $file->getChildren($target)[1] ?? null;
     }
 }

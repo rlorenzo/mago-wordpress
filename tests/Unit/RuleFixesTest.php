@@ -7,21 +7,7 @@ namespace Rlorenzo\MagoWordPress\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-use function dirname;
-use function escapeshellarg;
-use function exec;
 use function file_get_contents;
-use function file_put_contents;
-use function is_file;
-use function json_encode;
-use function mkdir;
-use function rmdir;
-use function sys_get_temp_dir;
-use function uniqid;
-use function unlink;
-
-use const JSON_THROW_ON_ERROR;
-use const JSON_UNESCAPED_SLASHES;
 
 /**
  * Applies a rule's fixes through a real worker with `mago lint --fix` and checks the result
@@ -29,28 +15,7 @@ use const JSON_UNESCAPED_SLASHES;
  */
 final class RuleFixesTest extends TestCase
 {
-    private const FILES = ['composer.json', 'mago.toml', 'fixture.php'];
-
-    private string $directory;
-
-    protected function setUp(): void
-    {
-        $this->directory = sys_get_temp_dir() . '/' . uniqid('mago-wordpress-', more_entropy: true);
-        mkdir($this->directory);
-    }
-
-    protected function tearDown(): void
-    {
-        foreach (self::FILES as $name) {
-            if (!is_file("{$this->directory}/{$name}")) {
-                continue;
-            }
-
-            unlink("{$this->directory}/{$name}");
-        }
-
-        rmdir($this->directory);
-    }
+    use TempProject;
 
     /**
      * @return iterable<string, array{string, string, string, string, 4?: list<string>}>
@@ -179,30 +144,7 @@ final class RuleFixesTest extends TestCase
         string $expected,
         array $textDomains = [],
     ): void {
-        $worker = dirname(__DIR__, levels: 2) . '/resources/worker.php';
-        $settings = ['mago-wordpress' => ['text-domains' => $textDomains]];
-        file_put_contents("{$this->directory}/composer.json", json_encode([
-            'extra' => $settings,
-        ], flags: JSON_THROW_ON_ERROR));
-        file_put_contents(
-            "{$this->directory}/mago.toml",
-            "version = \"1\"\nphp-version = \"8.1\"\n[extension-hosts.wordpress]\ncommand = [\"php\", "
-            . json_encode($worker, flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "]\n",
-        );
-        file_put_contents("{$this->directory}/fixture.php", "<?php\n\n{$code}\n");
-
-        $mago = dirname(__DIR__, levels: 2) . '/vendor/bin/mago';
-        $output = [];
-        exec(
-            escapeshellarg($mago)
-            . ' --workspace '
-            . escapeshellarg($this->directory)
-            . ' lint --only '
-            . escapeshellarg($rule)
-            . " --fix {$flags} fixture.php 2>&1",
-            $output,
-        );
+        $this->lint($rule, ['text-domains' => $textDomains], $code, "--fix {$flags}");
 
         self::assertSame("<?php\n\n{$expected}\n", file_get_contents("{$this->directory}/fixture.php"));
     }

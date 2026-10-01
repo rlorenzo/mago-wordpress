@@ -17,6 +17,7 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Linter\CallRule;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function array_fill_keys;
 use function array_keys;
 use function in_array;
 
@@ -30,6 +31,9 @@ use function in_array;
  */
 final class CapabilitiesRule extends CallRule
 {
+    /** @var null|array<string, true> */
+    private static ?array $coreCapabilities = null;
+
     private const SNIFF = 'WordPress.WP.Capabilities';
 
     /**
@@ -59,6 +63,14 @@ final class CapabilitiesRule extends CallRule
         'map_meta_cap' => [0, 'cap'],
         'user_can' => [1, 'capability'],
     ];
+
+    /**
+     * @return array<string, true>
+     */
+    private static function coreCapabilities(): array
+    {
+        return self::$coreCapabilities ??= array_fill_keys(Lists::CORE_CAPABILITIES, value: true);
+    }
 
     public function __construct(
         private readonly Report $report,
@@ -91,7 +103,7 @@ final class CapabilitiesRule extends CallRule
         [$index, $parameter] = self::TARGETS[$name];
         $value = $this->argument($context, $call, $index, $parameter);
         $capability = $value === null ? null : Values::literalString($context->file, $value);
-        if ($value === null || $capability === null || in_array($capability, Lists::CORE_CAPABILITIES, strict: true)) {
+        if ($value === null || $capability === null || (self::coreCapabilities()[$capability] ?? false)) {
             return;
         }
 

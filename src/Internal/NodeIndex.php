@@ -7,7 +7,6 @@ namespace Rlorenzo\MagoWordPress\Internal;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
-use WeakMap;
 
 use function array_values;
 use function in_array;
@@ -26,15 +25,12 @@ use function ksort;
  * the program is walked instead.
  *
  * The rules are singletons in one worker and see the same `SourceFile` for
- * each file, so the lists are cached per file and dropped with it.
+ * each file, so the lists are cached for the file being linted.
  *
  * @internal
  */
 final class NodeIndex
 {
-    /** @var null|WeakMap<SourceFile, array<string, list<Node>>> */
-    private static ?WeakMap $cache = null;
-
     private function __construct() {}
 
     /**
@@ -48,17 +44,7 @@ final class NodeIndex
             return $file->getDescendants($program, $kind);
         }
 
-        self::$cache ??= new WeakMap();
-        /** @var array<string, list<Node>> $lists */
-        $lists = self::$cache[$file] ?? [];
-        $nodes = $lists[$kind->value] ?? null;
-        if ($nodes === null) {
-            $nodes = $file->getNodes($kind);
-            $lists[$kind->value] = $nodes;
-            self::$cache[$file] = $lists;
-        }
-
-        return $nodes;
+        return FileCache::remember($file, 'nodes:' . $kind->value, static fn(): array => $file->getNodes($kind));
     }
 
     /**

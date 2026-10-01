@@ -11,17 +11,13 @@ use Rlorenzo\MagoWordPress\Settings;
 
 use function file_get_contents;
 use function file_put_contents;
-use function glob;
 use function implode;
 use function json_encode;
-use function mkdir;
-use function rmdir;
-use function sys_get_temp_dir;
-use function uniqid;
-use function unlink;
 
 final class PhpcsMigrationTest extends TestCase
 {
+    use TempProject;
+
     private const RULESET = <<<'XML'
         <?xml version="1.0"?>
         <ruleset name="Example">
@@ -214,34 +210,24 @@ final class PhpcsMigrationTest extends TestCase
 
     public function testWriteMergesComposerAndRefusesToOverwriteMagoToml(): void
     {
-        $dir = sys_get_temp_dir() . '/' . uniqid('mago-wordpress-migrate-', more_entropy: true);
-        mkdir($dir);
+        $dir = $this->directory;
         file_put_contents("{$dir}/phpcs.xml.dist", self::RULESET);
         file_put_contents(
             "{$dir}/composer.json",
             data: "{\n\t\"name\": \"a/b\",\n\t\"require\": {},\n\t\"extra\": {\"mago-wordpress\": {\"honor-phpcs-comments\": false}}\n}\n",
         );
 
-        try {
-            self::assertIsString(PhpcsMigration::run([$dir], $dir));
-            self::assertFileDoesNotExist("{$dir}/mago.toml");
+        self::assertIsString(PhpcsMigration::run([$dir], $dir));
+        self::assertFileDoesNotExist("{$dir}/mago.toml");
 
-            self::assertIsString(PhpcsMigration::run([$dir, '--write'], $dir));
-            self::assertFileExists("{$dir}/mago.toml");
-            $composer = (string) file_get_contents("{$dir}/composer.json");
-            self::assertStringContainsString("\n\t\"require\": {},", $composer);
-            self::assertStringContainsString('"honor-phpcs-comments": false', $composer);
-            self::assertStringContainsString("\t\t\t\"text-domains\": [", $composer);
+        self::assertIsString(PhpcsMigration::run([$dir, '--write'], $dir));
+        self::assertFileExists("{$dir}/mago.toml");
+        $composer = (string) file_get_contents("{$dir}/composer.json");
+        self::assertStringContainsString("\n\t\"require\": {},", $composer);
+        self::assertStringContainsString('"honor-phpcs-comments": false', $composer);
+        self::assertStringContainsString("\t\t\t\"text-domains\": [", $composer);
 
-            self::assertSame(1, PhpcsMigration::run([$dir, '--write'], $dir));
-            self::assertIsString(PhpcsMigration::run([$dir, '--write', '--force'], $dir));
-        } finally {
-            $files = glob("{$dir}/*");
-            foreach ($files === false ? [] : $files as $file) {
-                unlink($file);
-            }
-
-            rmdir($dir);
-        }
+        self::assertSame(1, PhpcsMigration::run([$dir, '--write'], $dir));
+        self::assertIsString(PhpcsMigration::run([$dir, '--write', '--force'], $dir));
     }
 }

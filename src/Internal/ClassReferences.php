@@ -70,6 +70,25 @@ final class ClassReferences
     }
 
     /**
+     * The class-name identifiers a class-referencing target node (instantiation, static
+     * access, `extends`, `implements`) mentions.
+     *
+     * @return list<Node>
+     */
+    public static function referenced(SourceFile $file, Node $node): array
+    {
+        return match ($node->kind) {
+            NodeKind::Instantiation => self::identifier($file, $file->getChildren($node)[1] ?? null),
+            NodeKind::StaticMethodCall,
+            NodeKind::StaticPropertyAccess,
+            NodeKind::ClassConstantAccess,
+                => self::identifier($file, $file->getChildren($node)[0] ?? null),
+            NodeKind::Extends, NodeKind::Implements => self::heritage($file, $node),
+            default => [],
+        };
+    }
+
+    /**
      * The identifier's resolved name without its leading `\`, or NULL when
      * it does not resolve to the global namespace. A bare name qualifies
      * against the file's namespace and `use` imports, so a class inside a

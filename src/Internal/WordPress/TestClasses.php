@@ -48,12 +48,12 @@ final class TestClasses
      */
     public static function namespaceOf(SourceFile $file, Node $node): string
     {
-        foreach ($file->getAncestors($node) as $ancestor) {
-            if ($ancestor->kind !== NodeKind::Namespace) {
+        while (($node = $file->getParent($node)) !== null) {
+            if ($node->kind !== NodeKind::Namespace) {
                 continue;
             }
 
-            foreach ($file->getChildren($ancestor) as $child) {
+            foreach ($file->getChildren($node) as $child) {
                 if ($child->kind === NodeKind::Identifier) {
                     return strtolower($file->getText($child));
                 }

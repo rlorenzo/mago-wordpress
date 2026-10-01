@@ -11,7 +11,6 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
-use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\ClassReferences;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\Report;
@@ -35,11 +34,14 @@ final class DbRestrictedClassesRule implements Rule
 {
     private const SNIFF = 'WordPress.DB.RestrictedClasses';
 
-    private ?FileGate $gate = null;
+    private readonly FileGate $gate;
 
     public function __construct(
         private readonly Report $report,
-    ) {}
+    ) {
+        // Every match puts a restricted class name directly in the source.
+        $this->gate = FileGate::forWords(Lists::DB_RESTRICTED_CLASSES);
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -66,29 +68,13 @@ final class DbRestrictedClassesRule implements Rule
             return;
         }
 
-        // Every match puts a restricted class name directly in the source.
-        $this->gate ??= FileGate::forWords(Lists::DB_RESTRICTED_CLASSES);
         if (!$this->gate->passes($context->file)) {
             return;
         }
 
-        foreach ($this->candidates($context->file, $context->node) as $identifier) {
+        foreach (ClassReferences::referenced($context->file, $context->node) as $identifier) {
             $this->reportIfRestricted($context, $identifier);
         }
-    }
-
-    /**
-     * Returns the class-name identifier nodes a target node references.
-     *
-     * @return list<Node>
-     */
-    private function candidates(SourceFile $file, Node $node): array
-    {
-        return match ($node->kind) {
-            NodeKind::Instantiation => ClassReferences::identifier($file, $file->getChildren($node)[1] ?? null),
-            NodeKind::Extends, NodeKind::Implements => ClassReferences::heritage($file, $node),
-            default => ClassReferences::identifier($file, $file->getChildren($node)[0] ?? null),
-        };
     }
 
     private function reportIfRestricted(LintContext $context, Node $identifier): void

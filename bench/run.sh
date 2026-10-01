@@ -19,6 +19,7 @@ prefix=${3:-}
 here=$(cd "$(dirname "$0")/.." && pwd -P)
 mago=${MAGO:-$here/vendor/bin/mago}
 phpcs=${PHPCS:-$here/vendor/bin/phpcs}
+source "$here/bench/lib.sh"
 
 [[ -x "$mago" ]] || { echo "mago not found or not executable: $mago" >&2; exit 1; }
 [[ -x "$phpcs" ]] || { echo "phpcs not found or not executable: $phpcs" >&2; exit 1; }
@@ -26,30 +27,12 @@ phpcs=${PHPCS:-$here/vendor/bin/phpcs}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-# PHP writes all three configs so every value is escaped by a real encoder. A JSON string
-# with unescaped slashes is also a valid TOML basic string.
+# PHP writes the configs so every value is escaped by a real encoder.
+write_configs "$project" "$here/resources/worker.php" "$domain" "$prefix" "$work"
 # shellcheck disable=SC2016 # the single-quoted $ are PHP variables, not shell ones
 php -r '
-[, $project, $worker, $domain, $prefix, $work] = $argv;
-$json = fn (mixed $value): string => json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+[, $domain, $prefix, $work] = $argv;
 $xml = fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_XML1);
-
-file_put_contents("$work/mago.toml", <<<TOML
-php-version = "8.2"
-[source]
-paths = [{$json($project)}]
-excludes = ["**/vendor/**", "**/vendor_prefixed/**", "**/node_modules/**", "**/tests/**"]
-[linter]
-integrations = ["wordpress"]
-[extension-hosts.wordpress]
-command = ["php", {$json($worker)}]
-
-TOML);
-
-file_put_contents("$work/composer.json", json_encode(
-    ["extra" => ["mago-wordpress" => ["text-domains" => [$domain], "prefixes" => [$prefix]]]],
-    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
-) . "\n");
 
 file_put_contents("$work/phpcs.xml", <<<XML
 <?xml version="1.0"?>
@@ -60,9 +43,7 @@ file_put_contents("$work/phpcs.xml", <<<XML
 </ruleset>
 
 XML);
-' "$project" "$here/resources/worker.php" "$domain" "$prefix" "$work"
-
-codes=$(paste -sd, - < "$here/tests/corpus/expected-rules.txt")
+' "$domain" "$prefix" "$work"
 
 # The worker discovers composer.json via getcwd(), so mago must run from $work.
 run_mago() { (cd "$work" && "$mago" --config "$work/mago.toml" lint --only "$codes" --reporting-format code-count); }

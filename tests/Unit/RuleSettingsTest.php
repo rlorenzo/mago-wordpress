@@ -7,51 +7,15 @@ namespace Rlorenzo\MagoWordPress\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-use function dirname;
-use function escapeshellarg;
-use function exec;
-use function file_put_contents;
-use function implode;
-use function is_file;
-use function json_encode;
-use function mkdir;
-use function rmdir;
 use function str_contains;
-use function sys_get_temp_dir;
-use function uniqid;
-use function unlink;
-
-use const JSON_THROW_ON_ERROR;
-use const JSON_UNESCAPED_SLASHES;
 
 /**
  * Lints a fixture through a real worker whose project settings come from composer.json,
- * as a consuming project's would. Ports the Rust option tests of the same names.
+ * as a consuming project's would.
  */
 final class RuleSettingsTest extends TestCase
 {
-    private const FILES = ['composer.json', 'mago.toml', 'fixture.php'];
-
-    private string $directory;
-
-    protected function setUp(): void
-    {
-        $this->directory = sys_get_temp_dir() . '/' . uniqid('mago-wordpress-', more_entropy: true);
-        mkdir($this->directory);
-    }
-
-    protected function tearDown(): void
-    {
-        foreach (self::FILES as $name) {
-            if (!is_file("{$this->directory}/{$name}")) {
-                continue;
-            }
-
-            unlink("{$this->directory}/{$name}");
-        }
-
-        rmdir($this->directory);
-    }
+    use TempProject;
 
     /**
      * @return iterable<string, array{string, array<string, bool|int|string|list<string>|array<string, list<string>>>, string, int, 4?: string}>
@@ -300,34 +264,12 @@ final class RuleSettingsTest extends TestCase
         int $issues,
         ?string $expectedText = null,
     ): void {
-        $worker = dirname(__DIR__, levels: 2) . '/resources/worker.php';
-        file_put_contents("{$this->directory}/composer.json", json_encode(['extra' => [
-            'mago-wordpress' => $settings,
-        ]], flags: JSON_THROW_ON_ERROR));
-        file_put_contents(
-            "{$this->directory}/mago.toml",
-            "version = \"1\"\nphp-version = \"8.1\"\n[linter]\nminimum-fail-level = \"note\"\n"
-            . "[extension-hosts.wordpress]\ncommand = [\"php\", "
-            . json_encode($worker, flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "]\n",
+        [$status, $report] = $this->lint(
+            $rule,
+            $settings,
+            $code,
+            linterToml: "[linter]\nminimum-fail-level = \"note\"\n",
         );
-        file_put_contents("{$this->directory}/fixture.php", "<?php\n\n{$code}\n");
-
-        $mago = dirname(__DIR__, levels: 2) . '/vendor/bin/mago';
-        $output = [];
-        $status = 0;
-        exec(
-            escapeshellarg($mago)
-            . ' --workspace '
-            . escapeshellarg($this->directory)
-            . ' lint --only '
-            . escapeshellarg($rule)
-            . ' fixture.php 2>&1',
-            $output,
-            $status,
-        );
-
-        $report = implode("\n", $output);
         self::assertSame($issues, $status, $report);
         self::assertSame($issues === 1, str_contains($report, $expectedText ?? $rule), $report);
     }

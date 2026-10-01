@@ -497,12 +497,12 @@ table runs the same `WordPress-Extra` comparison as the plugins throughout, for 
 | **Total** | | | **11,883** | **111.60 s** | **14.86 s** | **7.5×** |
 
 Measured 2026-09-28 on the plugins' release zips (vendor and tests excluded) and a fresh
-wordpress-develop checkout, `mago` at 1.50.0 and this package at 1.0.1 (37 rules, phpcs suppression
+wordpress-develop checkout, `mago` at 1.50.0 and this package at 1.0.1 (phpcs suppression
 comments honoured). The mago column includes starting the PHP worker. mago never lost a single-codebase
 comparison. Full output, per-codebase mago issue counts by rule, and exact reproduction commands are
 in [`bench/results/2026-09-bakeoff.md`](bench/results/2026-09-bakeoff.md).
 Every rule PR re-runs the bake-off (`bench/bakeoff.sh`) and commits the per-rule counts next to it;
-the latest is [`bench/results/2026-09-29-bakeoff.md`](bench/results/2026-09-29-bakeoff.md).
+the newest `*-bakeoff.md` in [`bench/results/`](bench/results/) has the current counts.
 
 ## Development
 

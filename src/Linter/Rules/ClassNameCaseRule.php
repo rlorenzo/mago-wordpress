@@ -85,27 +85,9 @@ final class ClassNameCaseRule implements Rule
             return;
         }
 
-        foreach ($this->candidates($context->file, $context->node) as $identifier) {
+        foreach (ClassReferences::referenced($context->file, $context->node) as $identifier) {
             $this->checkIdentifier($context, $identifier);
         }
-    }
-
-    /**
-     * Returns the class-name identifier nodes a target node references.
-     *
-     * @return list<Node>
-     */
-    private function candidates(SourceFile $file, Node $node): array
-    {
-        return match ($node->kind) {
-            NodeKind::Instantiation => ClassReferences::identifier($file, $file->getChildren($node)[1] ?? null),
-            NodeKind::StaticMethodCall,
-            NodeKind::StaticPropertyAccess,
-            NodeKind::ClassConstantAccess,
-                => ClassReferences::identifier($file, $file->getChildren($node)[0] ?? null),
-            NodeKind::Extends, NodeKind::Implements => ClassReferences::heritage($file, $node),
-            default => [],
-        };
     }
 
     private function checkIdentifier(LintContext $context, Node $identifier): void

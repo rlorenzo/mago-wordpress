@@ -16,6 +16,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
@@ -76,9 +77,14 @@ final class CapitalPDangitRule implements Rule
         NodeKind::FunctionCall,
     ];
 
+    private readonly FileGate $gate;
+
     public function __construct(
         private readonly Report $report,
-    ) {}
+    ) {
+        // Every match, in text and in names, contains `Word`, separators and `Pres`.
+        $this->gate = new FileGate(['/word[ _-]*pres/i']);
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -95,6 +101,10 @@ final class CapitalPDangitRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
+        if (!$this->gate->passes($file)) {
+            return;
+        }
+
         $program = $context->node;
         $skipped = self::skippedRanges($file, $program);
 

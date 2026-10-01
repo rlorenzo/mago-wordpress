@@ -36,14 +36,24 @@ final class DbRestrictedFunctionsRule implements Rule
 
     private const ALLOWED = ['mysql_to_rfc3339'];
 
-    private ?FileGate $gate = null;
+    private readonly FileGate $gate;
 
-    /** @var null|list<string> */
-    private ?array $prefixes = null;
+    /** @var list<string> */
+    private readonly array $prefixes;
 
     public function __construct(
         private readonly Report $report,
-    ) {}
+    ) {
+        $this->prefixes = array_map(static fn(string $pattern): string => rtrim(
+            $pattern,
+            characters: '*',
+        ), Lists::DB_RESTRICTED_FUNCTIONS);
+        $alternation = implode('|', array_map(static fn(string $prefix): string => preg_quote(
+            $prefix,
+            delimiter: '/',
+        ), $this->prefixes));
+        $this->gate = new FileGate(["/(?<!\\w)(?:{$alternation})/i"]);
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -63,7 +73,6 @@ final class DbRestrictedFunctionsRule implements Rule
             return;
         }
 
-        $this->gate ??= new FileGate([$this->buildGatePattern()]);
         if (!$this->gate->passes($context->file)) {
             return;
         }
@@ -78,7 +87,7 @@ final class DbRestrictedFunctionsRule implements Rule
             return;
         }
 
-        foreach ($this->prefixes() as $prefix) {
+        foreach ($this->prefixes as $prefix) {
             if (!str_starts_with($normalized, $prefix)) {
                 continue;
             }
@@ -94,26 +103,5 @@ final class DbRestrictedFunctionsRule implements Rule
 
             return;
         }
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function prefixes(): array
-    {
-        return $this->prefixes ??= array_map(static fn(string $pattern): string => rtrim(
-            $pattern,
-            characters: '*',
-        ), Lists::DB_RESTRICTED_FUNCTIONS);
-    }
-
-    private function buildGatePattern(): string
-    {
-        $alternation = implode('|', array_map(static fn(string $prefix): string => preg_quote(
-            $prefix,
-            delimiter: '/',
-        ), $this->prefixes()));
-
-        return "/(?<!\\w)(?:{$alternation})/i";
     }
 }

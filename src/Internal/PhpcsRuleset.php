@@ -206,7 +206,7 @@ final class PhpcsRuleset
             'is-theme' => self::flag(self::last($properties['is_theme'] ?? [])),
             'exclude-groups' => self::excludeGroups($xpath),
         ];
-        foreach (Settings::CUSTOM_LISTS as $option => $property) {
+        foreach (Settings::CUSTOM_LISTS as $option => [$property]) {
             $values[$option] = $properties[$property] ?? [];
         }
 

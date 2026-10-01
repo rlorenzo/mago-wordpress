@@ -33,9 +33,9 @@ use function preg_quote;
 /**
  * Ports `WordPress.NamingConventions.ValidHookName`.
  *
- * Only checks the hook-defining calls the Rust spec covers: it skips the
- * `*_deprecated` dispatchers in `Lists::HOOK_INVOKE_FUNCTIONS`, as the Rust
- * rule does.
+ * Skips the `*_deprecated` dispatchers in `Lists::HOOK_INVOKE_FUNCTIONS`, as
+ * WPCS does: their first argument is the hook name, but the sniff only
+ * checks the plain `do_action`/`apply_filters` family.
  */
 final class ValidHookNameRule extends CallRule
 {

@@ -7,7 +7,6 @@ namespace Rlorenzo\MagoWordPress\Internal;
 use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Syntax\SourceFile;
-use WeakMap;
 
 use function array_slice;
 use function count;
@@ -133,9 +132,6 @@ final class Report
         return str_contains($code, '/');
     }
 
-    /** @var WeakMap<SourceFile, PhpcsSuppressions> */
-    private WeakMap $suppressions;
-
     /** @var array<string, list<string>> WPCS code => regexes, as phpcs compiles `<exclude-pattern>` */
     private readonly array $excludes;
 
@@ -150,7 +146,6 @@ final class Report
         array $excludePatterns = [],
         private readonly array $excludeGroups = [],
     ) {
-        $this->suppressions = new WeakMap();
         $excludes = [];
         foreach ($excludePatterns as $code => $patterns) {
             foreach ($patterns as $pattern) {
@@ -260,6 +255,10 @@ final class Report
 
     private function suppressions(SourceFile $file): PhpcsSuppressions
     {
-        return $this->suppressions[$file] ??= PhpcsSuppressions::fromSource($file->contents);
+        return FileCache::remember(
+            $file,
+            'suppressions',
+            static fn(): PhpcsSuppressions => PhpcsSuppressions::fromSource($file->contents),
+        );
     }
 }

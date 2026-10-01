@@ -701,15 +701,20 @@ final class WpI18nRule extends CallRule
     private static function translatorsCommentBefore(SourceFile $file, int $start): ?TriviaKind
     {
         // Trivia come in source order, so the last one that ends before the call is the nearest.
-        $comment = null;
-        foreach ($file->getTrivia() as $trivia) {
-            if ($trivia->span->end > $start) {
-                break;
+        $trivia = $file->getTrivia();
+        $low = 0;
+        $high = count($trivia);
+        while ($low < $high) {
+            $mid = ($low + $high) >> 1;
+            if ($trivia[$mid]->span->end > $start) {
+                $high = $mid;
+                continue;
             }
 
-            $comment = $trivia;
+            $low = $mid + 1;
         }
 
+        $comment = $trivia[$low - 1] ?? null;
         if ($comment === null) {
             return null;
         }
@@ -746,7 +751,8 @@ final class WpI18nRule extends CallRule
      */
     private function insideWrapper(LintContext $context): bool
     {
-        foreach ($context->file->getAncestors($context->node) as $ancestor) {
+        $ancestor = $context->node;
+        while (($ancestor = $context->file->getParent($ancestor)) !== null) {
             if ($ancestor->kind === NodeKind::Closure || $ancestor->kind === NodeKind::ArrowFunction) {
                 return false;
             }

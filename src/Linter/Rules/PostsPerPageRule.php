@@ -95,17 +95,7 @@ final class PostsPerPageRule implements Rule
             return;
         }
 
-        $file = $context->file;
-        foreach ($file->getChildren($context->node) as $wrapper) {
-            if ($wrapper->kind !== NodeKind::ArrayElement) {
-                continue;
-            }
-
-            $element = $file->getChildren($wrapper)[0] ?? null;
-            if ($element === null || $element->kind !== NodeKind::KeyValueArrayElement) {
-                continue;
-            }
-
+        foreach (Values::keyValueElements($context->file, $context->node) as $element) {
             $this->checkElement($context, $element);
         }
     }
@@ -128,21 +118,9 @@ final class PostsPerPageRule implements Rule
     private function checkAssignment(LintContext $context): void
     {
         $file = $context->file;
-        [$target, $operator, $valueNode] = $file->getChildren($context->node) + [null, null, null];
-        if ($target === null || $operator === null || $valueNode === null) {
-            return;
-        }
-
-        $target = Values::unwrap($file, $target);
-        if (
-            $target->kind !== NodeKind::ArrayAccess
-            || !in_array(trim($file->getText($operator)), ['=', '??='], strict: true)
-        ) {
-            return;
-        }
-
-        $keyNode = $file->getChildren($target)[1] ?? null;
-        if ($keyNode !== null) {
+        $keyNode = Values::assignedKey($file, $context->node);
+        $valueNode = $file->getChildren($context->node)[2] ?? null;
+        if ($keyNode !== null && $valueNode !== null) {
             $this->checkPair($context, $keyNode, $valueNode, $keyNode->span);
         }
     }

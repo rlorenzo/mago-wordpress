@@ -12,6 +12,7 @@ use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\Calls;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\Values;
@@ -22,7 +23,6 @@ use function array_key_exists;
 use function array_keys;
 use function explode;
 use function in_array;
-use function ltrim;
 use function preg_match;
 use function str_ends_with;
 use function str_replace;
@@ -284,7 +284,7 @@ final class EnqueuedResourceParametersRule extends CallRule
             return null;
         }
 
-        $text = strtolower(ltrim($file->getText($node), characters: '\\'));
+        $text = Calls::normalize($file->getText($node));
 
         return $text === 'false' || $text === 'null' ? $text : null;
     }

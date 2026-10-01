@@ -19,13 +19,9 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 
 use function in_array;
 use function preg_match_all;
-use function trim;
 
 /**
  * Ports `WordPress.DB.SlowDBQuery`.
- *
- * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:kan-defect
  */
 final class SlowDbQueryRule implements Rule
 {
@@ -80,16 +76,7 @@ final class SlowDbQueryRule implements Rule
     private function checkArray(LintContext $context): void
     {
         $file = $context->file;
-        foreach ($file->getChildren($context->node) as $wrapper) {
-            if ($wrapper->kind !== NodeKind::ArrayElement) {
-                continue;
-            }
-
-            $element = $file->getChildren($wrapper)[0] ?? null;
-            if ($element === null || $element->kind !== NodeKind::KeyValueArrayElement) {
-                continue;
-            }
-
+        foreach (Values::keyValueElements($file, $context->node) as $element) {
             $key = $file->getChildren($element)[0] ?? null;
             if ($key !== null) {
                 $this->checkKey($context, $key);
@@ -102,21 +89,7 @@ final class SlowDbQueryRule implements Rule
      */
     private function checkAssignment(LintContext $context): void
     {
-        $file = $context->file;
-        [$target, $operator] = $file->getChildren($context->node) + [null, null];
-        if ($target === null || $operator === null) {
-            return;
-        }
-
-        $target = Values::unwrap($file, $target);
-        if (
-            $target->kind !== NodeKind::ArrayAccess
-            || !in_array(trim($file->getText($operator)), ['=', '??='], strict: true)
-        ) {
-            return;
-        }
-
-        $keyNode = $file->getChildren($target)[1] ?? null;
+        $keyNode = Values::assignedKey($context->file, $context->node);
         if ($keyNode !== null) {
             $this->checkKey($context, $keyNode);
         }
