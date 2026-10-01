@@ -29,6 +29,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
@@ -113,6 +114,7 @@ final class WordPressExtension
                 new DbRestrictedClassesRule($report),
                 new RestrictedPhpFunctionsRule($report),
                 new TypeCastsRule($report),
+                new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),
                 new DisallowSizeFunctionsInLoopsRule($report),

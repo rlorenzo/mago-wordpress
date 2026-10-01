@@ -108,6 +108,20 @@ final class RuleFixesTest extends TestCase
             ['default'],
         ];
 
+        yield 'parentheses-spacing adds the WordPress spaces' => [
+            'wordpress/parentheses-spacing',
+            '',
+            "if (! foo(\$a, array(1), [\$b])) {\n\t\$c = \$d[\$i] . \$d['k'] . \$d[ 0 ];\n}\ndo {\n} while (\$x);",
+            "if ( ! foo( \$a, array( 1 ), [ \$b ] ) ) {\n\t\$c = \$d[ \$i ] . \$d['k'] . \$d[0];\n}\ndo {\n} while ( \$x );",
+        ];
+
+        yield 'parentheses-spacing leaves strings, empty pairs and broken lines alone' => [
+            'wordpress/parentheses-spacing',
+            '',
+            "\$s = \"\$a[0] {\$b[\$i]}\" . bar() . baz(\n\t1\n);",
+            "\$s = \"\$a[0] {\$b[\$i]}\" . bar() . baz(\n\t1\n);",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

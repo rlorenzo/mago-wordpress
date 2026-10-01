@@ -160,6 +160,7 @@ core rules are configured in `mago.toml` as usual.
 | `wordpress/file-name` | `WordPress.Files.FileName` | file names not lowercase and hyphenated, a class file missing its `class-` prefix, a templated `wp-includes` file missing its `-template` suffix |
 | `wordpress/get-meta-single` | `WordPress.WP.GetMetaSingle` | `get_*meta()`/`get_metadata*()` calls that pass the key parameter without also passing `$single` |
 | `wordpress/global-variables-override` | `WordPress.WP.GlobalVariablesOverride` | assignments, foreach bindings, destructuring and `$GLOBALS[...]` writes (including array-element writes) to WordPress's protected globals (243 names), skipping unit-test classes |
+| `wordpress/parentheses-spacing` | the single-line spacing part of `PEAR.Functions.FunctionCallSignature`, `Squiz.Functions.FunctionDeclarationArgumentSpacing`, `WordPress.WhiteSpace.ControlStructureSpacing`, `NormalizedArrays.Arrays.ArrayBraceSpacing`, `WordPress.Arrays.ArrayKeySpacingRestrictions` | one space inside call, declaration, control-structure and array parentheses and brackets (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]` but `$a['key']`); off by default, see [Formatting](#formatting) |
 | `wordpress/plugin-menu-slug` | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` over `max-posts-per-page` (default 100; `-1` and `nopaging` are not flagged, as in WPCS) in any array literal, `$args['key'] = ...`/`??=` assignment, or `posts_per_page=999`-style query string (it does not follow `$args` variables into `WP_Query`) |
 | `wordpress/prefix-all-globals` | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants and hook names; inert until `prefixes` is configured |
@@ -201,10 +202,11 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example `"Generic": ["*"]` turns off the `Generic.*` ones); the `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the five that only `WordPress-Extra` includes.
 
-All 45 rules are enabled by default when the extension is installed, and report at `Warning`
-except `wordpress/capital-p-dangit` (`Note`) and sixteen rules that report at `Error`:
+45 of the 46 rules are enabled by default when the extension is installed (`parentheses-spacing`
+runs only with `--only`, see [Formatting](#formatting)), and report at `Warning` except
+`wordpress/capital-p-dangit` (`Note`) and seventeen rules that report at `Error`:
 `db-restricted-classes`, `db-restricted-functions`, `dont-extract`, `file-name`,
-`global-variables-override`, `prepared-sql-placeholders`, `restricted-php-functions`,
+`global-variables-override`, `parentheses-spacing`, `prepared-sql-placeholders`, `restricted-php-functions`,
 `type-casts`, `valid-function-name`, `valid-post-type-slug`, `valid-variable-name`,
 `generic/byte-order-mark`, `generic/disallow-size-functions-in-loops`,
 `generic/foreach-unique-assignment`, `generic/git-merge-conflict` and
@@ -219,6 +221,7 @@ phpcbf's fix would change behaviour or break the file (a misspelling inside an i
 | Rule | Fix | Applied by |
 |:---|:---|:---|
 | `type-casts` | `(double)`/`(real)` → `(float)` | `--fix` |
+| `parentheses-spacing` | one space inside parentheses and brackets, none around a literal array key | `--fix --only wordpress/parentheses-spacing` |
 | `capital-p-dangit` | misspelling → `WordPress` in comments | `--fix` |
 | `capital-p-dangit` | misspelling → `WordPress` in strings and inline HTML (changes output) | `--fix --potentially-unsafe` |
 | `wp-date-time` | `current_time( 'timestamp' \| 'U', true )` → `time()`, unless the call holds a comment | `--fix` |
@@ -259,13 +262,35 @@ The `extends` in [Install](#install) also sets Mago's formatter to the closest i
 It also sets `array-style` to `long`; `mago lint --fix --only array-style` rewrites `[]` as `array()`.
 Override any of these under `[formatter]` in your own `mago.toml`.
 
-`mago format` cannot produce WordPress formatting exactly. Measured on Akismet, Contact Form 7 and
+`mago format` cannot add the spaces WordPress puts inside parentheses and brackets, and upstream has
+declined an option for it ([#446](https://github.com/carthage-software/mago/issues/446),
+[#490](https://github.com/carthage-software/mago/issues/490)). This package adds them with a lint fix
+instead, `wordpress/parentheses-spacing`, which is off by default and runs only when named:
+
+```sh
+mago lint --fix --only array-style
+mago format
+mago lint --fix --only wordpress/parentheses-spacing
+```
+
+Run the three together, every time: `mago format` removes the spaces again, so on its own (or as an
+editor's format-on-save) it undoes the third step. For the same reason `mago format --check` always
+fails on code formatted this way; check with `mago lint --only wordpress/parentheses-spacing` instead.
+Lines are not re-wrapped after the spaces go in, so a few may run past `print-width`.
+
+The first step has an upstream bug in Mago 1.50: `array-style` rewrites a short-list destructuring
+`[ $a, $b ] = f();` as `array( $a, $b ) = f();`, which does not parse (one file in Yoast SEO). It is
+fixed upstream ([#2407](https://github.com/carthage-software/mago/pull/2407),
+[#2408](https://github.com/carthage-software/mago/pull/2408)) for the next Mago release; until then run
+`php -l` on the changed files, or fix those lines to `list( ... )` by hand.
+
+Without that step, `mago format` cannot produce WordPress formatting exactly. Measured on Akismet, Contact Form 7 and
 Yoast SEO ([results](bench/results/2026-09-30-formatter.md)), formatting with this preset leaves
 95,040 phpcs-fixable `WordPress-Core` reports, against 334,577 with Mago's defaults. What remains:
 
 | Cause | `WordPress-Core` sniff codes | Share |
 |:---|:---|---:|
-| **No spaces inside call, declaration, control-structure and array parentheses** (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]`). Mago has no option for this and upstream declined one ([#446](https://github.com/carthage-software/mago/issues/446), [#490](https://github.com/carthage-software/mago/issues/490)). The `!` and cast reports are the same cause: `(! $x)` has no space after the parenthesis. | `PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket`, `.SpaceBeforeCloseBracket`; `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceAfterOpenParenthesis`, `.NoSpaceBeforeCloseParenthesis`; `Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen`, `.SpacingBeforeClose`; `WordPress.Arrays.ArrayKeySpacingRestrictions.NoSpacesAroundArrayKeys`; `NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine`, `.SpaceBeforeArrayCloserSingleLine`, `.SpaceAfterArrayOpenerMultiLine`, `.SpaceBeforeArrayCloserMultiLine`; `WordPress.WhiteSpace.OperatorSpacing.NoSpaceBefore`; `WordPress.WhiteSpace.CastStructureSpacing.NoSpaceBeforeOpenParenthesis` | 92 % |
+| **No spaces inside call, declaration, control-structure and array parentheses** (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]`). Mago has no option for this and upstream declined one. The `!` and cast reports are the same cause: `(! $x)` has no space after the parenthesis. `wordpress/parentheses-spacing` fixes all of these: with it, 7,579 reports remain (92 % fewer). | `PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket`, `.SpaceBeforeCloseBracket`; `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceAfterOpenParenthesis`, `.NoSpaceBeforeCloseParenthesis`; `Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen`, `.SpacingBeforeClose`; `WordPress.Arrays.ArrayKeySpacingRestrictions.NoSpacesAroundArrayKeys`; `NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine`, `.SpaceBeforeArrayCloserSingleLine`, `.SpaceAfterArrayOpenerMultiLine`, `.SpaceBeforeArrayCloserMultiLine`; `WordPress.WhiteSpace.OperatorSpacing.NoSpaceBefore`; `WordPress.WhiteSpace.CastStructureSpacing.NoSpaceBeforeOpenParenthesis` | 92 % |
 | **Alignment limits.** WPCS stops aligning `=>` past column 60 and `=` past 40 spaces of padding, and aligns across comments and blank lines; Mago aligns each run without a limit. | `WordPress.Arrays.MultipleStatementAlignment.LongIndexSpaceBeforeDoubleArrow`, `.DoubleArrowNotAligned`; `Generic.Formatting.MultipleStatementAlignment.NotSameWarning` | 5 % |
 | **Hugged last argument.** Mago keeps `foo( $a, array(` on one line; PEAR wants one argument per line once a call breaks. | `PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket`, `.CloseBracketLine`, `.MultipleArguments`, `.Indent` | 2 % |
 | **Templates and alternative syntax.** Mago prints `if ( $x ):` without the space before `:`, and breaks long `<?php echo … ?>` lines inside HTML. | `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceBetweenStructureColon`; `Squiz.ControlStructures.ControlSignature.SpaceAfterCloseParenthesis`; `Squiz.PHP.EmbeddedPhp.*`; `Generic.WhiteSpace.LanguageConstructSpacing.IncorrectSingle` | < 1 % |

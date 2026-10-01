@@ -19,6 +19,7 @@ spaces, so its unformatted count is high too.
 | Unformatted (as shipped) | 88 | 3,682 | 66,052 | 69,822 |
 | `mago fmt`, Mago defaults | 12,874 | 35,554 | 286,149 | 334,577 |
 | `mago fmt` + this preset | 5,594 | 15,473 | 73,973 | 95,040 |
+| `mago fmt` + this preset + `wordpress/parentheses-spacing` fix | 576 | 1,765 | 5,238 | 7,579 |
 
 The preset removes 72 % of the reports Mago's default style causes. Of the 95,040 left, 87,501
 (92 %) are spaces inside call, declaration, control-structure and array parentheses, which Mago
@@ -29,6 +30,14 @@ from 88 reports to 5,594.
 Tried and dropped: `print-width = 200` (joins more calls onto one line and adds about 4,200 reports),
 and preserving every other kind of line break (`preserve-breaking-*` for member-access chains,
 conditionals and binary expressions: 200 fewer, not worth four more settings).
+
+The last row runs `mago lint --fix --only wordpress/parentheses-spacing` after formatting (added
+after the rest of this run, same plugin versions). It takes every code in the first cause group below
+to zero (call, declaration, control-structure and array brace spacing, array keys, and the `!` and cast
+reports), adds no new codes, and leaves every file parsing except one Yoast SEO file that Mago's own
+`array-style` fix had already broken (`[ $a, $b ] =` → `array( $a, $b ) =`). The fix pass takes
+0.8 s, 0.4 s and 2.3 s. Of the 5,238 left in Yoast SEO, 20 `OperatorSpacing.NoSpaceBefore` reports are
+multi-catch `A|B`, not parentheses.
 
 ## Reports left after the preset, by sniff code
 
