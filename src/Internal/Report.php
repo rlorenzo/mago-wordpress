@@ -16,6 +16,7 @@ use function implode;
 use function in_array;
 use function ltrim;
 use function preg_match;
+use function str_contains;
 use function str_replace;
 use function strtr;
 
@@ -31,8 +32,9 @@ use function strtr;
 final class Report
 {
     /**
-     * WPCS sniff => the Mago rule codes that port it: this package's `wordpress/*` rules and
-     * Mago's own core rules (the `wordpress` integration and a few generic ones). The parity
+     * phpcs sniff => the Mago rule codes that port it: this package's `wordpress/*` and
+     * `generic/*` rules and Mago's own core rules (the `wordpress` integration and the generic
+     * ones that cover sniffs the WPCS standards pull in). The parity
      * harness and the phpcs.xml migration both read it.
      *
      * @var array<string, non-empty-list<string>>
@@ -89,7 +91,47 @@ final class Report
         'WordPress.WP.GlobalVariablesOverride' => ['wordpress/global-variables-override'],
         'WordPress.WP.I18n' => ['wordpress/wp-i18n'],
         'WordPress.WP.PostsPerPage' => ['wordpress/posts-per-page'],
+        // Generic sniffs the WPCS standards pull in: this package's `generic/*` ports and the
+        // Mago core lint rules that cover the rest (analyzer-only coverage is in the README).
+        'Generic.CodeAnalysis.AssignmentInCondition' => ['no-assign-in-condition'],
+        'Generic.CodeAnalysis.EmptyPHPStatement' => ['no-noop'],
+        'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => ['prefer-while-loop'],
+        'Generic.CodeAnalysis.ForLoopWithTestFunctionCall' => ['generic/for-loop-with-test-function-call'],
+        'Generic.CodeAnalysis.JumbledIncrementer' => ['generic/jumbled-incrementer'],
+        'Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence' => [
+            'generic/require-explicit-boolean-operator-precedence',
+        ],
+        'Generic.CodeAnalysis.UnconditionalIfStatement' => ['constant-condition'],
+        'Generic.CodeAnalysis.UnnecessaryFinalModifier' => ['no-redundant-final'],
+        'Generic.CodeAnalysis.UselessOverridingMethod' => ['no-redundant-method-override'],
+        'Generic.Files.ByteOrderMark' => ['generic/byte-order-mark'],
+        'Generic.Files.OneObjectStructurePerFile' => ['single-class-per-file'],
+        'Generic.NamingConventions.UpperCaseConstantName' => ['constant-name'],
+        'Generic.PHP.BacktickOperator' => ['no-shell-execute-string'],
+        'Generic.PHP.DisallowAlternativePHPTags' => ['generic/disallow-alternative-php-tags'],
+        'Generic.PHP.DisallowShortOpenTag' => ['no-short-opening-tag'],
+        'Generic.PHP.DiscourageGoto' => ['no-goto'],
+        'Generic.PHP.ForbiddenFunctions' => ['disallowed-functions'],
+        'Generic.PHP.LowerCaseConstant' => ['lowercase-keyword'],
+        'Generic.PHP.LowerCaseKeyword' => ['lowercase-keyword'],
+        'Generic.PHP.LowerCaseType' => ['lowercase-type-hint'],
+        'Generic.Strings.UnnecessaryStringConcat' => ['no-redundant-string-concat'],
+        'Generic.VersionControl.GitMergeConflict' => ['generic/git-merge-conflict'],
+        'PEAR.NamingConventions.ValidClassName' => ['class-name'],
+        'PSR2.Files.ClosingTag' => ['no-closing-tag'],
+        'Squiz.PHP.DisallowMultipleAssignments' => ['no-multi-assignments'],
+        'Squiz.PHP.DisallowSizeFunctionsInLoops' => ['generic/disallow-size-functions-in-loops'],
+        'Squiz.PHP.Eval' => ['no-eval'],
+        'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],
+        'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
+        'Universal.Operators.DisallowShortTernary' => ['no-shorthand-ternary'],
     ];
+
+    /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */
+    public static function isExtensionRule(string $code): bool
+    {
+        return str_contains($code, '/');
+    }
 
     /** @var WeakMap<SourceFile, PhpcsSuppressions> */
     private WeakMap $suppressions;

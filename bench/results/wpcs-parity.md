@@ -80,6 +80,47 @@ Only reports carrying the mapped rule codes count (Mago's parser/semantics error
 deliberately odd test files no longer count as matches or extras), so numbers from this run on
 are slightly lower and exact.
 
+Generic sniffs added (Sprint F), 2026-09-30. The WPCS rows and the WPCS total are unchanged from
+the wave-4 table below. The harness now also runs the non-WordPress sniffs mapped in
+`Report::SNIFF_RULES` against phpcs's own tests (PHPCSExtra ships none) and totals them on their own
+line. The eight `generic/*` rules are this package's ports; the other generic rows measure how
+closely a Mago core rule covers a sniff it was not written to mirror:
+
+| Sniff | Files | Expected lines | Matched | Missed | Extra | Recall | Notes |
+|:---|---:|---:|---:|---:|---:|---:|:---|
+| `Generic.CodeAnalysis.AssignmentInCondition` | 6 | 34 | 28 | 6 | 8 | 82% |  |
+| `Generic.CodeAnalysis.EmptyPHPStatement` | 2 | 25 | 19 | 6 | 1 | 76% |  |
+| `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | 3 | 3 | 3 | 0 | 1 | 100% |  |
+| `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | 3 | 14 | 14 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.JumbledIncrementer` | 4 | 10 | 10 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | 1 | 34 | 31 | 3 | 0 | 91% |  |
+| `Generic.CodeAnalysis.UnconditionalIfStatement` | 2 | 5 | 2 | 3 | 0 | 40% |  |
+| `Generic.CodeAnalysis.UnnecessaryFinalModifier` | 2 | 10 | 5 | 5 | 0 | 50% |  |
+| `Generic.CodeAnalysis.UselessOverridingMethod` | 6 | 11 | 4 | 7 | 2 | 36% |  |
+| `Generic.Files.ByteOrderMark` | 5 | 3 | 3 | 0 | 0 | 100% |  |
+| `Generic.Files.OneObjectStructurePerFile` | 1 | 5 | 5 | 0 | 0 | 100% |  |
+| `Generic.NamingConventions.UpperCaseConstantName` | 5 | 13 | 6 | 7 | 0 | 46% |  |
+| `Generic.PHP.BacktickOperator` | 1 | 1 | 1 | 0 | 0 | 100% |  |
+| `Generic.PHP.DisallowAlternativePHPTags` | 3 | 12 | 12 | 0 | 0 | 100% |  |
+| `Generic.PHP.DisallowShortOpenTag` | 5 | 12 | 8 | 4 | 2 | 67% |  |
+| `Generic.PHP.DiscourageGoto` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `Generic.PHP.ForbiddenFunctions` | 1 | 4 | 0 | 4 | 0 | 0% |  |
+| `Generic.PHP.LowerCaseConstant` | 2 | 38 | 35 | 3 | 12 | 92% |  |
+| `Generic.PHP.LowerCaseKeyword` | 1 | 29 | 27 | 2 | 2 | 93% |  |
+| `Generic.PHP.LowerCaseType` | 1 | 63 | 42 | 21 | 0 | 67% |  |
+| `Generic.Strings.UnnecessaryStringConcat` | 2 | 7 | 4 | 3 | 4 | 57% | UnnecessaryStringConcatUnitTest.1.inc: no setting for phpcs:set allowMultiline, error |
+| `Generic.VersionControl.GitMergeConflict` | 7 | 64 | 64 | 0 | 0 | 100% |  |
+| `PEAR.NamingConventions.ValidClassName` | 1 | 24 | 5 | 19 | 4 | 21% |  |
+| `PSR2.Files.ClosingTag` | 7 | 5 | 4 | 1 | 0 | 80% |  |
+| `Squiz.PHP.DisallowMultipleAssignments` | 2 | 9 | 2 | 7 | 0 | 22% |  |
+| `Squiz.PHP.DisallowSizeFunctionsInLoops` | 1 | 12 | 12 | 0 | 0 | 100% |  |
+| `Squiz.PHP.Eval` | 1 | 2 | 2 | 0 | 0 | 100% |  |
+| `Universal.Arrays.DisallowShortArraySyntax` | - | - | - | - | - | - | no upstream test |
+| `Universal.CodeAnalysis.ForeachUniqueAssignment` | - | - | - | - | - | - | no upstream test |
+| `Universal.Operators.DisallowShortTernary` | - | - | - | - | - | - | no upstream test |
+| **Total** | **117** | **2132** | **1890** | **242** | **194** | **89%** | |
+| **Generic sniffs (phpcs tests)** | **76** | **453** | **352** | **101** | **36** | **78%** | |
+
 After wave 4 (wp-i18n, prepared-sql-placeholders, discouraged-wp-functions, wp-deprecated-functions,
 wp-deprecated-classes), 2026-09-30. Every extension rule with a WPCS test is now at 100% except the
 accepted cases (test-only sniff groups, `phpcs:set exclude`/`custom_test_classes`/

@@ -243,21 +243,35 @@ Re-run after every rule change; a row that drops is a regression.
 
 ## Sprint F: generic sniffs that `WordPress-Extra` pulls in
 
-The README lists 24 non-`WordPress.*` sniffs with no Mago rule. Several are analyzer findings
-in Mago rather than lint rules, so the README's list needs re-checking against `mago analyze`
-output, and the rest need a decision:
+**Done (2026-09-30).** Each of the 24 README sniffs was triggered on a snippet (confirmed with
+phpcs) and run through `mago lint` with every core rule on plus `mago analyze`:
 
-- Likely covered by `mago analyze` already (verify, then move to the covered table):
-  `Generic.PHP.Syntax`, `Generic.PHP.DeprecatedFunctions`, `Generic.CodeAnalysis.UnusedFunctionParameter`,
-  `Squiz.PHP.NonExecutableCode`, `Universal.Arrays.DuplicateArrayKey`, `Generic.Classes.DuplicateClassName`,
-  `Squiz.Functions.FunctionDuplicateArgument`, `Universal.CodeAnalysis.ConstructorDestructorReturn`.
-- Worth porting as cheap `Rule`s (real bugs, no Mago equivalent):
-  `Generic.CodeAnalysis.JumbledIncrementer`, `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence`,
-  `Squiz.PHP.DisallowSizeFunctionsInLoops`, `Generic.CodeAnalysis.ForLoopWithTestFunctionCall`,
-  `Universal.CodeAnalysis.ForeachUniqueAssignment`, `Generic.VersionControl.GitMergeConflict`,
-  `Generic.Files.ByteOrderMark`, `Generic.PHP.DisallowAlternativePHPTags`.
-  Batch as `generic/*` rule codes so they can be disabled as a group.
-- Leave unported (style, or `mago fmt` makes them moot): the rest of the README list.
+- **Covered by `mago analyze`** (README table): DuplicateClassName (`duplicate-definition`),
+  DeprecatedFunctions (`deprecated-function`), Syntax (parse errors), FunctionDuplicateArgument
+  (semantics), NonExecutableCode (`unevaluated-code`), DuplicateArrayKey (`duplicate-array-key`),
+  UnusedFunctionParameter (`unused-parameter`, needs `find-unused-parameters = true`, off by default).
+  Partly: EmptyStatement (`no-empty-loop`, loops only), ConstructorDestructorReturn (return types
+  only). Analyzer codes are not lint rules, so they are not in `Report::SNIFF_RULES`.
+- **Ported as `generic/*` rules**: JumbledIncrementer, ForLoopWithTestFunctionCall,
+  RequireExplicitBooleanOperatorPrecedence, DisallowSizeFunctionsInLoops, ForeachUniqueAssignment,
+  GitMergeConflict, ByteOrderMark, DisallowAlternativePHPTags. Mago accepts a second code prefix.
+  `[linter.rules]` still rejects extension codes, so they turn off through `exclude-patterns` under
+  their sniff codes. Parity on phpcs's own tests (`bench/wpcs-parity.php --phpcs=...`, separate
+  total line): 100% for each, except RequireExplicitBooleanOperatorPrecedence at 91% (two lines
+  phpcs's tests mark "debatable", across a match arm's commas and into an arrow function body, plus
+  one `for(a, b)` parse error). PHPCSExtra ships no tests; ForeachUniqueAssignment matches phpcs on
+  PHPCSExtra's GitHub test file. No fix for ForeachUniqueAssignment: the key wins at runtime, so
+  phpcbf's key removal changes the value. Bake-off (all 11 codebases): counts equal phpcs's
+  `WordPress-Extra` counts for every sniff on every codebase (ForLoopWithTestFunctionCall 130,
+  RequireExplicitBooleanOperatorPrecedence 184, DisallowSizeFunctionsInLoops 178, the other five 0
+  in both); `wordpress/*` counts unchanged.
+- **`Report::SNIFF_RULES`** now maps the generic sniffs too (the ports and the 22 core-rule
+  covers), with their standard membership in `PhpcsRuleset`; `mago-wordpress migrate` maps a
+  generic sniff exclusion instead of listing it. The harness shows how loosely the core rules
+  cover their sniffs (21–100%, README table).
+- **Left unported** (conventions, not bugs): CommentedOutCode, MethodScope, NoDoubleNegative,
+  DisallowDeclarationWithoutName, OneDeclarationPerFile, NoReservedKeywordParameterNames,
+  NoUselessAliases.
 
 ## Sprint G: `WordPress-Docs`
 

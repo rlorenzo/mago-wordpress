@@ -7,12 +7,15 @@ namespace Rlorenzo\MagoWordPress;
 use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
@@ -20,13 +23,18 @@ use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
@@ -105,6 +113,14 @@ final class WordPressExtension
                 new DbRestrictedClassesRule($report),
                 new RestrictedPhpFunctionsRule($report),
                 new TypeCastsRule($report),
+                new JumbledIncrementerRule($report),
+                new ForLoopWithTestFunctionCallRule($report),
+                new DisallowSizeFunctionsInLoopsRule($report),
+                new RequireExplicitBooleanOperatorPrecedenceRule($report),
+                new ForeachUniqueAssignmentRule($report),
+                new GitMergeConflictRule($report),
+                new ByteOrderMarkRule($report),
+                new DisallowAlternativePhpTagsRule($report),
             ],
         );
     }
