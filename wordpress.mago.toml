@@ -24,7 +24,8 @@ array-style = { style = "long" }
 
 # The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
 # call, declaration, control-structure and array parentheses (refused upstream, mago #446/#490);
-# see the README's Formatting section for the sniff codes that remain.
+# `mago lint --fix --only wordpress/parentheses-spacing` adds them after `mago format`; see the
+# README's Formatting section.
 [formatter]
 use-tabs = true
 function-brace-style = "same-line"
