@@ -11,13 +11,10 @@ use DOMXPath;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_filter;
-use function array_key_exists;
 use function array_keys;
-use function array_slice;
 use function array_values;
 use function count;
 use function explode;
-use function implode;
 use function in_array;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
@@ -240,13 +237,19 @@ final class PhpcsRuleset
     /** A WPCS code, or a code of a non-WordPress sniff that `Report::SNIFF_RULES` maps. */
     private static function isMapped(string $code): bool
     {
-        return (
-            str_starts_with($code, 'WordPress.')
-            || array_key_exists(
-                implode('.', array_slice(explode('.', $code), offset: 0, length: 3)),
-                Report::SNIFF_RULES,
-            )
-        );
+        if (str_starts_with($code, 'WordPress.')) {
+            return true;
+        }
+
+        // A mapped sniff, one of its message codes, or a category or standard that holds one,
+        // as phpcs applies a `<rule ref>`/`<exclude>` to every sniff under it.
+        foreach (array_keys(Report::SNIFF_RULES) as $sniff) {
+            if (str_starts_with($sniff . '.', $code . '.') || str_starts_with($code, $sniff . '.')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -84,7 +84,9 @@ namespace {
         $wpcs = null;
         $only = null;
         $verbose = false;
-        $phpcs = getenv('HOME') . '/.config/composer/vendor/squizlabs/php_codesniffer/src/Standards';
+        // The global Composer install: $COMPOSER_HOME, else ~/.config/composer.
+        $composerHome = getenv('COMPOSER_HOME') ?: (getenv('HOME') ? getenv('HOME') . '/.config/composer' : '');
+        $phpcs = $composerHome === '' ? '' : "$composerHome/vendor/squizlabs/php_codesniffer/src/Standards";
         foreach (array_slice($argv, 1) as $arg) {
             if (str_starts_with($arg, '--only=')) {
                 $only = substr($arg, 7);
@@ -100,6 +102,11 @@ namespace {
         if ($wpcs === null || !is_dir("$wpcs/WordPress/Tests")) {
             fwrite(STDERR, "usage: php bench/wpcs-parity.php /path/to/WordPress-Coding-Standards [--only=Sniff] [--verbose]\n");
             exit(1);
+        }
+
+        if ($phpcs === '' || !is_dir($phpcs)) {
+            fwrite(STDERR, 'notice: phpcs standards not found' . ($phpcs === '' ? '' : " at $phpcs")
+                . "; non-WordPress sniffs are listed as 'no upstream test'. Pass --phpcs=/path/to/php_codesniffer/src/Standards.\n");
         }
 
         $here = dirname(__DIR__);

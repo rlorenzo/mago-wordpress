@@ -49,6 +49,30 @@ final class PhpcsRulesetTest extends TestCase
         self::assertArrayNotHasKey('Generic.Files.ByteOrderMark', $patterns);
     }
 
+    public function testCategoryRefsReachGenericSniffs(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress-Extra">
+                <exclude name="Generic.CodeAnalysis"/>
+                <exclude name="Generic.WhiteSpace"/>
+              </rule>
+              <rule ref="Squiz.PHP"><exclude-pattern>/legacy/*</exclude-pattern></rule>
+              <rule ref="Universal"><severity>0</severity></rule>
+            </ruleset>
+            XML;
+
+        $patterns = Settings::fromArray(PhpcsRuleset::values($xml))->excludePatterns;
+
+        // A category or standard holding a mapped sniff counts, as phpcs applies it to every sniff under it.
+        self::assertSame(['*'], $patterns['Generic.CodeAnalysis'] ?? null);
+        self::assertSame(['/legacy/*'], $patterns['Squiz.PHP'] ?? null);
+        self::assertSame(['*'], $patterns['Universal'] ?? null);
+        // A category with nothing mapped stays out.
+        self::assertArrayNotHasKey('Generic.WhiteSpace', $patterns);
+    }
+
     public function testBlankExcludePatternIsSkipped(): void
     {
         $xml = <<<'XML'

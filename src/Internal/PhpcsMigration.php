@@ -35,6 +35,7 @@ use function ksort;
 use function preg_match;
 use function preg_replace_callback;
 use function rtrim;
+use function serialize;
 use function str_contains;
 use function str_ends_with;
 use function str_replace;
@@ -307,6 +308,8 @@ final class PhpcsMigration
     private function coreRules(array $patterns): array
     {
         $rules = [];
+        /** @var array<string, array<string, array{enabled?: bool, exclude?: list<string>, level?: string}>> $bySniff */
+        $bySniff = [];
         foreach (Report::SNIFF_RULES as $sniff => $codes) {
             $core = array_values(array_filter(
                 $codes,
@@ -338,17 +341,31 @@ final class PhpcsMigration
                 $settings['level'] = $level;
             }
 
+            foreach ($core as $rule) {
+                $bySniff[$rule][$sniff] = $settings;
+            }
+        }
+
+        foreach ($bySniff as $rule => $sniffSettings) {
+            // One Mago rule can cover several sniffs (lowercase-keyword); one sniff's setting
+            // must not turn off or re-level the others', so a disagreement leaves it as shipped.
+            if (count(array_unique(array_map(serialize(...), $sniffSettings))) > 1) {
+                $this->unmapped[] =
+                    "Mago's {$rule} covers "
+                    . implode(' and ', array_keys($sniffSettings))
+                    . ', which the ruleset configures differently; the rule is left as shipped';
+                continue;
+            }
+
+            $settings = array_values($sniffSettings)[0];
             if ($settings === []) {
                 continue;
             }
 
-            foreach ($core as $rule) {
-                // A partial override of a rule the shipped config enables must keep it enabled.
-                $rules[$rule] = ($settings['enabled'] ?? true)
-                && in_array($rule, self::ENABLED_BY_EXTENDS, strict: true)
-                    ? ['enabled' => true, ...$settings]
-                    : $settings;
-            }
+            // A partial override of a rule the shipped config enables must keep it enabled.
+            $rules[$rule] = ($settings['enabled'] ?? true) && in_array($rule, self::ENABLED_BY_EXTENDS, strict: true)
+                ? ['enabled' => true, ...$settings]
+                : $settings;
         }
 
         if ($this->leavesOutDocs()) {

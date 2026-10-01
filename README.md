@@ -385,7 +385,7 @@ cousins rather than ports:
 | `PEAR.NamingConventions.ValidClassName` | `class-name` | 21% |
 | `PSR2.Files.ClosingTag` | `no-closing-tag` | 80% |
 | `Squiz.PHP.DisallowMultipleAssignments` | `no-multi-assignments` | 22% |
-| `Squiz.PHP.Eval.Discouraged` | `no-eval` | 100% |
+| `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
 | `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` | - |
 

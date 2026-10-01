@@ -131,6 +131,38 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringNotContainsString('missing-docs', $result['toml']);
     }
 
+    /**
+     * @return iterable<string, array{string, null|string}>
+     */
+    public static function sharedRuleRulesets(): iterable
+    {
+        $only = '<rule ref="WordPress-Extra"><exclude name="Generic.PHP.LowerCaseConstant"/></rule>';
+        yield 'one of the two sniffs excluded' => [$only, null];
+        $both =
+            '<rule ref="WordPress-Extra"><exclude name="Generic.PHP.LowerCaseConstant"/>'
+            . '<exclude name="Generic.PHP.LowerCaseKeyword"/></rule>';
+        yield 'both excluded' => [$both, 'lowercase-keyword = { enabled = false }'];
+        $levels = '<rule ref="WordPress-Extra"/><rule ref="Generic.PHP.LowerCaseConstant"><type>warning</type></rule>';
+        yield 'level on one' => [$levels, null];
+    }
+
+    #[DataProvider('sharedRuleRulesets')]
+    public function testSharedCoreRuleOnlyChangesWhenItsSniffsAgree(string $rules, ?string $expected): void
+    {
+        $result = PhpcsMigration::migrate("<?xml version=\"1.0\"?><ruleset name=\"x\">{$rules}</ruleset>", 'phpcs.xml');
+        self::assertNotNull($result);
+
+        if ($expected === null) {
+            // A disagreement is listed and the rule left alone, so nothing is silently turned off.
+            self::assertStringNotContainsString('lowercase-keyword =', $result['toml']);
+            self::assertStringContainsString("Mago's lowercase-keyword covers", implode("\n", $result['unmapped']));
+
+            return;
+        }
+
+        self::assertStringContainsString($expected, $result['toml']);
+    }
+
     public function testSniffPropertiesBecomeSettings(): void
     {
         $xml = <<<'XML'
