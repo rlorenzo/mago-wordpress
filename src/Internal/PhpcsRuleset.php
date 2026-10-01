@@ -41,6 +41,32 @@ final class PhpcsRuleset
     private const SANITIZING_PROPERTIES = ['customSanitizingFunctions', 'customUnslashingSanitizingFunctions'];
 
     /**
+     * WPCS property => the composer.json `extra.mago-wordpress` key it feeds, and how a
+     * phpcs.xml ruleset gives it: `list` takes every value, `last` the last one set,
+     * `flag` the last one as a `true`/`false` string. `minimum_wp_version` (a config value)
+     * and `exclude` (read per sniff) are handled on their own.
+     *
+     * @var array<string, array{non-empty-string, 'list'|'last'|'flag'}>
+     */
+    public const PROPERTY_SETTINGS = [
+        'text_domain' => ['text-domains', 'list'],
+        'prefixes' => ['prefixes', 'list'],
+        'posts_per_page' => ['max-posts-per-page', 'last'],
+        'min_interval' => ['min-cron-interval', 'last'],
+        'additionalWordDelimiters' => ['additional-word-delimiters', 'last'],
+        'treat_files_as_scoped' => ['treat-files-as-scoped', 'flag'],
+        'strict_class_file_names' => ['strict-class-file-names', 'flag'],
+        'is_theme' => ['is-theme', 'flag'],
+        'customEscapingFunctions' => ['custom-escaping-functions', 'list'],
+        'customAutoEscapedFunctions' => ['custom-auto-escaped-functions', 'list'],
+        'customSanitizingFunctions' => ['custom-sanitizing-functions', 'list'],
+        'customUnslashingSanitizingFunctions' => ['custom-unslashing-sanitizing-functions', 'list'],
+        'custom_capabilities' => ['custom-capabilities', 'list'],
+        'allowed_custom_properties' => ['allowed-custom-properties', 'list'],
+        'custom_test_classes' => ['custom-test-classes', 'list'],
+    ];
+
+    /**
      * WPCS sniff refs, mapped to the property names each one accepts. Scoping by ref
      * keeps an unrelated sniff (or a project's own custom one) from feeding the wrong
      * setting just because it happens to declare a same-named property.
@@ -77,7 +103,7 @@ final class PhpcsRuleset
     ];
 
     /**
-     * The sniffs that `Report::SNIFF_RULES` maps, by the WPCS 3.4.1 standard that
+     * The sniffs that `SniffMap::RULES` maps, by the WPCS 3.4.1 standard that
      * pulls them in. `WordPress-Extra` includes `WordPress-Core`; `WordPress` includes
      * every sniff, including the three neither group lists (DirectDatabaseQuery,
      * SlowDBQuery, ValidatedSanitizedInput).
@@ -195,19 +221,16 @@ final class PhpcsRuleset
         $properties = self::properties($xpath);
 
         $values = [
-            'text-domains' => $properties['text_domain'] ?? [],
-            'prefixes' => $properties['prefixes'] ?? [],
             'minimum-wp-version' => self::minimumVersion($xpath),
-            'max-posts-per-page' => self::last($properties['posts_per_page'] ?? []),
-            'min-cron-interval' => self::last($properties['min_interval'] ?? []),
-            'additional-word-delimiters' => self::last($properties['additionalWordDelimiters'] ?? []),
-            'treat-files-as-scoped' => self::flag(self::last($properties['treat_files_as_scoped'] ?? [])),
-            'strict-class-file-names' => self::flag(self::last($properties['strict_class_file_names'] ?? [])),
-            'is-theme' => self::flag(self::last($properties['is_theme'] ?? [])),
             'exclude-groups' => self::excludeGroups($xpath),
         ];
-        foreach (Settings::CUSTOM_LISTS as $option => [$property]) {
-            $values[$option] = $properties[$property] ?? [];
+        foreach (self::PROPERTY_SETTINGS as $property => [$key, $shape]) {
+            $given = $properties[$property] ?? [];
+            $values[$key] = match ($shape) {
+                'list' => $given,
+                'last' => self::last($given),
+                'flag' => self::flag(self::last($given)),
+            };
         }
 
         $values['exclude-patterns'] = self::excludePatterns($xpath);
@@ -234,7 +257,7 @@ final class PhpcsRuleset
         return $standards;
     }
 
-    /** A WPCS code, or a code of a non-WordPress sniff that `Report::SNIFF_RULES` maps. */
+    /** A WPCS code, or a code of a non-WordPress sniff that `SniffMap::RULES` maps. */
     private static function isMapped(string $code): bool
     {
         if (str_starts_with($code, 'WordPress.')) {
@@ -243,7 +266,7 @@ final class PhpcsRuleset
 
         // A mapped sniff, one of its message codes, or a category or standard that holds one,
         // as phpcs applies a `<rule ref>`/`<exclude>` to every sniff under it.
-        foreach (array_keys(Report::SNIFF_RULES) as $sniff) {
+        foreach (array_keys(SniffMap::RULES) as $sniff) {
             if (str_starts_with($sniff . '.', $code . '.') || str_starts_with($code, $sniff . '.')) {
                 return true;
             }
@@ -332,7 +355,7 @@ final class PhpcsRuleset
         }
 
         $excluded = [];
-        foreach (array_keys(Report::SNIFF_RULES) as $sniff) {
+        foreach (array_keys(SniffMap::RULES) as $sniff) {
             if (in_array($sniff, $included, strict: true)) {
                 continue;
             }

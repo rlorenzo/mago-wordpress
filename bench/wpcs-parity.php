@@ -42,31 +42,17 @@ namespace PHPCSUtils\BackCompat {
 
 namespace {
     use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
-    use Rlorenzo\MagoWordPress\Internal\Report;
+    use Rlorenzo\MagoWordPress\Internal\PhpcsRuleset;
+    use Rlorenzo\MagoWordPress\Internal\SniffMap;
 
     require dirname(__DIR__) . '/vendor/autoload.php';
 
     /** phpcs:set property => composer.json extra.mago-wordpress key. */
-    const SETTING_KEYS = [
-        'text_domain' => 'text-domains',
-        'prefixes' => 'prefixes',
+    define('SETTING_KEYS', array_map(static fn(array $setting): string => $setting[0], PhpcsRuleset::PROPERTY_SETTINGS) + [
         'minimum_wp_version' => 'minimum-wp-version',
-        'custom_capabilities' => 'custom-capabilities',
-        'posts_per_page' => 'max-posts-per-page',
-        'min_interval' => 'min-cron-interval',
-        'additionalWordDelimiters' => 'additional-word-delimiters',
-        'customEscapingFunctions' => 'custom-escaping-functions',
-        'customAutoEscapedFunctions' => 'custom-auto-escaped-functions',
-        'customSanitizingFunctions' => 'custom-sanitizing-functions',
-        'customUnslashingSanitizingFunctions' => 'custom-unslashing-sanitizing-functions',
-        'allowed_custom_properties' => 'allowed-custom-properties',
-        'custom_test_classes' => 'custom-test-classes',
-        'treat_files_as_scoped' => 'treat-files-as-scoped',
-        'strict_class_file_names' => 'strict-class-file-names',
-        'is_theme' => 'is-theme',
         // Keyed by the sniff the directive names (settingsRegions()).
         'exclude' => 'exclude-groups',
-    ];
+    ]);
 
     /** What the test classes' setCliValues() set per file, mirrored here. */
     const CLI_OVERRIDES = [
@@ -118,7 +104,7 @@ namespace {
         $rows = [];
         $totals = ['files' => 0, 'expected' => 0, 'matched' => 0, 'missed' => 0, 'extra' => 0];
         $genericTotals = $totals;
-        foreach (Report::SNIFF_RULES as $sniff => $rules) {
+        foreach (SniffMap::RULES as $sniff => $rules) {
             if ($only !== null && $sniff !== $only) {
                 continue;
             }
