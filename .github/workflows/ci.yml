@@ -143,7 +143,7 @@ jobs:
           out=$(vendor/bin/mago lint --reporting-format short 2>&1 || true)
           echo "$out"
           for rule in wordpress/safe-redirect nonce-verification validated-sanitized-input prepared-sql; do
-            echo "$out" | grep -q "\[$rule\]" || {
+            grep -q "\[$rule\]" <<< "$out" || {
               echo "error: $rule was not reported" >&2
               exit 1
             }
