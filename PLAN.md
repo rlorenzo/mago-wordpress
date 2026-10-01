@@ -157,8 +157,7 @@ settings and scoped exclusions take effect (file-name 4,536 → 691, capabilitie
 **C.2** README "Migrating from phpcs".
 
 Follow-ups (not done): `<include-pattern>`; `customAllowedFunctionsList` (needs Sprint A — the
-rule is Mago's `no-error-control-operator`); per-sniff `exclude` groups; `custom_test_classes`;
-`treat_files_as_scoped`; `type="relative"` patterns inside a rule; mapping generic sniff refs to
+rule is Mago's `no-error-control-operator`); `type="relative"` patterns inside a rule; mapping generic sniff refs to
 the Mago core rules in README "Coming from WPCS" (e.g. `Generic.PHP.DiscourageGoto` → `no-goto`);
 a message-code ref re-includes its whole sniff when the standard leaves it out (`ponytail:` in
 `PhpcsRuleset::excludedByStandard`).
@@ -192,8 +191,7 @@ fixes neither. The other fixable WPCS sniffs are formatting (`WhiteSpace.*`, `Ar
 Known, documented shortfalls against the WPCS sniff each rule ports. Each is a small PR; each
 gets a WPCS `.inc` case added to the corpus.
 
-- `wordpress/cron-interval`: only inline closures are inspected; WPCS follows a named callback
-  declared in the same file. Resolve function/method names to declarations in the file.
+- `wordpress/cron-interval`: named callbacks declared in the same file — done (PR #2).
 - `wordpress/posts-per-page`, `wordpress/slow-db-query`: any array literal is checked; an
   `$args` variable passed to `WP_Query`/`get_posts` is not followed. WPCS is also literal-only,
   so this is parity today; only add if the bake-off shows misses.
@@ -201,21 +199,33 @@ gets a WPCS `.inc` case added to the corpus.
   phpcs's default severity and not ported. Leave it.
 - `wordpress/valid-variable-name`: WPCS's `allowed_custom_properties` — done in Sprint C
   (`allowed-custom-properties`).
-- `wordpress/discouraged-wp-functions`, `db-restricted-*`, `wp-date-time` and every other
-  `AbstractFunctionRestrictionsSniff` port: WPCS's per-sniff `exclude` property drops named
-  groups (`<element value="obfuscation"/>`). Not read; add `exclude-groups` keyed by sniff.
+- Per-sniff `exclude` groups — done (2026-09-30): `exclude-groups` (WPCS sniff => groups), read
+  per sniff from `phpcs.xml` and by `mago-wordpress migrate`, honoured through
+  `Report::excludesGroup()` by all 14 restriction sniffs this package ports. `ClassNameCase`
+  groups need `Lists::CLASS_NAME_CASE_BUNDLED_CLASSES` keyed by group (generator updated). Mago's
+  core rules (`use-wp-functions`, `no-unescaped-output`, `no-debug-symbols`) cannot honour it.
 - Defaults mirror the out-of-the-box `WordPress` ruleset (Core + Docs + Extra). That is why
   `wordpress/posix-functions` ships disabled: the `WordPress` ruleset excludes that sniff.
   Any future rule whose sniff is not in `WordPress` ships disabled too.
-- `wordpress/file-name`: WPCS properties `strict_class_file_names` (default true) and `is_theme` are not read.
+- `wordpress/file-name`: `strict_class_file_names` and `is_theme` — done (2026-09-30), plus
+  namespace-aware test-class detection. The parity harness now runs the sniff's 78
+  `FileNameUnitTests/` files (was 1): 27/27, 3 extras for the `.inc` hyphenation exceptions WPCS
+  only adds under `PHP_CODESNIFFER_IN_TESTS`.
+- `custom_test_classes` (`custom-test-classes`, one list for FileName, GlobalVariablesOverride and
+  PrefixAllGlobals) and `treat_files_as_scoped` (`treat-files-as-scoped`) — done (2026-09-30).
+  GlobalVariablesOverride extras 12 → 2 (a PHP 7-only `namespace My \ /* */ Ns;` and WPCS's
+  deliberate parse-error file).
+- `wordpress/prepared-sql-placeholders`: the extra `QuotedDynamicPlaceholderGeneration` on
+  wordpress-develop's `class-wp-posts-list-table.php` — fixed (2026-09-30). phpcs tokenizes a
+  multi-line string per line and WPCS looks back only at the last, so a quote before `implode()`
+  after a multi-line string is never reported there.
 
 **E.1 WPCS `.inc` sweep — done (2026-09-30).** `bench/wpcs-parity.php` runs every WPCS sniff's
 own test files through the mapped rule; results in `bench/results/wpcs-parity.md`. Suite recall
 went 76% → 89% over four waves of rule fixes (PRs #2 and #3). Every extension rule with a WPCS
 test is at 100% except the accepted cases: test-only sniff groups (`RestrictedClasses` .1/.2/.3,
-`RestrictedFunctions` line 94), `phpcs:set exclude[]` / `custom_test_classes` /
-`treat_files_as_scoped` (no setting; candidates for Sprint C), WPCS's deliberate parse-error
-files, and severity-3 "undetermined" warnings phpcs hides at its default severity
+`RestrictedFunctions` line 94), the `.inc` FileName hyphenation exceptions WPCS adds only in
+its own tests, WPCS's deliberate parse-error files, and severity-3 "undetermined" warnings phpcs hides at its default severity
 (`Capabilities`, `ValidPostTypeSlug`). What remains short is Mago's core rules, which is Sprint
 A's evidence:
 

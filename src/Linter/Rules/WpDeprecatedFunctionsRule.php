@@ -59,6 +59,10 @@ final class WpDeprecatedFunctionsRule extends CallRule
 
     protected function inspectReference(LintContext $context, Node $reference, string $name): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'deprecated_functions')) {
+            return;
+        }
+
         $entry = Lists::DEPRECATED_FUNCTIONS[$name];
         $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $entry['version']);
 

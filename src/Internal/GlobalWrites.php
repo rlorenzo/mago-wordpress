@@ -58,8 +58,9 @@ final class GlobalWrites
     }
 
     /**
-     * Maps each function-like scope's id to the variables it imports with
-     * `global`, each mapped to the start of its earliest `global` statement.
+     * Maps each function-like scope's id (the program's for the file scope) to the
+     * variables it imports with `global`, each mapped to the start of its earliest
+     * `global` statement.
      *
      * @return array<int, array<string, int>>
      */
@@ -67,10 +68,8 @@ final class GlobalWrites
     {
         $imports = [];
         foreach (NodeIndex::ofKind($file, $program, NodeKind::Global) as $global) {
-            $scope = self::nearestScope($file, $global);
-            if ($scope === null) {
-                continue;
-            }
+            // A top-level `global` keys on the program node, for `treat_files_as_scoped`.
+            $scope = self::nearestScope($file, $global) ?? $program;
 
             // Descendants arrive in source order, so the first import is the earliest.
             $imports[$scope->id][self::ANY_IMPORT] ??= $global->span->start;

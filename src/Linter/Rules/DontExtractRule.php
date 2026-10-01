@@ -43,6 +43,10 @@ final class DontExtractRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'extract')) {
+            return;
+        }
+
         $this->report->issue(
             $context,
             Issue::new('Do not use `extract()`', $context->node->span, '`extract()` call detected')->withNote(

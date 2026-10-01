@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
+use Rlorenzo\MagoWordPress\Settings;
 
 use function array_key_exists;
 use function basename;
@@ -31,11 +32,9 @@ use function substr;
  * Ports `WordPress.Files.FileName`.
  *
  * Runs once per file from `NodeKind::Program`, which materializes the whole
- * file tree. `is_theme` (theme template-hierarchy exceptions) and
- * `strict_class_file_names` have no `Settings` field, so this hardcodes the
- * WPCS defaults: `is_theme = false` (theme exceptions never apply) and
- * `strict_class_file_names = true` (class files always need the `class-`
- * prefix check).
+ * file tree. The sniff's `is_theme` and `strict_class_file_names` properties are
+ * the `is-theme` and `strict-class-file-names` settings.
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class FileNameRule implements Rule
 {
@@ -56,8 +55,16 @@ final class FileNameRule implements Rule
         'functions.wp-styles.php' => true,
     ];
 
+    /**
+     * Theme template-hierarchy file names allowed under `is_theme`, as in WPCS: template
+     * prefixes followed by a dash, and top-level MIME types optionally followed by an
+     * underscore and a subtype.
+     */
+    private const THEME_EXCEPTIONS_REGEX = '/^(?:(?:archive|category|content|embed|page|single|tag|taxonomy)-[^.]+|(?:application|audio|example|image|message|model|multipart|text|video)(?:_[^.]+)?)\.(?:php|inc)$/D';
+
     public function __construct(
         private readonly Report $report,
+        private readonly Settings $settings,
     ) {}
 
     public function getDefinition(): RuleDefinition
@@ -78,7 +85,15 @@ final class FileNameRule implements Rule
         $fileName = basename($file->path);
 
         $class = $file->getFirstDescendant($context->node, NodeKind::Class_);
-        if ($class !== null && TestClasses::is($file, $class, namespace: null)) {
+        if (
+            $class !== null
+            && TestClasses::is(
+                $file,
+                $class,
+                TestClasses::namespaceOf($file, $class),
+                $this->settings->customList('custom-test-classes'),
+            )
+        ) {
             // WPCS exempts unit test classes from this sniff entirely.
             return;
         }
@@ -86,7 +101,9 @@ final class FileNameRule implements Rule
         $this->checkHyphenated($context, $fileName);
 
         if ($class !== null) {
-            $this->checkClassPrefix($context, $class, $fileName);
+            if ($this->settings->strictClassFileNames) {
+                $this->checkClassPrefix($context, $class, $fileName);
+            }
 
             return;
         }
@@ -118,6 +135,10 @@ final class FileNameRule implements Rule
 
         $expected = strtolower((string) preg_replace('/[^a-zA-Z0-9]/', replacement: '-', subject: $name)) . $extension;
         if ($fileName === $expected || array_key_exists($fileName, self::HYPHENATION_EXCEPTIONS)) {
+            return;
+        }
+
+        if ($this->settings->isTheme && preg_match(self::THEME_EXCEPTIONS_REGEX, $fileName) === 1) {
             return;
         }
 

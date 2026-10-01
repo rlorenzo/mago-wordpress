@@ -102,6 +102,9 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var list<string> Regexes matching a namespace name that starts with a prefix. */
     private readonly array $namespacePatterns;
 
+    /** @var list<string> WPCS `custom_test_classes`, lowercased. */
+    private readonly array $customTestClasses;
+
     /** @var null|array<string, true> */
     private ?array $wantedCalls = null;
 
@@ -112,6 +115,7 @@ final class PrefixAllGlobalsRule implements Rule
         private readonly Report $report,
         Settings $settings,
     ) {
+        $this->customTestClasses = $settings->customList('custom-test-classes');
         $prefixes = [];
         $problems = [];
         foreach ($settings->prefixes as $prefix) {
@@ -619,7 +623,7 @@ final class PrefixAllGlobalsRule implements Rule
         }
 
         foreach ($classLikes as $classLike) {
-            if (TestClasses::is($file, $classLike, $namespace)) {
+            if (TestClasses::is($file, $classLike, $namespace, $this->customTestClasses)) {
                 return true;
             }
         }

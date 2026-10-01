@@ -28,6 +28,7 @@ use function trim;
  *
  * `Lists::WP_DATETIME_RESTRICTED` also lists `date_default_timezone_set()`,
  * which the restricted-functions check reports too.
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class WpDateTimeRule extends CallRule
 {
@@ -85,7 +86,8 @@ final class WpDateTimeRule extends CallRule
     private function reportRestrictedFunction(LintContext $context, string $name): void
     {
         $details = self::RESTRICTED_MESSAGES[$name] ?? null;
-        if ($details === null) {
+        $group = $name === 'date' ? 'date' : 'timezone_change';
+        if ($details === null || $this->report->excludesGroup(self::SNIFF, $group)) {
             return;
         }
 
@@ -96,7 +98,7 @@ final class WpDateTimeRule extends CallRule
                 $context->node->span,
                 "`{$name}()` uses the runtime timezone, not the WordPress site timezone",
             )->withNote($details['reason'])->withHelp($details['help']),
-            [self::SNIFF . '.' . ($name === 'date' ? 'date_date' : "timezone_change_{$name}")],
+            [self::SNIFF . ".{$group}_{$name}"],
         );
     }
 

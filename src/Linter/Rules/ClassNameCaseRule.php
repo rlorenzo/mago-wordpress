@@ -31,7 +31,8 @@ use function strtolower;
  * The sniff's `$wp_classes` group lives in `CoreClasses`; its other groups
  * (default themes and bundled libraries such as getID3, PHPMailer, Requests,
  * SimplePie, Avifinfo and the AI Client) in
- * `Lists::CLASS_NAME_CASE_BUNDLED_CLASSES`.
+ * `Lists::CLASS_NAME_CASE_BUNDLED_CLASSES`, keyed by group so the sniff's `exclude`
+ * property can drop one.
  *
  * The class name is resolved with `SourceFile::getResolvedName()`, which
  * plays the part of the sniff's own `get_namespaced_classname()`: a bare,
@@ -47,7 +48,7 @@ final class ClassNameCaseRule implements Rule
     private ?FileGate $gate = null;
 
     /** @var array<string, string>|null lowercase name => properly cased name */
-    private static ?array $properCase = null;
+    private ?array $properCase = null;
 
     public function __construct(
         private readonly Report $report,
@@ -79,7 +80,7 @@ final class ClassNameCaseRule implements Rule
             $segments = explode(separator: '\\', string: $name);
 
             return array_pop($segments);
-        }, self::names()));
+        }, $this->names()));
         if (!$this->gate->passes($context->file)) {
             return;
         }
@@ -116,7 +117,7 @@ final class ClassNameCaseRule implements Rule
 
         $name = ltrim($resolved, characters: '\\');
 
-        $properCase = self::properCaseMap()[strtolower($name)] ?? null;
+        $properCase = $this->properCaseMap()[strtolower($name)] ?? null;
         if ($properCase === null || $properCase === $name) {
             // Not a listed class, or already using the proper case.
             return;
@@ -133,18 +134,30 @@ final class ClassNameCaseRule implements Rule
     }
 
     /**
+     * The listed classes, less any group the sniff's `exclude` property drops.
+     *
      * @return list<string>
      */
-    private static function names(): array
+    private function names(): array
     {
-        return [...CoreClasses::NAMES, ...Lists::CLASS_NAME_CASE_BUNDLED_CLASSES];
+        $groups = ['wp_classes' => CoreClasses::NAMES, ...Lists::CLASS_NAME_CASE_BUNDLED_CLASSES];
+        $names = [];
+        foreach ($groups as $group => $classes) {
+            if ($this->report->excludesGroup(self::SNIFF, $group)) {
+                continue;
+            }
+
+            $names = [...$names, ...$classes];
+        }
+
+        return $names;
     }
 
     /**
      * @return array<string, string>
      */
-    private static function properCaseMap(): array
+    private function properCaseMap(): array
     {
-        return self::$properCase ??= array_combine(array_map(strtolower(...), self::names()), self::names());
+        return $this->properCase ??= array_combine(array_map(strtolower(...), $this->names()), $this->names());
     }
 }

@@ -62,6 +62,10 @@ final class DbRestrictedClassesRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'mysql')) {
+            return;
+        }
+
         // Every match puts a restricted class name directly in the source.
         $this->gate ??= FileGate::forWords(Lists::DB_RESTRICTED_CLASSES);
         if (!$this->gate->passes($context->file)) {

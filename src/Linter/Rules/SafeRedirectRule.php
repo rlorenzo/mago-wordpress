@@ -43,6 +43,10 @@ final class SafeRedirectRule extends CallRule
 
     protected function inspect(LintContext $context, CallExpression $call, string $name): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'wp_redirect')) {
+            return;
+        }
+
         $this->report->issue(
             $context,
             Issue::new('wp_redirect() does not validate the redirect target.', $context->node->span)->withHelp(

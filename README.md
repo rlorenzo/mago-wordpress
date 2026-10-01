@@ -63,10 +63,17 @@ takes as sniff properties from your project instead. Put them in `composer.json`
       "custom-unslashing-sanitizing-functions": [],
       "custom-capabilities": [],
       "allowed-custom-properties": [],
+      "custom-test-classes": [],
       "max-posts-per-page": 100,
       "min-cron-interval": 900,
       "additional-word-delimiters": "",
       "honor-phpcs-comments": true,
+      "strict-class-file-names": true,
+      "is-theme": false,
+      "treat-files-as-scoped": false,
+      "exclude-groups": {
+        "WordPress.PHP.DiscouragedPHPFunctions": ["serialize"]
+      },
       "exclude-patterns": {
         "WordPress.Files.FileName": ["/tests/*"],
         "WordPress.PHP.YodaConditions": ["*"]
@@ -83,7 +90,8 @@ WordPress versions that support it.
 
 If there is no `extra.mago-wordpress` block, the worker reads the same values from your existing
 `phpcs.xml` (`text_domain`, `prefixes`, `minimum_wp_version`, `customEscapingFunctions`,
-`posts_per_page`, `min_interval`, `additionalWordDelimiters`, `allowed_custom_properties`, ...) and the
+`posts_per_page`, `min_interval`, `additionalWordDelimiters`, `allowed_custom_properties`, `exclude`,
+`custom_test_classes`, `strict_class_file_names`, `is_theme`, `treat_files_as_scoped`, ...) and the
 codes it turns off (see `exclude-patterns` below), so a project migrating from phpcs needs no new configuration. An explicitly present but empty `extra.mago-wordpress` block
 (`{"extra": {"mago-wordpress": {}}}`) means "use the defaults" and does not fall back to `phpcs.xml`.
 
@@ -110,6 +118,16 @@ everything regardless. There is no `phpcs.xml` equivalent.
 
 `allowed-custom-properties` lists mixed-case object properties `wordpress/valid-variable-name`
 accepts (WPCS's `allowed_custom_properties`), such as `childNodes` for `DOMDocument`.
+
+Other WPCS sniff properties, under their own names:
+
+| Setting | WPCS property | Effect |
+|:---|:---|:---|
+| `exclude-groups` | `exclude` on a function-restriction sniff | WPCS sniff => the function groups it skips, e.g. `"WordPress.PHP.DevelopmentFunctions": ["error_log"]`. Honoured by every sniff this package ports (`DateTime.RestrictedFunctions`, `DB.RestrictedClasses`, `DB.RestrictedFunctions`, `DB.SlowDBQuery`, `PHP.DevelopmentFunctions`, `PHP.DiscouragedPHPFunctions`, `PHP.DontExtract`, `PHP.RestrictedPHPFunctions`, `Security.SafeRedirect`, `WP.ClassNameCase`, `WP.DeprecatedClasses`, `WP.DeprecatedFunctions`, `WP.DiscouragedFunctions`, `WP.PostsPerPage`); not by Mago's core rules (`WP.AlternativeFunctions`, `Security.EscapeOutput`). |
+| `custom-test-classes` | `custom_test_classes` | extra test base classes (fully qualified) whose subclasses `file-name`, `global-variables-override` and `prefix-all-globals` skip. WPCS sets it per sniff; here it is one list. |
+| `strict-class-file-names` | `strict_class_file_names` | `false` stops `file-name` requiring the `class-` prefix on class files. |
+| `is-theme` | `is_theme` | `true` lets `file-name` accept theme template-hierarchy names (`single-my_post_type.php`, `taxonomy-post_format-...`, `text_plain.php`). |
+| `treat-files-as-scoped` | `treat_files_as_scoped` | `true` makes `global-variables-override` treat each file like a function: file-scope writes count only after a `global` statement (`$GLOBALS[...]` writes still count). |
 
 Mago (as of 1.50) rejects extension rule codes under `[linter.rules]` in `mago.toml` (`unknown field
 "wordpress/..."`), so this package's rules are turned off with `exclude-patterns` instead: WPCS code
@@ -292,7 +310,8 @@ vendor/bin/mago-wordpress migrate --write
 
 Listed as not migrated: `<type>` on this package's rules or on a single message code, exclusions of
 a message code that only a Mago core rule ports (core rules have no message codes), `<include-pattern>`,
-`type="relative"` patterns inside a rule, properties with no setting (`customAllowedFunctionsList`, ...),
+`type="relative"` patterns inside a rule, properties with no setting (`customAllowedFunctionsList`,
+`exclude` on a sniff only a Mago core rule ports, ...),
 custom or third-party standards (`WooCommerce-Core`, `Jetpack`: their contents are not followed, so
 every extension rule stays on), non-WordPress sniffs (see the table below for Mago rules that cover
 some), `PHPCompatibility` and `testVersion` (PHP 8.1+ target), and `<arg>`/`<ini>`. Inline
@@ -302,7 +321,7 @@ On wordpress-develop's `phpcs.xml.dist` (`WordPress-Core`): 54 of 55 `<exclude-p
 globs (`/themes/(?!twenty)*` does not), the Extra-only and WordPress-only rules are turned off, and the
 file- and message-scoped exclusions carry over. Linting the migrated project, every rule this package
 ports reports the same count as phpcs with that ruleset (file-name 10, valid-hook-name 1,
-wp-date-time 1, valid-variable-name 0) except one extra `prepared-sql-placeholders` report; the gaps
+wp-date-time 1, valid-variable-name 0, prepared-sql-placeholders 2); the gaps
 are Mago's core rules (`prepared-sql` 242 vs phpcs's 215, `no-error-control-operator` 151 because
 `customAllowedFunctionsList` has no setting). 16 items are listed as not migrated, mostly
 `Generic`/`PEAR` sniff refs and `<type>` on extension rules.

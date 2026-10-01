@@ -64,6 +64,10 @@ final class WpDeprecatedClassesRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'deprecated_classes')) {
+            return;
+        }
+
         // Every match puts a deprecated class name directly in the source.
         $this->gate ??= FileGate::forWords(array_keys(Lists::DEPRECATED_CLASSES));
         if (!$this->gate->passes($context->file)) {

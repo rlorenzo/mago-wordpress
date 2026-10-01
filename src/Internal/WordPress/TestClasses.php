@@ -19,6 +19,7 @@ use function substr;
  * WordPress/PHPUnit test class.
  *
  * @internal
+ * @mago-expect lint:kan-defect
  */
 final class TestClasses
 {
@@ -43,18 +44,44 @@ final class TestClasses
     private function __construct() {}
 
     /**
+     * The lowercased namespace a node is declared in, or '' in the global namespace.
+     */
+    public static function namespaceOf(SourceFile $file, Node $node): string
+    {
+        foreach ($file->getAncestors($node) as $ancestor) {
+            if ($ancestor->kind !== NodeKind::Namespace) {
+                continue;
+            }
+
+            foreach ($file->getChildren($ancestor) as $child) {
+                if ($child->kind === NodeKind::Identifier) {
+                    return strtolower($file->getText($child));
+                }
+            }
+
+            return '';
+        }
+
+        return '';
+    }
+
+    /**
      * Whether the class-like's own name, or the first name after its
      * `extends`, is a known test class. `use` imports are not followed.
      *
      * @param ?string $namespace The lowercased enclosing namespace to resolve
      *                           names against, or null to match on the last
      *                           `\`-separated segment of a name only.
+     * @param list<string> $custom WPCS `custom_test_classes`, lowercased
      */
-    public static function is(SourceFile $file, Node $classLike, ?string $namespace): bool
+    public static function is(SourceFile $file, Node $classLike, ?string $namespace, array $custom = []): bool
     {
         foreach ($file->getChildren($classLike) as $child) {
             // The declared name precedes the `extends` clause.
-            if ($child->kind === NodeKind::LocalIdentifier && self::known($file->getText($child), $namespace)) {
+            if (
+                $child->kind === NodeKind::LocalIdentifier
+                && self::known($file->getText($child), $namespace, $custom)
+            ) {
                 return true;
             }
 
@@ -68,7 +95,7 @@ final class TestClasses
                     || $name->kind === NodeKind::QualifiedIdentifier
                     || $name->kind === NodeKind::FullyQualifiedIdentifier
                 ) {
-                    return self::known($file->getText($name), $namespace);
+                    return self::known($file->getText($name), $namespace, $custom);
                 }
             }
 
@@ -78,7 +105,10 @@ final class TestClasses
         return false;
     }
 
-    private static function known(string $name, ?string $namespace): bool
+    /**
+     * @param list<string> $custom
+     */
+    private static function known(string $name, ?string $namespace, array $custom): bool
     {
         $name = strtolower($name);
         $lastSlash = strrchr($name, needle: '\\');
@@ -89,6 +119,6 @@ final class TestClasses
             default => $name,
         };
 
-        return in_array($qualified, self::NAMES, strict: true);
+        return in_array($qualified, self::NAMES, strict: true) || in_array($qualified, $custom, strict: true);
     }
 }

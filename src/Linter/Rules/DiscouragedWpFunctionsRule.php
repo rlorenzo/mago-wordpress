@@ -122,6 +122,11 @@ final class DiscouragedWpFunctionsRule extends CallRule
     {
         $details = self::DISCOURAGED_FUNCTIONS[$name] ?? null;
         if ($details !== null) {
+            // Each WPCS group here is named after its one function.
+            if ($this->report->excludesGroup(self::SNIFF, $name)) {
+                return;
+            }
+
             $this->report->issue(
                 $context,
                 Issue::new(
@@ -140,6 +145,11 @@ final class DiscouragedWpFunctionsRule extends CallRule
             return;
         }
 
+        [$sniff, $wpcsGroup] = self::wpcsGroup($group, $name);
+        if ($this->report->excludesGroup($sniff, $wpcsGroup)) {
+            return;
+        }
+
         $messages = self::GROUP_MESSAGES[$group];
         $this->report->issue(
             $context,
@@ -148,22 +158,26 @@ final class DiscouragedWpFunctionsRule extends CallRule
                 $reference->span,
                 "`{$name}()` is discouraged by the WordPress Coding Standards \"{$group}\" function group",
             )->withNote($messages['note'])->withHelp($messages['help']),
-            [self::groupCode($group, $name)],
+            ["{$sniff}.{$wpcsGroup}_{$name}"],
         );
     }
 
     /**
-     * The WPCS message code, which joins the sniff's own group name and the function.
+     * The WPCS sniff and group that report the function: the message code joins the
+     * group and the function name.
+     *
+     * @return array{string, string}
      */
-    private static function groupCode(string $group, string $name): string
+    private static function wpcsGroup(string $group, string $name): array
     {
         if ($group !== 'development') {
-            return "WordPress.PHP.DiscouragedPHPFunctions.{$group}_{$name}";
+            return ['WordPress.PHP.DiscouragedPHPFunctions', $group];
         }
 
-        $group = $name === 'error_reporting' || $name === 'phpinfo' ? 'prevent_path_disclosure' : 'error_log';
-
-        return "WordPress.PHP.DevelopmentFunctions.{$group}_{$name}";
+        return [
+            'WordPress.PHP.DevelopmentFunctions',
+            $name === 'error_reporting' || $name === 'phpinfo' ? 'prevent_path_disclosure' : 'error_log',
+        ];
     }
 
     /**

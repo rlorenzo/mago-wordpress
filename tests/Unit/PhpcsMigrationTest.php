@@ -174,6 +174,85 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringNotContainsString('missing-docs', $result['toml']);
     }
 
+    public function testSniffPropertiesBecomeSettings(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress"/>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array"><element value="error_log"/></property></properties>
+              </rule>
+              <rule ref="WordPress.WP.DiscouragedFunctions">
+                <properties><property name="exclude" type="array" value="query_posts, wp_reset_query"/></properties>
+              </rule>
+              <rule ref="WordPress.WP.AlternativeFunctions">
+                <properties><property name="exclude" type="array"><element value="curl"/></property></properties>
+              </rule>
+              <rule ref="WordPress.Files.FileName">
+                <properties>
+                  <property name="strict_class_file_names" value="false"/>
+                  <property name="is_theme" value="true"/>
+                  <property name="custom_test_classes" type="array"><element value="\My\TestCase"/></property>
+                </properties>
+              </rule>
+              <rule ref="WordPress.WP.GlobalVariablesOverride">
+                <properties><property name="treat_files_as_scoped" value="true"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+        self::assertSame(
+            [
+                'WordPress.PHP.DevelopmentFunctions' => ['error_log'],
+                'WordPress.WP.DiscouragedFunctions' => ['query_posts', 'wp_reset_query'],
+            ],
+            $result['extra']['exclude-groups'] ?? null,
+        );
+        self::assertFalse($result['extra']['strict-class-file-names'] ?? null);
+        self::assertTrue($result['extra']['is-theme'] ?? null);
+        self::assertTrue($result['extra']['treat-files-as-scoped'] ?? null);
+        self::assertSame(['\My\TestCase'], $result['extra']['custom-test-classes'] ?? null);
+        // Mago's core `use-wp-functions` ports AlternativeFunctions and has no group setting.
+        self::assertContains('property exclude on WordPress.WP.AlternativeFunctions: no setting', $result['unmapped']);
+
+        $settings = Settings::fromArray($result['extra']);
+        self::assertSame(['my\testcase'], $settings->customList('custom-test-classes'));
+        self::assertFalse($settings->strictClassFileNames);
+    }
+
+    public function testRepeatedExcludePropertyReplacesUnlessExtended(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress"/>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array"><element value="error_log"/></property></properties>
+              </rule>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array"><element value="prevent_path_disclosure"/></property></properties>
+              </rule>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array" extend="true"><element value="error_log"/></property></properties>
+              </rule>
+              <rule ref="WordPress.WP.DiscouragedFunctions">
+                <properties><property name="exclude" type="array"><element value="query_posts"/></property></properties>
+              </rule>
+              <rule ref="WordPress.WP.DiscouragedFunctions">
+                <properties><property name="exclude" type="array"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        self::assertSame(
+            ['WordPress.PHP.DevelopmentFunctions' => ['prevent_path_disclosure', 'error_log']],
+            Settings::fromArray(PhpcsRuleset::values($xml))->excludeGroups,
+        );
+    }
+
     public function testWordPressStandardExcludesNothing(): void
     {
         $xml = '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress"/></ruleset>';

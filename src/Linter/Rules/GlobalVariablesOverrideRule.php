@@ -17,11 +17,9 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
+use Rlorenzo\MagoWordPress\Settings;
 
-use function array_filter;
-use function array_values;
 use function in_array;
-use function strtolower;
 use function substr;
 use function trim;
 
@@ -62,6 +60,7 @@ final class GlobalVariablesOverrideRule implements Rule
 
     public function __construct(
         private readonly Report $report,
+        private readonly Settings $settings,
     ) {}
 
     public function getDefinition(): RuleDefinition
@@ -125,7 +124,12 @@ final class GlobalVariablesOverrideRule implements Rule
             return;
         }
 
+        // `treat_files_as_scoped`: the file scope needs a `global` import too, like a function.
         $scope = GlobalWrites::nearestScope($file, $variable);
+        if ($scope === null && $this->settings->treatFilesAsScoped) {
+            $scope = $context->node;
+        }
+
         if ($scope !== null && ($importsByScope[$scope->id][$text] ?? PHP_INT_MAX) >= $variable->span->start) {
             return;
         }
@@ -173,7 +177,7 @@ final class GlobalVariablesOverrideRule implements Rule
     private function report(LintContext $context, Node $spanNode, string $name): void
     {
         // WPCS skips test classes whole, so tests may set up any global.
-        if (self::inTestClass($context->file, $spanNode)) {
+        if ($this->inTestClass($context->file, $spanNode)) {
             return;
         }
 
@@ -190,29 +194,15 @@ final class GlobalVariablesOverrideRule implements Rule
         );
     }
 
-    private static function inTestClass(SourceFile $file, Node $node): bool
+    private function inTestClass(SourceFile $file, Node $node): bool
     {
-        $namespace = '';
-        $classLikes = [];
+        $namespace = TestClasses::namespaceOf($file, $node);
+        $custom = $this->settings->customList('custom-test-classes');
         foreach ($file->getAncestors($node) as $ancestor) {
-            if ($ancestor->kind === NodeKind::Namespace) {
-                $names = array_filter(
-                    $file->getChildren($ancestor),
-                    static fn(Node $child): bool => $child->kind === NodeKind::Identifier,
-                );
-                $identifier = array_values($names)[0] ?? null;
-                $namespace = $identifier === null ? '' : strtolower($file->getText($identifier));
-
-                break;
-            }
-
-            if (in_array($ancestor->kind, self::CLASS_LIKE_KINDS, strict: true)) {
-                $classLikes[] = $ancestor;
-            }
-        }
-
-        foreach ($classLikes as $classLike) {
-            if (TestClasses::is($file, $classLike, $namespace)) {
+            if (
+                in_array($ancestor->kind, self::CLASS_LIKE_KINDS, strict: true)
+                && TestClasses::is($file, $ancestor, $namespace, $custom)
+            ) {
                 return true;
             }
         }

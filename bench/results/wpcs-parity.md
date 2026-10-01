@@ -15,6 +15,67 @@ files 2 and 3, which depend on test-only sniff groups, are skipped.
 
 Snapshots below are newest first; the top table is the current state.
 
+After Sprint E, 2026-09-30: the `exclude` (group), `custom_test_classes`, `treat_files_as_scoped`,
+`allowed_custom_properties`, `is_theme` and `strict_class_file_names` properties now have settings,
+so their `phpcs:set` directives are honoured, and `WordPress.Files.FileName` runs the 78 files in
+`FileNameUnitTests/` (was 1; the directives before the open tag apply to the whole file). Extras
+194 → 176 with 77 more files; no row dropped. Remaining extension-rule extras: the three `.inc`
+hyphenation exceptions WPCS adds only in its own tests (FileName), a PHP 7-only namespace and a
+parse-error file (GlobalVariablesOverride), `phpinfo()` from Mago's core `no-debug-symbols`, which
+has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented cases.
+
+| WPCS sniff | Files | Expected lines | Matched | Missed | Extra | Recall | Notes |
+|:---|---:|---:|---:|---:|---:|---:|:---|
+| `WordPress.CodeAnalysis.AssignmentInTernaryCondition` | 1 | 11 | 11 | 0 | 0 | 100% |  |
+| `WordPress.CodeAnalysis.EscapedNotTranslated` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `WordPress.DateTime.CurrentTimeTimestamp` | 1 | 10 | 10 | 0 | 0 | 100% |  |
+| `WordPress.DateTime.RestrictedFunctions` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `WordPress.DB.DirectDatabaseQuery` | 2 | 70 | 68 | 2 | 4 | 97% | DirectDatabaseQueryUnitTest.1.inc: no setting for phpcs:set customCacheGetFunctions, customCacheSetFunctions, customCacheDeleteFunctions |
+| `WordPress.DB.PreparedSQL` | 3 | 33 | 28 | 5 | 9 | 85% |  |
+| `WordPress.DB.PreparedSQLPlaceholders` | 1 | 106 | 106 | 0 | 0 | 100% | PreparedSQLPlaceholdersUnitTest.inc: 5 phpcs:set directive(s), honoured by region |
+| `WordPress.DB.RestrictedClasses` | 2 | 37 | 35 | 2 | 0 | 95% | RestrictedClassesUnitTest.1.inc: 3 phpcs:set directive(s), honoured by region; RestrictedClassesUnitTest.2.inc skipped: test-only sniff groups; RestrictedClassesUnitTest.3.inc skipped: test-only sniff groups |
+| `WordPress.DB.RestrictedFunctions` | 1 | 42 | 41 | 1 | 0 | 98% |  |
+| `WordPress.DB.SlowDBQuery` | 1 | 8 | 8 | 0 | 0 | 100% |  |
+| `WordPress.Files.FileName` | 78 | 27 | 27 | 0 | 3 | 100% |  |
+| `WordPress.NamingConventions.PrefixAllGlobals` | 9 | 99 | 96 | 3 | 5 | 97% | PrefixAllGlobalsUnitTest.1.inc: 17 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.4.inc: 4 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.5.inc: 1 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.6.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.7.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.8.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.9.inc: 2 phpcs:set directive(s), honoured by region |
+| `WordPress.NamingConventions.ValidFunctionName` | 2 | 29 | 29 | 0 | 0 | 100% |  |
+| `WordPress.NamingConventions.ValidHookName` | 3 | 55 | 55 | 0 | 0 | 100% | ValidHookNameUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region; ValidHookNameUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region |
+| `WordPress.NamingConventions.ValidPostTypeSlug` | 2 | 29 | 28 | 1 | 1 | 97% |  |
+| `WordPress.NamingConventions.ValidVariableName` | 1 | 70 | 70 | 0 | 0 | 100% | ValidVariableNameUnitTest.inc: 2 phpcs:set directive(s), honoured by region |
+| `WordPress.PHP.DevelopmentFunctions` | 1 | 16 | 16 | 0 | 1 | 100% | DevelopmentFunctionsUnitTest.inc: 3 phpcs:set directive(s), honoured by region |
+| `WordPress.PHP.DiscouragedPHPFunctions` | 1 | 24 | 24 | 0 | 0 | 100% |  |
+| `WordPress.PHP.DontExtract` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `WordPress.PHP.IniSet` | 1 | 28 | 28 | 0 | 18 | 100% |  |
+| `WordPress.PHP.NoSilencedErrors` | 1 | 29 | 29 | 0 | 14 | 100% | NoSilencedErrorsUnitTest.inc: no setting for phpcs:set customAllowedFunctionsList, usePHPFunctionsList, context_length |
+| `WordPress.PHP.PregQuoteDelimiter` | 1 | 5 | 4 | 1 | 2 | 80% |  |
+| `WordPress.PHP.RestrictedPHPFunctions` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `WordPress.PHP.StrictInArray` | 1 | 15 | 15 | 0 | 1 | 100% |  |
+| `WordPress.PHP.TypeCasts` | 1 | 10 | 10 | 0 | 0 | 100% |  |
+| `WordPress.PHP.YodaConditions` | 1 | 19 | 19 | 0 | 0 | 100% |  |
+| `WordPress.Security.EscapeOutput` | 23 | 176 | 101 | 75 | 65 | 57% | EscapeOutputUnitTest.1.inc: 4 phpcs:set directive(s), honoured by region; EscapeOutputUnitTest.1.inc: no setting for phpcs:set customPrintingFunctions |
+| `WordPress.Security.NonceVerification` | 8 | 66 | 38 | 28 | 25 | 58% | NonceVerificationUnitTest.1.inc: 5 phpcs:set directive(s), honoured by region; NonceVerificationUnitTest.1.inc: no setting for phpcs:set customNonceVerificationFunctions |
+| `WordPress.Security.PluginMenuSlug` | 1 | 5 | 5 | 0 | 0 | 100% |  |
+| `WordPress.Security.SafeRedirect` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `WordPress.Security.ValidatedSanitizedInput` | 5 | 106 | 36 | 70 | 12 | 34% | ValidatedSanitizedInputUnitTest.1.inc: 5 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.AlternativeFunctions` | 1 | 62 | 20 | 42 | 14 | 32% | AlternativeFunctionsUnitTest.inc: 10 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.Capabilities` | 5 | 48 | 37 | 11 | 0 | 77% | CapabilitiesUnitTest.1.inc: 4 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.CapitalPDangit` | 2 | 32 | 32 | 0 | 0 | 100% |  |
+| `WordPress.WP.ClassNameCase` | 1 | 18 | 18 | 0 | 0 | 100% |  |
+| `WordPress.WP.CronInterval` | 1 | 35 | 35 | 0 | 0 | 100% | CronIntervalUnitTest.inc: 3 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.DeprecatedClasses` | 2 | 22 | 22 | 0 | 0 | 100% |  |
+| `WordPress.WP.DeprecatedFunctions` | 2 | 388 | 388 | 0 | 0 | 100% |  |
+| `WordPress.WP.DeprecatedParameters` | 1 | 64 | 64 | 0 | 0 | 100% |  |
+| `WordPress.WP.DeprecatedParameterValues` | 2 | 28 | 28 | 0 | 0 | 100% |  |
+| `WordPress.WP.DiscouragedConstants` | 1 | 20 | 20 | 0 | 0 | 100% |  |
+| `WordPress.WP.DiscouragedFunctions` | 2 | 8 | 8 | 0 | 0 | 100% | DiscouragedFunctionsUnitTest.1.inc: 3 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.EnqueuedResourceParameters` | 2 | 30 | 29 | 1 | 0 | 97% |  |
+| `WordPress.WP.EnqueuedResources` | 2 | 28 | 28 | 0 | 0 | 100% |  |
+| `WordPress.WP.GetMetaSingle` | 1 | 12 | 12 | 0 | 0 | 100% |  |
+| `WordPress.WP.GlobalVariablesOverride` | 8 | 43 | 43 | 0 | 2 | 100% | GlobalVariablesOverrideUnitTest.1.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.4.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.6.inc: 2 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.I18n` | 3 | 149 | 149 | 0 | 0 | 100% | I18nUnitTest.1.inc: 8 phpcs:set directive(s), honoured by region; I18nUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.PostsPerPage` | 1 | 26 | 26 | 0 | 0 | 100% | PostsPerPageUnitTest.inc: 5 phpcs:set directive(s), honoured by region |
+| **Total** | **194** | **2158** | **1916** | **242** | **176** | **89%** | |
+
 Only reports carrying the mapped rule codes count (Mago's parser/semantics errors on WPCS's
 deliberately odd test files no longer count as matches or extras), so numbers from this run on
 are slightly lower and exact.

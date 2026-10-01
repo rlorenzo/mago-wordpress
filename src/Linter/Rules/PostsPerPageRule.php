@@ -75,6 +75,10 @@ final class PostsPerPageRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if ($this->report->excludesGroup(self::SNIFF, 'posts_per_page')) {
+            return;
+        }
+
         if (!$this->gate->passes($context->file)) {
             return;
         }

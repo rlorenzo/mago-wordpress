@@ -13,6 +13,7 @@ use function array_slice;
 use function count;
 use function explode;
 use function implode;
+use function in_array;
 use function ltrim;
 use function preg_match;
 use function str_replace;
@@ -25,6 +26,7 @@ use function strtr;
  * another extension's rules.
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class Report
 {
@@ -98,10 +100,13 @@ final class Report
     /**
      * @param array<string, list<string>> $excludePatterns WPCS code (standard, category, sniff or
      *        message) => phpcs `<exclude-pattern>` values; `*` excludes the code everywhere
+     * @param array<string, list<string>> $excludeGroups WPCS sniff => the function groups its
+     *        `exclude` property drops
      */
     public function __construct(
         private readonly bool $honorPhpcsComments,
         array $excludePatterns = [],
+        private readonly array $excludeGroups = [],
     ) {
         $this->suppressions = new WeakMap();
         $excludes = [];
@@ -119,6 +124,15 @@ final class Report
         }
 
         $this->excludes = $excludes;
+    }
+
+    /**
+     * Whether the sniff's `exclude` property drops the group, as WPCS's restriction sniffs
+     * skip an excluded group before matching.
+     */
+    public function excludesGroup(string $sniff, string $group): bool
+    {
+        return in_array($group, $this->excludeGroups[$sniff] ?? [], strict: true);
     }
 
     /**
