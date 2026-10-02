@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal;
 
+use InvalidArgumentException;
 use Rlorenzo\MagoWordPress\Settings;
 
+use function array_key_exists;
 use function file_exists;
 use function file_get_contents;
+use function implode;
+use function is_array;
 use function json_decode;
 
 /**
@@ -30,7 +34,7 @@ final class SettingsDiscovery
     {
         $extra = self::composerExtra($directory . '/composer.json');
         if ($extra !== null) {
-            return Settings::fromArray($extra + ['standard' => $standard]);
+            return self::validated($extra + ['standard' => $standard], 'composer.json extra.mago-wordpress');
         }
 
         foreach (self::RULESETS as $name) {
@@ -44,11 +48,25 @@ final class SettingsDiscovery
                     $values['standard'] = $standard;
                 }
 
-                return Settings::fromArray($values);
+                return self::validated($values, $name);
             }
         }
 
-        return Settings::fromArray(['standard' => $standard]);
+        return self::validated(['standard' => $standard], 'the worker command');
+    }
+
+    /**
+     * @param array<array-key, mixed> $values
+     * @throws InvalidArgumentException naming each invalid setting, one per line
+     */
+    private static function validated(array $values, string $source): Settings
+    {
+        $problems = Settings::problems($values);
+        if ($problems !== []) {
+            throw new InvalidArgumentException("{$source}: " . implode("\n{$source}: ", $problems));
+        }
+
+        return Settings::fromArray($values);
     }
 
     /**
@@ -57,6 +75,7 @@ final class SettingsDiscovery
      * block (`{"extra": {"mago-wordpress": {}}}`) does not: it means "use the defaults".
      *
      * @return null|array<array-key, mixed>
+     * @throws InvalidArgumentException when `extra.mago-wordpress` is not an object
      */
     private static function composerExtra(string $path): ?array
     {
@@ -64,10 +83,15 @@ final class SettingsDiscovery
             return null;
         }
 
-        return Shape::arrayAt(
-            json_decode((string) file_get_contents($path), associative: true),
-            'extra',
-            'mago-wordpress',
-        );
+        $extra = Shape::arrayAt(json_decode((string) file_get_contents($path), associative: true), 'extra');
+        if ($extra === null || !array_key_exists('mago-wordpress', $extra)) {
+            return null;
+        }
+
+        if (!is_array($extra['mago-wordpress'])) {
+            throw new InvalidArgumentException('composer.json extra.mago-wordpress: must be an object.');
+        }
+
+        return $extra['mago-wordpress'];
     }
 }

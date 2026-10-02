@@ -189,7 +189,8 @@ final class WordPressExtension
     {
         [$rules, $problems] = LeveledRule::apply($rules, $settings->levels);
         if ($problems !== []) {
-            fwrite(STDERR, 'mago-wordpress: ' . implode("\nmago-wordpress: ", $problems) . "\n");
+            $prefix = 'mago-wordpress: invalid configuration: ';
+            fwrite(STDERR, $prefix . implode("\n{$prefix}", $problems) . "\n");
             exit(1);
         }
 
