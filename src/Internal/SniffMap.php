@@ -102,7 +102,7 @@ final class SniffMap
         'Generic.PHP.DisallowAlternativePHPTags' => ['generic/disallow-alternative-php-tags'],
         'Generic.PHP.DisallowShortOpenTag' => ['no-short-opening-tag'],
         'Generic.PHP.DiscourageGoto' => ['no-goto'],
-        'Generic.PHP.ForbiddenFunctions' => ['disallowed-functions'],
+        'Generic.PHP.ForbiddenFunctions' => ['generic/forbidden-functions'],
         'Generic.PHP.LowerCaseConstant' => ['lowercase-keyword'],
         'Generic.PHP.LowerCaseKeyword' => ['lowercase-keyword'],
         'Generic.PHP.LowerCaseType' => ['lowercase-type-hint'],
