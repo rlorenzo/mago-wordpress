@@ -11,6 +11,7 @@ generic/empty-statement
 generic/for-loop-with-test-function-call
 generic/foreach-unique-assignment
 generic/git-merge-conflict
+generic/increment-decrement-usage
 generic/inline-control-structure
 generic/jumbled-incrementer
 generic/method-declaration

@@ -151,6 +151,11 @@ final class Levels
             'SpaceAfterKeyword' => 'error',
             'SpaceBeforeSemicolon' => 'error',
         ],
+        'Squiz.Operators.IncrementDecrementUsage' => [
+            'Found' => 'error',
+            'NoBrackets' => 'error',
+            'NotAllowed' => 'error',
+        ],
         'Squiz.Operators.ValidLogicalOperators' => [
             'NotAllowed' => 'error',
         ],

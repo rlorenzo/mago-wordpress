@@ -233,6 +233,7 @@ final class PhpcsRuleset
         'Universal.Files.SeparateFunctionsFromOO',
         'Squiz.Operators.ValidLogicalOperators',
         'Universal.ControlStructures.DisallowLonelyIf',
+        'Squiz.Operators.IncrementDecrementUsage',
     ];
 
     /** phpcs hides reports below this severity by default. */

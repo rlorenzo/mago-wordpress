@@ -21,6 +21,7 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 use function array_slice;
 use function count;
 use function in_array;
+use function preg_match;
 use function preg_replace;
 use function ucfirst;
 
@@ -75,14 +76,26 @@ final class DisallowStandalonePostIncrementDecrementRule implements Rule
             description: 'Reports `$i++;` and `$i--;` as statements of their own; use `++$i;` and `--$i;`.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
-            targets: [NodeKind::ExpressionStatement],
+            // The whole file, before NonceVerificationRule releases the shared PhpcsTokens.
+            targets: [NodeKind::Program],
         );
     }
 
     public function lint(LintContext $context): void
     {
+        if (preg_match('/\+\+|--/', $context->file->contents) !== 1) {
+            return;
+        }
+
+        foreach ($context->file->getNodes(NodeKind::ExpressionStatement) as $statement) {
+            $this->check($context, $statement);
+        }
+    }
+
+    private function check(LintContext $context, Node $statement): void
+    {
         $file = $context->file;
-        $expression = $file->getChildren($context->node)[0] ?? null;
+        $expression = $file->getChildren($statement)[0] ?? null;
         $postfix = $expression === null ? null : $file->getChildren($expression)[0] ?? null;
         if ($postfix === null || $postfix->kind !== NodeKind::UnaryPostfix) {
             return;
@@ -125,7 +138,7 @@ final class DisallowStandalonePostIncrementDecrementRule implements Rule
     /**
      * Whether the statement sits inside parentheses, such as in a closure passed as an argument
      * or written in a condition: the sniff skips any token with `nested_parenthesis`. Read from
-     * the phpcs tokens, as a linter snapshot holds only the statement's own subtree.
+     * the phpcs tokens the other token-based rules share.
      */
     private static function inParentheses(SourceFile $file, Node $operator): bool
     {

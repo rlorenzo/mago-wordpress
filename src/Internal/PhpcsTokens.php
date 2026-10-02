@@ -7,10 +7,10 @@ namespace Rlorenzo\MagoWordPress\Internal;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
 
+use function array_flip;
 use function array_key_last;
 use function array_pop;
 use function array_reverse;
-use function array_search;
 use function array_slice;
 use function count;
 use function explode;
@@ -223,6 +223,9 @@ final class PhpcsTokens
         private readonly array $ooDirect,
         private readonly array $strings,
     ) {}
+
+    /** @var null|array<int, int> byte offset => token, built on first indexAt() */
+    private ?array $indexes = null;
 
     public static function of(SourceFile $file): self
     {
@@ -679,9 +682,15 @@ final class PhpcsTokens
     /** The token that starts at the byte offset, if one does. */
     public function indexAt(int $offset): ?int
     {
-        $index = array_search($offset, $this->positions, strict: true);
+        $this->indexes ??= array_flip($this->positions);
 
-        return $index === false ? null : $index;
+        return $this->indexes[$offset] ?? null;
+    }
+
+    /** Whether whitespace or a comment comes right before the token. */
+    public function gapBefore(int $index): bool
+    {
+        return $this->gaps[$index] ?? false;
     }
 
     /**
