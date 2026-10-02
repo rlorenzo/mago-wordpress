@@ -11,6 +11,7 @@ generic/method-scope
 generic/property-declaration
 generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence
+generic/self-member-reference
 wordpress/alternative-functions
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities
