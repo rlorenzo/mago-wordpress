@@ -1,4 +1,5 @@
 /bin/generate-lists.php export-ignore
+/bin/generate-presets.php export-ignore
 /.github export-ignore
 /tests export-ignore
 /.editorconfig export-ignore

@@ -8,7 +8,8 @@
  *
  * Settings (text domains, prefixes, minimum WordPress version, custom escaping
  * functions) are read from the project's composer.json `extra.mago-wordpress`,
- * falling back to its phpcs.xml properties.
+ * falling back to its phpcs.xml properties. An optional `--standard=WordPress-Core`
+ * or `--standard=WordPress-Extra` argument sets the default `standard` setting.
  */
 
 declare(strict_types=1);
@@ -20,6 +21,14 @@ use Rlorenzo\MagoWordPress\WordPressExtension;
 (static function (): void {
     $cwd = getcwd();
     $cwd = $cwd === false ? '.' : $cwd;
+    // `--standard=WordPress-Extra` (the presets pass it) is the default composer.json can override.
+    // The last one wins: Mago 1.47 appends a preset's command to the one it extends.
+    $standard = 'WordPress';
+    foreach ($_SERVER['argv'] ?? [] as $arg) {
+        if (is_string($arg) && str_starts_with($arg, '--standard=')) {
+            $standard = substr($arg, offset: 11);
+        }
+    }
     $candidates = [
         // The package is a dependency: vendor/rlorenzo/mago-wordpress/resources.
         dirname(__DIR__, levels: 3) . '/autoload.php',
@@ -40,7 +49,7 @@ use Rlorenzo\MagoWordPress\WordPressExtension;
             continue;
         }
 
-        (new Worker(WordPressExtension::create(SettingsDiscovery::in($cwd))))->run();
+        (new Worker(WordPressExtension::create(SettingsDiscovery::in($cwd, $standard))))->run();
 
         return;
     }
