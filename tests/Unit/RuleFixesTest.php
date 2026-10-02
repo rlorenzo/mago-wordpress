@@ -187,6 +187,13 @@ final class RuleFixesTest extends TestCase
             "if (\$a) {\n} else {\n}\ntry {\n} catch (E \$e) {\n} // x\nfinally {\n}",
         ];
 
+        yield 'double-quote-usage single-quotes strings that need no double quotes' => [
+            'generic/double-quote-usage',
+            '',
+            "\$a = \"plain \\\"q\\\" \\\$x\";\n\$b = \"it's\";\n\$c = \"tab\\t\";",
+            "\$a = 'plain \"q\" \$x';\n\$b = \"it's\";\n\$c = \"tab\\t\";",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

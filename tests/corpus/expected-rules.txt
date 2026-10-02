@@ -6,6 +6,7 @@ generic/disallow-lonely-if
 generic/disallow-multiple-assignments
 generic/disallow-size-functions-in-loops
 generic/disallow-standalone-post-increment-decrement
+generic/double-quote-usage
 generic/else-if-declaration
 generic/empty-statement
 generic/for-loop-with-test-function-call

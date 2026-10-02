@@ -176,6 +176,10 @@ final class Levels
         'Squiz.Scope.MethodScope' => [
             'Missing' => 'error',
         ],
+        'Squiz.Strings.DoubleQuoteUsage' => [
+            'ContainsVar' => 'error',
+            'NotRequired' => 'error',
+        ],
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
