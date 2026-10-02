@@ -241,6 +241,7 @@ final class PhpcsRuleset
         'Generic.Strings.UnnecessaryHeredoc',
         'Universal.CodeAnalysis.NoDoubleNegative',
         'Generic.CodeAnalysis.UnusedFunctionParameter',
+        'Squiz.PHP.CommentedOutCode',
     ];
 
     /** phpcs hides reports below this severity by default. */

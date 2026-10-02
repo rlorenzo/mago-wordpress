@@ -1,5 +1,6 @@
 generic/assignment-in-condition
 generic/byte-order-mark
+generic/commented-out-code
 generic/control-signature
 generic/disallow-alternative-php-tags
 generic/disallow-lonely-if
