@@ -242,6 +242,10 @@ final class Levels
         'Universal.Operators.StrictComparisons' => [
             '*' => 'warning',
         ],
+        'Universal.UseStatements.NoLeadingBackslash' => [
+            'LeadingBackslashFound' => 'error',
+            'LeadingBackslashFoundInGroup' => 'error',
+        ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',
         ],

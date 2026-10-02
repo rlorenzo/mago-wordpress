@@ -201,6 +201,5 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `Universal.PHP.LowercasePHPTag`
 - `Universal.UseStatements.DisallowMixedGroupUse`
 - `Universal.UseStatements.LowercaseFunctionConst`
-- `Universal.UseStatements.NoLeadingBackslash`
 
 </details>
