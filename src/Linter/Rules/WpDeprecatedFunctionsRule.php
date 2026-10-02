@@ -41,7 +41,7 @@ final class WpDeprecatedFunctionsRule extends CallRule
             code: 'wordpress/wp-deprecated-functions',
             name: 'WordPress deprecated functions',
             description: 'Reports calls to WordPress core functions that have been deprecated. A deprecated function may be removed in a future release and often has a modern replacement.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::FunctionCall, NodeKind::FunctionPartialApplication, NodeKind::TypedUseItemSequence],
         );

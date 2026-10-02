@@ -173,14 +173,16 @@ jobs:
           php-version: '8.4'
           coverage: none
 
-      # Lists.php and CoreClasses.php must be exactly what bin/generate-lists.php produces
-      # from the pinned WPCS tag, and the pin must be the latest WPCS release.
+      # Lists.php, CoreClasses.php and Levels.php must be exactly what bin/generate-lists.php
+      # produces from the pinned WPCS tag (and the phpcs/PHPCSExtra it installs), and the pin
+      # must be the latest WPCS release.
       - name: Check generated lists against WPCS
         run: |
           set -euo pipefail
           pinned=$(sed -n "s/^const WPCS_VERSION = '\(.*\)';/\1/p" bin/generate-lists.php)
           repo=https://github.com/WordPress/WordPress-Coding-Standards
           git clone --quiet --depth 1 --branch "$pinned" "$repo" "$RUNNER_TEMP/wpcs"
+          composer install --working-dir="$RUNNER_TEMP/wpcs" --no-dev --no-interaction --no-progress --quiet
           php bin/generate-lists.php "$RUNNER_TEMP/wpcs" --check
           latest=$(git ls-remote --tags --refs "$repo" | sed 's#.*/##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
           if [ "$latest" != "$pinned" ]; then

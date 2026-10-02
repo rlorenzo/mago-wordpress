@@ -51,7 +51,7 @@ final class EnqueuedResourcesRule implements Rule
             . 'literals and inline HTML. Scripts and stylesheets must be registered through the WordPress '
             . 'dependency API (`wp_enqueue_script()` / `wp_enqueue_style()`) so that dependencies, versioning, '
             . 'concatenation, and deduplication work correctly.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::LiteralString, NodeKind::CompositeString, NodeKind::Inline],
         );

@@ -1,10 +1,14 @@
 <?php
 
 /**
- * Regenerates src/Internal/WordPress/Lists.php and CoreClasses.php from a WordPress Coding
- * Standards checkout.
+ * Regenerates src/Internal/WordPress/Lists.php, CoreClasses.php and Levels.php from a WordPress
+ * Coding Standards checkout.
  *
- *   php bin/generate-lists.php /path/to/WordPress-Coding-Standards [--check]
+ *   php bin/generate-lists.php /path/to/WordPress-Coding-Standards [/path/to/vendor] [--check]
+ *
+ * The vendor directory (default: the checkout's own `vendor/`, after `composer install` there)
+ * holds the phpcs and PHPCSExtra sources whose Generic, Squiz and Universal sniffs Levels.php
+ * also covers.
  *
  * The WPCS arrays are read straight from the source: each property default or `getGroups()`
  * return is tokenized and its array literal evaluated, so no phpcs or PHPCSUtils install is
@@ -18,9 +22,11 @@ const WPCS_VERSION = '3.4.1';
 
 $args = array_slice($argv, 1);
 $check = in_array('--check', $args, true);
-$wpcs = array_values(array_filter($args, static fn(string $a): bool => $a !== '--check'))[0] ?? null;
-if ($wpcs === null || !is_dir("{$wpcs}/WordPress/Sniffs")) {
-    fwrite(STDERR, "usage: php bin/generate-lists.php /path/to/WordPress-Coding-Standards [--check]\n");
+$paths = array_values(array_filter($args, static fn(string $a): bool => $a !== '--check'));
+$wpcs = $paths[0] ?? null;
+$vendor = $paths[1] ?? "{$wpcs}/vendor";
+if ($wpcs === null || !is_dir("{$wpcs}/WordPress/Sniffs") || !is_dir("{$vendor}/squizlabs/php_codesniffer")) {
+    fwrite(STDERR, "usage: php bin/generate-lists.php /path/to/WordPress-Coding-Standards [/path/to/vendor] [--check]\n");
     exit(2);
 }
 
@@ -269,6 +275,194 @@ $constants = [
         ksorted(wpcs_array($wpcs, 'Sniffs/WP/I18nSniff.php', 'i18n_functions'))],
 ];
 
+/** Tokens without whitespace and comments. */
+function code_tokens(string $file): array
+{
+    return array_values(array_filter(
+        token_get_all((string) file_get_contents($file)),
+        static fn($t): bool => !is_array($t) || !in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true),
+    ));
+}
+
+function text($t): string
+{
+    return is_array($t) ? $t[1] : $t;
+}
+
+/** The arguments of the call whose `(` is at $open, each a token slice. */
+function call_args(array $tokens, int $open): array
+{
+    $args = [[]];
+    $depth = 0;
+    for ($i = $open + 1; $i < count($tokens); $i++) {
+        $text = text($tokens[$i]);
+        if ($depth === 0 && ($text === ',' || $text === ')')) {
+            if ($text === ')') {
+                return $args;
+            }
+            $args[] = [];
+            continue;
+        }
+        $depth += match ($text) {
+            '(', '[' => 1,
+            ')', ']' => -1,
+            default => 0,
+        };
+        $args[array_key_last($args)][] = $tokens[$i];
+    }
+    return $args;
+}
+
+/** The right-hand sides assigned to $variable between the enclosing function's start and $at. */
+function assignments(array $tokens, int $at, string $variable): array
+{
+    $values = [];
+    for ($i = $at; $i > 0 && !(is_array($tokens[$i]) && $tokens[$i][0] === T_FUNCTION); $i--) {
+        if (!is_array($tokens[$i]) || $tokens[$i][1] !== $variable || ($tokens[$i + 1] ?? null) !== '=') {
+            continue;
+        }
+        $value = [];
+        $depth = 0;
+        for ($j = $i + 2; $j < count($tokens); $j++) {
+            $text = text($tokens[$j]);
+            if ($depth === 0 && in_array($text, [';', ',', ')'], true)) {
+                break;
+            }
+            $depth += match ($text) {
+                '(', '[' => 1,
+                ')', ']' => -1,
+                default => 0,
+            };
+            $value[] = $tokens[$j];
+        }
+        $values[] = $value;
+    }
+    return $values;
+}
+
+/**
+ * The message codes an expression can produce, `*` standing for a dynamic part: literals,
+ * concatenations, `MessageHelper::stringToErrorcode()` and variables assigned in the same function.
+ */
+function code_patterns(array $tokens, array $expr, int $at): array
+{
+    if (count($expr) === 1 && is_array($expr[0]) && $expr[0][0] === T_VARIABLE) {
+        $patterns = [];
+        foreach (assignments($tokens, $at, $expr[0][1]) as $value) {
+            $patterns = [...$patterns, ...code_patterns($tokens, $value, $at)];
+        }
+        return $patterns === [] ? ['*'] : array_values(array_unique($patterns));
+    }
+    if (text($expr[0] ?? '') === 'MessageHelper' && text($expr[2] ?? '') === 'stringToErrorcode') {
+        return code_patterns($tokens, array_slice($expr, 4, -1), $at);
+    }
+    $pattern = '';
+    $depth = 0;
+    $part = [];
+    foreach ([...$expr, '.'] as $t) {
+        $text = text($t);
+        if ($depth === 0 && $text === '.') {
+            $resolved = count($part) === 1 && is_array($part[0]) && $part[0][0] === T_VARIABLE
+                ? code_patterns($tokens, $part, $at) : ['*'];
+            $pattern .= match (true) {
+                count($part) === 1 && is_array($part[0]) && $part[0][0] === T_CONSTANT_ENCAPSED_STRING
+                    => substr($part[0][1], 1, -1),
+                count($resolved) === 1 => $resolved[0],
+                default => '*',
+            };
+            $part = [];
+            continue;
+        }
+        $depth += match ($text) {
+            '(', '[' => 1,
+            ')', ']' => -1,
+            default => 0,
+        };
+        $part[] = $t;
+    }
+    return [preg_replace('/\*+/', '*', $pattern)];
+}
+
+/** `error`, `warning`, or `error|warning` when the sniff decides at runtime. */
+function level_of(array $tokens, array $expr, int $at): string
+{
+    $text = strtolower(implode('', array_map(text(...), $expr)));
+    if ($text === 'true' || $text === 'false') {
+        return $text === 'true' ? 'error' : 'warning';
+    }
+    if (count($expr) === 1 && is_array($expr[0]) && $expr[0][0] === T_VARIABLE) {
+        $levels = array_values(array_unique(array_map(
+            static fn(array $value): string => level_of($tokens, $value, $at),
+            assignments($tokens, $at, $expr[0][1]),
+        )));
+        return count($levels) === 1 ? $levels[0] : 'error|warning';
+    }
+    return 'error|warning';
+}
+
+/**
+ * Message code (`*` matches any text) => level, from each `add[Fixable](Error|Warning|Message)`
+ * call in the sniff and each `getGroups()` group's `type`.
+ */
+function sniff_levels(string $wpcs, string $file): array
+{
+    $tokens = code_tokens($file);
+    $levels = [];
+    foreach ($tokens as $i => $t) {
+        if (!is_array($t) || $t[0] !== T_STRING || ($tokens[$i + 1] ?? null) !== '('
+            || !preg_match('/^add(?:Fixable)?(Error|Warning|Message)$/', $t[1], $m)) {
+            continue;
+        }
+        $args = call_args($tokens, $i + 1);
+        // File::addError($message, $stackPtr, $code, ...);
+        // MessageHelper::addMessage($phpcsFile, $message, $stackPtr, $isError, $code, ...).
+        [$level, $code] = $m[1] === 'Message'
+            ? [level_of($tokens, $args[3], $i), $args[4]]
+            : [strtolower($m[1]), $args[2]];
+        foreach (code_patterns($tokens, $code, $i) as $pattern) {
+            $levels[$pattern] = isset($levels[$pattern]) && $levels[$pattern] !== $level ? 'error|warning' : $level;
+        }
+    }
+    // The restriction sniffs' groups report `<group>_<matched name>` at the group's `type`.
+    if (preg_match("/extends Abstract\\w+RestrictionsSniff.*'type'\\s*=>/s", (string) file_get_contents($file))) {
+        foreach (wpcs_array($wpcs, substr($file, strlen("{$wpcs}/WordPress/")), 'getGroups()') as $group => $def) {
+            if (isset($def['type'])) {
+                $levels["{$group}_*"] = $def['type'];
+            }
+        }
+    }
+    ksort($levels, SORT_STRING | SORT_FLAG_CASE);
+    return $levels;
+}
+
+require_once __DIR__ . '/../src/Internal/SniffMap.php';
+$sniffLevels = [];
+foreach (Rlorenzo\MagoWordPress\Internal\SniffMap::RULES as $sniff => $rules) {
+    if (array_filter($rules, Rlorenzo\MagoWordPress\Internal\SniffMap::isExtensionRule(...)) === []) {
+        continue;
+    }
+    [$standard, $category, $name] = explode('.', $sniff);
+    $sniffLevels[$sniff] = sniff_levels($wpcs, match ($standard) {
+        'WordPress' => "{$wpcs}/WordPress/Sniffs/{$category}/{$name}Sniff.php",
+        'Universal' => "{$vendor}/phpcsstandards/phpcsextra/Universal/Sniffs/{$category}/{$name}Sniff.php",
+        default => "{$vendor}/squizlabs/php_codesniffer/src/Standards/{$standard}/Sniffs/{$category}/{$name}Sniff.php",
+    });
+}
+// The level comes from `$superglobals` at runtime: `$_POST`/`$_FILES` (Missing) are errors,
+// `$_GET`/`$_REQUEST` (Recommended) warnings.
+$sniffLevels['WordPress.Security.NonceVerification'] = ['Missing' => 'error', 'Recommended' => 'warning'];
+// The `<type>` overrides in the WordPress standard's rulesets (WordPress-Extra makes two I18n codes errors).
+foreach (glob("{$wpcs}/WordPress-*/ruleset.xml") as $ruleset) {
+    foreach ((new SimpleXMLElement((string) file_get_contents($ruleset)))->rule as $rule) {
+        $parts = explode('.', (string) $rule['ref']);
+        $sniff = implode('.', array_slice($parts, 0, 3));
+        if (isset($rule->type, $parts[3], $sniffLevels[$sniff])) {
+            $sniffLevels[$sniff][$parts[3]] = (string) $rule->type;
+        }
+    }
+}
+ksort($sniffLevels);
+
 $version = WPCS_VERSION;
 $lists = <<<PHP
     <?php
@@ -322,9 +516,43 @@ $core = preg_replace('/(WPCS )[\d.]+(\'s)/', '${1}' . $version . '$2', $core);
 $core = preg_replace('/(public const NAMES = \[\n).*?(    \];)/s', '$1' . str_replace('\\', '\\\\', $names) . '$2', $core);
 
 $stale = 0;
-foreach (['Lists.php' => $lists, 'CoreClasses.php' => $core] as $file => $contents) {
+$levels = <<<PHP
+    <?php
+
+    declare(strict_types=1);
+
+    namespace Rlorenzo\MagoWordPress\Internal\WordPress;
+
+    /**
+     * Whether phpcs reports each message code of the sniffs this package ports as an error or a
+     * warning, from WordPress Coding Standards {$version} and the phpcs/PHPCSExtra sniffs it pulls in.
+     *
+     * Generated by bin/generate-lists.php from each sniff's `addError()` / `addWarning()` /
+     * `addMessage(\$isError)` calls, its `getGroups()` types and the WordPress rulesets' `<type>`
+     * overrides — do not hand-edit.
+     *
+     * @internal
+     */
+    final class Levels
+    {
+        /**
+         * Sniff => message code (`*` matches any text) => `error`, `warning`, or `error|warning`
+         * when the sniff decides at runtime (deprecations against `minimum_wp_version`, dynamic names).
+         *
+         * @var array<string, array<string, 'error'|'warning'|'error|warning'>>
+         */
+        public const SNIFFS
+    PHP . ' = ' . render($sniffLevels) . <<<PHP
+    ;
+
+        private function __construct() {}
+    }
+
+    PHP;
+
+foreach (['Lists.php' => $lists, 'CoreClasses.php' => $core, 'Levels.php' => $levels] as $file => $contents) {
     $path = __DIR__ . "/../src/Internal/WordPress/{$file}";
-    if (file_get_contents($path) === $contents) {
+    if (is_file($path) && file_get_contents($path) === $contents) {
         continue;
     }
     if ($check) {
