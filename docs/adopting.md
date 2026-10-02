@@ -238,19 +238,32 @@ On the sample site it changed 68 files (+1,254/-1,412 lines; +296/-418 ignoring 
 
 ## 8. Mago rules the presets turn off
 
-The presets turn off Mago's own rules that no WPCS sniff runs (91 on Mago 1.51.0, listed between the
+The presets turn off Mago's own rules that no WPCS sniff runs (90 on Mago 1.51.0, listed between the
 `BEGIN generated` and `END generated` lines in `wordpress.mago.toml`), so a phpcs-clean project
-starts clean. Among them are `strict-types`, `no-isset`, `class-name`, `no-closing-tag`,
-`cyclomatic-complexity` and `no-request-variable`. Turn one back on in your `mago.toml`:
+starts clean. Among them are `strict-types`, `no-isset`, `cyclomatic-complexity` and
+`no-request-variable`.
+
+Four security rules with no WPCS counterpart stay on, because they make code safer and almost never
+fire: `tainted-data-to-sink`, `no-unsafe-finally`, `no-variable-variable` and `no-ffi` (2 reports in
+total on the 10 bake-off plugins, wordpress-develop and one private site).
+
+`class-name` and `no-closing-tag` are off for another reason: they cover
+`PEAR.NamingConventions.ValidClassName` and `PSR2.Files.ClosingTag`, which WordPress-Core runs, but
+they report code those sniffs accept (`My_Class` names, templates that end in `?>` after inline
+HTML).
+
+Turn a rule back on in your `mago.toml`:
 
 ```toml
 [linter.rules]
 no-request-variable = { enabled = true }
 ```
 
-`no-request-variable` (reading `$_REQUEST`) is worth it: it reported 6 errors on the sample site
-and had found a real bug there. `strict-types` (94 warnings) and `no-closing-tag` (19) fight
-WordPress conventions; leave them off.
+`no-request-variable` (reading `$_REQUEST`) reported 6 errors on the sample site and found a real
+bug there, but on the bake-off plugins it reported 1,380, mostly false positives, and it overlaps
+`wordpress/validated-sanitized-input`. `no-literal-password` and `no-insecure-comparison` match
+option names and variables named `token` or `key`. `strict-types` (94 warnings) fights WordPress
+conventions; leave it off.
 
 ## 9. Known differences from phpcs
 
@@ -258,7 +271,7 @@ WordPress conventions; leave them off.
 |:---|:---|:---|
 | Cyclomatic complexity | counts branches, not `&&`/`\|\|`; scores functions and methods | counts `&&`/`\|\|`; also scores a class as the sum of its methods, with no setting to turn that off alone (use `exclude` or a pragma) |
 | Nesting | the function body is level 0 | the function body is level 1; `migrate` writes `nestingLevel + 1` |
-| Missing docblocks | a `//` comment before a function is `FunctionComment.WrongStyle`, a separate code | `missing-docs` reports it as missing |
+| Missing docblocks | a `//` or `/* */` comment before a function, class or property is `*Comment.WrongStyle`, a separate code | `missing-docs` reports it as missing. When a ruleset selects only `*Comment.Missing`, `migrate` lists this under "Not migrated" and notes it above `missing-docs`; turn the comment into a `/**` docblock or add `@mago-expect lint:missing-docs` |
 | Levels | per message | per rule; some sniffs' warning-level messages go to a `<rule>-warning` companion rule |
 | `ShortPrefixPassed`, `InvalidPrefixPassed` | once per run | once per worker process ([details](rules.md#prefix-all-globals-in-theme-templates)) |
 | Absolute limits | `absoluteComplexity`, `absoluteNestingLevel` | none |

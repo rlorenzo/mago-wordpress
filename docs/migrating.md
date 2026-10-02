@@ -65,7 +65,7 @@ Inline `// phpcs:set` comments are not read.
 ## Converting phpcs comments to Mago pragmas
 
 This package's rules honour `phpcs:ignore` comments, but Mago core rules (`no-debug-symbols`,
-`no-error-control-operator`, the `Generic.*` ports) never do, and a phpcs comment never reports as
+`no-ini-set`, `constant-name` and the other core rules that cover generic sniffs) never do, and a phpcs comment never reports as
 stale. `vendor/bin/mago-wordpress convert-comments` rewrites them as `@mago-expect` pragmas:
 
 ```sh
