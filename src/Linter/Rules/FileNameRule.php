@@ -12,6 +12,7 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 use Rlorenzo\MagoWordPress\Settings;
@@ -84,7 +85,8 @@ final class FileNameRule implements Rule
         $file = $context->file;
         $fileName = basename($file->path);
 
-        $class = $file->getFirstDescendant($context->node, NodeKind::Class_);
+        // NodeIndex, not getFirstDescendant(): a walk of the whole tree keeps every node in memory.
+        $class = NodeIndex::ofKind($file, $context->node, NodeKind::Class_)[0] ?? null;
         if (
             $class !== null
             && TestClasses::is(

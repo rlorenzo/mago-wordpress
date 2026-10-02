@@ -63,26 +63,28 @@ final class SplitRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $issues = FileCache::remember(
-            $context->file,
-            'split:' . $this->rule::class . ':' . $context->node->id,
-            function () use ($context): array {
-                $issues = [];
-                $this->report->recording(
-                    static function (Issue $issue, array $codes) use (&$issues): void {
-                        $issues[] = [$issue, self::isWarning($codes)];
-                    },
-                    fn() => $this->rule->lint($context),
-                );
+        $key = 'split:' . $this->rule::class . ':' . $context->node->id;
+        $issues = FileCache::remember($context->file, $key, function () use ($context): array {
+            $issues = [];
+            $this->report->recording(
+                static function (Issue $issue, array $codes) use (&$issues): void {
+                    $issues[] = [$issue, self::isWarning($codes)];
+                },
+                fn() => $this->rule->lint($context),
+            );
 
-                return $issues;
-            },
-        );
+            return $issues;
+        });
 
         foreach ($issues as [$issue, $warning]) {
             if ($warning === ($this->companion !== null)) {
                 $context->report($issue);
             }
+        }
+
+        // The companion runs right after the rule on each node; nothing reads the entry again.
+        if ($this->companion !== null) {
+            FileCache::forget($context->file, $key);
         }
     }
 

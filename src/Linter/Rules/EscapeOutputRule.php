@@ -237,6 +237,8 @@ final class EscapeOutputRule implements Rule
         }
 
         $this->tokens = [];
+        // A large file's tokens leave mostly empty memory pages; hand them back for the next rules.
+        gc_mem_caches();
         $this->context = null;
     }
 
@@ -330,7 +332,7 @@ final class EscapeOutputRule implements Rule
     private function processFunctionCall(int $ptr): ?int
     {
         $tokens = $this->tokens;
-        $name = strtolower($tokens[$ptr]->content);
+        $name = strtolower($tokens[$ptr]->text);
         $unsafe = (self::UNSAFE_PRINTING[$name] ?? null) !== null;
         if (!$unsafe && ($this->printing[$name] ?? null) === null) {
             return null;
@@ -670,7 +672,7 @@ final class EscapeOutputRule implements Rule
 
             if (
                 $tokenCode === 'T_STRING'
-                && (self::SAFE_PHP_CONSTANTS[$token->content] ?? null) !== null
+                && (self::SAFE_PHP_CONSTANTS[$token->text] ?? null) !== null
                 && $this->isUseOfGlobalConstant($i)
             ) {
                 continue;
@@ -721,7 +723,7 @@ final class EscapeOutputRule implements Rule
 
                 if ($doubleColon !== null && $tokens[$doubleColon]->code === 'T_DOUBLE_COLON') {
                     $classKeyword = $this->nextNonEmpty($doubleColon, $end);
-                    if ($classKeyword !== null && strtolower($tokens[$classKeyword]->content) === 'class') {
+                    if ($classKeyword !== null && strtolower($tokens[$classKeyword]->text) === 'class') {
                         $i = $classKeyword;
                         continue;
                     }
@@ -760,16 +762,16 @@ final class EscapeOutputRule implements Rule
                 continue;
             }
 
-            $content = $token->content;
+            $content = $token->text;
             $ptr = $i;
             if ($tokenCode === 'T_STRING') {
-                $functionName = $token->content;
+                $functionName = $token->text;
                 $opener = $this->nextNonEmpty($i);
                 $isFormatting = ($this->formatting[strtolower($functionName)] ?? null) !== null;
                 if ($opener !== null && $tokens[$opener]->code === 'T_OPEN_PARENTHESIS') {
                     $mapped = $this->stringCallback($ptr);
                     if ($mapped !== null) {
-                        $functionName = self::stripQuotes($tokens[$mapped]->content);
+                        $functionName = self::stripQuotes($tokens[$mapped]->text);
                         $ptr = $mapped;
                     }
 
@@ -834,7 +836,7 @@ final class EscapeOutputRule implements Rule
      */
     private function stringCallback(int $ptr): ?int
     {
-        $walking = self::ARRAY_WALKING[strtolower($this->tokens[$ptr]->content)] ?? null;
+        $walking = self::ARRAY_WALKING[strtolower($this->tokens[$ptr]->text)] ?? null;
         $callback = $walking === null
             ? null
             : self::parameterFromStack($this->parameters($ptr), $walking[0], $walking[1]);
@@ -1014,9 +1016,9 @@ final class EscapeOutputRule implements Rule
                     $firstNonEmpty !== null
                     && $second !== null
                     && $tokens[$second]->code === 'T_COLON'
-                    && preg_match('/^[a-z_\x80-\xff][a-z0-9_\x80-\xff]*$/i', $tokens[$firstNonEmpty]->content) === 1
+                    && preg_match('/^[a-z_\x80-\xff][a-z0-9_\x80-\xff]*$/i', $tokens[$firstNonEmpty]->text) === 1
                 ) {
-                    $name = $tokens[$firstNonEmpty]->content;
+                    $name = $tokens[$firstNonEmpty]->text;
                     $key = ($params[$name] ?? null) !== null ? $position : $name;
                     $param = ['start' => $second + 1, 'end' => $paramEnd, 'name' => $name];
                 }
@@ -1176,7 +1178,7 @@ final class EscapeOutputRule implements Rule
         }
 
         $token = $this->tokens[$ptr];
-        $length = max(1, strlen(trim($token->content, characters: "\n")));
+        $length = max(1, strlen(trim($token->text, characters: "\n")));
 
         return $this->report->issue(
             $context,
@@ -1193,7 +1195,7 @@ final class EscapeOutputRule implements Rule
         for ($i = $start; $i <= $end; $i++) {
             $code = $this->tokens[$i]->code;
             if ($code !== 'T_COMMENT' && $code !== 'T_DOC_COMMENT') {
-                $text .= $this->tokens[$i]->content;
+                $text .= $this->tokens[$i]->text;
             }
         }
 
