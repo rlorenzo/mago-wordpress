@@ -73,6 +73,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
@@ -221,6 +222,7 @@ final class WordPressExtension
                 new DoubleQuoteUsageRule($report),
                 new NoEchoSprintfRule($report),
                 new SwitchDeclarationRule($report),
+                new UnnecessaryHeredocRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),

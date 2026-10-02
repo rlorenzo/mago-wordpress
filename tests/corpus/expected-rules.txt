@@ -29,6 +29,7 @@ generic/static-in-final-class
 generic/strict-comparisons
 generic/switch-declaration
 generic/unconditional-if-statement
+generic/unnecessary-heredoc
 generic/useless-overriding-method
 generic/valid-class-name
 generic/valid-logical-operators

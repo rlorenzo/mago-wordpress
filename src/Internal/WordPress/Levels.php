@@ -102,6 +102,9 @@ final class Levels
         'Generic.PHP.LowerCaseType' => [
             '*' => 'error',
         ],
+        'Generic.Strings.UnnecessaryHeredoc' => [
+            'Found' => 'warning',
+        ],
         'Generic.Strings.UnnecessaryStringConcat' => [
             'Found' => 'error|warning',
         ],
