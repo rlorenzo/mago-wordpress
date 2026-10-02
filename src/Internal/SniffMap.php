@@ -128,6 +128,9 @@ final class SniffMap
         'Universal.CodeAnalysis.StaticInFinalClass' => ['generic/static-in-final-class'],
         'Universal.Files.SeparateFunctionsFromOO' => ['generic/separate-functions-from-oo'],
         'Universal.Operators.DisallowShortTernary' => ['no-shorthand-ternary'],
+        'Universal.Operators.DisallowStandalonePostIncrementDecrement' => [
+            'generic/disallow-standalone-post-increment-decrement',
+        ],
         'Universal.Operators.StrictComparisons' => ['generic/strict-comparisons'],
     ];
 

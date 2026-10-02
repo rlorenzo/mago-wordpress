@@ -10,6 +10,7 @@ use PhpToken;
 use function array_key_last;
 use function array_pop;
 use function array_reverse;
+use function array_search;
 use function array_slice;
 use function count;
 use function explode;
@@ -673,6 +674,14 @@ final class PhpcsTokens
     public function pos(int $index): int
     {
         return $this->positions[$index];
+    }
+
+    /** The token that starts at the byte offset, if one does. */
+    public function indexAt(int $offset): ?int
+    {
+        $index = array_search($offset, $this->positions, strict: true);
+
+        return $index === false ? null : $index;
     }
 
     /**
