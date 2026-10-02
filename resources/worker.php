@@ -18,6 +18,11 @@ use Mago\Sdk\Worker;
 use Rlorenzo\MagoWordPress\Internal\SettingsDiscovery;
 use Rlorenzo\MagoWordPress\WordPressExtension;
 
+// stdout carries the protocol frames: a fatal error (e.g. memory exhausted) printed there reads as
+// "invalid extension frame magic"; on stderr, Mago shows it when the worker exits.
+// @mago-expect lint:no-ini-set
+ini_set('display_errors', value: 'stderr');
+
 (static function (): void {
     $cwd = getcwd();
     $cwd = $cwd === false ? '.' : $cwd;
@@ -49,7 +54,21 @@ use Rlorenzo\MagoWordPress\WordPressExtension;
             continue;
         }
 
-        (new Worker(WordPressExtension::create(SettingsDiscovery::in($cwd, $standard))))->run();
+        try {
+            $settings = SettingsDiscovery::in($cwd, $standard);
+        } catch (\InvalidArgumentException $exception) {
+            // Mago shows a worker's stderr when it exits; one readable line per invalid setting.
+            $lines = explode("\n", $exception->getMessage());
+            fwrite(
+                STDERR,
+                'mago-wordpress: invalid configuration: '
+                . implode("\nmago-wordpress: invalid configuration: ", $lines)
+                . "\n",
+            );
+            exit(1);
+        }
+
+        (new Worker(WordPressExtension::create($settings)))->run();
 
         return;
     }

@@ -202,7 +202,59 @@ final class SettingsTest extends TestCase
         self::assertSame(['*'], $core['Generic.PHP.ForbiddenFunctions'] ?? null);
         self::assertArrayNotHasKey('WordPress.WP.I18n', $core);
 
-        // An unknown name runs the full standard rather than silently dropping sniffs.
-        self::assertSame([], Settings::fromArray(['standard' => 'WordPress-Docs'])->excludePatterns);
+        // phpcs finds a standard regardless of case on macOS and Windows.
+        self::assertSame('WordPress-Extra', Settings::fromArray(['standard' => 'wordpress-EXTRA'])->standard);
+    }
+
+    public function testProblemsNameEachInvalidSetting(): void
+    {
+        self::assertSame(
+            [],
+            Settings::problems([
+                'standard' => 'wordpress-core',
+                'text-domains' => 'akismet',
+                'prefixes' => ['a', 'b'],
+                'custom-capabilities' => 'manage_things',
+                'max-posts-per-page' => '50',
+                'is-theme' => 'true',
+                'honor-phpcs-comments' => false,
+                'minimum-wp-version' => '6.5',
+                'exclude-patterns' => ['WordPress.WP.I18n' => '*/legacy/*'],
+                'exclude-groups' => [],
+                'levels' => ['wordpress/capital-p-dangit' => 'error'],
+            ]),
+        );
+
+        self::assertSame(
+            [
+                'unknown setting `text-domain`.',
+                '`standard` must be WordPress, WordPress-Core or WordPress-Extra, not "WordPress-Extar".',
+                '`levels` must be an object of rule code => level, such as {"wordpress/capital-p-dangit": "error"}, not "warning".',
+                '`text-domains` must be a string or a list of strings, not 5.',
+                '`custom-test-classes` must be a string or a list of strings, not [1].',
+                '`max-posts-per-page` must be an integer, not "many".',
+                '`is-theme` must be true or false, not "yes".',
+                '`minimum-wp-version` must be a string, not 6.5.',
+                '`exclude-patterns` must be an object whose values are a string or a list of strings, not ["*"].',
+            ],
+            Settings::problems([
+                'text-domain' => 'akismet',
+                'standard' => 'WordPress-Extar',
+                'levels' => 'warning',
+                'text-domains' => 5,
+                'custom-test-classes' => [1],
+                'max-posts-per-page' => 'many',
+                'is-theme' => 'yes',
+                'minimum-wp-version' => 6.5,
+                'exclude-patterns' => ['*'],
+            ]),
+        );
+
+        foreach (['', 'WordPress-Docs', ['WordPress']] as $standard) {
+            self::assertCount(1, Settings::problems(['standard' => $standard]));
+        }
+
+        self::assertCount(1, Settings::problems(['levels' => ['warning']]));
+        self::assertCount(1, Settings::problems(['levels' => ['wordpress/yoda-conditions' => 3]]));
     }
 }

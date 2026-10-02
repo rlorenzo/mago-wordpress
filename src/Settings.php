@@ -9,6 +9,8 @@ use Rlorenzo\MagoWordPress\Internal\Shape;
 
 use function array_fill_keys;
 use function array_filter;
+use function array_is_list;
+use function array_key_exists;
 use function array_keys;
 use function array_map;
 use function array_unique;
@@ -17,8 +19,10 @@ use function is_array;
 use function is_bool;
 use function is_int;
 use function is_string;
+use function json_encode;
 use function ltrim;
 use function preg_match;
+use function strcasecmp;
 use function strtolower;
 use function trim;
 
@@ -31,6 +35,8 @@ use function trim;
  *
  * @api
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class Settings
 {
@@ -61,6 +67,37 @@ final class Settings
         'custom-cache-set-functions' => 'customCacheSetFunctions',
         'custom-cache-delete-functions' => 'customCacheDeleteFunctions',
         'custom-allowed-functions-list' => 'customAllowedFunctionsList',
+    ];
+
+    /** The standards `standard` accepts; phpcs finds them case-insensitively on macOS and Windows. */
+    public const STANDARDS = ['WordPress', 'WordPress-Core', 'WordPress-Extra'];
+
+    /** Every key `fromArray()` reads besides the custom lists, by the type it expects. */
+    private const KEYS = [
+        'text-domains' => 'list',
+        'prefixes' => 'list',
+        'minimum-wp-version' => 'string',
+        'additional-word-delimiters' => 'string',
+        'max-posts-per-page' => 'integer',
+        'min-cron-interval' => 'integer',
+        'honor-phpcs-comments' => 'boolean',
+        'treat-files-as-scoped' => 'boolean',
+        'strict-class-file-names' => 'boolean',
+        'is-theme' => 'boolean',
+        'exclude-patterns' => 'map',
+        'exclude-groups' => 'map',
+        'levels' => 'levels',
+        'standard' => 'standard',
+    ];
+
+    private const EXPECTED = [
+        'list' => 'a string or a list of strings',
+        'string' => 'a string',
+        'integer' => 'an integer',
+        'boolean' => 'true or false',
+        'map' => 'an object whose values are a string or a list of strings',
+        'levels' => 'an object of rule code => level, such as {"wordpress/capital-p-dangit": "error"}',
+        'standard' => 'WordPress, WordPress-Core or WordPress-Extra',
     ];
 
     /**
@@ -150,7 +187,7 @@ final class Settings
 
         // The sniffs the standard leaves out are excluded everywhere, like a phpcs.xml built on it;
         // any other name (`WordPress` included) runs every sniff.
-        $standard = Shape::string($values['standard'] ?? null) ?? self::DEFAULT_STANDARD;
+        $standard = self::standard($values['standard'] ?? null) ?? self::DEFAULT_STANDARD;
         $excludePatterns = [
             ...self::stringListMap($values['exclude-patterns'] ?? []),
             ...array_fill_keys(PhpcsRuleset::excludedSniffs($standard), ['*']),
@@ -173,6 +210,64 @@ final class Settings
             standard: $standard,
             levels: Shape::arrayAt($values, 'levels') ?? [],
         );
+    }
+
+    /**
+     * What is wrong with the settings, one line per key naming it and what it expects;
+     * `fromArray()` would ignore these values or fall back to a default. NULL means unset.
+     *
+     * @param array<array-key, mixed> $values
+     * @return list<string>
+     */
+    public static function problems(array $values): array
+    {
+        $problems = [];
+        foreach ($values as $key => $value) {
+            $type = self::KEYS[$key] ?? (array_key_exists($key, self::CUSTOM_LISTS) ? 'list' : null);
+            if ($type === null) {
+                $problems[] = "unknown setting `{$key}`.";
+            } elseif ($value !== null && !self::isValid($type, $value)) {
+                $problems[] =
+                    "`{$key}` must be " . self::EXPECTED[$type] . ', not ' . (string) json_encode($value) . '.';
+            }
+        }
+
+        return $problems;
+    }
+
+    private static function isValid(string $type, mixed $value): bool
+    {
+        return match ($type) {
+            'list' => is_string($value) || self::isStringList($value),
+            'string' => is_string($value),
+            'integer' => self::integer($value) !== null,
+            'boolean' => self::boolean($value) !== null,
+            'map' => is_array($value)
+                && ($value === [] || !array_is_list($value))
+                && array_filter($value, static fn(mixed $item): bool => !is_string($item) && !self::isStringList($item))
+                    === [],
+            'levels' => is_array($value)
+                && ($value === [] || !array_is_list($value))
+                && array_filter($value, static fn(mixed $item): bool => !is_string($item)) === [],
+            default => self::standard($value) !== null,
+        };
+    }
+
+    private static function isStringList(mixed $value): bool
+    {
+        return is_array($value) && array_is_list($value) && array_filter($value, is_string(...)) === $value;
+    }
+
+    /** One of STANDARDS, matched regardless of case, in its own spelling. */
+    private static function standard(mixed $value): ?string
+    {
+        foreach (self::STANDARDS as $standard) {
+            if (is_string($value) && strcasecmp($value, $standard) === 0) {
+                return $standard;
+            }
+        }
+
+        return null;
     }
 
     /**
