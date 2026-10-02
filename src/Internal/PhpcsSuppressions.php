@@ -192,7 +192,7 @@ final class PhpcsSuppressions
      *
      * @return list<array{int, string, bool, bool, bool}>
      */
-    private static function commentLines(string $source): array
+    public static function commentLines(string $source): array
     {
         $tokens = token_get_all($source);
         $comments = [];
@@ -500,7 +500,7 @@ final class PhpcsSuppressions
     /**
      * @return list<string>
      */
-    private static function codes(string $list): array
+    public static function codes(string $list): array
     {
         $codes = [];
         foreach (explode(',', $list) as $code) {
