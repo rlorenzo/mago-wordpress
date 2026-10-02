@@ -60,6 +60,7 @@ final class Settings
         'custom-cache-get-functions' => 'customCacheGetFunctions',
         'custom-cache-set-functions' => 'customCacheSetFunctions',
         'custom-cache-delete-functions' => 'customCacheDeleteFunctions',
+        'custom-allowed-functions-list' => 'customAllowedFunctionsList',
     ];
 
     /**

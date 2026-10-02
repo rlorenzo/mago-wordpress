@@ -49,7 +49,7 @@ final class SniffMap
         'WordPress.PHP.DiscouragedPHPFunctions' => ['wordpress/discouraged-wp-functions'],
         'WordPress.PHP.DontExtract' => ['wordpress/dont-extract'],
         'WordPress.PHP.IniSet' => ['no-ini-set'],
-        'WordPress.PHP.NoSilencedErrors' => ['no-error-control-operator'],
+        'WordPress.PHP.NoSilencedErrors' => ['wordpress/no-silenced-errors'],
         'WordPress.PHP.PregQuoteDelimiter' => ['wordpress/preg-quote-delimiter'],
         'WordPress.PHP.RestrictedPHPFunctions' => ['wordpress/restricted-php-functions'],
         'WordPress.PHP.StrictInArray' => ['wordpress/strict-in-array'],
@@ -82,7 +82,7 @@ final class SniffMap
         'WordPress.WP.PostsPerPage' => ['wordpress/posts-per-page'],
         // Generic sniffs the WPCS standards pull in: this package's `generic/*` ports and the
         // Mago core lint rules that cover the rest (analyzer-only coverage is in docs/wpcs-coverage.md).
-        'Generic.CodeAnalysis.AssignmentInCondition' => ['no-assign-in-condition'],
+        'Generic.CodeAnalysis.AssignmentInCondition' => ['generic/assignment-in-condition'],
         'Generic.CodeAnalysis.EmptyPHPStatement' => ['no-noop'],
         'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => ['prefer-while-loop'],
         'Generic.CodeAnalysis.ForLoopWithTestFunctionCall' => ['generic/for-loop-with-test-function-call'],
@@ -108,7 +108,7 @@ final class SniffMap
         'Generic.VersionControl.GitMergeConflict' => ['generic/git-merge-conflict'],
         'PEAR.NamingConventions.ValidClassName' => ['class-name'],
         'PSR2.Files.ClosingTag' => ['no-closing-tag'],
-        'Squiz.PHP.DisallowMultipleAssignments' => ['no-multi-assignments'],
+        'Squiz.PHP.DisallowMultipleAssignments' => ['generic/disallow-multiple-assignments'],
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => ['generic/disallow-size-functions-in-loops'],
         'Squiz.PHP.Eval' => ['no-eval'],
         'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],

@@ -1,5 +1,7 @@
+generic/assignment-in-condition
 generic/byte-order-mark
 generic/disallow-alternative-php-tags
+generic/disallow-multiple-assignments
 generic/disallow-size-functions-in-loops
 generic/for-loop-with-test-function-call
 generic/foreach-unique-assignment
@@ -26,6 +28,7 @@ wordpress/escaped-not-translated
 wordpress/file-name
 wordpress/get-meta-single
 wordpress/global-variables-override
+wordpress/no-silenced-errors
 wordpress/nonce-verification
 wordpress/nonce-verification-warning
 wordpress/parentheses-spacing

@@ -23,7 +23,8 @@ use function array_values;
  * Ports `WordPress.WP.DiscouragedFunctions` (and widens it with
  * `PHP.DiscouragedPHPFunctions` and `PHP.DevelopmentFunctions`).
  *
- * Six WordPress functions get a specific reason and alternative. Every other
+ * WPCS's two discouraged WordPress functions (`query_posts()`, `wp_reset_query()`) get a
+ * specific reason and alternative. Every other
  * function in `Lists::DISCOURAGED_PHP_FUNCTION_GROUPS` and
  * `Lists::DEVELOPMENT_FUNCTIONS` is reported with its WPCS group name.
  */
@@ -39,22 +40,6 @@ final class DiscouragedWpFunctionsRule extends CallRule
         'wp_reset_query' => [
             'reason' => '`wp_reset_query()` is only needed after `query_posts()`, which should not be used.',
             'alternative' => 'Use `wp_reset_postdata()` after custom `WP_Query` loops instead.',
-        ],
-        'get_page_by_title' => [
-            'reason' => '`get_page_by_title()` is deprecated and discouraged.',
-            'alternative' => 'Use a `WP_Query` with the `title` argument instead.',
-        ],
-        'url_to_postid' => [
-            'reason' => '`url_to_postid()` runs an expensive query on every call.',
-            'alternative' => 'Cache the result (e.g. with the object cache or a transient) instead of calling it repeatedly.',
-        ],
-        'attachment_url_to_postid' => [
-            'reason' => '`attachment_url_to_postid()` runs an expensive query on every call.',
-            'alternative' => 'Cache the result (e.g. with the object cache or a transient) instead of calling it repeatedly.',
-        ],
-        'wp_is_mobile' => [
-            'reason' => '`wp_is_mobile()` relies on unreliable user-agent sniffing and breaks with page caching.',
-            'alternative' => 'Use client-side detection (CSS media queries or JavaScript), or server checks that are safe with caching.',
         ],
     ];
 
@@ -98,7 +83,7 @@ final class DiscouragedWpFunctionsRule extends CallRule
         return new RuleDefinition(
             code: 'wordpress/discouraged-wp-functions',
             name: 'Discouraged WordPress functions',
-            description: 'Reports calls to WordPress functions that are discouraged because they break the main query, are deprecated, are expensive without caching, or rely on unreliable user-agent sniffing, plus calls in the wider WPCS-restricted PHP function groups (obfuscation, runtime configuration, serialize, system calls, urlencode) and development/debugging functions.',
+            description: 'Reports calls to query_posts() and wp_reset_query(), which break the main query, plus calls in the wider WPCS-restricted PHP function groups (obfuscation, runtime configuration, serialize, system calls, urlencode) and development/debugging functions.',
             defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [NodeKind::FunctionCall, NodeKind::FunctionPartialApplication, NodeKind::TypedUseItemSequence],
