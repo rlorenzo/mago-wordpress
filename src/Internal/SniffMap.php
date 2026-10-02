@@ -74,7 +74,7 @@ final class SniffMap
         'WordPress.WP.I18n' => ['wordpress/wp-i18n'],
         'WordPress.WP.PostsPerPage' => ['wordpress/posts-per-page'],
         // Generic sniffs the WPCS standards pull in: this package's `generic/*` ports and the
-        // Mago core lint rules that cover the rest (analyzer-only coverage is in the README).
+        // Mago core lint rules that cover the rest (analyzer-only coverage is in docs/wpcs-coverage.md).
         'Generic.CodeAnalysis.AssignmentInCondition' => ['no-assign-in-condition'],
         'Generic.CodeAnalysis.EmptyPHPStatement' => ['no-noop'],
         'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => ['prefer-while-loop'],

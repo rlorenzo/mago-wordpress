@@ -16,7 +16,7 @@ validated-sanitized-input = { enabled = true }
 prepared-sql = { enabled = true }
 # WordPress-Docs' Squiz.Commenting.{Function,Class,Variable}Comment.Missing: a docblock on every
 # function, method, class and property (not interfaces, traits, enums or constants). Reports at
-# Mago's `help` level, so it does not fail a build; see the README's WordPress-Docs section.
+# Mago's `help` level, so it does not fail a build; see docs/wpcs-coverage.md (WordPress-Docs).
 missing-docs = { enabled = true, classes = true, methods = true, properties = true, constants = false, enum-cases = false, statics = false }
 # WordPress-Core requires long arrays (Universal.Arrays.DisallowShortArraySyntax); Mago's
 # default is the opposite. `mago lint --fix --only array-style` converts `[]` to `array()`.
@@ -24,8 +24,8 @@ array-style = { style = "long" }
 
 # The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
 # call, declaration, control-structure and array parentheses (refused upstream, mago #446/#490);
-# `mago lint --fix --only wordpress/parentheses-spacing` adds them after `mago format`; see the
-# README's Formatting section.
+# `mago lint --fix --only wordpress/parentheses-spacing` adds them after `mago format`; see
+# docs/formatting.md.
 [formatter]
 use-tabs = true
 function-brace-style = "same-line"

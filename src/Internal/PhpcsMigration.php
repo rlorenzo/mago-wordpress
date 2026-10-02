@@ -506,7 +506,7 @@ final class PhpcsMigration
         $parts = explode('.', $ref);
         $sniff = implode('.', array_slice($parts, offset: 0, length: 3));
         $reason = match (true) {
-            $ref === 'WordPress-Docs' => "only missing docblocks are checked (Mago's missing-docs); see the README",
+            $ref === 'WordPress-Docs' => 'only missing docblocks are checked (missing-docs); see docs/wpcs-coverage.md',
             str_starts_with($ref, 'PHPCompatibility') => 'ignored (the package targets PHP 8.1+)',
             !str_starts_with($ref, 'WordPress.') && count($parts) === 1 && !str_contains($ref, '/')
                 => 'custom or third-party standard; its contents are not followed',
