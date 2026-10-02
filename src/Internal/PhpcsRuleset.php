@@ -183,6 +183,7 @@ final class PhpcsRuleset
         'Squiz.ControlStructures.ControlSignature',
         'Squiz.Strings.DoubleQuoteUsage',
         'PSR2.ControlStructures.SwitchDeclaration',
+        'Universal.NamingConventions.NoReservedKeywordParameterNames',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */

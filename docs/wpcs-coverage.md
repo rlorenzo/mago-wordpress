@@ -182,7 +182,6 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 - `Squiz.PHP.CommentedOutCode`
 - `Universal.Namespaces.DisallowDeclarationWithoutName`
 - `Universal.Namespaces.OneDeclarationPerFile`
-- `Universal.NamingConventions.NoReservedKeywordParameterNames`
 - `Universal.UseStatements.NoUselessAliases`
 
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
