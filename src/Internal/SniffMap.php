@@ -112,6 +112,7 @@ final class SniffMap
             'generic/property-declaration-warning',
         ],
         'PSR2.Files.ClosingTag' => ['no-closing-tag'],
+        'PSR2.Methods.MethodDeclaration' => ['generic/method-declaration', 'generic/method-declaration-warning'],
         'Squiz.Classes.SelfMemberReference' => ['generic/self-member-reference'],
         'Squiz.PHP.DisallowMultipleAssignments' => ['generic/disallow-multiple-assignments'],
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => ['generic/disallow-size-functions-in-loops'],

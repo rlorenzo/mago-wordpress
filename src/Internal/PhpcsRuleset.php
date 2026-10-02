@@ -175,12 +175,14 @@ final class PhpcsRuleset
         'Universal.Operators.DisallowShortTernary',
         'Squiz.Scope.MethodScope',
         'Squiz.Classes.SelfMemberReference',
+        'PSR2.Methods.MethodDeclaration',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
     private const CORE_SILENCED_CODES = [
         'PSR2.Classes.PropertyDeclaration.Underscore',
         'Squiz.Classes.SelfMemberReference.NotUsed',
+        'PSR2.Methods.MethodDeclaration.Underscore',
     ];
 
     private const EXTRA_SNIFFS = [
