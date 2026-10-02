@@ -112,7 +112,8 @@ final class PhpcsMigrationTest extends TestCase
         // A <type> on a whole sniff re-levels its extension rule through the `levels` setting.
         self::assertStringNotContainsString('<type> on WordPress.DB.PreparedSQL', $unmapped);
         self::assertSame(['wordpress/prepared-sql' => 'warning'], $result['extra']['levels'] ?? null);
-        self::assertStringContainsString('customAllowedFunctionsList', $unmapped);
+        self::assertStringNotContainsString('customAllowedFunctionsList', $unmapped);
+        self::assertSame(['ftp_connect'], $result['extra']['custom-allowed-functions-list'] ?? null);
         // Generic sniffs map to this package's generic/* rules and Mago core rules.
         self::assertStringNotContainsString('Generic.PHP.DiscourageGoto', $unmapped);
         self::assertStringContainsString('Generic.WhiteSpace.ScopeIndent', $unmapped);

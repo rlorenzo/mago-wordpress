@@ -10,20 +10,10 @@ query_posts(['post_type' => 'post']);
 // @mago-expect lint:wordpress/discouraged-wp-functions
 wp_reset_query();
 
-// get_page_by_title_is_flagged
-// @mago-expect lint:wordpress/discouraged-wp-functions
+// functions_wpcs_does_not_discourage_are_not_flagged (get_page_by_title is wp-deprecated-functions)
 $page = get_page_by_title('About Us');
-
-// url_to_postid_is_flagged
-// @mago-expect lint:wordpress/discouraged-wp-functions
 $post_id = url_to_postid('https://example.com/about/');
-
-// attachment_url_to_postid_is_flagged
-// @mago-expect lint:wordpress/discouraged-wp-functions
 $attachment_id = attachment_url_to_postid($url);
-
-// wp_is_mobile_is_flagged
-// @mago-expect lint:wordpress/discouraged-wp-functions
 if (wp_is_mobile()) {
     echo 'mobile';
 }
