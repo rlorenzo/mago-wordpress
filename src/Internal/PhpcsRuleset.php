@@ -180,6 +180,7 @@ final class PhpcsRuleset
         'Universal.Operators.StrictComparisons',
         'Generic.ControlStructures.InlineControlStructure',
         'Universal.Operators.DisallowStandalonePostIncrementDecrement',
+        'Squiz.ControlStructures.ControlSignature',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */

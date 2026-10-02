@@ -172,6 +172,13 @@ final class RuleFixesTest extends TestCase
             "if (\$a) {\n\tx();\n} else { // why\n\tif (\$b) {\n\t\ty();\n\t}\n}",
         ];
 
+        yield 'control-signature puts one space after the brace unless a comment is in the way' => [
+            'generic/control-signature',
+            '',
+            "if (\$a) {\n}\nelse {\n}\ntry {\n}catch (E \$e) {\n} // x\nfinally {\n}",
+            "if (\$a) {\n} else {\n}\ntry {\n} catch (E \$e) {\n} // x\nfinally {\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
