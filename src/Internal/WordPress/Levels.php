@@ -23,6 +23,17 @@ final class Levels
      * @var array<string, array<string, 'error'|'warning'|'error|warning'>>
      */
     public const SNIFFS = [
+        'Generic.CodeAnalysis.AssignmentInCondition' => [
+            'Found' => 'warning',
+            'FoundInWhileCondition' => 'warning',
+        ],
+        'Generic.CodeAnalysis.EmptyPHPStatement' => [
+            'EmptyPHPOpenCloseTagsDetected' => 'warning',
+            'SemicolonWithoutCodeDetected' => 'warning',
+        ],
+        'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => [
+            'CanSimplify' => 'warning',
+        ],
         'Generic.CodeAnalysis.ForLoopWithTestFunctionCall' => [
             'NotAllowed' => 'warning',
         ],
@@ -32,7 +43,26 @@ final class Levels
         'Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence' => [
             'MissingParentheses' => 'error',
         ],
+        'Generic.CodeAnalysis.UnconditionalIfStatement' => [
+            'Found' => 'warning',
+        ],
+        'Generic.CodeAnalysis.UnnecessaryFinalModifier' => [
+            'Found' => 'warning',
+        ],
+        'Generic.CodeAnalysis.UselessOverridingMethod' => [
+            'Found' => 'warning',
+        ],
         'Generic.Files.ByteOrderMark' => [
+            'Found' => 'error',
+        ],
+        'Generic.Files.OneObjectStructurePerFile' => [
+            'MultipleFound' => 'error',
+        ],
+        'Generic.NamingConventions.UpperCaseConstantName' => [
+            'ClassConstantNotUpperCase' => 'error',
+            'ConstantNotUpperCase' => 'error',
+        ],
+        'Generic.PHP.BacktickOperator' => [
             'Found' => 'error',
         ],
         'Generic.PHP.DisallowAlternativePHPTags' => [
@@ -42,16 +72,62 @@ final class Levels
             'MaybeASPShortOpenTagFound' => 'warning',
             'ScriptOpenTagFound' => 'error',
         ],
+        'Generic.PHP.DisallowShortOpenTag' => [
+            'EchoFound' => 'error',
+            'Found' => 'error',
+            'PossibleFound' => 'warning',
+        ],
+        'Generic.PHP.DiscourageGoto' => [
+            'Found' => 'warning',
+        ],
+        'Generic.PHP.ForbiddenFunctions' => [
+            '*' => 'error',
+            '*WithAlternative' => 'error|warning',
+            'Discouraged' => 'error|warning',
+            'Found' => 'error|warning',
+        ],
+        'Generic.PHP.LowerCaseConstant' => [
+            'Found' => 'error',
+        ],
+        'Generic.PHP.LowerCaseKeyword' => [
+            'Found' => 'error',
+        ],
+        'Generic.PHP.LowerCaseType' => [
+            '*' => 'error',
+        ],
+        'Generic.Strings.UnnecessaryStringConcat' => [
+            'Found' => 'error|warning',
+        ],
         'Generic.VersionControl.GitMergeConflict' => [
             'CloserFound' => 'error',
             'DelimiterFound' => 'error',
             'OpenerFound' => 'error',
         ],
+        'PEAR.NamingConventions.ValidClassName' => [
+            'Invalid' => 'error',
+            'StartWithCapital' => 'error',
+        ],
+        'PSR2.Files.ClosingTag' => [
+            'NotAllowed' => 'error',
+        ],
+        'Squiz.PHP.DisallowMultipleAssignments' => [
+            '*InControlStructure' => 'error',
+            'Found' => 'error',
+        ],
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => [
+            'Found' => 'error',
+        ],
+        'Squiz.PHP.Eval' => [
+            'Discouraged' => 'error',
+        ],
+        'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
+        ],
+        'Universal.Operators.DisallowShortTernary' => [
+            'Found' => 'error',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',
@@ -162,6 +238,13 @@ final class Levels
         ],
         'WordPress.PHP.DontExtract' => [
             'extract_*' => 'error',
+        ],
+        'WordPress.PHP.IniSet' => [
+            '*_Disallowed' => 'error',
+            'Risky' => 'warning',
+        ],
+        'WordPress.PHP.NoSilencedErrors' => [
+            'Discouraged' => 'warning',
         ],
         'WordPress.PHP.PregQuoteDelimiter' => [
             'Missing' => 'warning',
