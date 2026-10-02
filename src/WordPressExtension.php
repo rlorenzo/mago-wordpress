@@ -48,6 +48,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PregQuoteDelimiterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\PropertyDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
@@ -161,6 +162,12 @@ final class WordPressExtension
                 new DisallowSizeFunctionsInLoopsRule($report),
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
+                ...SplitRule::pair(
+                    new PropertyDeclarationRule($report),
+                    $report,
+                    'Property declaration (warnings)',
+                    'A property name with a leading underscore (PSR2 PropertyDeclaration Underscore, a warning; WordPress-Core leaves it out).',
+                ),
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),

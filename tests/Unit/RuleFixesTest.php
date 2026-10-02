@@ -101,6 +101,13 @@ final class RuleFixesTest extends TestCase
             "?>\n<?php if ( \$x ) : ?>\n<?php elseif ( \$y ) : ?>\n<?php else : ?>\n<?php endif; ?>\n<?php",
         ];
 
+        yield 'property-declaration moves modifiers and fixes the space after the type' => [
+            'generic/property-declaration',
+            '',
+            "class A {\n\tstatic public int   \$a;\n\treadonly protected ?string\$b;\n}",
+            "class A {\n\tpublic static int \$a;\n\tprotected readonly ?string \$b;\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
