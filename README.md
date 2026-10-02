@@ -29,11 +29,22 @@ composer require --dev carthage-software/mago rlorenzo/mago-wordpress
 
 ```toml
 # mago.toml
-extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
+extends = "vendor/rlorenzo/mago-wordpress/wordpress-extra.mago.toml"
 ```
 
-Run `mago lint`. You get this package's 52 default rules, Mago's own WordPress security rules
-and a WordPress formatter preset.
+Pick the preset that matches the phpcs standard you used. If you're not sure, use
+`wordpress-extra.mago.toml`: `WordPress-Extra` is what most plugins and themes run.
+
+| phpcs `--standard` | Preset |
+|:---|:---|
+| `WordPress-Core` | `wordpress-core.mago.toml` |
+| `WordPress-Extra` | `wordpress-extra.mago.toml` |
+| `WordPress` (Core + Docs + Extra + the database and input sniffs) | `wordpress.mago.toml` |
+
+Run `mago lint`. Each preset reports what its standard reports: the rules for sniffs outside it
+are off, and so are Mago's own rules that no WPCS sniff runs (`strict-types`, `no-isset`,
+`cyclomatic-complexity` and the like), so a project that was clean under phpcs starts clean.
+All three include a WordPress formatter preset.
 
 The worker runs as PHP inside your project and loads its Composer autoloader, like PHPUnit or
 PHPStan, so only lint projects you trust.
