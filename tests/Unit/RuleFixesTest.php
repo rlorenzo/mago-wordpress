@@ -158,6 +158,20 @@ final class RuleFixesTest extends TestCase
             "++\$i;\n--\$obj->a[\$k] ;\n\$b = \$i++;",
         ];
 
+        yield 'disallow-lonely-if merges the else and the if into elseif' => [
+            'generic/disallow-lonely-if',
+            '',
+            "if (\$a) {\n\tx();\n} else {\n\tif (\$b) {\n\t\ty();\n\t} else {\n\t\tz();\n\t}\n}",
+            "if (\$a) {\n\tx();\n} elseif (\$b) {\n\t\ty();\n\t} else {\n\t\tz();\n}",
+        ];
+
+        yield 'disallow-lonely-if leaves a comment around the inner if unfixed' => [
+            'generic/disallow-lonely-if',
+            '',
+            "if (\$a) {\n\tx();\n} else { // why\n\tif (\$b) {\n\t\ty();\n\t}\n}",
+            "if (\$a) {\n\tx();\n} else { // why\n\tif (\$b) {\n\t\ty();\n\t}\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

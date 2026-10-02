@@ -173,6 +173,9 @@ final class Levels
         'Universal.CodeAnalysis.StaticInFinalClass' => [
             '*' => 'error',
         ],
+        'Universal.ControlStructures.DisallowLonelyIf' => [
+            'Found' => 'error',
+        ],
         'Universal.Files.SeparateFunctionsFromOO' => [
             'Mixed' => 'error',
         ],
