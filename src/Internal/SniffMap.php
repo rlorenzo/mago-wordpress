@@ -114,6 +114,7 @@ final class SniffMap
             'generic/property-declaration-warning',
         ],
         'PSR2.ControlStructures.ElseIfDeclaration' => ['generic/else-if-declaration'],
+        'PSR2.ControlStructures.SwitchDeclaration' => ['generic/switch-declaration'],
         'PSR2.Files.ClosingTag' => ['no-closing-tag'],
         'PSR2.Methods.MethodDeclaration' => ['generic/method-declaration', 'generic/method-declaration-warning'],
         'Squiz.Classes.SelfMemberReference' => ['generic/self-member-reference'],
