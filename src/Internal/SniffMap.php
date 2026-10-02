@@ -123,6 +123,7 @@ final class SniffMap
         'Squiz.Scope.MethodScope' => ['generic/method-scope'],
         'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
+        'Universal.CodeAnalysis.StaticInFinalClass' => ['generic/static-in-final-class'],
         'Universal.Operators.DisallowShortTernary' => ['no-shorthand-ternary'],
     ];
 

@@ -163,6 +163,9 @@ final class Levels
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
         ],
+        'Universal.CodeAnalysis.StaticInFinalClass' => [
+            '*' => 'error',
+        ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
         ],
