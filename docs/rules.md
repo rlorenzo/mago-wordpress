@@ -129,6 +129,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/no-leading-backslash` | Error | `Universal.UseStatements.NoLeadingBackslash` | `use \Foo\Bar;`: an import name with a leading backslash (autofix) |
 | `generic/forbidden-functions` | Error | `Generic.PHP.ForbiddenFunctions` | `sizeof()` and `delete()`, the sniff's default list, which WordPress-Extra keeps |
 | `generic/including-file-warning` | Warning | `PEAR.Files.IncludingFile` | an `include`/`include_once` outside any scope, condition or assignment, which should be `require`/`require_once` (`UseRequire`, `UseRequireOnce`; autofix) |
+| `generic/closing-tag` | Error | `PSR2.Files.ClosingTag` | a `?>` at the end of a file with no inline HTML (autofix); templates are left alone, as the sniff leaves them |
 | `generic/including-file` | Error | `PEAR.Files.IncludingFile` | `require( 'file.php' )`: parentheses around the path (`BracketsNotRequired`; autofix) |
 | `generic/useless-overriding-method` | Warning | `Generic.CodeAnalysis.UselessOverridingMethod` | a method whose body only calls the parent method of the same name with its own parameters, unchanged; replaces Mago's `no-redundant-method-override` |
 | `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |

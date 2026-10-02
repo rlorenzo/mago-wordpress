@@ -17,6 +17,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
@@ -217,6 +218,7 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new ClosingTagRule($report),
                 ...SplitRule::pair(
                     new IncludingFileRule($report),
                     $report,
