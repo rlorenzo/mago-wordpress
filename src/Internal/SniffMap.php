@@ -130,6 +130,7 @@ final class SniffMap
         'Squiz.Strings.DoubleQuoteUsage' => ['generic/double-quote-usage'],
         'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
+        'Universal.CodeAnalysis.NoDoubleNegative' => ['generic/no-double-negative'],
         'Universal.CodeAnalysis.NoEchoSprintf' => ['generic/no-echo-sprintf'],
         'Universal.CodeAnalysis.StaticInFinalClass' => ['generic/static-in-final-class'],
         'Universal.ControlStructures.DisallowLonelyIf' => ['generic/disallow-lonely-if'],
