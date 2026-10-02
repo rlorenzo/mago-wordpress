@@ -3,6 +3,7 @@
 
 declare(strict_types=1);
 
+use Rlorenzo\MagoWordPress\Internal\FormatCommand;
 use Rlorenzo\MagoWordPress\Internal\PhpcsMigration;
 
 $autoloaders = [
@@ -19,22 +20,35 @@ foreach ($autoloaders as $autoloader) {
 }
 
 $args = array_slice($argv, 1);
-if (($args[0] ?? '') !== 'migrate') {
+$cwd = getcwd();
+$cwd = $cwd === false ? '.' : $cwd;
+$command = match ($args[0] ?? '') {
+    'migrate' => static function () use ($args, $cwd): int {
+        $result = PhpcsMigration::run(array_slice($args, 1), $cwd);
+        if (is_int($result)) {
+            return $result;
+        }
+
+        echo $result;
+
+        return 0;
+    },
+    'format' => static fn(): int => FormatCommand::run(array_slice($args, 1), $cwd),
+    default => null,
+};
+if ($command === null) {
     fwrite(STDERR, <<<'USAGE'
         Usage: mago-wordpress migrate [<phpcs.xml or directory>] [--write] [--force]
+               mago-wordpress format [<paths>...] [--check] [--staged]
 
-        Converts a phpcs ruleset into mago.toml and composer.json extra.mago-wordpress.
+        migrate: converts a phpcs ruleset into mago.toml and composer.json extra.mago-wordpress.
         Prints the result by default; --write saves both next to the ruleset (--force
         overwrites an existing mago.toml). Lists everything that could not be migrated.
+
+        format: formats PHP files for WordPress (`mago-wordpress format --help` for details).
 
         USAGE);
     exit(($args[0] ?? '') === '--help' ? 0 : 2);
 }
 
-$cwd = getcwd();
-$result = PhpcsMigration::run(array_slice($args, 1), $cwd === false ? '.' : $cwd);
-if (is_int($result)) {
-    exit($result);
-}
-
-echo $result;
+exit($command());
