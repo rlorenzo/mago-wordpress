@@ -228,15 +228,6 @@ vendor/bin/mago-wordpress format --check  # exits 1 with a diff if a file would 
 On the sample site it changed 68 files (+1,254/-1,412 lines; +296/-418 ignoring whitespace), and
 `--check` passed afterwards.
 
-- The reformat removed the parentheses that group a mixed `&&`/`||` condition
-  (`a || ( b && c )` became `a || b && c`), which added 7 `generic/require-explicit-boolean-operator-precedence`
-  errors. Add this to your `mago.toml` before reformatting to keep them:
-
-  ```toml
-  [formatter]
-  preserve-redundant-logical-binary-expression-parentheses = true
-  ```
-
 - Template whitespace changes, so the HTML a template prints changes too. Regenerate HTML or visual
   snapshots after the reformat.
 - Regenerate the baseline after the reformat if you use `--verify-baseline`.

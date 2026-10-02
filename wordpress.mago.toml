@@ -134,6 +134,9 @@ parentheses-in-exit-and-die = false
 # WordPress-Core asks for neither: templates keep a final `?>`, files don't gain a blank line after `<?php`.
 remove-trailing-close-tag = false
 empty-line-after-opening-tag = false
+# Keep `a || ( b && c )`: without the parentheses Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence
+# (generic/require-explicit-boolean-operator-precedence) reports the line.
+preserve-redundant-logical-binary-expression-parentheses = true
 # trailing-comma stays on (Mago's default): WordPress-Core requires one after a multi-line array's last item.
 
 [extension-hosts.wordpress]
