@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
+use Mago\Sdk\Linter\Rule;
 use Rlorenzo\MagoWordPress\Internal\CommentConversion;
+use Rlorenzo\MagoWordPress\Internal\LeveledRule;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
@@ -61,6 +63,10 @@ use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedParameterValuesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\YodaConditionsRule;
 
+use function fwrite;
+
+use const STDERR;
+
 /**
  * Constructs the complete extension advertised by each worker process.
  *
@@ -88,7 +94,7 @@ final class WordPressExtension
             identifier: 'rlorenzo/mago-wordpress',
             name: 'WordPress',
             version: self::VERSION,
-            linterRules: [
+            linterRules: self::leveled($settings, [
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
                 new EnqueuedResourcesRule($report),
@@ -142,7 +148,24 @@ final class WordPressExtension
                 new PregQuoteDelimiterRule($report),
                 new ValidatedSanitizedInputRule($report, $settings),
                 new NonceVerificationRule($report, $settings),
-            ],
+            ]),
         );
+    }
+
+    /**
+     * Applies the `levels` setting; a mistyped entry is reported on stderr, which Mago shows,
+     * rather than silently doing nothing.
+     *
+     * @param list<Rule> $rules
+     * @return list<Rule>
+     */
+    private static function leveled(Settings $settings, array $rules): array
+    {
+        [$rules, $problems] = LeveledRule::apply($rules, $settings->levels);
+        foreach ($problems as $problem) {
+            fwrite(STDERR, "mago-wordpress: {$problem}\n");
+        }
+
+        return $rules;
     }
 }

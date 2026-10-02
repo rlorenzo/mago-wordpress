@@ -151,7 +151,7 @@ final class PrefixAllGlobalsRule implements Rule
             code: 'wordpress/prefix-all-globals',
             name: 'Prefix all globals',
             description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants, global variables and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured; the prefixes `wordpress`, `wp`, `_` and `php` and prefixes shorter than three characters are reported at the top of each file and ignored. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. Global variable writes are checked in the top-level scope, in functions that import the variable with `global`, and through `$GLOBALS[...]` anywhere; superglobals and WordPress core globals are exempt. A constant or hook name built dynamically is reported unless its leading literal part is prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks, PHP built-in names, functions documented as @deprecated and unit test classes are exempt.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [
                 NodeKind::Function,

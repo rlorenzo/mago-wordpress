@@ -83,7 +83,7 @@ final class CapabilitiesRule extends CallRule
             code: 'wordpress/capabilities',
             name: 'WordPress capabilities',
             description: 'Reports roles, deprecated capabilities, and unknown capabilities passed to current_user_can(), add_menu_page() and the other capability-checking functions. Custom capabilities can be listed in the `custom-capabilities` setting.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::FunctionCall],
         );

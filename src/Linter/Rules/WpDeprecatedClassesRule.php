@@ -51,7 +51,7 @@ final class WpDeprecatedClassesRule implements Rule
             code: 'wordpress/wp-deprecated-classes',
             name: 'WordPress deprecated classes',
             description: 'Reports instantiations, static calls, static property accesses, class constant accesses, and extends and implements clauses that reference a deprecated WordPress core class.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [
                 NodeKind::Instantiation,

@@ -115,7 +115,7 @@ final class WpI18nRule extends CallRule
             . "`xgettext` and WP-CLI's `i18n make-pot` can extract them. Every call must also pass a literal text domain, "
             . 'and for the plural functions the singular and plural strings should use consistent printf-style placeholders. '
             . 'The `text-domains` setting can list the allowed text domains; when non-empty, any other literal text domain is reported.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             // The function-like targets put the enclosing declarations into the snapshot, so a call has ancestors.
             targets: [
