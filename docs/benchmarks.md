@@ -16,7 +16,7 @@ table runs the same `WordPress-Extra` comparison as the plugins throughout, for 
 | Codebase | Version | Active installs | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
 |:---|:---|---:|---:|---:|---:|---:|
 | WooCommerce | 11.1.2 | 7,000,000+ | 3,528 | 33.40 s | 3.32 s | 10.1× |
-| WordPress core | trunk | — | 1,868 | 25.89 s | 3.78 s | 6.8× |
+| WordPress core | trunk | n/a¹ | 1,868 | 25.89 s | 3.78 s | 6.8× |
 | Elementor | 4.3.2 | 10,000,000+ | 1,460 | 13.02 s | 1.35 s | 9.6× |
 | Google Site Kit | 1.188.0 | 5,000,000+ | 1,869 | 15.92 s | 1.33 s | 12.0× |
 | Yoast SEO | 28.5 | 10,000,000+ | 1,511 | 12.32 s | 1.25 s | 9.9× |
@@ -27,6 +27,8 @@ table runs the same `WordPress-Extra` comparison as the plugins throughout, for 
 | Contact Form 7 | 6.1.7 | 10,000,000+ | 111 | 1.40 s | 0.34 s | 4.1× |
 | Akismet | 5.7.2 | 5,000,000+ | 29 | 0.52 s | 0.26 s | 2.0× |
 | **Total** | | | **11,883** | **120.13 s** | **14.84 s** | **8.1×** |
+
+¹ WordPress.org publishes active-install counts for plugins only; core has no equivalent figure.
 
 Measured 2026-10-01 on the plugins' release zips (vendor and tests excluded) and a wordpress-develop
 checkout, `mago` at 1.51.0 and this package at 1.2.0, with the rules that are on by default (phpcs
