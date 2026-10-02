@@ -3,6 +3,7 @@ generic/byte-order-mark
 generic/disallow-alternative-php-tags
 generic/disallow-multiple-assignments
 generic/disallow-size-functions-in-loops
+generic/else-if-declaration
 generic/empty-statement
 generic/for-loop-with-test-function-call
 generic/foreach-unique-assignment

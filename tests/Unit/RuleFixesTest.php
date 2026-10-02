@@ -122,6 +122,13 @@ final class RuleFixesTest extends TestCase
             "class A {\n\tpublic static function a() {}\n\tfinal public function b() {}\n}",
         ];
 
+        yield 'else-if-declaration joins else if into elseif' => [
+            'generic/else-if-declaration',
+            '',
+            "if (\$a) {\n} else  if (\$b) {\n}",
+            "if (\$a) {\n} elseif (\$b) {\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
