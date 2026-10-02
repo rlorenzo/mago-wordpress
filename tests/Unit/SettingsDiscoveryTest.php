@@ -56,6 +56,37 @@ final class SettingsDiscoveryTest extends TestCase
         self::assertSame([], SettingsDiscovery::in($this->directory)->prefixes);
     }
 
+    public function testWorkerStandardIsTheDefaultComposerOverrides(): void
+    {
+        self::assertSame('WordPress-Extra', SettingsDiscovery::in($this->directory, 'WordPress-Extra')->standard);
+
+        file_put_contents($this->directory . '/composer.json', data: '{"extra": {"mago-wordpress": {}}}');
+        self::assertSame('WordPress-Core', SettingsDiscovery::in($this->directory, 'WordPress-Core')->standard);
+
+        file_put_contents(
+            $this->directory . '/composer.json',
+            data: '{"extra": {"mago-wordpress": {"standard": "WordPress"}}}',
+        );
+        self::assertSame('WordPress', SettingsDiscovery::in($this->directory, 'WordPress-Core')->standard);
+    }
+
+    public function testPhpcsRulesetStandardWinsOverTheWorkerStandard(): void
+    {
+        // No standard named: the worker's applies.
+        file_put_contents($this->directory . '/phpcs.xml', self::ruleset('from_phpcs'));
+        $settings = SettingsDiscovery::in($this->directory, 'WordPress-Core');
+        self::assertSame(['*'], $settings->excludePatterns['WordPress.Security.EscapeOutput'] ?? null);
+
+        // Built on WordPress-Extra: EscapeOutput runs, whatever the preset says.
+        file_put_contents(
+            $this->directory . '/phpcs.xml',
+            data: '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress-Extra"/></ruleset>',
+        );
+        $settings = SettingsDiscovery::in($this->directory, 'WordPress-Core');
+        self::assertArrayNotHasKey('WordPress.Security.EscapeOutput', $settings->excludePatterns);
+        self::assertSame(['*'], $settings->excludePatterns['WordPress.DB.SlowDBQuery'] ?? null);
+    }
+
     private static function ruleset(string $prefix): string
     {
         return <<<XML

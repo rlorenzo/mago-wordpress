@@ -415,32 +415,64 @@ final class PhpcsRuleset
     }
 
     /**
+     * The broadest WPCS standard the ruleset names (`WordPress` > `WordPress-Extra` >
+     * `WordPress-Core`), or NULL when it names none.
+     */
+    public static function standard(DOMXPath $xpath): ?string
+    {
+        $standards = self::standards($xpath);
+        foreach (['WordPress', 'WordPress-Extra', 'WordPress-Core'] as $standard) {
+            if (in_array($standard, $standards, strict: true)) {
+                return $standard;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The mapped sniffs a WPCS standard leaves out: none for `WordPress` (or an unknown name),
+     * which runs every sniff.
+     *
+     * @return list<string>
+     */
+    public static function excludedSniffs(string $standard): array
+    {
+        $included = match ($standard) {
+            'WordPress-Core' => self::CORE_SNIFFS,
+            'WordPress-Extra' => [...self::CORE_SNIFFS, ...self::EXTRA_SNIFFS],
+            default => null,
+        };
+        if ($included === null) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_keys(SniffMap::RULES),
+            static fn(string $sniff): bool => !in_array($sniff, $included, strict: true),
+        ));
+    }
+
+    /**
      * Mapped sniffs outside every WPCS standard the ruleset names, unless a `<rule ref>`
      * names the sniff, its category, or one of its message codes.
      *
      * @return list<string>
      */
-    private static function excludedByStandard(DOMXPath $xpath): array
+    public static function excludedByStandard(DOMXPath $xpath): array
     {
-        $standards = self::standards($xpath);
-        if ($standards === [] || in_array('WordPress', $standards, strict: true)) {
+        $standard = self::standard($xpath);
+        if ($standard === null) {
             return [];
         }
 
-        $included = in_array('WordPress-Extra', $standards, strict: true)
-            ? [...self::CORE_SNIFFS, ...self::EXTRA_SNIFFS]
-            : self::CORE_SNIFFS;
         $refs = [];
         foreach (self::elements($xpath, '/ruleset/rule[@ref]') as $rule) {
             $refs[] = $rule->getAttribute('ref');
         }
 
         $excluded = [];
-        foreach (array_keys(SniffMap::RULES) as $sniff) {
-            if (in_array($sniff, $included, strict: true)) {
-                continue;
-            }
-
+        foreach (self::excludedSniffs($standard) as $sniff) {
             foreach ($refs as $ref) {
                 // ponytail: a message-code ref re-includes its whole sniff; phpcs includes only that code.
                 if (str_starts_with($sniff . '.', $ref . '.') || str_starts_with($ref, $sniff . '.')) {
