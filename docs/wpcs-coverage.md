@@ -195,7 +195,6 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `PSR12.Files.FileHeader`
 - `PSR12.Keywords.ShortFormTypeKeywords`
 - `Squiz.Operators.IncrementDecrementUsage`
-- `Squiz.Operators.ValidLogicalOperators`
 - `Squiz.Strings.DoubleQuoteUsage`
 - `Universal.Attributes.DisallowAttributeParentheses`
 - `Universal.Classes.ModifierKeywordOrder`
