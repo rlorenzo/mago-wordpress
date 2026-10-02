@@ -25,7 +25,7 @@ use Rlorenzo\MagoWordPress\WordPressExtension;
     // The last one wins: Mago 1.47 appends a preset's command to the one it extends.
     $standard = 'WordPress';
     foreach ($_SERVER['argv'] ?? [] as $arg) {
-        if (is_string($arg) && str_starts_with($arg, '--standard=')) {
+        if (str_starts_with($arg, '--standard=')) {
             $standard = substr($arg, offset: 11);
         }
     }
