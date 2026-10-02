@@ -159,7 +159,6 @@ doesn't map them:
 | `Generic.PHP.DeprecatedFunctions` | `deprecated-function` |
 | `Generic.PHP.Syntax` | parse errors |
 | `Squiz.Functions.FunctionDuplicateArgument` | a semantics error |
-| `Squiz.PHP.NonExecutableCode` | `unevaluated-code` |
 | `Universal.Arrays.DuplicateArrayKey` | `duplicate-array-key` |
 | `Universal.CodeAnalysis.ConstructorDestructorReturn` | partly: a semantics error for a return type on `__construct`/`__destruct`, not a `return $value;` inside one |
 

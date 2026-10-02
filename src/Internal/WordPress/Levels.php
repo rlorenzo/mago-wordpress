@@ -147,6 +147,10 @@ final class Levels
         'Squiz.PHP.Eval' => [
             'Discouraged' => 'error',
         ],
+        'Squiz.PHP.NonExecutableCode' => [
+            'ReturnNotRequired' => 'warning',
+            'Unreachable' => 'warning',
+        ],
         'Squiz.Scope.MethodScope' => [
             'Missing' => 'error',
         ],
