@@ -109,6 +109,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/method-declaration-warning` | Warning | `PSR2.Methods.MethodDeclaration` | a method name with a single leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |
 | `generic/method-declaration` | Error | `PSR2.Methods.MethodDeclaration` | `final` or `abstract` after a method's visibility, `static` before it (fixed) |
 | `generic/method-scope` | Error | `Squiz.Scope.MethodScope` | a method declared without `public`, `protected` or `private` |
+| `generic/no-double-negative` | Error | `Universal.CodeAnalysis.NoDoubleNegative` | `!!` (use a `(bool)` cast) or `!!!` and more (use one `!`); fixed as phpcbf does, except before `instanceof` or with a comment in the chain |
 | `generic/no-echo-sprintf` | Error | `Universal.CodeAnalysis.NoEchoSprintf` | `echo sprintf(...)` or `echo vsprintf(...)`; the fix drops the `echo` and calls `printf()`/`vprintf()`, as phpcbf does |
 | `generic/non-executable-code` | Warning | `Squiz.PHP.NonExecutableCode` | code after a `return`, `break`, `continue`, `throw`, `exit` or `goto` in the same block (one report per line), and a bare `return;` ending a function |
 | `generic/property-declaration-warning` | Warning | `PSR2.Classes.PropertyDeclaration` | a property name with a leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |

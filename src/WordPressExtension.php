@@ -48,6 +48,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
@@ -223,6 +224,7 @@ final class WordPressExtension
                 new NoEchoSprintfRule($report),
                 new SwitchDeclarationRule($report),
                 new UnnecessaryHeredocRule($report),
+                new NoDoubleNegativeRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),

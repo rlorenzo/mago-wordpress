@@ -181,6 +181,7 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 
 - `Squiz.PHP.CommentedOutCode`
 - `Universal.CodeAnalysis.NoDoubleNegative`
+- `Squiz.Scope.MethodScope`
 - `Universal.Namespaces.DisallowDeclarationWithoutName`
 - `Universal.Namespaces.OneDeclarationPerFile`
 - `Universal.NamingConventions.NoReservedKeywordParameterNames`
