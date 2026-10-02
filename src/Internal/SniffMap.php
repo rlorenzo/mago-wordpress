@@ -107,6 +107,10 @@ final class SniffMap
         'Generic.Strings.UnnecessaryStringConcat' => ['no-redundant-string-concat'],
         'Generic.VersionControl.GitMergeConflict' => ['generic/git-merge-conflict'],
         'PEAR.NamingConventions.ValidClassName' => ['class-name'],
+        'PSR2.Classes.PropertyDeclaration' => [
+            'generic/property-declaration',
+            'generic/property-declaration-warning',
+        ],
         'PSR2.Files.ClosingTag' => ['no-closing-tag'],
         'Squiz.PHP.DisallowMultipleAssignments' => ['generic/disallow-multiple-assignments'],
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => ['generic/disallow-size-functions-in-loops'],

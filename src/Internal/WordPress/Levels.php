@@ -107,6 +107,18 @@ final class Levels
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
         ],
+        'PSR2.Classes.PropertyDeclaration' => [
+            'AbstractAfterVisibility' => 'error',
+            'AvizKeywordOrder' => 'error',
+            'FinalAfterVisibility' => 'error',
+            'Multiple' => 'error',
+            'ReadonlyBeforeVisibility' => 'error',
+            'ScopeMissing' => 'error',
+            'SpacingAfterType' => 'error',
+            'StaticBeforeVisibility' => 'error',
+            'Underscore' => 'warning',
+            'VarUsed' => 'error',
+        ],
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
         ],
