@@ -71,6 +71,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidLogicalOperatorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidVariableNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
@@ -200,6 +201,7 @@ final class WordPressExtension
                 new DisallowMultipleAssignmentsRule($report),
                 new StrictComparisonsRule($report),
                 new InlineControlStructureRule($report),
+                new ValidLogicalOperatorsRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),
