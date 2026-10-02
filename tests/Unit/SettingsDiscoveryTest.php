@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Tests;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\SettingsDiscovery;
 
 use function file_put_contents;
 
+/**
+ * @mago-expect lint:too-many-methods
+ */
 final class SettingsDiscoveryTest extends TestCase
 {
     use TempProject;
@@ -85,6 +89,36 @@ final class SettingsDiscoveryTest extends TestCase
         $settings = SettingsDiscovery::in($this->directory, 'WordPress-Core');
         self::assertArrayNotHasKey('WordPress.Security.EscapeOutput', $settings->excludePatterns);
         self::assertSame(['*'], $settings->excludePatterns['WordPress.DB.SlowDBQuery'] ?? null);
+    }
+
+    public function testInvalidComposerSettingsThrowOneLineEach(): void
+    {
+        file_put_contents(
+            $this->directory . '/composer.json',
+            data: '{"extra": {"mago-wordpress": {"standard": "WordPress-Extar", "nope": 1}}}',
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "composer.json extra.mago-wordpress: `standard` must be WordPress, WordPress-Core or WordPress-Extra, not \"WordPress-Extar\".\n"
+            . 'composer.json extra.mago-wordpress: unknown setting `nope`.',
+        );
+        SettingsDiscovery::in($this->directory);
+    }
+
+    public function testNonObjectComposerSettingsThrow(): void
+    {
+        file_put_contents($this->directory . '/composer.json', data: '{"extra": {"mago-wordpress": "WordPress"}}');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('composer.json extra.mago-wordpress: must be an object.');
+        SettingsDiscovery::in($this->directory);
+    }
+
+    public function testInvalidWorkerStandardThrows(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        SettingsDiscovery::in($this->directory, 'WordPress-Docs');
     }
 
     private static function ruleset(string $prefix): string
