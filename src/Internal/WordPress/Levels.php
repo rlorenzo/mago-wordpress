@@ -52,6 +52,12 @@ final class Levels
         'Generic.CodeAnalysis.UnnecessaryFinalModifier' => [
             'Found' => 'warning',
         ],
+        'Generic.CodeAnalysis.UnusedFunctionParameter' => [
+            '*' => 'warning',
+            '*InExtendedClass' => 'warning',
+            '*InImplementedInterface' => 'warning',
+            'Found' => 'warning',
+        ],
         'Generic.CodeAnalysis.UselessOverridingMethod' => [
             'Found' => 'warning',
         ],

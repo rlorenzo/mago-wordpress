@@ -76,6 +76,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
@@ -221,6 +222,7 @@ final class WordPressExtension
                 new SwitchDeclarationRule($report),
                 new UnnecessaryHeredocRule($report),
                 new NoDoubleNegativeRule($report),
+                new UnusedFunctionParameterRule($report),
                 new NoReservedKeywordParameterNamesRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
