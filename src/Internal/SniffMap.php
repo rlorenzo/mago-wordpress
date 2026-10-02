@@ -106,6 +106,7 @@ final class SniffMap
         'Generic.PHP.LowerCaseConstant' => ['lowercase-keyword'],
         'Generic.PHP.LowerCaseKeyword' => ['lowercase-keyword'],
         'Generic.PHP.LowerCaseType' => ['lowercase-type-hint'],
+        'Generic.Strings.UnnecessaryHeredoc' => ['generic/unnecessary-heredoc'],
         'Generic.Strings.UnnecessaryStringConcat' => ['no-redundant-string-concat'],
         'Generic.VersionControl.GitMergeConflict' => ['generic/git-merge-conflict'],
         'PEAR.NamingConventions.ValidClassName' => ['generic/valid-class-name'],
