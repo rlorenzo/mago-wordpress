@@ -222,6 +222,7 @@ final class PhpcsRuleset
         'Generic.Strings.UnnecessaryStringConcat',
         'Squiz.PHP.DisallowSizeFunctionsInLoops',
         'Universal.CodeAnalysis.ForeachUniqueAssignment',
+        'Generic.CodeAnalysis.EmptyStatement',
     ];
 
     /** phpcs hides reports below this severity by default. */

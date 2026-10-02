@@ -27,6 +27,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
@@ -160,6 +161,7 @@ final class WordPressExtension
                 new DisallowSizeFunctionsInLoopsRule($report),
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
+                new EmptyStatementRule($report),
                 new SelfMemberReferenceRule($report),
                 new MethodScopeRule($report),
                 ...SplitRule::pair(

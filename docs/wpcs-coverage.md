@@ -161,7 +161,6 @@ doesn't map them:
 | `Squiz.Functions.FunctionDuplicateArgument` | a semantics error |
 | `Squiz.PHP.NonExecutableCode` | `unevaluated-code` |
 | `Universal.Arrays.DuplicateArrayKey` | `duplicate-array-key` |
-| `Generic.CodeAnalysis.EmptyStatement` | partly: `no-empty-loop` (lint) covers empty loops, not an empty `if` |
 | `Universal.CodeAnalysis.ConstructorDestructorReturn` | partly: a semantics error for a return type on `__construct`/`__destruct`, not a `return $value;` inside one |
 
 Enable these, and any core rule the presets turn off, in `mago.toml`:

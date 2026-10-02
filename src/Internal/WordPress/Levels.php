@@ -31,6 +31,9 @@ final class Levels
             'EmptyPHPOpenCloseTagsDetected' => 'warning',
             'SemicolonWithoutCodeDetected' => 'warning',
         ],
+        'Generic.CodeAnalysis.EmptyStatement' => [
+            'Detected*' => 'error',
+        ],
         'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => [
             'CanSimplify' => 'warning',
         ],
