@@ -186,6 +186,7 @@ final class PhpcsRuleset
         'Universal.NamingConventions.NoReservedKeywordParameterNames',
         'Modernize.FunctionCalls.Dirname',
         'Universal.UseStatements.NoLeadingBackslash',
+        'PEAR.Files.IncludingFile',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */

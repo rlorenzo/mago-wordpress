@@ -147,6 +147,7 @@ final class SniffMap
         'Squiz.PHP.CommentedOutCode' => ['generic/commented-out-code'],
         'Modernize.FunctionCalls.Dirname' => ['generic/dirname'],
         'Universal.UseStatements.NoLeadingBackslash' => ['generic/no-leading-backslash'],
+        'PEAR.Files.IncludingFile' => ['generic/including-file', 'generic/including-file-warning'],
     ];
 
     /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */

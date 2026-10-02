@@ -46,6 +46,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
@@ -216,6 +217,12 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                ...SplitRule::pair(
+                    new IncludingFileRule($report),
+                    $report,
+                    'Including file (warnings)',
+                    'An include/include_once outside any scope, condition or assignment (phpcs UseRequire, UseRequireOnce, warnings in WordPress-Core); the parentheses check stays with generic/including-file.',
+                ),
                 new ForbiddenFunctionsRule($report),
                 new NoLeadingBackslashRule($report),
                 new DirnameRule($report),
