@@ -27,8 +27,8 @@ array-style = { style = "long" }
 
 # The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
 # call, declaration, control-structure and array parentheses (refused upstream, mago #446/#490);
-# `mago lint --fix --only wordpress/parentheses-spacing` adds them after `mago format`; see
-# docs/formatting.md.
+# `mago lint --fix --only wordpress/parentheses-spacing` adds them after `mago format`.
+# `vendor/bin/mago-wordpress format` runs every step; see docs/formatting.md.
 [formatter]
 use-tabs = true
 function-brace-style = "same-line"
@@ -39,6 +39,14 @@ space-within-grouping-parenthesis = true
 align-assignment-like = true
 preserve-breaking-argument-list = true
 preserve-breaking-parameter-list = true
+# WordPress has no line limit; 120 wraps long calls, even `<?php esc_html_e( '...' ); ?>` in HTML.
+print-width = 1000
+# `exit;`, not `exit();`.
+parentheses-in-exit-and-die = false
+# WordPress-Core asks for neither: templates keep a final `?>`, files don't gain a blank line after `<?php`.
+remove-trailing-close-tag = false
+empty-line-after-opening-tag = false
+# trailing-comma stays on (Mago's default): WordPress-Core requires one after a multi-line array's last item.
 
 [extension-hosts.wordpress]
 command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php"]
