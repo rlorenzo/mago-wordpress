@@ -10,6 +10,7 @@ use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Level;
 
 use function array_key_exists;
+use function array_keys;
 use function array_map;
 use function is_string;
 use function strtolower;
@@ -67,8 +68,8 @@ final class LeveledRule implements Rule
 
         $given = $levels;
         $levels = [];
-        foreach ($given as $code => $level) {
-            $level = is_string($level) ? strtolower(trim($level)) : '';
+        foreach (array_keys($given) as $code) {
+            $level = is_string($given[$code]) ? strtolower(trim($given[$code])) : '';
             $levels[$code] = $level;
             if (!array_key_exists($code, $codes)) {
                 $problems[] = "levels: unknown rule `{$code}`; use a rule code such as `wordpress/capital-p-dangit`.";
