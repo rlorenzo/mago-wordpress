@@ -186,6 +186,9 @@ final class Levels
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
         ],
+        'Universal.CodeAnalysis.NoEchoSprintf' => [
+            'Found' => 'error',
+        ],
         'Universal.CodeAnalysis.StaticInFinalClass' => [
             '*' => 'error',
         ],
