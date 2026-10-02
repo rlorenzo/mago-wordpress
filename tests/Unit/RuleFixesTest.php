@@ -87,6 +87,20 @@ final class RuleFixesTest extends TestCase
             "use Foo\\Bar;\nuse function foo, Bar\\baz as q;\nuse/*x*/ Baz;",
         ];
 
+        yield 'including-file drops the parentheses around the path' => [
+            'generic/including-file',
+            '',
+            "require_once('a.php');\nrequire ( 'b.php' ) . '';",
+            "require_once 'a.php';\nrequire  'b.php'  . '';",
+        ];
+
+        yield 'including-file-warning makes an unconditional include a require' => [
+            'generic/including-file-warning',
+            '',
+            "include 'a.php';\ninclude_once 'b.php';\nif (\$x) {\n\tinclude 'c.php';\n}",
+            "require 'a.php';\nrequire_once 'b.php';\nif (\$x) {\n\tinclude 'c.php';\n}",
+        ];
+
         yield 'parentheses-spacing adds the WordPress spaces' => [
             'wordpress/parentheses-spacing',
             '',
