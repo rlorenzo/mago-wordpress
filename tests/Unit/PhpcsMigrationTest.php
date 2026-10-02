@@ -87,7 +87,10 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('no-unescaped-output = { exclude = ["templates/*", "*/templates/*"] }', $toml);
         self::assertStringContainsString('prepared-sql = { enabled = true, level = "warning" }', $toml);
         // WordPress-Extra leaves out the three WordPress-only sniffs.
-        self::assertStringContainsString('validated-sanitized-input = { enabled = false }', $toml);
+        self::assertSame(
+            ['*'],
+            $result['extra']['exclude-patterns']['WordPress.Security.ValidatedSanitizedInput'] ?? null,
+        );
         // ...and WordPress-Docs, which the shipped missing-docs stands in for.
         self::assertStringContainsString('missing-docs = { enabled = false }', $toml);
 

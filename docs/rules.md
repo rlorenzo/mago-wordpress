@@ -18,6 +18,7 @@
 | `wordpress/file-name` | Error | `WordPress.Files.FileName` | file names not lowercase and hyphenated, a class file missing its `class-` prefix, a templated `wp-includes` file missing its `-template` suffix |
 | `wordpress/get-meta-single` | Warning | `WordPress.WP.GetMetaSingle` | `get_*meta()`/`get_metadata*()` calls that pass the key parameter without also passing `$single` |
 | `wordpress/global-variables-override` | Error | `WordPress.WP.GlobalVariablesOverride` | assignments, foreach bindings, destructuring and `$GLOBALS[...]` writes (including array-element writes) to WordPress's protected globals (243 names), skipping unit-test classes |
+| `wordpress/nonce-verification` | Error | `WordPress.Security.NonceVerification` | `$_POST`/`$_FILES` (`Missing`) and `$_GET`/`$_REQUEST` (`Recommended`, a warning in WPCS) read without `wp_verify_nonce()`, `check_admin_referer()`, `check_ajax_referer()` or a `custom-nonce-verification-functions` entry earlier in the function or file; an `isset()`, comparison or plain sanitizing may come before the check |
 | `wordpress/parentheses-spacing` | Error | the single-line spacing part of `PEAR.Functions.FunctionCallSignature`, `Squiz.Functions.FunctionDeclarationArgumentSpacing`, `WordPress.WhiteSpace.ControlStructureSpacing`, `NormalizedArrays.Arrays.ArrayBraceSpacing`, `WordPress.Arrays.ArrayKeySpacingRestrictions` | one space inside call, declaration, control-structure and array parentheses and brackets (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]` but `$a['key']`); off by default, see [Formatting](formatting.md) |
 | `wordpress/plugin-menu-slug` | Warning | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | Warning | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` over `max-posts-per-page` (default 100; `-1` and `nopaging` are not flagged, as in WPCS) in any array literal, `$args['key'] = ...`/`??=` assignment, or `posts_per_page=999`-style query string (it does not follow `$args` variables into `WP_Query`) |
@@ -33,6 +34,7 @@
 | `wordpress/valid-hook-name` | Warning | `WordPress.NamingConventions.ValidHookName` | hook names with uppercase letters or separators other than `_` and `additional-word-delimiters` |
 | `wordpress/valid-post-type-slug` | Error | `WordPress.NamingConventions.ValidPostTypeSlug` | invalid characters, reserved names, a reserved prefix, or a slug over 20 characters in `register_post_type()` |
 | `wordpress/valid-variable-name` | Error | `WordPress.NamingConventions.ValidVariableName` | variables, properties and object property accesses not in snake_case, including interpolated variables |
+| `wordpress/validated-sanitized-input` | Error | `WordPress.Security.ValidatedSanitizedInput` | superglobal array elements read without an `isset()`/`empty()`/`array_key_exists()`/`??` check, without `wp_unslash()`, or without a sanitizing function (`custom-sanitizing-functions`, `custom-unslashing-sanitizing-functions`), and superglobals interpolated into strings |
 | `wordpress/wp-date-time` | Warning | `WordPress.DateTime.RestrictedFunctions`, `WordPress.DateTime.CurrentTimeTimestamp` | `date()`, `date_default_timezone_set()`, `current_time('timestamp')` |
 | `wordpress/wp-deprecated-classes` | Warning | `WordPress.WP.DeprecatedClasses` | deprecated core classes; a deprecation newer than `minimum-wp-version` is reported with a note (WPCS lowers it to a warning) |
 | `wordpress/wp-deprecated-functions` | Warning | `WordPress.WP.DeprecatedFunctions` | 386 deprecated core functions with their replacements; a deprecation newer than `minimum-wp-version` is reported with a note (WPCS lowers it to a warning) |
@@ -60,7 +62,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the five rules that only `WordPress-Extra` includes.
 
-45 of the 46 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+47 of the 48 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above.
 
 Function, class, constant and capability lists come from WPCS 3.4.1 (`src/Internal/WordPress/Lists.php`,

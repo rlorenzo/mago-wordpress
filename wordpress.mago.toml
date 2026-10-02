@@ -8,11 +8,10 @@
 [linter]
 integrations = ["wordpress"]
 
-# Mago ships these three WordPress security rules disabled; WPCS runs their
-# equivalents (NonceVerification, ValidatedSanitizedInput, PreparedSQL) by default.
+# Mago ships this WordPress security rule disabled; WPCS runs its equivalent
+# (PreparedSQL) by default. NonceVerification and ValidatedSanitizedInput are ported by
+# this extension (wordpress/nonce-verification, wordpress/validated-sanitized-input).
 [linter.rules]
-nonce-verification = { enabled = true }
-validated-sanitized-input = { enabled = true }
 prepared-sql = { enabled = true }
 # WordPress-Docs' Squiz.Commenting.{Function,Class,Variable}Comment.Missing: a docblock on every
 # function, method, class and property (not interfaces, traits, enums or constants). Reports at

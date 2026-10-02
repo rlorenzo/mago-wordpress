@@ -29,6 +29,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
@@ -41,6 +42,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
@@ -123,6 +125,8 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new ValidatedSanitizedInputRule($report, $settings),
+                new NonceVerificationRule($report, $settings),
             ],
         );
     }

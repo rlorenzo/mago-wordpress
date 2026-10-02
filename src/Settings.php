@@ -47,6 +47,7 @@ final class Settings
         'custom-auto-escaped-functions' => 'customAutoEscapedFunctions',
         'custom-sanitizing-functions' => 'customSanitizingFunctions',
         'custom-unslashing-sanitizing-functions' => 'customUnslashingSanitizingFunctions',
+        'custom-nonce-verification-functions' => 'customNonceVerificationFunctions',
         'custom-capabilities' => 'custom_capabilities',
         'allowed-custom-properties' => 'allowed_custom_properties',
         'custom-test-classes' => 'custom_test_classes',

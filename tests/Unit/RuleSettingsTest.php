@@ -245,6 +245,30 @@ final class RuleSettingsTest extends TestCase
             'global $wp_query; $wp_query = 2;',
             1,
         ];
+        yield 'unknown_sanitizer_is_reported' => [
+            'wordpress/validated-sanitized-input',
+            [],
+            "if (isset(\$_POST['a'])) { mp_clean(wp_unslash(\$_POST['a'])); }",
+            1,
+        ];
+        yield 'custom_sanitizing_function_sanitizes' => [
+            'wordpress/validated-sanitized-input',
+            ['custom-sanitizing-functions' => ['mp_clean']],
+            "if (isset(\$_POST['a'])) { mp_clean(wp_unslash(\$_POST['a'])); }",
+            0,
+        ];
+        yield 'custom_unslashing_sanitizing_function_needs_no_unslash' => [
+            'wordpress/validated-sanitized-input',
+            ['custom-unslashing-sanitizing-functions' => ['mp_int']],
+            "if (isset(\$_POST['a'])) { mp_int(\$_POST['a']); }",
+            0,
+        ];
+        yield 'custom_nonce_verification_function_verifies' => [
+            'wordpress/nonce-verification',
+            ['custom-nonce-verification-functions' => ['mp_check_nonce']],
+            "mp_check_nonce(); echo sanitize_text_field(wp_unslash(\$_POST['a'] ?? ''));",
+            0,
+        ];
         yield 'mixed_default_domain_allows_explicit_default' => [
             'wordpress/wp-i18n',
             ['text-domains' => ['default', 'my-plugin']],

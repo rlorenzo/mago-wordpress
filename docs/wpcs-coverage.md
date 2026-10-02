@@ -8,12 +8,13 @@ sniffs. The last section lists what nothing covers.
 
 Mago's core linter has its own `wordpress` integration: eight rules, independent of this package's
 `wordpress/*` rules. Mago ships three disabled. The `extends` in [Install](../README.md#install) turns
-them on, so a project keeps the security checks WPCS gave it.
+on `prepared-sql`, so a project keeps the security checks WPCS gave it; the other two are ported as
+`wordpress/*` rules and stay off.
 
 | Mago rule | Covers | Mago default |
 |:---|:---|:---|
-| `nonce-verification` | `WordPress.Security.NonceVerification` | off |
-| `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput` | off |
+| `nonce-verification` | `WordPress.Security.NonceVerification`, ported as [`wordpress/nonce-verification`](rules.md) | off |
+| `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput`, ported as [`wordpress/validated-sanitized-input`](rules.md) | off |
 | `prepared-sql` | `WordPress.DB.PreparedSQL` | off |
 | `no-unescaped-output` | `WordPress.Security.EscapeOutput` | on |
 | `use-wp-functions` | `WordPress.WP.AlternativeFunctions` | on |

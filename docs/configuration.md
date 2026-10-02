@@ -14,6 +14,7 @@ as sniff properties from your project. Put them in `composer.json`:
       "custom-auto-escaped-functions": [],
       "custom-sanitizing-functions": [],
       "custom-unslashing-sanitizing-functions": [],
+      "custom-nonce-verification-functions": [],
       "custom-capabilities": [],
       "allowed-custom-properties": [],
       "custom-test-classes": [],
@@ -67,9 +68,13 @@ Properties are read only when set directly on the sniff's own ref, such as
 
 `custom-capabilities` lists capabilities `wordpress/capabilities` accepts.
 
-The other four `custom-*` lists have no effect yet. They belong to Mago's core rules
-`no-unescaped-output`, `nonce-verification` and `validated-sanitized-input`, which can't take
-per-project options from an extension. They are reserved for porting those rules into this package.
+`custom-sanitizing-functions` and `custom-unslashing-sanitizing-functions` add sanitizing functions
+(the second kind also unslash) to `wordpress/validated-sanitized-input` and
+`wordpress/nonce-verification`. `custom-nonce-verification-functions` (WPCS's
+`customNonceVerificationFunctions`) adds nonce-checking functions to `wordpress/nonce-verification`.
+
+`custom-escaping-functions` and `custom-auto-escaped-functions` have no effect yet. They belong to
+Mago's core rule `no-unescaped-output`, which can't take per-project options from an extension.
 
 `allowed-custom-properties` lists mixed-case object properties `wordpress/valid-variable-name`
 accepts (WPCS's `allowed_custom_properties`), such as `childNodes` for `DOMDocument`.
