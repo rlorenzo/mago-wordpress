@@ -40,14 +40,16 @@ final class StrictComparisonsRule implements Rule
     public function lint(LintContext $context): void
     {
         $operator = $context->getText();
-        [$expected, $code] = match ($operator) {
-            '==' => ['===', 'LooseEqual'],
-            '!=', '<>' => ['!==', 'LooseNotEqual'],
-            default => [null, null],
+        $code = match ($operator) {
+            '==' => 'LooseEqual',
+            '!=', '<>' => 'LooseNotEqual',
+            default => null,
         };
-        if ($expected === null) {
+        if ($code === null) {
             return;
         }
+
+        $expected = $code === 'LooseEqual' ? '===' : '!==';
 
         $this->report->issue(
             $context,

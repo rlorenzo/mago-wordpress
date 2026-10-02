@@ -193,6 +193,7 @@ final class InlineControlStructureRule implements Rule
             return TextEdit::insert($end + $gap, '} ');
         }
 
+        $comment = [];
         if (preg_match('/^[ \t]*(?:(?:\/\/|#)[^\r\n]*|\/\*.*?\*\/(?=[ \t]*(?:\r?\n|$)))/', $rest, $comment) === 1) {
             $end += strlen($comment[0]);
         }
