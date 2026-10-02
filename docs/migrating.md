@@ -73,8 +73,10 @@ vendor/bin/mago-wordpress convert-comments [<path>...]   # dry run: one line per
 vendor/bin/mago-wordpress convert-comments --write
 ```
 
-It runs `mago lint` once with phpcs comments ignored and converts each comment from the issues it
-actually covers, not from the sniff name:
+It runs `mago lint` with phpcs comments honoured and with them ignored, and converts each comment
+from the issues it actually suppressed, not from the sniff name (a message code such as
+`ValidatedSanitizedInput.MissingUnslash` covers only those reports of the rule; it never covers a
+Mago core rule, which has no message codes):
 
 - `phpcs:ignore` becomes `// @mago-expect lint:<rule>(N) -- <reason>`, with a count when the
   statement has more than one issue and one code per rule. A comment that covers nothing keeps its
@@ -82,17 +84,21 @@ actually covers, not from the sniff name:
   three-line `<?php` block, because a one-line block does not reach the HTML after it.
 - A `phpcs:disable` … `phpcs:enable` region gets a pragma before each statement in it that has
   issues, or, when that would be several pragmas and the region holds all of the function's issues
-  of those rules, one in the function's docblock.
+  of those rules, one in the function's docblock. A `phpcs:disable` without a `phpcs:enable` runs
+  to the end of the file and is converted the same way: one docblock pragma per function it
+  covers whole, a pragma per statement elsewhere.
 - `phpcs:ignoreFile` and the legacy `@codingStandardsIgnore*` comments are listed, not converted:
-  Mago has no file-level pragma.
+  Mago has no file-level pragma. Exclude such a file in `mago.toml` instead.
 - An existing `@mago-expect` or `@mago-ignore` naming a Mago core rule this package replaces
   (`no-unescaped-output`, `validated-sanitized-input`, `nonce-verification`, `use-wp-functions`,
   `prepared-sql`, `no-direct-db-query`, `no-db-schema-change`, `require-preg-quote-delimiter`) is
   retargeted to the `wordpress/*` rule and recounted.
 
-`--write` then lints again and fails if any pragma is unfulfilled or a converted file's issue counts
-changed. Set `"honor-phpcs-comments": false` afterwards, so Mago's `unfulfilled-expect` warnings
-catch stale suppressions from then on.
+`--write` then lints again with phpcs comments ignored and compares with the first run that honoured
+them. When every file has the same issues and no pragma is unfulfilled, it says to set
+`"honor-phpcs-comments": false`, so Mago's `unfulfilled-expect` warnings catch stale suppressions
+from then on. Otherwise it lists each file and rule a phpcs comment still suppresses, exits 1 and
+says to keep the setting on until those comments are replaced by hand.
 
 On bcap_website's 67 phpcs comments: 44 converted, 8 regions (16 comments),
 6 kept as plain comments, 1 dropped, and zero `unfulfilled-expect` afterwards.
