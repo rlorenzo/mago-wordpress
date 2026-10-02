@@ -13,6 +13,7 @@ use function array_reverse;
 use function array_slice;
 use function count;
 use function explode;
+use function gc_mem_caches;
 use function in_array;
 use function preg_match;
 use function strlen;
@@ -194,36 +195,63 @@ final class PhpcsTokens
     private const ARRAY_COMPARE = ['in_array' => true, 'array_search' => true, 'array_keys' => true];
 
     /**
-     * @param list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}> $tokens
+     * @param list<string> $codes each token's phpcs code
+     * @param list<string> $contents
+     * @param list<int> $positions byte offsets
+     * @param array<int, true> $namespaced the last part of a qualified name
+     * @param array<int, true> $gaps tokens after whitespace or a comment
+     * @param array<int, list<array{string, int}>> $embeds string token => the variables it interpolates
      * @param array<int, int> $pairs opener => closer and closer => opener, for `()`, `[]` and `{}`
      * @param array<int, list<int>> $nested token => the `(` around it, outermost first
      * @param array<int, int> $scopes scope owner (function, closure, class-like, `fn`) => its closer
      * @param array<int, int> $functions token => the `{` of the innermost function or closure around it
      * @param array<int, true> $ooDirect tokens directly in a class-like body
-     * @param list<PhpToken> $raw PHP's own tokens
-     * @param array<int, array{int, int}> $strings string token => its first and last token in $raw
+     * @param array<int, list<PhpToken>> $strings string token => PHP's own tokens for it
      */
     private function __construct(
-        public readonly array $tokens,
+        public readonly array $codes,
+        private readonly array $contents,
+        private readonly array $positions,
+        private readonly array $namespaced,
+        private readonly array $gaps,
+        private readonly array $embeds,
         private readonly array $pairs,
         private readonly array $nested,
         private readonly array $scopes,
         private readonly array $functions,
         private readonly array $ooDirect,
-        private readonly array $raw,
         private readonly array $strings,
     ) {}
 
     public static function of(SourceFile $file): self
     {
-        return FileCache::remember($file, 'phpcs-tokens', static fn(): self => self::build($file->contents));
+        return FileCache::remember($file, 'phpcs-tokens', static function () use ($file): self {
+            $tokens = self::build($file->contents);
+            // Building leaves the pages of PHP's freed token objects empty; hand them back.
+            gc_mem_caches();
+
+            return $tokens;
+        });
     }
 
+    /**
+     * Frees the file's tokens once the last rule that reads them is done with the file
+     * (they all target `Program`, which the worker lints before any other node), so a large
+     * file's tokens are not held while the other rules walk its syntax tree.
+     */
+    public static function release(SourceFile $file): void
+    {
+        FileCache::forget($file, 'phpcs-tokens');
+        gc_mem_caches();
+    }
+
+    /** @mago-expect lint:halstead */
     public static function build(string $contents): self
     {
-        [$tokens, $raw, $strings] = self::tokenize($contents);
-        $pairs = self::pair($tokens);
-        [$scopes, $owners] = self::scopes($tokens, $pairs);
+        // Columns rather than an array per token: a large file has hundreds of thousands of tokens.
+        [$codes, $contents, $positions, $namespaced, $gaps, $embeds, $strings] = self::tokenize($contents);
+        $pairs = self::pair($codes);
+        [$scopes, $owners] = self::scopes($codes, $pairs);
 
         // One pass for the parentheses and the brace scopes each token sits in.
         /** @var array<int, list<int>> $nested */
@@ -237,8 +265,7 @@ final class PhpcsTokens
         $braces = [];
         /** @var list<int> $functionStack */
         $functionStack = [];
-        foreach ($tokens as $index => $token) {
-            $code = $token['code'];
+        foreach ($codes as $index => $code) {
             if ($code === ')' && ($pairs[$index] ?? null) !== null) {
                 array_pop($parens);
             } elseif ($code === '}' && ($pairs[$index] ?? null) !== null) {
@@ -270,17 +297,30 @@ final class PhpcsTokens
             }
         }
 
-        return new self($tokens, $pairs, $nested, $scopes, $functions, $ooDirect, $raw, $strings);
+        return new self(
+            $codes,
+            $contents,
+            $positions,
+            $namespaced,
+            $gaps,
+            $embeds,
+            $pairs,
+            $nested,
+            $scopes,
+            $functions,
+            $ooDirect,
+            $strings,
+        );
     }
 
     public function code(int $index): ?string
     {
-        return $this->tokens[$index]['code'] ?? null;
+        return $this->codes[$index] ?? null;
     }
 
     public function content(int $index): string
     {
-        return $this->tokens[$index]['content'] ?? '';
+        return $this->contents[$index] ?? '';
     }
 
     public function closer(int $index): ?int
@@ -333,7 +373,7 @@ final class PhpcsTokens
     /** `ContextHelper::is_token_namespaced()`. */
     public function isNamespaced(int $index): bool
     {
-        return $this->tokens[$index]['ns'] ?? false;
+        return $this->namespaced[$index] ?? false;
     }
 
     /**
@@ -510,7 +550,7 @@ final class PhpcsTokens
     {
         $text = '';
         for ($index = $start; $index <= $end; $index++) {
-            $text .= ($index > $start && $this->tokens[$index]['gap'] ? ' ' : '') . $this->content($index);
+            $text .= ($index > $start && ($this->gaps[$index] ?? false) ? ' ' : '') . $this->content($index);
         }
 
         return $text;
@@ -632,7 +672,17 @@ final class PhpcsTokens
     /** The token's byte offset. */
     public function pos(int $index): int
     {
-        return $this->tokens[$index]['pos'];
+        return $this->positions[$index];
+    }
+
+    /**
+     * The variables a double-quoted string or heredoc interpolates, as `TextStrings::getEmbeds()` names them.
+     *
+     * @return list<array{string, int}> name and offset
+     */
+    public function embeds(int $index): array
+    {
+        return $this->embeds[$index] ?? [];
     }
 
     /**
@@ -644,10 +694,10 @@ final class PhpcsTokens
      */
     public function embedTexts(int $index): array
     {
-        [$k, $last] = $this->strings[$index] ?? [0, 0];
-        $raw = $this->raw;
+        $raw = $this->strings[$index] ?? [];
+        $last = count($raw) - 1;
         $embeds = [];
-        for ($k++; $k < $last; $k++) {
+        for ($k = 1; $k < $last; $k++) {
             if ($raw[$k]->id === T_ENCAPSED_AND_WHITESPACE) {
                 continue;
             }
@@ -704,7 +754,7 @@ final class PhpcsTokens
     public function endOfStatement(int $start): int
     {
         $last = $start;
-        $count = count($this->tokens);
+        $count = count($this->codes);
         for ($k = $start; $k < $count; $k++) {
             $type = $this->type($k);
             if ($k !== $start && in_array($type, [':', ',', '=>', ';'], strict: true)) {
@@ -734,19 +784,26 @@ final class PhpcsTokens
     }
 
     /**
-     * @return array{list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}>, list<PhpToken>, array<int, array{int, int}>}
+     * @return array{list<string>, list<string>, list<int>, array<int, true>, array<int, true>, array<int, list<array{string, int}>>, array<int, list<PhpToken>>}
      * @mago-expect lint:halstead
      */
     private static function tokenize(string $contents): array
     {
         $raw = PhpToken::tokenize($contents);
-        $tokens = [];
+        $codes = [];
+        $texts = [];
+        $positions = [];
+        $namespaced = [];
+        $gaps = [];
+        $embeds = [];
         $strings = [];
         $gap = false;
         /** @var list<string> $squares */
         $squares = [];
         $count = count($raw);
         for ($index = 0; $index < $count; $index++) {
+            // Free PHP's tokens as they are converted, so both lists are not held at once.
+            unset($raw[$index - 1]);
             $token = $raw[$index];
             $code = $token->getTokenName() ?? $token->text;
             if ((self::EMPTY[$code] ?? null) !== null) {
@@ -754,8 +811,12 @@ final class PhpcsTokens
                 continue;
             }
 
+            if ($gap) {
+                $gaps[count($codes)] = true;
+                $gap = false;
+            }
+
             $content = $token->text;
-            $embeds = [];
             if ((self::NAMES[$code] ?? null) !== null) {
                 // phpcs splits a name at `\`; the last part is namespaced unless it is `\name`.
                 $ns = $code !== 'T_NAME_FULLY_QUALIFIED' || strrpos($content, needle: '\\') !== 0;
@@ -764,13 +825,19 @@ final class PhpcsTokens
                 $last = count($parts) - 1;
                 foreach ($parts as $part => $text) {
                     if ($part > 0) {
-                        $tokens[] = self::token('T_NS_SEPARATOR', '\\', $pos++, $gap);
-                        $gap = false;
+                        $codes[] = 'T_NS_SEPARATOR';
+                        $texts[] = '\\';
+                        $positions[] = $pos++;
                     }
 
                     if ($text !== '') {
-                        $tokens[] = self::token('T_STRING', $text, $pos, $gap, $part === $last && $ns);
-                        $gap = false;
+                        if ($part === $last && $ns) {
+                            $namespaced[count($codes)] = true;
+                        }
+
+                        $codes[] = 'T_STRING';
+                        $texts[] = $text;
+                        $positions[] = $pos;
                         $pos += strlen($text);
                     }
                 }
@@ -780,11 +847,17 @@ final class PhpcsTokens
 
             if ($code === '"' || $code === 'T_START_HEREDOC') {
                 $first = $index;
-                [$index, $embeds, $content] = self::string($raw, $index);
+                [$index, $stringEmbeds, $content] = self::string($raw, $index);
                 $code = $code === '"' ? 'T_DOUBLE_QUOTED_STRING' : 'T_HEREDOC';
-                $strings[count($tokens)] = [$first, $index];
+                $strings[count($codes)] = [];
+                for ($k = $first; $k <= $index; $k++) {
+                    $strings[count($codes)][] = $raw[$k];
+                }
+                if ($stringEmbeds !== []) {
+                    $embeds[count($codes)] = $stringEmbeds;
+                }
             } elseif ($code === '[') {
-                $previous = $tokens === [] ? '' : $tokens[count($tokens) - 1]['code'];
+                $previous = $codes === [] ? '' : $codes[count($codes) - 1];
                 $code = (self::ACCESS_BEFORE[$previous] ?? null) !== null ? '[' : 'T_OPEN_SHORT_ARRAY';
                 $squares[] = $code;
             } elseif ($code === 'T_ATTRIBUTE') {
@@ -793,26 +866,12 @@ final class PhpcsTokens
                 $code = array_pop($squares) === 'T_OPEN_SHORT_ARRAY' ? 'T_CLOSE_SHORT_ARRAY' : ']';
             }
 
-            $tokens[] = self::token($code, $content, $token->pos, $gap, embeds: $embeds);
-            $gap = false;
+            $codes[] = $code;
+            $texts[] = $content;
+            $positions[] = $token->pos;
         }
 
-        return [$tokens, $raw, $strings];
-    }
-
-    /**
-     * @param list<array{string, int}> $embeds
-     * @return array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}
-     */
-    private static function token(
-        string $code,
-        string $content,
-        int $pos,
-        bool $gap,
-        bool $ns = false,
-        array $embeds = [],
-    ): array {
-        return ['code' => $code, 'content' => $content, 'pos' => $pos, 'ns' => $ns, 'gap' => $gap, 'embeds' => $embeds];
+        return [$codes, $texts, $positions, $namespaced, $gaps, $embeds, $strings];
     }
 
     /**
@@ -820,7 +879,7 @@ final class PhpcsTokens
      * name of each interpolated variable. As in `TextStrings::getEmbeds()`, only the
      * variable an embed starts with counts, not one in its index or braces.
      *
-     * @param list<PhpToken> $raw
+     * @param array<int, PhpToken> $raw keys from 0, those before $index possibly unset
      * @return array{int, list<array{string, int}>, string}
      * @mago-expect lint:halstead
      */
@@ -830,7 +889,8 @@ final class PhpcsTokens
         $content = $raw[$index]->text;
         $embeds = [];
         $depth = 0;
-        $count = count($raw);
+        // Not count(): tokenize() unsets the tokens before this one.
+        $count = (int) array_key_last($raw) + 1;
         for ($index++; $index < $count; $index++) {
             $token = $raw[$index];
             $code = $token->getTokenName() ?? $token->text;
@@ -878,10 +938,10 @@ final class PhpcsTokens
     /**
      * Pairs `()`, `[]` and `{}`; an unmatched one (a parse error) stays unpaired.
      *
-     * @param list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}> $tokens
+     * @param list<string> $codes
      * @return array<int, int>
      */
-    private static function pair(array $tokens): array
+    private static function pair(array $codes): array
     {
         $openers = [
             '(' => ')',
@@ -894,8 +954,7 @@ final class PhpcsTokens
         $stacks = [];
         /** @var array<int, int> $pairs */
         $pairs = [];
-        foreach ($tokens as $index => $token) {
-            $code = $token['code'];
+        foreach ($codes as $index => $code) {
             if (($openers[$code] ?? null) !== null) {
                 $stacks[$openers[$code]][] = $index;
             } elseif (($stacks[$code] ?? []) !== []) {
@@ -912,23 +971,21 @@ final class PhpcsTokens
      * The scope owners phpcs skips as closed scopes: functions, closures and class-likes
      * (closer: their `}`) and arrow functions (closer: the last token of their expression).
      *
-     * @param list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}> $tokens
+     * @param list<string> $codes
      * @param array<int, int> $pairs
      * @return array{array<int, int>, array<int, 'f'|'c'>} owner => closer, `{` => owner kind
      * @mago-expect lint:halstead
      */
-    private static function scopes(array $tokens, array $pairs): array
+    private static function scopes(array $codes, array $pairs): array
     {
         $scopes = [];
         $owners = [];
-        $count = count($tokens);
-        foreach ($tokens as $index => $token) {
-            $code = $token['code'];
+        $count = count($codes);
+        foreach ($codes as $index => $code) {
             $kind = match (true) {
                 $code === 'T_FUNCTION' => 'f',
                 $code === 'T_FN' => 'fn',
-                (self::CLASS_LIKE[$code] ?? null) !== null && ($tokens[$index - 1]['code'] ?? '') !== 'T_DOUBLE_COLON'
-                    => 'c',
+                (self::CLASS_LIKE[$code] ?? null) !== null && ($codes[$index - 1] ?? '') !== 'T_DOUBLE_COLON' => 'c',
                 default => null,
             };
             if ($kind === null) {
@@ -937,7 +994,7 @@ final class PhpcsTokens
 
             // Skip to the body, over the parameter list, a closure's `use` and an anonymous class's arguments.
             for ($next = $index + 1; $next < $count; $next++) {
-                $nextCode = $tokens[$next]['code'];
+                $nextCode = $codes[$next];
                 if ($nextCode === '(') {
                     $next = $pairs[$next] ?? $count;
                 } elseif ($nextCode === '{' || $nextCode === ';' || $kind === 'fn' && $nextCode === 'T_DOUBLE_ARROW') {
@@ -945,12 +1002,12 @@ final class PhpcsTokens
                 }
             }
 
-            $nextCode = $tokens[$next]['code'] ?? null;
+            $nextCode = $codes[$next] ?? null;
             if ($nextCode === '{' && $kind !== 'fn' && ($pairs[$next] ?? null) !== null) {
                 $scopes[$index] = $pairs[$next];
                 $owners[$next] = $kind === 'f' ? 'f' : 'c';
             } elseif ($nextCode === 'T_DOUBLE_ARROW' && $kind === 'fn') {
-                $scopes[$index] = self::expressionEnd($tokens, $pairs, $next + 1);
+                $scopes[$index] = self::expressionEnd($codes, $pairs, $next + 1);
             }
         }
 
@@ -958,14 +1015,14 @@ final class PhpcsTokens
     }
 
     /**
-     * @param list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}> $tokens
+     * @param list<string> $codes
      * @param array<int, int> $pairs
      */
-    private static function expressionEnd(array $tokens, array $pairs, int $index): int
+    private static function expressionEnd(array $codes, array $pairs, int $index): int
     {
-        $count = count($tokens);
+        $count = count($codes);
         for (; $index < $count; $index++) {
-            $code = $tokens[$index]['code'];
+            $code = $codes[$index];
             if (in_array($code, [';', ',', ')', ']', 'T_CLOSE_SHORT_ARRAY', '}', 'T_CLOSE_TAG'], strict: true)) {
                 return $index - 1;
             }
@@ -986,8 +1043,8 @@ final class PhpcsTokens
      */
     public function span(int $index): array
     {
-        $pos = $this->tokens[$index]['pos'];
+        $pos = $this->positions[$index];
 
-        return [$pos, $pos + strlen($this->tokens[$index]['content'])];
+        return [$pos, $pos + strlen($this->contents[$index])];
     }
 }

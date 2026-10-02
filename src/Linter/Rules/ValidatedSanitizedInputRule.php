@@ -82,9 +82,9 @@ final class ValidatedSanitizedInputRule implements Rule
         }
 
         $tokens = PhpcsTokens::of($context->file);
-        foreach ($tokens->tokens as $index => $token) {
-            if ($token['code'] === 'T_DOUBLE_QUOTED_STRING' || $token['code'] === 'T_HEREDOC') {
-                foreach ($token['embeds'] as [$name, $pos]) {
+        foreach ($tokens->codes as $index => $code) {
+            if ($code === 'T_DOUBLE_QUOTED_STRING' || $code === 'T_HEREDOC') {
+                foreach ($tokens->embeds($index) as [$name, $pos]) {
                     if (in_array('$' . $name, self::SUPERGLOBALS, strict: true)) {
                         $this->report(
                             $context,
@@ -94,10 +94,7 @@ final class ValidatedSanitizedInputRule implements Rule
                         );
                     }
                 }
-            } elseif (
-                $token['code'] === 'T_VARIABLE'
-                && in_array($token['content'], self::SUPERGLOBALS, strict: true)
-            ) {
+            } elseif ($code === 'T_VARIABLE' && in_array($tokens->content($index), self::SUPERGLOBALS, strict: true)) {
                 $this->variable($context, $tokens, $index);
             }
         }

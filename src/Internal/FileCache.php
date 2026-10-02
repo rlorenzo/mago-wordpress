@@ -47,4 +47,12 @@ final class FileCache
         /** @var T */
         return self::$values[$key] ??= $compute();
     }
+
+    /** Drops the value cached under $key for $file, so its memory is freed before the next file. */
+    public static function forget(SourceFile $file, string $key): void
+    {
+        if (self::$file === $file) {
+            unset(self::$values[$key]);
+        }
+    }
 }

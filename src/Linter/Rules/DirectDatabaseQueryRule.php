@@ -127,7 +127,7 @@ final class DirectDatabaseQueryRule implements Rule
         }
 
         $tokens = PhpcsTokens::of($context->file);
-        $count = count($tokens->tokens);
+        $count = count($tokens->codes);
         for ($at = 0; $at < $count; $at++) {
             if ($tokens->code($at) !== 'T_VARIABLE' || $tokens->content($at) !== '$wpdb') {
                 continue;
