@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs bench/run.sh on every bake-off codebase and prints the README results table.
+# Runs bench/run.sh on every bake-off codebase and prints the results table for docs/benchmarks.md.
 #
 #   BAKEOFF_DATA=~/Projects/bakeoff-data PHPCS=~/.config/composer/vendor/bin/phpcs bench/bakeoff.sh [<out-dir>]
 #   bench/bakeoff.sh --report <out-dir> > bench/results/<yyyy-mm>-bakeoff.md

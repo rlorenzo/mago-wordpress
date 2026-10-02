@@ -5,7 +5,7 @@
 #
 # Needs: vendor/bin/mago (composer install), php, perl, and a phpcs with WPCS on PATH or
 # in $PHPCS (defaults to vendor/bin/phpcs of this package if installed). Results print as
-# a markdown table; paste them into README.md.
+# a markdown table; paste them into docs/benchmarks.md.
 #
 # Not an apples-to-apples rule comparison: phpcs runs the full WordPress-Extra ruleset
 # (WPCS 3.4.1), while mago only runs this extension's rules.
