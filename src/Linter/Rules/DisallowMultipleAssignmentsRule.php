@@ -135,6 +135,10 @@ final class DisallowMultipleAssignmentsRule implements Rule
                 );
             }
         }
+
+        // The last reader of the shared tokens (WordPressExtension registers it after
+        // generic/assignment-in-condition); free them before the rules that walk the tree.
+        AssignmentInConditionRule::releaseTokens($context->file);
     }
 
     /**
