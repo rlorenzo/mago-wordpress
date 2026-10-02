@@ -138,7 +138,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.PHP.BacktickOperator` | `no-shell-execute-string` | 100% |
 | `Generic.PHP.DisallowShortOpenTag` | `no-short-opening-tag` | 67% |
 | `Generic.PHP.DiscourageGoto` | `no-goto` | 100% |
-| `Generic.PHP.ForbiddenFunctions` | `disallowed-functions` (lists no functions until configured) | 0% |
 | `Generic.PHP.LowerCaseConstant` | `lowercase-keyword` | 92% |
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |

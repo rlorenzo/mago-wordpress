@@ -31,6 +31,7 @@ cyclomatic-complexity = { enabled = false }
 deprecated-cast = { enabled = false }
 deprecated-shell-execute-string = { enabled = false }
 deprecated-switch-semicolon = { enabled = false }
+disallowed-functions = { enabled = false }
 enum-name = { enabled = false }
 excessive-nesting = { enabled = false }
 excessive-parameter-list = { enabled = false }
@@ -115,7 +116,6 @@ use-compound-assignment = { enabled = false }
 valid-docblock = { enabled = false }
 array-style = { style = "long", level = "error" }
 constant-name = { level = "error" }
-disallowed-functions = { level = "error" }
 lowercase-keyword = { level = "error" }
 lowercase-type-hint = { level = "error" }
 no-debug-symbols = { level = "warning" }

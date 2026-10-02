@@ -12,6 +12,7 @@ generic/double-quote-usage
 generic/else-if-declaration
 generic/empty-statement
 generic/for-loop-with-test-function-call
+generic/forbidden-functions
 generic/foreach-unique-assignment
 generic/git-merge-conflict
 generic/increment-decrement-usage
