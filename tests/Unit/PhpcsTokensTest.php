@@ -19,7 +19,7 @@ final class PhpcsTokensTest extends TestCase
 
         self::assertSame(
             ['ignored', 'ns', 'name', 'ns', 'name', '(', ')', ';', 'ns', 'name', '(', ')', ';'],
-            array_map($tokens->type(...), array_keys($tokens->tokens)),
+            array_map($tokens->type(...), array_keys($tokens->codes)),
         );
         self::assertTrue($tokens->isNamespaced(4));
         self::assertFalse($tokens->isNamespaced(9));
@@ -81,7 +81,7 @@ final class PhpcsTokensTest extends TestCase
 
     private static function find(PhpcsTokens $tokens, string $type, int $from): int
     {
-        for ($index = $from; $index < count($tokens->tokens); $index++) {
+        for ($index = $from; $index < count($tokens->codes); $index++) {
             if ($tokens->type($index) === $type) {
                 return $index;
             }

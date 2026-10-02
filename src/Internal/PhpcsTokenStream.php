@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal;
 
-use PhpToken;
-
 use function array_pop;
 use function count;
 use function explode;
@@ -124,7 +122,8 @@ final class PhpcsTokenStream
      */
     public static function fromSource(string $source): array
     {
-        $raw = PhpToken::tokenize($source);
+        /** @var list<PhpcsToken> $raw */
+        $raw = PhpcsToken::tokenize($source);
         $count = count($raw);
         $tokens = [];
         for ($i = 0; $i < $count; $i++) {
@@ -138,7 +137,7 @@ final class PhpcsTokenStream
                 }
 
                 $content .= $i < $count ? $text : '';
-                $tokens[] = new PhpcsToken(
+                $tokens[] = PhpcsToken::of(
                     $text === '"' ? 'T_DOUBLE_QUOTED_STRING' : 'T_BACKTICK',
                     $content,
                     $token->pos,
@@ -149,7 +148,7 @@ final class PhpcsTokenStream
 
             if ($token->id === T_START_HEREDOC) {
                 $nowdoc = str_contains($text, "'");
-                $tokens[] = new PhpcsToken(
+                $tokens[] = PhpcsToken::of(
                     $nowdoc ? 'T_START_NOWDOC' : 'T_START_HEREDOC',
                     $text,
                     $token->pos,
@@ -169,7 +168,7 @@ final class PhpcsTokenStream
                 $offset = 0;
                 $parts = preg_split('/(?<=\n)/', $body, flags: PREG_SPLIT_NO_EMPTY);
                 foreach ($parts === false ? [] : $parts as $index => $part) {
-                    $line = new PhpcsToken(
+                    $line = PhpcsToken::of(
                         $nowdoc ? 'T_NOWDOC' : 'T_HEREDOC',
                         $part,
                         $bodyPos + $offset,
@@ -184,7 +183,7 @@ final class PhpcsTokenStream
                 }
 
                 if ($i < $count) {
-                    $tokens[] = new PhpcsToken(
+                    $tokens[] = PhpcsToken::of(
                         $nowdoc ? 'T_END_NOWDOC' : 'T_END_HEREDOC',
                         $raw[$i]->text,
                         $raw[$i]->pos,
@@ -199,7 +198,7 @@ final class PhpcsTokenStream
                 $pos = $token->pos;
                 foreach (explode('\\', $text) as $index => $part) {
                     if ($index > 0) {
-                        $tokens[] = new PhpcsToken('T_NS_SEPARATOR', '\\', $pos++, $token->line);
+                        $tokens[] = PhpcsToken::of('T_NS_SEPARATOR', '\\', $pos++, $token->line);
                     }
 
                     if ($part !== '') {
@@ -211,7 +210,7 @@ final class PhpcsTokenStream
                                 => 'T_EXIT',
                             default => 'T_STRING',
                         };
-                        $tokens[] = new PhpcsToken($code, $part, $pos, $token->line);
+                        $tokens[] = PhpcsToken::of($code, $part, $pos, $token->line);
                         $pos += strlen($part);
                     }
                 }
@@ -220,7 +219,8 @@ final class PhpcsTokenStream
             }
 
             $code = $token->id < 256 ? self::CHARS[$text] ?? $text : $token->getTokenName() ?? $text;
-            $tokens[] = new PhpcsToken(self::RENAMED[$code] ?? $code, $text, $token->pos, $token->line);
+            $token->code = self::RENAMED[$code] ?? $code;
+            $tokens[] = $token;
         }
 
         return self::structure($tokens);
@@ -249,7 +249,7 @@ final class PhpcsTokenStream
             $prevCode = $prev === null ? '' : $tokens[$prev]->code;
             if (
                 $code !== 'T_STRING'
-                && preg_match('/^[a-z_]+$/i', $tokens[$i]->content) === 1
+                && preg_match('/^[a-z_]+$/i', $tokens[$i]->text) === 1
                 && in_array(
                     $prevCode,
                     ['T_OBJECT_OPERATOR', 'T_NULLSAFE_OBJECT_OPERATOR', 'T_DOUBLE_COLON', 'T_FUNCTION', 'T_CONST'],
@@ -263,7 +263,7 @@ final class PhpcsTokenStream
 
             switch ($code) {
                 case 'T_STRING':
-                    $lower = strtolower($tokens[$i]->content);
+                    $lower = strtolower($tokens[$i]->text);
                     $isMember = in_array(
                         $prevCode,
                         ['T_OBJECT_OPERATOR', 'T_NULLSAFE_OBJECT_OPERATOR', 'T_DOUBLE_COLON', 'T_FUNCTION', 'T_CONST'],
