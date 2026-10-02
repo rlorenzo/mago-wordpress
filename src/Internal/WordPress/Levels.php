@@ -166,6 +166,9 @@ final class Levels
         'Universal.CodeAnalysis.StaticInFinalClass' => [
             '*' => 'error',
         ],
+        'Universal.Files.SeparateFunctionsFromOO' => [
+            'Mixed' => 'error',
+        ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
         ],

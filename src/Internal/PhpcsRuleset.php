@@ -226,6 +226,7 @@ final class PhpcsRuleset
         'Generic.CodeAnalysis.EmptyStatement',
         'Squiz.PHP.NonExecutableCode',
         'Universal.CodeAnalysis.StaticInFinalClass',
+        'Universal.Files.SeparateFunctionsFromOO',
     ];
 
     /** phpcs hides reports below this severity by default. */
