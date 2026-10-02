@@ -145,6 +145,7 @@ final class SniffMap
         ],
         'Generic.CodeAnalysis.UnusedFunctionParameter' => ['generic/unused-function-parameter'],
         'Squiz.PHP.CommentedOutCode' => ['generic/commented-out-code'],
+        'Modernize.FunctionCalls.Dirname' => ['generic/dirname'],
     ];
 
     /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */

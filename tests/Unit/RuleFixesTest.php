@@ -73,6 +73,13 @@ final class RuleFixesTest extends TestCase
             ['default'],
         ];
 
+        yield 'dirname of __FILE__ becomes __DIR__, levels lowered by one' => [
+            'generic/dirname',
+            '',
+            "\$a = \\dirname( __FILE__ );\n\$b = dirname(__FILE__, 1);\n\$c = dirname( __FILE__, 3 );\n\$d = dirname(__FILE__ /* x */);\n\$e = dirname(__FILE__, \$n);",
+            "\$a = __DIR__;\n\$b = __DIR__;\n\$c = dirname( __DIR__, 2 );\n\$d = dirname(__FILE__ /* x */);\n\$e = dirname(__FILE__, \$n);",
+        ];
+
         yield 'parentheses-spacing adds the WordPress spaces' => [
             'wordpress/parentheses-spacing',
             '',
