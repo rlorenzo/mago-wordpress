@@ -17,6 +17,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
@@ -222,6 +223,7 @@ final class WordPressExtension
                 new SwitchDeclarationRule($report),
                 new UnnecessaryHeredocRule($report),
                 new NoDoubleNegativeRule($report),
+                new CommentedOutCodeRule($report),
                 new UnusedFunctionParameterRule($report),
                 new NoReservedKeywordParameterNamesRule($report),
                 new AlternativeFunctionsRule($report, $settings),

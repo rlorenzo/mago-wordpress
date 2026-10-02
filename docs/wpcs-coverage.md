@@ -179,6 +179,8 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 `mago lint` with every core rule on and `mago analyze`, and neither covers them:
 
 - `Squiz.PHP.CommentedOutCode`
+- `Squiz.Scope.MethodScope`
+- `Universal.CodeAnalysis.NoDoubleNegative`
 - `Universal.Namespaces.DisallowDeclarationWithoutName`
 - `Universal.Namespaces.OneDeclarationPerFile`
 - `Universal.UseStatements.NoUselessAliases`

@@ -144,6 +144,7 @@ final class SniffMap
             'generic/no-reserved-keyword-parameter-names',
         ],
         'Generic.CodeAnalysis.UnusedFunctionParameter' => ['generic/unused-function-parameter'],
+        'Squiz.PHP.CommentedOutCode' => ['generic/commented-out-code'],
     ];
 
     /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */
