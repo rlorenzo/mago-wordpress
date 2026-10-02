@@ -55,9 +55,6 @@ $defaultLevel = array_map(strtolower(...), array_column($listed, 'level', 'code'
  * bake-off plugins and bcap_website (phpcs-clean): off in every preset.
  */
 const DIVERGENT = [
-    // PEAR.NamingConventions.ValidClassName accepts WordPress's `Foo_Bar`; Mago's class-name
-    // wants PascalCase (1,216 reports on wordpress-seo, 10 on akismet, none from phpcs).
-    'class-name',
     // PSR2.Files.ClosingTag skips any file with inline HTML; Mago's no-closing-tag flags a
     // template that ends in a closing tag (19 on bcap_website, none from phpcs).
     'no-closing-tag',
