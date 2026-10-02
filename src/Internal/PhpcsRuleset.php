@@ -240,6 +240,7 @@ final class PhpcsRuleset
         'Universal.CodeAnalysis.NoEchoSprintf',
         'Generic.Strings.UnnecessaryHeredoc',
         'Universal.CodeAnalysis.NoDoubleNegative',
+        'Generic.CodeAnalysis.UnusedFunctionParameter',
     ];
 
     /** phpcs hides reports below this severity by default. */
