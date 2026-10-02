@@ -127,6 +127,9 @@ space-within-grouping-parenthesis = true
 align-assignment-like = true
 preserve-breaking-argument-list = true
 preserve-breaking-parameter-list = true
+# Keep a broken concatenation broken: joined, literals trip Generic.Strings.UnnecessaryStringConcat
+# (allowMultiline in WordPress-Extra) and a translators comment ends up away from its string.
+preserve-breaking-binary-expression = true
 # WordPress has no line limit; 120 wraps long calls, even `<?php esc_html_e( '...' ); ?>` in HTML.
 print-width = 1000
 # `exit;`, not `exit();`.

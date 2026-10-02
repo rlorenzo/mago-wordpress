@@ -7,6 +7,7 @@ namespace Rlorenzo\MagoWordPress\Internal;
 use function array_diff;
 use function array_filter;
 use function array_intersect;
+use function array_keys;
 use function array_map;
 use function array_merge;
 use function array_unique;
@@ -18,6 +19,7 @@ use function escapeshellarg;
 use function exec;
 use function explode;
 use function file_get_contents;
+use function file_put_contents;
 use function fwrite;
 use function getenv;
 use function implode;
@@ -39,6 +41,7 @@ use function substr;
 use function symlink;
 use function sys_get_temp_dir;
 
+use const ARRAY_FILTER_USE_BOTH;
 use const STDERR;
 use const STDOUT;
 
@@ -175,12 +178,23 @@ final class FormatCommand
 
     /**
      * Runs the steps. `mago format` is not always stable (a comment after `<?php` before `endif;`
-     * moves one place per run), so it is repeated until `mago format --check` passes.
+     * moves one place per run), so it is repeated until `mago format --check` passes. A file
+     * whose formatting adds a lint finding is put back as it was (see keepFindings()).
      *
      * @param list<string> $paths
      */
     private static function steps(string $mago, string $cwd, array $paths, bool $capture): int
     {
+        $files = self::files($mago, $cwd, $paths);
+        if ($files === null) {
+            return 1;
+        }
+
+        $before = [];
+        foreach ($files as $file) {
+            $before[$file] = (string) file_get_contents("{$cwd}/{$file}");
+        }
+
         foreach (self::STEPS as $step) {
             $runs = $step === ['format'] ? 5 : 1; // ponytail: gives up after 5 runs; mago converged in 3 on bcap.
             for ($run = 1;; ++$run) {
@@ -215,7 +229,80 @@ final class FormatCommand
             }
         }
 
+        return self::keepFindings($mago, $cwd, $before);
+    }
+
+    /**
+     * Lints the files formatting changed, formatted and as they were, and puts back the original
+     * of each one that formatting gives a finding it did not have: `mago format` can move a
+     * translators comment away from its string (WordPress.WP.I18n.MissingTranslatorsComment) and
+     * nothing else keeps it there.
+     *
+     * @param array<string, string> $before the files' contents before formatting
+     */
+    private static function keepFindings(string $mago, string $cwd, array $before): int
+    {
+        $formatted = [];
+        foreach ($before as $file => $source) {
+            $after = (string) file_get_contents("{$cwd}/{$file}");
+            if ($after !== $source) {
+                $formatted[$file] = $after;
+            }
+        }
+
+        if ($formatted === []) {
+            return 0;
+        }
+
+        $files = array_keys($formatted);
+        $new = CommentConversion::lint($mago, $files, ignorePhpcs: false, cwd: $cwd);
+        foreach ($files as $file) {
+            file_put_contents("{$cwd}/{$file}", $before[$file]);
+        }
+
+        $old = CommentConversion::lint($mago, $files, ignorePhpcs: false, cwd: $cwd);
+        if ($new === null || $old === null) {
+            fwrite(STDERR, "mago lint did not return a JSON report; nothing was formatted.\n");
+
+            return 1;
+        }
+
+        foreach ($formatted as $file => $source) {
+            $had = self::rules($old[$file] ?? []);
+            $added = array_filter(
+                self::rules($new[$file] ?? []),
+                static fn(int $count, string $rule): bool => $count > ($had[$rule] ?? 0),
+                ARRAY_FILTER_USE_BOTH,
+            );
+            if ($added === []) {
+                file_put_contents("{$cwd}/{$file}", $source);
+
+                continue;
+            }
+
+            fwrite(
+                STDERR,
+                "{$file}: left unformatted: formatting adds "
+                . implode(', ', array_keys($added))
+                . " findings. Format it by hand, or keep it as it is.\n",
+            );
+        }
+
         return 0;
+    }
+
+    /**
+     * @param list<array{int, string}> $issues
+     * @return array<string, int> issues per rule
+     */
+    private static function rules(array $issues): array
+    {
+        $rules = [];
+        foreach ($issues as [, $rule]) {
+            $rules[$rule] = ($rules[$rule] ?? 0) + 1;
+        }
+
+        return $rules;
     }
 
     /**

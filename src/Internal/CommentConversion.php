@@ -880,15 +880,19 @@ final class CommentConversion
     }
 
     /**
-     * Issues per file as [line, rule], or null when mago returned no report.
+     * Issues per file as [line, rule], or null when mago returned no report. Run in $cwd when
+     * given, else in the current directory.
      *
      * @param list<string> $paths
      * @return null|array<string, list<array{int, string}>>
      */
-    private static function lint(string $mago, array $paths, bool $ignorePhpcs): ?array
+    public static function lint(string $mago, array $paths, bool $ignorePhpcs, string $cwd = ''): ?array
     {
         putenv($ignorePhpcs ? self::ENV . '=1' : self::ENV);
-        $command = escapeshellarg($mago) . ' lint --ignore-baseline --reporting-format json';
+        $command =
+            ($cwd === '' ? '' : 'cd ' . escapeshellarg($cwd) . ' && ')
+            . escapeshellarg($mago)
+            . ' lint --ignore-baseline --reporting-format json';
         foreach ($paths as $path) {
             $command .= ' ' . escapeshellarg($path);
         }
@@ -1001,9 +1005,8 @@ final class CommentConversion
             fwrite(STDERR, "{$problem}\n");
         }
 
-        echo
-            "\nKeep \"honor-phpcs-comments\" on: the phpcs comments behind the lines above (see the\n"
-                . "\"not convertible\" notes) still suppress issues. Replace them by hand first.\n";
+        $keep = "\nKeep \"honor-phpcs-comments\" on: the phpcs comments behind the lines above (see the\n";
+        echo $keep . "\"not convertible\" notes) still suppress issues. Replace them by hand first.\n";
 
         return 1;
     }
