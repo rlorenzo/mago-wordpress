@@ -44,22 +44,8 @@ Inline `// phpcs:set` comments are not read.
 
 ## Results on real rulesets
 
-**wordpress-develop's `phpcs.xml.dist` (`WordPress-Core`).** 54 of 55 `<exclude-pattern>`s become
-globs (`/themes/(?!twenty)*` does not). The Extra-only and WordPress-only rules are turned off, and
-the file- and message-scoped exclusions carry over.
-
-Linting the migrated project, every rule this package ports reports the same count as phpcs with
-that ruleset: file-name 10, valid-hook-name 1, wp-date-time 1, valid-variable-name 0,
-prepared-sql-placeholders 2. The gaps are Mago's core rules: `prepared-sql` 242 vs phpcs's 215, and
-`no-error-control-operator` 151 because `customAllowedFunctionsList` has no setting.
-
-16 items are listed as not migrated, mostly `Generic`/`PEAR` sniff refs and `<type>` on extension
-rules.
-
-**WooCommerce's `phpcs.xml` (`WooCommerce-Core`).** All 17 path exclusions, the text domain,
-`minimum_supported_wp_version`, the 18 custom capabilities and the file-name and hook-name exclusions
-migrate. The custom standard, its own sniffs, `PHPCompatibility` and 13 generic sniff refs are
-listed.
-
-On the 11.1.1 release zip, the migrated config drops `wordpress/file-name` from 4,536 to 691 reports
-and `wordpress/capabilities` from 189 to 0.
+- **wordpress-develop** (`WordPress-Core`): 54 of 55 path exclusions migrate, and every rule this
+  package ports then reports the same count as phpcs. 16 items are listed as not migrated.
+- **WooCommerce** (`WooCommerce-Core`): exclusions, text domain and custom capabilities migrate.
+  On the 11.1.1 release, `wordpress/file-name` drops from 4,536 to 691 reports and
+  `wordpress/capabilities` from 189 to 0.

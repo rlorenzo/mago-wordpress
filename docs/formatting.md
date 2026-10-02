@@ -24,32 +24,20 @@ editor's format-on-save) undoes the third step. For the same reason `mago format
 fails on code formatted this way; check with `mago lint --only wordpress/parentheses-spacing` instead.
 Lines are not re-wrapped after the spaces go in, so a few may run past `print-width`.
 
-## What remains without the third step
+## How close it gets
 
-Without it, `mago format` cannot produce WordPress formatting exactly. Measured on Akismet, Contact
-Form 7 and Yoast SEO ([results](../bench/results/2026-09-30-formatter.md)), this preset leaves
-95,040 phpcs-fixable `WordPress-Core` reports, against 334,577 with Mago's defaults.
+On Akismet, Contact Form 7 and Yoast SEO, phpcs-fixable `WordPress-Core` reports drop from
+334,577 (Mago's default formatting) to 95,040 with the preset, and to 7,579 with the third step.
+What's left:
 
 | Cause | Share |
 |:---|---:|
-| **No spaces inside parentheses and brackets** (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]`). Mago has no option for this and upstream declined one. The `!` and cast reports share the cause: `(! $x)` has no space after the parenthesis. `wordpress/parentheses-spacing` fixes all of these, leaving 7,579 reports (92 % fewer). | 92 % |
-| **Alignment limits.** WPCS stops aligning `=>` past column 60 and `=` past 40 spaces of padding, and aligns across comments and blank lines. Mago aligns each run without a limit. | 5 % |
-| **Hugged last argument.** Mago keeps `foo( $a, array(` on one line; PEAR wants one argument per line once a call breaks. | 2 % |
-| **Templates and alternative syntax.** Mago prints `if ( $x ):` without the space before `:`, and breaks long `<?php echo … ?>` lines inside HTML. | < 1 % |
+| Missing spaces inside parentheses and brackets, which the third step fixes | 92 % |
+| Alignment: WPCS stops aligning `=>` past column 60 and `=` past 40 spaces, Mago never stops | 5 % |
+| Hugged last argument: Mago keeps `foo( $a, array(` on one line | 2 % |
+| Templates: no space before `:` in `if ( $x ):`, long `<?php echo … ?>` lines broken | < 1 % |
 
-Sniff codes behind each cause:
-
-- **No spaces:**
-  - `PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket`, `.SpaceBeforeCloseBracket`
-  - `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceAfterOpenParenthesis`, `.NoSpaceBeforeCloseParenthesis`
-  - `Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen`, `.SpacingBeforeClose`
-  - `WordPress.Arrays.ArrayKeySpacingRestrictions.NoSpacesAroundArrayKeys`
-  - `NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine`, `.SpaceBeforeArrayCloserSingleLine`, `.SpaceAfterArrayOpenerMultiLine`, `.SpaceBeforeArrayCloserMultiLine`
-  - `WordPress.WhiteSpace.OperatorSpacing.NoSpaceBefore`
-  - `WordPress.WhiteSpace.CastStructureSpacing.NoSpaceBeforeOpenParenthesis`
-- **Alignment limits:** `WordPress.Arrays.MultipleStatementAlignment.LongIndexSpaceBeforeDoubleArrow`, `.DoubleArrowNotAligned`; `Generic.Formatting.MultipleStatementAlignment.NotSameWarning`
-- **Hugged last argument:** `PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket`, `.CloseBracketLine`, `.MultipleArguments`, `.Indent`
-- **Templates and alternative syntax:** `WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceBetweenStructureColon`; `Squiz.ControlStructures.ControlSignature.SpaceAfterCloseParenthesis`; `Squiz.PHP.EmbeddedPhp.*`; `Generic.WhiteSpace.LanguageConstructSpacing.IncorrectSingle`
+Sniff codes and per-plugin numbers: [formatter results](../bench/results/2026-09-30-formatter.md).
 
 ## Existing phpcs-clean code
 
