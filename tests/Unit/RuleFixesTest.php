@@ -159,6 +159,13 @@ final class RuleFixesTest extends TestCase
                 "\tif (\$a)\n\t\tif (\$b) { foo();\n\t\t}",
             ];
 
+        yield 'disallow-standalone-post-increment-decrement moves the operator to the front' => [
+            'generic/disallow-standalone-post-increment-decrement',
+            '',
+            "\$i++;\n\$obj->a[\$k] --;\n\$b = \$i++;",
+            "++\$i;\n--\$obj->a[\$k];\n\$b = \$i++;",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
