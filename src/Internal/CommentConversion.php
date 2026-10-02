@@ -879,15 +879,19 @@ final class CommentConversion
     }
 
     /**
-     * Issues per file as [line, rule], or null when mago returned no report.
+     * Issues per file as [line, rule], or null when mago returned no report. Run in $cwd when
+     * given, else in the current directory.
      *
      * @param list<string> $paths
      * @return null|array<string, list<array{int, string}>>
      */
-    private static function lint(string $mago, array $paths, bool $ignorePhpcs): ?array
+    public static function lint(string $mago, array $paths, bool $ignorePhpcs, string $cwd = ''): ?array
     {
         putenv($ignorePhpcs ? self::ENV . '=1' : self::ENV);
-        $command = escapeshellarg($mago) . ' lint --ignore-baseline --reporting-format json';
+        $command =
+            ($cwd === '' ? '' : 'cd ' . escapeshellarg($cwd) . ' && ')
+            . escapeshellarg($mago)
+            . ' lint --ignore-baseline --reporting-format json';
         foreach ($paths as $path) {
             $command .= ' ' . escapeshellarg($path);
         }

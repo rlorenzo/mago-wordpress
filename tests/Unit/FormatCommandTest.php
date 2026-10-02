@@ -27,16 +27,7 @@ final class FormatCommandTest extends TestCase
 
     public function testFormatThenCheck(): void
     {
-        $root = dirname(__DIR__, levels: 2);
-        file_put_contents("{$this->directory}/composer.json", data: '{}');
-        file_put_contents(
-            "{$this->directory}/mago.toml",
-            'extends = '
-            . json_encode("{$root}/wordpress.mago.toml", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "\nphp-version = \"8.1\"\n[source]\npaths = [\".\"]\n[extension-hosts.wordpress]\ncommand = [\"php\", "
-            . json_encode("{$root}/resources/worker.php", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "]\n",
-        );
+        $this->project();
         $unformatted = "<?php\nif (\$x): ?>\n\t<p><?php echo foo(\$a, [1, 2]); ?></p>\n<?php else: ?>\n\t<?php exit(); ?>\n<?php endif; ?>\n";
         file_put_contents("{$this->directory}/template.php", $unformatted);
 
@@ -56,11 +47,50 @@ final class FormatCommandTest extends TestCase
         self::assertSame(0, $status, $output);
     }
 
+    /**
+     * A file whose formatting would add a finding (here a translators comment no longer on the
+     * line before its string) is left as it was, and `--check` accepts it.
+     */
+    public function testFileThatFormattingBreaksIsLeftAlone(): void
+    {
+        $this->project();
+        $source = <<<'PHP'
+            <?php
+            echo '<a class="' . esc_attr( $c ) . '"' .
+            	/* translators: %s: percent done. */
+            	' data-label="' . esc_attr( __( 'Checking (%1$s%)', 'd' ) ) . '"';
+
+            PHP;
+        file_put_contents("{$this->directory}/broken.php", $source);
+
+        [$status, $output] = $this->format();
+        self::assertSame(0, $status, $output);
+        self::assertStringContainsString('broken.php: left unformatted: formatting adds wordpress/wp-i18n', $output);
+        self::assertSame($source, file_get_contents("{$this->directory}/broken.php"));
+
+        [$status, $output] = $this->format('--check');
+        self::assertSame(0, $status, $output);
+    }
+
     public function testUnknownFlagIsAnError(): void
     {
         [$status, $output] = $this->format('--nope');
         self::assertSame(2, $status);
         self::assertStringContainsString('Usage: mago-wordpress format', $output);
+    }
+
+    private function project(): void
+    {
+        $root = dirname(__DIR__, levels: 2);
+        file_put_contents("{$this->directory}/composer.json", data: '{}');
+        file_put_contents(
+            "{$this->directory}/mago.toml",
+            'extends = '
+            . json_encode("{$root}/wordpress.mago.toml", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
+            . "\nphp-version = \"8.1\"\n[source]\npaths = [\".\"]\n[extension-hosts.wordpress]\ncommand = [\"php\", "
+            . json_encode("{$root}/resources/worker.php", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
+            . "]\n",
+        );
     }
 
     /**
