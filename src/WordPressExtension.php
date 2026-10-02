@@ -42,6 +42,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
@@ -166,6 +167,7 @@ final class WordPressExtension
                 new DisallowSizeFunctionsInLoopsRule($report),
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
+                new NonExecutableCodeRule($report),
                 new EmptyStatementRule($report),
                 new SelfMemberReferenceRule($report),
                 new MethodScopeRule($report),
