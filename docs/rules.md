@@ -107,6 +107,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/property-declaration` | Error | `PSR2.Classes.PropertyDeclaration` | a property without visibility, declared with `var`, several per statement, modifiers out of order, not one space after its type (fixes the last two) |
 | `generic/require-explicit-boolean-operator-precedence` | Error | `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | `&&`, `\|\|`, `and`, `or`, `xor` mixed without parentheses, as in `$a && $b \|\| $c` |
 | `generic/self-member-reference` | Error | `Squiz.Classes.SelfMemberReference` | the enclosing class named instead of `self::`, `self` in another case, spaces around `::` (fixed; `NotUsed` is off in `WordPress-Core`) |
+| `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |
 
 The generic rules honour phpcs comments and `exclude-patterns` under their own sniff codes. For
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
