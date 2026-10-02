@@ -91,7 +91,7 @@ final class SniffMap
         'Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence' => [
             'generic/require-explicit-boolean-operator-precedence',
         ],
-        'Generic.CodeAnalysis.UnconditionalIfStatement' => ['constant-condition'],
+        'Generic.CodeAnalysis.UnconditionalIfStatement' => ['generic/unconditional-if-statement'],
         'Generic.CodeAnalysis.UnnecessaryFinalModifier' => ['no-redundant-final'],
         'Generic.CodeAnalysis.UselessOverridingMethod' => ['no-redundant-method-override'],
         'Generic.Files.ByteOrderMark' => ['generic/byte-order-mark'],

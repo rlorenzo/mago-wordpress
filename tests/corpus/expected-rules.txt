@@ -17,6 +17,7 @@ generic/property-declaration
 generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence
 generic/self-member-reference
+generic/unconditional-if-statement
 generic/valid-class-name
 wordpress/alternative-functions
 wordpress/assignment-in-ternary-condition
