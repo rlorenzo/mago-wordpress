@@ -47,7 +47,7 @@ Four security rules no WPCS sniff runs stay on, because they make code safer and
 which match option names and any variable named `token` or `key`.
 
 The core rules a preset keeps report at the level phpcs gives their sniff (`constant-name` and
-`single-class-per-file` are errors, `no-goto` a warning). `bin/generate-presets.php` derives all of
+`single-class-per-file` and `no-goto` are errors). `bin/generate-presets.php` derives all of
 this from `SniffMap`, `src/Internal/WordPress/Levels.php` and Mago's default rules.
 
 The ported sniff lists match WPCS 3.4.1's `ruleset.xml` files, including

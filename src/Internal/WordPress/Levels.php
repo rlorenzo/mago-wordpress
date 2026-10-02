@@ -81,7 +81,7 @@ final class Levels
             'PossibleFound' => 'warning',
         ],
         'Generic.PHP.DiscourageGoto' => [
-            'Found' => 'warning',
+            'Found' => 'error',
         ],
         'Generic.PHP.ForbiddenFunctions' => [
             '*' => 'error',
@@ -171,6 +171,9 @@ final class Levels
         ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
+        ],
+        'Universal.Operators.StrictComparisons' => [
+            '*' => 'warning',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',
