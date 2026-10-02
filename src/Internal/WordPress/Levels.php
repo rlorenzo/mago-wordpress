@@ -129,6 +129,16 @@ final class Levels
         'PSR2.ControlStructures.ElseIfDeclaration' => [
             'NotAllowed' => 'warning',
         ],
+        'PSR2.ControlStructures.SwitchDeclaration' => [
+            '*NotLower' => 'error',
+            'BodyOnNextLine*' => 'error',
+            'BreakIndent' => 'error',
+            'BreakNotNewLine' => 'error',
+            'SpaceBeforeColon*' => 'error',
+            'SpacingAfterCase' => 'error',
+            'TerminatingComment' => 'error',
+            'WrongOpener*' => 'error',
+        ],
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
         ],

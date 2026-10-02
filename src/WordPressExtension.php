@@ -70,6 +70,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
@@ -219,6 +220,7 @@ final class WordPressExtension
                 new IncrementDecrementUsageRule($report),
                 new DoubleQuoteUsageRule($report),
                 new NoEchoSprintfRule($report),
+                new SwitchDeclarationRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),
