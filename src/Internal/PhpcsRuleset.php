@@ -223,6 +223,7 @@ final class PhpcsRuleset
         'Squiz.PHP.DisallowSizeFunctionsInLoops',
         'Universal.CodeAnalysis.ForeachUniqueAssignment',
         'Generic.CodeAnalysis.EmptyStatement',
+        'Squiz.PHP.NonExecutableCode',
     ];
 
     /** phpcs hides reports below this severity by default. */

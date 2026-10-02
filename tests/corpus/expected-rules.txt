@@ -11,6 +11,7 @@ generic/jumbled-incrementer
 generic/method-declaration
 generic/method-declaration-warning
 generic/method-scope
+generic/non-executable-code
 generic/property-declaration
 generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence
