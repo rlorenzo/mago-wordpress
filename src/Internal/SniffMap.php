@@ -125,6 +125,7 @@ final class SniffMap
         'Squiz.PHP.Eval' => ['no-eval'],
         'Squiz.PHP.NonExecutableCode' => ['generic/non-executable-code'],
         'Squiz.Scope.MethodScope' => ['generic/method-scope'],
+        'Squiz.Strings.DoubleQuoteUsage' => ['generic/double-quote-usage'],
         'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
         'Universal.CodeAnalysis.StaticInFinalClass' => ['generic/static-in-final-class'],

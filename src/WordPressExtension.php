@@ -30,6 +30,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrement
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DoubleQuoteUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
@@ -210,6 +211,7 @@ final class WordPressExtension
                 new DisallowLonelyIfRule($report),
                 new ControlSignatureRule($report),
                 new IncrementDecrementUsageRule($report),
+                new DoubleQuoteUsageRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),

@@ -95,6 +95,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/disallow-lonely-if` | Error | `Universal.ControlStructures.DisallowLonelyIf` | an `else` block whose only statement is an `if`; the fix rewrites the brace form to `elseif` as phpcbf does (comments around the inner `if` and the alternative syntax are not fixed) |
 | `generic/disallow-size-functions-in-loops` | Error | `Squiz.PHP.DisallowSizeFunctionsInLoops` | `count()`, `sizeof()` or `strlen()` in a `while`/do-`while` condition or a `for` loop's test part |
 | `generic/disallow-standalone-post-increment-decrement` | Warning | `Universal.Operators.DisallowStandalonePostIncrementDecrement` | `$i++;` or `$i--;` as a statement of its own (WordPress-Core makes it a warning); the fix moves the operator to the front |
+| `generic/double-quote-usage` | Error | `Squiz.Strings.DoubleQuoteUsage` | only `NotRequired` (the code WordPress-Core includes): a double-quoted string that needs no double quotes; the fix single-quotes it as phpcbf does |
 | `generic/else-if-declaration` | Warning | `PSR2.ControlStructures.ElseIfDeclaration` | `else if` instead of `elseif` (fixed) |
 | `generic/empty-statement` | Error | `Generic.CodeAnalysis.EmptyStatement` | an `if`, `elseif`, `else`, loop, `try`, `catch`, `finally`, `switch` or `match` whose body is empty or only comments |
 | `generic/for-loop-with-test-function-call` | Warning | `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | any function or method call in a `for` loop's test part |

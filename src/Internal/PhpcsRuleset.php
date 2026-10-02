@@ -181,6 +181,7 @@ final class PhpcsRuleset
         'Generic.ControlStructures.InlineControlStructure',
         'Universal.Operators.DisallowStandalonePostIncrementDecrement',
         'Squiz.ControlStructures.ControlSignature',
+        'Squiz.Strings.DoubleQuoteUsage',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
