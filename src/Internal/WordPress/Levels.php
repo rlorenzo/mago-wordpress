@@ -123,6 +123,13 @@ final class Levels
             'FileConstant' => 'error',
             'Nested' => 'error',
         ],
+        'PEAR.Files.IncludingFile' => [
+            'BracketsNotRequired' => 'error',
+            'UseInclude' => 'error',
+            'UseIncludeOnce' => 'error',
+            'UseRequire' => 'warning',
+            'UseRequireOnce' => 'warning',
+        ],
         'PEAR.NamingConventions.ValidClassName' => [
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
