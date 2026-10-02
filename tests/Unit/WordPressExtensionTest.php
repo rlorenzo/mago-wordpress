@@ -21,6 +21,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionProperty;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\SplitRule;
 use Rlorenzo\MagoWordPress\Settings;
 use Rlorenzo\MagoWordPress\WordPressExtension;
 
@@ -69,6 +70,12 @@ final class WordPressExtensionTest extends TestCase
     public function testRulesDoNotReportDirectly(): void
     {
         foreach (WordPressExtension::create()->linterRules as $rule) {
+            // A split rule replays issues its wrapped rule reported through the Report.
+            if ($rule instanceof SplitRule) {
+                /** @var Rule $rule */
+                $rule = (new ReflectionProperty($rule, 'rule'))->getValue($rule);
+            }
+
             for ($class = new ReflectionClass($rule); $class !== false; $class = $class->getParentClass()) {
                 $source = (string) file_get_contents((string) $class->getFileName());
                 self::assertFalse(

@@ -14,6 +14,7 @@ current_user_can('administrator');
 // phpcs:ignore WordPress.WP.Capabilities.Deprecated
 current_user_can('level_10');
 
+// @mago-expect lint:wordpress/capabilities-warning
 // phpcs:ignore WordPress.WP.Capabilities.RoleFound
 current_user_can('unknown_cap');
 
