@@ -178,6 +178,9 @@ final class Levels
         'Squiz.Operators.ValidLogicalOperators' => [
             'NotAllowed' => 'error',
         ],
+        'Squiz.PHP.CommentedOutCode' => [
+            'Found' => 'warning',
+        ],
         'Squiz.PHP.DisallowMultipleAssignments' => [
             '*InControlStructure' => 'error',
             'Found' => 'error',
