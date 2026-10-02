@@ -19,6 +19,7 @@ generic/require-explicit-boolean-operator-precedence
 generic/self-member-reference
 generic/separate-functions-from-oo
 generic/static-in-final-class
+generic/strict-comparisons
 generic/unconditional-if-statement
 generic/useless-overriding-method
 generic/valid-class-name
