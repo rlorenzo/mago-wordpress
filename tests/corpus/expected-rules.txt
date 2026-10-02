@@ -24,6 +24,7 @@ generic/strict-comparisons
 generic/unconditional-if-statement
 generic/useless-overriding-method
 generic/valid-class-name
+generic/valid-logical-operators
 wordpress/alternative-functions
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities

@@ -144,6 +144,9 @@ final class Levels
             'SpaceAfter' => 'error',
             'SpaceBefore' => 'error',
         ],
+        'Squiz.Operators.ValidLogicalOperators' => [
+            'NotAllowed' => 'error',
+        ],
         'Squiz.PHP.DisallowMultipleAssignments' => [
             '*InControlStructure' => 'error',
             'Found' => 'error',

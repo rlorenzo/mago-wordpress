@@ -115,6 +115,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/unconditional-if-statement` | Warning | `Generic.CodeAnalysis.UnconditionalIfStatement` | an `if` or `elseif` whose condition is the literal `true` or `false`; replaces Mago's `constant-condition` |
 | `generic/useless-overriding-method` | Warning | `Generic.CodeAnalysis.UselessOverridingMethod` | a method whose body only calls the parent method of the same name with its own parameters, unchanged; replaces Mago's `no-redundant-method-override` |
 | `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |
+| `generic/valid-logical-operators` | Error | `Squiz.Operators.ValidLogicalOperators` | the `and` and `or` operators; no fix, as `&&` and `||` bind tighter |
 
 The generic rules honour phpcs comments and `exclude-patterns` under their own sniff codes. For
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
