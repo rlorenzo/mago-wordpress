@@ -193,6 +193,13 @@ final class RuleFixesTest extends TestCase
             "printf( '%s', \$a );\n\\vprintf( '%s', [ \$a ] );",
         ];
 
+        yield 'unnecessary-heredoc turns the heredoc into a nowdoc' => [
+            'generic/unnecessary-heredoc',
+            '',
+            "\$a = <<<\"EOT\"\ncosts \\\$5 \\\\ more\nEOT;",
+            "\$a = <<<'EOT'\ncosts \$5 \\ more\nEOT;",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

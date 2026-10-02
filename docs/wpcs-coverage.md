@@ -188,7 +188,6 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
 
-- `Generic.Strings.UnnecessaryHeredoc`
 - `Modernize.FunctionCalls.Dirname`
 - `Modernize.FunctionCalls.Dirname.Nested`
 - `PEAR.Files.IncludingFile`

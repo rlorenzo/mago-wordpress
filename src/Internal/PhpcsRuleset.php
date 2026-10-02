@@ -237,6 +237,7 @@ final class PhpcsRuleset
         'Universal.ControlStructures.DisallowLonelyIf',
         'Squiz.Operators.IncrementDecrementUsage',
         'Universal.CodeAnalysis.NoEchoSprintf',
+        'Generic.Strings.UnnecessaryHeredoc',
     ];
 
     /** phpcs hides reports below this severity by default. */
