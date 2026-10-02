@@ -99,6 +99,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/git-merge-conflict` | Error | `Generic.VersionControl.GitMergeConflict` | merge conflict markers at the start of a line, including in inline HTML, comments and heredocs, where the file still parses |
 | `generic/assignment-in-condition` | Warning | `Generic.CodeAnalysis.AssignmentInCondition` | an assignment in an `if`, `elseif`, `switch`, `case`, `while`, `match` or `for` condition, including `! $a = f()` |
 | `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
+| `generic/inline-control-structure` | Error | `Generic.ControlStructures.InlineControlStructure` | an `if`, `elseif`, `else`, `foreach`, `for`, `while` or `do` body without braces; the fix adds them as phpcbf does |
 | `generic/jumbled-incrementer` | Warning | `Generic.CodeAnalysis.JumbledIncrementer` | a nested `for` loop incrementing the outer loop's variable |
 | `generic/method-declaration-warning` | Warning | `PSR2.Methods.MethodDeclaration` | a method name with a single leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |
 | `generic/method-declaration` | Error | `PSR2.Methods.MethodDeclaration` | `final` or `abstract` after a method's visibility, `static` before it (fixed) |

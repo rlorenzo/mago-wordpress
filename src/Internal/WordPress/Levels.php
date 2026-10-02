@@ -55,6 +55,10 @@ final class Levels
         'Generic.CodeAnalysis.UselessOverridingMethod' => [
             'Found' => 'warning',
         ],
+        'Generic.ControlStructures.InlineControlStructure' => [
+            'Discouraged' => 'warning',
+            'NotAllowed' => 'error',
+        ],
         'Generic.Files.ByteOrderMark' => [
             'Found' => 'error',
         ],
