@@ -48,6 +48,21 @@ final class CommentConversionTest extends TestCase
         self::assertSame(['wordpress/escape-output' => 3, 'wordpress/dont-extract' => 1], $result['claimed']);
     }
 
+    public function testWarningCodeConvertsToTheCompanionRule(): void
+    {
+        $source = <<<'PHP'
+            <?php
+            $page = absint($_GET['paged'] ?? 1); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            PHP;
+
+        $result = CommentConversion::convert($source, [[2, 'wordpress/nonce-verification-warning']]);
+
+        self::assertSame(<<<'PHP'
+            <?php
+            $page = absint($_GET['paged'] ?? 1); // @mago-expect lint:wordpress/nonce-verification-warning
+            PHP, $result['source']);
+    }
+
     public function testCommentThatCoversNothingKeepsOnlyItsReason(): void
     {
         $source = <<<'PHP'

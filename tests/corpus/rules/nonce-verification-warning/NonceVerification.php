@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 function myplugin_save_without_nonce(): void
 {
-    // @mago-expect lint:wordpress/nonce-verification
     update_option('myplugin', sanitize_text_field(wp_unslash($_POST['value'] ?? '')));
 }
 
@@ -32,6 +31,7 @@ function myplugin_nonce_elsewhere(): void
 {
     // A nonce check in the global scope or another function does not count.
     // `$_GET` and `$_REQUEST` are WPCS's `Recommended` (a warning there).
+    // @mago-expect lint:wordpress/nonce-verification-warning
     $page = absint($_GET['paged'] ?? 1) + 1;
 }
 

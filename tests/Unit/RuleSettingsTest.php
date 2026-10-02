@@ -89,13 +89,13 @@ final class RuleSettingsTest extends TestCase
             0,
         ];
         yield 'additional_word_delimiters_are_allowed' => [
-            'wordpress/valid-hook-name',
+            'wordpress/valid-hook-name-warning',
             ['additional-word-delimiters' => '/.'],
             "do_action('myplugin/loaded');\n\$value = apply_filters('myplugin.option.value', \$value);",
             0,
         ];
         yield 'other_delimiters_are_still_flagged' => [
-            'wordpress/valid-hook-name',
+            'wordpress/valid-hook-name-warning',
             ['additional-word-delimiters' => '/'],
             "do_action('myplugin-loaded');",
             1,

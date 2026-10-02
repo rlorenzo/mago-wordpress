@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Tests;
 
+use Mago\Sdk\Linter\Rule;
 use Mago\Sdk\Reporting\Level;
 use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\LeveledRule;
@@ -13,10 +14,14 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Levels;
 use Rlorenzo\MagoWordPress\Settings;
 use Rlorenzo\MagoWordPress\WordPressExtension;
 
+use function array_filter;
+use function array_flip;
 use function array_key_exists;
 use function array_keys;
+use function array_map;
 use function count;
 use function in_array;
+use function str_ends_with;
 
 final class LevelsTest extends TestCase
 {
@@ -26,15 +31,12 @@ final class LevelsTest extends TestCase
      */
     private const MIXED = [
         'generic/disallow-alternative-php-tags' => Level::Warning, // two Maybe* warnings, one error
-        'wordpress/capabilities' => Level::Error,
+        'wordpress/capabilities' => Level::Error, // Deprecated: error or warning against minimum_wp_version
         'wordpress/enqueued-resource-parameters' => Level::Warning,
-        'wordpress/nonce-verification' => Level::Error,
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap
         'wordpress/prefix-all-globals' => Level::Error,
-        'wordpress/prepared-sql-placeholders' => Level::Error,
         'wordpress/prepared-sql-unquoted-complex-placeholder' => Level::Warning, // its one code
         'wordpress/type-casts' => Level::Error,
-        'wordpress/valid-hook-name' => Level::Error,
         'wordpress/valid-post-type-slug' => Level::Error,
         'wordpress/wp-date-time' => Level::Error,
         'wordpress/wp-deprecated-classes' => Level::Error,
@@ -57,11 +59,19 @@ final class LevelsTest extends TestCase
             }
         }
 
-        foreach (WordPressExtension::create()->linterRules as $rule) {
+        $rules = WordPressExtension::create()->linterRules;
+        $codes = array_flip(array_map(static fn(Rule $rule): string => $rule->getDefinition()->code, $rules));
+        foreach ($rules as $rule) {
             $definition = $rule->getDefinition();
             $levels = [];
             foreach ($sniffs[$definition->code] ?? [] as $sniff) {
                 $levels += Levels::SNIFFS[$sniff];
+            }
+            // A split rule's `-warning` companion takes the codes WPCS reports as warnings.
+            if (str_ends_with($definition->code, '-warning')) {
+                $levels = array_filter($levels, static fn(string $level): bool => $level === 'warning');
+            } elseif (array_key_exists($definition->code . '-warning', $codes)) {
+                $levels = array_filter($levels, static fn(string $level): bool => $level !== 'warning');
             }
             $found = array_keys(array_flip($levels));
             $uniform = count($found) === 1 ? $found[0] : null;
