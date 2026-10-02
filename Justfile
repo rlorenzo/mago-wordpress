@@ -36,4 +36,20 @@ test-corpus:
 presets-check:
     php bin/generate-presets.php --check
 
-check: validate format-check presets-check test lint analyze test-corpus
+# Lints the whole corpus with every rule at once and checks only that the worker survives: the
+# per-rule `--only` runs above cannot catch rules breaking each other (two tokenizers sharing a
+# file-cache key once crashed the worker in real use). Findings are expected here (exit 1); a
+# crash exits 2 or prints a worker/extension-host error.
+test-corpus-smoke:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    out=$({{mago}} --workspace tests/corpus lint --only "$(paste -sd, tests/corpus/expected-rules.txt)" --reporting-format count 2>&1)
+    status=$?
+    if (( status > 1 )) || grep -qiE 'extension host|worker (crashed|panicked|failed|exited)' <<< "$out"; then
+        echo "$out" >&2
+        echo "corpus smoke run: the worker crashed (exit $status)" >&2
+        exit 1
+    fi
+    echo "corpus smoke run: no crash (exit $status)"
+
+check: validate format-check presets-check test lint analyze test-corpus test-corpus-smoke
