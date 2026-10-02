@@ -108,6 +108,13 @@ final class RuleFixesTest extends TestCase
             "class A {\n\tpublic static int \$a;\n\tprotected readonly ?string \$b;\n}",
         ];
 
+        yield 'self-member-reference uses self:: without spaces' => [
+            'generic/self-member-reference',
+            '',
+            "class A {\n\tconst B = 1;\n\tfunction f() {\n\t\treturn A::B + self :: B + SELF::B;\n\t}\n}",
+            "class A {\n\tconst B = 1;\n\tfunction f() {\n\t\treturn self::B + self::B + self::B;\n\t}\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

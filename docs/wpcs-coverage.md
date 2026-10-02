@@ -199,7 +199,6 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `PSR12.Keywords.ShortFormTypeKeywords`
 - `PSR2.ControlStructures.ElseIfDeclaration`
 - `PSR2.Methods.MethodDeclaration`
-- `Squiz.Classes.SelfMemberReference`
 - `Squiz.Operators.IncrementDecrementUsage`
 - `Squiz.Operators.ValidLogicalOperators`
 - `Squiz.Strings.DoubleQuoteUsage`

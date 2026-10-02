@@ -122,6 +122,12 @@ final class Levels
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
         ],
+        'Squiz.Classes.SelfMemberReference' => [
+            'IncorrectCase' => 'error',
+            'NotUsed' => 'error',
+            'SpaceAfter' => 'error',
+            'SpaceBefore' => 'error',
+        ],
         'Squiz.PHP.DisallowMultipleAssignments' => [
             '*InControlStructure' => 'error',
             'Found' => 'error',
