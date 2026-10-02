@@ -1,6 +1,7 @@
 generic/assignment-in-condition
 generic/byte-order-mark
 generic/disallow-alternative-php-tags
+generic/disallow-lonely-if
 generic/disallow-multiple-assignments
 generic/disallow-size-functions-in-loops
 generic/disallow-standalone-post-increment-decrement

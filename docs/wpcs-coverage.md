@@ -204,6 +204,7 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `Universal.Constants.UppercaseMagicConstants`
 - `Universal.ControlStructures.DisallowLonelyIf`
 - `Universal.Operators.DisallowStandalonePostIncrementDecrement`
+- `Universal.Files.SeparateFunctionsFromOO`
 - `Universal.PHP.LowercasePHPTag`
 - `Universal.UseStatements.DisallowMixedGroupUse`
 - `Universal.UseStatements.LowercaseFunctionConst`
