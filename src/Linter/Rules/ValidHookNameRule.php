@@ -73,7 +73,7 @@ final class ValidHookNameRule extends CallRule
             code: 'wordpress/valid-hook-name',
             name: 'Valid hook name',
             description: 'Ensures that hook names defined via do_action() or apply_filters() follow WordPress naming conventions: lowercase letters, numbers, and underscores as word separators. Only the literal parts of a hook name are validated; dynamic parts of interpolated hook names are ignored.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::FunctionCall],
         );

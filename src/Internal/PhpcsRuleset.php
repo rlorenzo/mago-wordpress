@@ -308,8 +308,31 @@ final class PhpcsRuleset
         }
 
         $values['exclude-patterns'] = self::excludePatterns($xpath);
+        $values['levels'] = self::levels($xpath);
 
         return $values;
+    }
+
+    /**
+     * The `levels` setting from a `<type>` on a whole sniff, for the extension rules that port
+     * it (the last `<type>` wins). A `<type>` on one message code cannot re-level a rule.
+     *
+     * @return array<string, string>
+     */
+    private static function levels(DOMXPath $xpath): array
+    {
+        $levels = [];
+        foreach (self::elements($xpath, '/ruleset/rule[@ref]/type') as $type) {
+            $rule = $type->parentNode;
+            $ref = $rule instanceof DOMElement ? $rule->getAttribute('ref') : '';
+            foreach (SniffMap::RULES[$ref] ?? [] as $code) {
+                if (SniffMap::isExtensionRule($code)) {
+                    $levels[$code] = trim($type->textContent) === 'warning' ? 'warning' : 'error';
+                }
+            }
+        }
+
+        return $levels;
     }
 
     /**

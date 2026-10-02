@@ -92,7 +92,7 @@ final class CapitalPDangitRule implements Rule
             code: 'wordpress/capital-p-dangit',
             name: 'Capital P dangit',
             description: 'Detects the misspelling of WordPress (such as Wordpress, wordpress, or Word Press) in string literals, inline HTML, comments, and class-like and namespace names. The correct spelling uses a capital W and a capital P. Occurrences inside URLs, paths, file names, e-mail addresses, dash-joined tokens (e.g. fa-wordpress), HTML attribute values, arrays, and constant declarations are ignored.',
-            defaultLevel: Level::Note,
+            defaultLevel: Level::Warning,
             defaultEnabled: true,
             targets: [NodeKind::Program],
         );

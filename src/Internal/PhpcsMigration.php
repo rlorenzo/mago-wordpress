@@ -716,17 +716,9 @@ final class PhpcsMigration
             $this->unmapped[] = "<include-pattern>{$pattern->textContent}</include-pattern> on {$ref}: no per-rule include; the rule runs on every file";
         }
 
-        $rules = SniffMap::RULES[$sniff] ?? [];
-        $extension = array_values(array_filter($rules, SniffMap::isExtensionRule(...)));
-        // A <type> on a whole sniff that only core rules port becomes their level.
-        if (
-            !$configured
-            && PhpcsRuleset::elements($this->xpath, 'type', $rule) !== []
-            && ($ref !== $sniff || $extension !== [])
-        ) {
-            $this->unmapped[] =
-                "<type> on {$ref}: Mago cannot re-level "
-                . ($extension !== [] ? 'extension rules (' . implode(', ', $extension) . ')' : 'part of a rule');
+        // A <type> on a whole sniff becomes its core rules' level and its extension rules' `levels`.
+        if (!$configured && PhpcsRuleset::elements($this->xpath, 'type', $rule) !== [] && $ref !== $sniff) {
+            $this->unmapped[] = "<type> on {$ref}: Mago cannot re-level part of a rule";
         }
 
         foreach (PhpcsRuleset::elements($this->xpath, 'exclude-pattern[@type="relative"]', $rule) as $pattern) {

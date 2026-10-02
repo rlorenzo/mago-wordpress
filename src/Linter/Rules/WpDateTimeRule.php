@@ -61,7 +61,7 @@ final class WpDateTimeRule extends CallRule
             code: 'wordpress/wp-date-time',
             name: 'WordPress date time',
             description: "Detects date/time handling that conflicts with how WordPress manages timezones: date() and date_default_timezone_set() depend on the runtime timezone, not the WordPress site timezone, and current_time('timestamp') (or current_time('U')) returns a \"local\" pseudo-timestamp shifted by the site's UTC offset instead of a true Unix timestamp.",
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::FunctionCall],
         );

@@ -32,9 +32,9 @@ use function strtolower;
  * on whether the deprecation is already behind the project's minimum
  * supported WordPress version. A Mago issue has one level per rule, not per
  * report, so this rule instead mirrors `WpDeprecatedFunctionsRule`'s gate:
- * it reports (at a single `Warning` level) only usages whose deprecation is
- * at or before the configured `minimum-wp-version`, and stays silent
- * otherwise.
+ * it reports (at `Error`, the level WPCS gives them) only usages whose
+ * deprecation is at or before the configured `minimum-wp-version`, and stays
+ * silent otherwise.
  */
 final class WpDeprecatedParametersRule extends CallRule
 {
@@ -53,7 +53,7 @@ final class WpDeprecatedParametersRule extends CallRule
             description: 'Reports calls to WordPress core functions that pass a value other than the current '
             . 'default for a parameter that has been deprecated. WordPress ignores the argument once a parameter '
             . 'is deprecated, so passing anything else no longer has any effect.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::FunctionCall],
         );

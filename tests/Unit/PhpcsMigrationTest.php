@@ -109,10 +109,9 @@ final class PhpcsMigrationTest extends TestCase
             $result['extra']['exclude-patterns']['WordPress.WP.AlternativeFunctions.json_encode_json_encode'] ?? null,
         );
         self::assertStringContainsString('<type> on WordPress.Files.FileName.InvalidClassFileName', $unmapped);
-        self::assertStringContainsString(
-            '<type> on WordPress.DB.PreparedSQL: Mago cannot re-level extension rules (wordpress/prepared-sql)',
-            $unmapped,
-        );
+        // A <type> on a whole sniff re-levels its extension rule through the `levels` setting.
+        self::assertStringNotContainsString('<type> on WordPress.DB.PreparedSQL', $unmapped);
+        self::assertSame(['wordpress/prepared-sql' => 'warning'], $result['extra']['levels'] ?? null);
         self::assertStringContainsString('customAllowedFunctionsList', $unmapped);
         // Generic sniffs map to this package's generic/* rules and Mago core rules.
         self::assertStringNotContainsString('Generic.PHP.DiscourageGoto', $unmapped);
