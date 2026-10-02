@@ -202,6 +202,7 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `Universal.Attributes.DisallowAttributeParentheses`
 - `Universal.Classes.ModifierKeywordOrder`
 - `Universal.CodeAnalysis.NoEchoSprintf`
+- `Universal.CodeAnalysis.StaticInFinalClass`
 - `Universal.Constants.LowercaseClassResolutionKeyword`
 - `Universal.Constants.ModifierKeywordOrder`
 - `Universal.Constants.UppercaseMagicConstants`

@@ -235,6 +235,7 @@ final class PhpcsRuleset
         'Squiz.Operators.ValidLogicalOperators',
         'Universal.ControlStructures.DisallowLonelyIf',
         'Squiz.Operators.IncrementDecrementUsage',
+        'Universal.CodeAnalysis.NoEchoSprintf',
     ];
 
     /** phpcs hides reports below this severity by default. */
