@@ -2,6 +2,7 @@ generic/assignment-in-condition
 generic/byte-order-mark
 generic/commented-out-code
 generic/control-signature
+generic/dirname
 generic/disallow-alternative-php-tags
 generic/disallow-lonely-if
 generic/disallow-multiple-assignments

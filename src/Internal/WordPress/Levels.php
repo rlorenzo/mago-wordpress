@@ -119,6 +119,10 @@ final class Levels
             'DelimiterFound' => 'error',
             'OpenerFound' => 'error',
         ],
+        'Modernize.FunctionCalls.Dirname' => [
+            'FileConstant' => 'error',
+            'Nested' => 'error',
+        ],
         'PEAR.NamingConventions.ValidClassName' => [
             'Invalid' => 'error',
             'StartWithCapital' => 'error',

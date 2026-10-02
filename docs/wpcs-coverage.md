@@ -189,6 +189,7 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 
 - `Modernize.FunctionCalls.Dirname`
 - `Modernize.FunctionCalls.Dirname.Nested`
+- `Generic.Strings.UnnecessaryHeredoc`
 - `PEAR.Files.IncludingFile`
 - `PSR12.Files.FileHeader`
 - `PSR12.Keywords.ShortFormTypeKeywords`

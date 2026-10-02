@@ -23,6 +23,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DirnameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
@@ -213,6 +214,7 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new DirnameRule($report),
                 new NoSilencedErrorsRule($report, $settings),
                 new StrictComparisonsRule($report),
                 new InlineControlStructureRule($report),
