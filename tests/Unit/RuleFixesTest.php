@@ -101,6 +101,20 @@ final class RuleFixesTest extends TestCase
             "require 'a.php';\nrequire_once 'b.php';\nif (\$x) {\n\tinclude 'c.php';\n}",
         ];
 
+        yield 'closing-tag removes the tag at the end of a PHP-only file' => [
+            'generic/closing-tag',
+            '',
+            "echo 'bye';\n\n?>",
+            "echo 'bye';\n\n",
+        ];
+
+        yield 'closing-tag ends the statement before a trailing comment' => [
+            'generic/closing-tag',
+            '',
+            'echo $foo //hello ?>',
+            'echo $foo; //hello ',
+        ];
+
         yield 'parentheses-spacing adds the WordPress spaces' => [
             'wordpress/parentheses-spacing',
             '',

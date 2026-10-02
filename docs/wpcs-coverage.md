@@ -37,6 +37,10 @@ All three turn off the Mago core rules that report what no WPCS sniff does (`str
 `generic/valid-class-name`, accepts `My_Class`), and one that is mapped to a sniff but reports code
 it accepts: `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
 templates). Turn any of them back on in your `mago.toml`, for example
+`no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety), and one
+that is mapped to a sniff but reports code it accepts: `class-name` (PEAR's `ValidClassName` accepts
+`My_Class`). `no-closing-tag` is off too: `generic/closing-tag` ports `PSR2.Files.ClosingTag`, which
+skips templates. Turn any of them back on in your `mago.toml`, for example
 `strict-types = { enabled = true }`.
 
 Four security rules no WPCS sniff runs stay on, because they make code safer and almost never fire
@@ -125,6 +129,7 @@ the `generic/*` rules in [Rules](rules.md).
 Mago's own core lint rules cover some of the rest. They don't need the `wordpress` integration;
 each preset keeps the ones its standard's sniffs map to, at the sniff's phpcs level (except
 `no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
+`class-name`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
 sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
 The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
@@ -142,6 +147,7 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
 | `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` | 57% |
+| `PEAR.NamingConventions.ValidClassName` | `class-name` | 21% |
 | `PSR2.Files.ClosingTag` | `no-closing-tag` | 80% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |

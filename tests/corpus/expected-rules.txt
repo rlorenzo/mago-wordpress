@@ -1,5 +1,6 @@
 generic/assignment-in-condition
 generic/byte-order-mark
+generic/closing-tag
 generic/commented-out-code
 generic/control-signature
 generic/dirname
