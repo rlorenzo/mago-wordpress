@@ -118,6 +118,10 @@ A code list matches the WPCS code a rule ports at any level: `WordPress`, `WordP
 Set `"honor-phpcs-comments": false` to report everything regardless. There is no `phpcs.xml`
 equivalent.
 
+`mago-wordpress convert-comments` ([Migrating](migrating.md#converting-phpcs-comments-to-mago-pragmas))
+turns these comments into Mago pragmas. For its own lint runs it sets the environment variable
+`MAGO_WORDPRESS_IGNORE_PHPCS_COMMENTS`, which has the same effect; it is internal to that command.
+
 ## Turning rules off
 
 Mago rejects extension rule codes under `[linter.rules]` in `mago.toml` (`unknown field
