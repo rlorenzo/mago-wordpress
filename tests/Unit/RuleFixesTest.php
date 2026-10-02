@@ -129,6 +129,13 @@ final class RuleFixesTest extends TestCase
             "if (\$a) {\n} elseif (\$b) {\n}",
         ];
 
+        yield 'static-in-final-class uses self' => [
+            'generic/static-in-final-class',
+            '',
+            "final class A {\n\tconst B = 1;\n\tpublic function f(): static {\n\t\treturn static::B ? new static() : \$this;\n\t}\n}",
+            "final class A {\n\tconst B = 1;\n\tpublic function f(): self {\n\t\treturn self::B ? new self() : \$this;\n\t}\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
