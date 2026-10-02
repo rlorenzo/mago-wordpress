@@ -12,8 +12,8 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\PhpcsTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
-use Rlorenzo\MagoWordPress\Internal\WordPress\PhpcsTokens;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_fill_keys;
@@ -127,9 +127,9 @@ final class DirectDatabaseQueryRule implements Rule
         }
 
         $tokens = PhpcsTokens::of($context->file);
-        $count = count($tokens);
+        $count = count($tokens->tokens);
         for ($at = 0; $at < $count; $at++) {
-            if ($tokens[$at]['t'] !== 'var' || $tokens[$at]['x'] !== '$wpdb') {
+            if ($tokens->code($at) !== 'T_VARIABLE' || $tokens->content($at) !== '$wpdb') {
                 continue;
             }
 
@@ -138,34 +138,31 @@ final class DirectDatabaseQueryRule implements Rule
         }
     }
 
-    /**
-     * @param list<array{t: string, x: string, p: int, m?: int, short?: bool, e?: list<array{string, int}>, h?: bool}> $tokens
-     */
-    private function inspect(LintContext $context, array $tokens, int $at): ?int
+    private function inspect(LintContext $context, PhpcsTokens $tokens, int $at): ?int
     {
-        $method = strtolower($tokens[$at + 2]['x'] ?? '');
+        $method = strtolower($tokens->content($at + 2));
         if (
-            !in_array($tokens[$at + 1]['x'] ?? '', ['->', '?->'], strict: true)
+            !in_array($tokens->content($at + 1), ['->', '?->'], strict: true)
             || !in_array($method, [...self::CACHABLE, 'insert'], strict: true)
         ) {
             return null;
         }
 
         $end = $at + 1;
-        while (($tokens[$end]['t'] ?? ';') !== ';') {
+        while (($tokens->type($end) ?? ';') !== ';') {
             $end++;
         }
 
-        if (($tokens[$end] ?? null) === null) {
+        if ($tokens->code($end) === null) {
             return null;
         }
 
         for ($k = $at + 1; $k < $end; $k++) {
-            if (!in_array($tokens[$k]['t'], ['text', 'string', 'html'], strict: true)) {
+            if (!in_array($tokens->type($k), ['text', 'string', 'html'], strict: true)) {
                 continue;
             }
 
-            foreach (PhpcsTokens::textLines($tokens[$k]) as [$line, $offset]) {
+            foreach ($tokens->textLines($k) as [$line, $offset]) {
                 // TextStrings::stripQuotes().
                 if (str_starts_with(
                     strtoupper((string) preg_replace('`^([\'"])(.*)\1$`Ds', replacement: '$2', subject: $line)),
@@ -191,7 +188,7 @@ final class DirectDatabaseQueryRule implements Rule
             $context,
             'Use of a direct database call is discouraged.',
             '$wpdb',
-            $tokens[$at]['p'],
+            $tokens->pos($at),
             'DirectQuery',
         );
         if (in_array($method, self::CACHABLE, strict: true) && !$this->isCached($tokens, $at, $method)) {
@@ -199,7 +196,7 @@ final class DirectDatabaseQueryRule implements Rule
                 $context,
                 'Direct database call without caching detected. Consider using wp_cache_get() / wp_cache_set() or wp_cache_delete().',
                 '$wpdb',
-                $tokens[$at]['p'],
+                $tokens->pos($at),
                 'NoCaching',
             );
         }
@@ -211,18 +208,17 @@ final class DirectDatabaseQueryRule implements Rule
      * Whether the innermost function or closure around the call clears the cache (for a
      * write), or reads and then writes it.
      *
-     * @param list<array{t: string, x: string, p: int, m?: int, short?: bool, e?: list<array{string, int}>, h?: bool}> $tokens
      */
-    private function isCached(array $tokens, int $at, string $method): bool
+    private function isCached(PhpcsTokens $tokens, int $at, string $method): bool
     {
         [$start, $end] = self::functionBody($tokens, $at) ?? [0, 0];
         $read = false;
         for ($k = $start + 1; $k < $end; $k++) {
-            if ($tokens[$k]['t'] !== 'name' || ($tokens[$k + 1]['t'] ?? '') !== '(') {
+            if ($tokens->type($k) !== 'name' || $tokens->type($k + 1) !== '(') {
                 continue;
             }
 
-            $name = strtolower($tokens[$k]['x']);
+            $name = strtolower($tokens->content($k));
             if ($this->cacheDelete[$name] ?? false) {
                 if (in_array($method, ['query', 'update', 'replace', 'delete'], strict: true)) {
                     return true;
@@ -241,24 +237,23 @@ final class DirectDatabaseQueryRule implements Rule
      * The braces of the innermost function or closure body around token $at (phpcs's
      * `Conditions::getLastCondition()`; an arrow function is not a condition there).
      *
-     * @param list<array{t: string, x: string, p: int, m?: int, short?: bool, e?: list<array{string, int}>, h?: bool}> $tokens
      * @return null|array{int, int}
      */
-    private static function functionBody(array $tokens, int $at): ?array
+    private static function functionBody(PhpcsTokens $tokens, int $at): ?array
     {
         for ($f = $at - 1; $f >= 0; $f--) {
-            if ($tokens[$f]['t'] !== 'function') {
+            if ($tokens->code($f) !== 'T_FUNCTION') {
                 continue;
             }
 
             // Past the parameter list and any `use (...)`, to the body or a `;`.
             $k = $f + 1;
-            while (!in_array($tokens[$k]['t'] ?? ';', ['{', ';'], strict: true)) {
-                $k = $tokens[$k]['t'] === '(' ? ($tokens[$k]['m'] ?? $k) + 1 : $k + 1;
+            while (!in_array($tokens->type($k) ?? ';', ['{', ';'], strict: true)) {
+                $k = $tokens->code($k) === '(' ? ($tokens->closer($k) ?? $k) + 1 : $k + 1;
             }
 
-            $close = $tokens[$k]['m'] ?? null;
-            if ($close !== null && $tokens[$k]['t'] === '{' && $k < $at && $at < $close) {
+            $close = $tokens->code($k) === '{' ? $tokens->closer($k) : null;
+            if ($close !== null && $k < $at && $at < $close) {
                 return [$k, $close];
             }
         }

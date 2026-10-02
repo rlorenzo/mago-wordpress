@@ -36,12 +36,12 @@ use const PREG_SPLIT_NO_EMPTY;
  */
 final class PhpcsTokenStream
 {
-    /** Token ids of the `"` and `` ` `` that open an interpolated string. */
-    private const ID_DOUBLE_QUOTE = 34;
-
-    private const ID_BACKTICK = 96;
-
     public const EMPTY = ['T_WHITESPACE' => true, 'T_COMMENT' => true, 'T_DOC_COMMENT' => true];
+
+    /** `PhpToken::$id` of a single-character token is its byte: `ord('"')` and `` ord('`') ``. */
+    private const DOUBLE_QUOTE = 34;
+
+    private const BACKTICK = 96;
 
     private const CHARS = [
         '(' => 'T_OPEN_PARENTHESIS',
@@ -130,7 +130,7 @@ final class PhpcsTokenStream
         for ($i = 0; $i < $count; $i++) {
             $token = $raw[$i];
             $text = $token->text;
-            if ($token->id === self::ID_DOUBLE_QUOTE || $token->id === self::ID_BACKTICK) {
+            if ($token->id === self::DOUBLE_QUOTE || $token->id === self::BACKTICK) {
                 // One token for the whole interpolated string, as phpcs reports it at its start.
                 $content = $text;
                 while (++$i < $count && $raw[$i]->id !== $token->id) {

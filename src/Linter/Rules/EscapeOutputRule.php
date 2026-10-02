@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\PhpcsToken;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokenStream;
 use Rlorenzo\MagoWordPress\Internal\Report;
@@ -18,6 +19,7 @@ use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Settings;
 
 use function array_fill_keys;
+use function array_keys;
 use function array_merge;
 use function count;
 use function implode;
@@ -135,6 +137,9 @@ final class EscapeOutputRule implements Rule
     /** ArrayWalkingFunctionsHelper: function => [callback position, name]. */
     private const ARRAY_WALKING = ['array_map' => [1, 'callback'], 'map_deep' => [2, 'callback']];
 
+    /** Passes only a file that holds a token the sniff starts from, so the rest skip tokenizing. */
+    private readonly FileGate $gate;
+
     /** @var array<string, true> */
     private readonly array $escaping;
 
@@ -175,6 +180,16 @@ final class EscapeOutputRule implements Rule
 
         $this->printing = $printing;
         $this->formatting = array_fill_keys(Lists::FORMATTING_FUNCTIONS, value: true);
+        // The keywords of T_ECHO, T_PRINT, T_EXIT and T_THROW, the printing functions, and `<?=`.
+        $this->gate = FileGate::forWords([
+            'echo',
+            'print',
+            'exit',
+            'die',
+            'throw',
+            ...array_keys(self::UNSAFE_PRINTING),
+            ...array_keys($printing),
+        ], '/<\?=/');
     }
 
     public function getDefinition(): RuleDefinition
@@ -191,6 +206,10 @@ final class EscapeOutputRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if (!$this->gate->passes($context->file)) {
+            return;
+        }
+
         $this->context = $context;
         $this->tokens = PhpcsTokenStream::fromSource($context->file->contents);
         $count = count($this->tokens);
