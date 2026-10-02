@@ -182,6 +182,7 @@ final class PhpcsRuleset
         'Universal.Operators.DisallowStandalonePostIncrementDecrement',
         'Squiz.ControlStructures.ControlSignature',
         'Squiz.Strings.DoubleQuoteUsage',
+        'PSR2.ControlStructures.SwitchDeclaration',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
