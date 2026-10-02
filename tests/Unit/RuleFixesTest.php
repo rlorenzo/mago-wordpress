@@ -115,6 +115,13 @@ final class RuleFixesTest extends TestCase
             "class A {\n\tconst B = 1;\n\tfunction f() {\n\t\treturn self::B + self::B + self::B;\n\t}\n}",
         ];
 
+        yield 'method-declaration moves final before and static after the visibility' => [
+            'generic/method-declaration',
+            '',
+            "class A {\n\tstatic public function a() {}\n\tpublic final function b() {}\n}",
+            "class A {\n\tpublic static function a() {}\n\tfinal public function b() {}\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

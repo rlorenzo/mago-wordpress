@@ -122,6 +122,12 @@ final class Levels
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
         ],
+        'PSR2.Methods.MethodDeclaration' => [
+            'AbstractAfterVisibility' => 'error',
+            'FinalAfterVisibility' => 'error',
+            'StaticBeforeVisibility' => 'error',
+            'Underscore' => 'warning',
+        ],
         'Squiz.Classes.SelfMemberReference' => [
             'IncorrectCase' => 'error',
             'NotUsed' => 'error',

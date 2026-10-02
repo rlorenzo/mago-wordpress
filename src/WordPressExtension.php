@@ -38,6 +38,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
@@ -166,6 +167,12 @@ final class WordPressExtension
                 new ForeachUniqueAssignmentRule($report),
                 new SelfMemberReferenceRule($report),
                 new MethodScopeRule($report),
+                ...SplitRule::pair(
+                    new MethodDeclarationRule($report),
+                    $report,
+                    'Method declaration (warnings)',
+                    'A method name with a single leading underscore (PSR2 MethodDeclaration Underscore, a warning; WordPress-Core leaves it out).',
+                ),
                 ...SplitRule::pair(
                     new PropertyDeclarationRule($report),
                     $report,
