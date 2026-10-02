@@ -96,8 +96,14 @@ final class PrefixAllGlobalsRule implements Rule
     /** @var list<string> Valid configured prefixes; invalid ones are dropped, as WPCS does. */
     private readonly array $prefixes;
 
-    /** @var list<array{string, string}> WPCS message code and message about each rejected prefix, reported at the top of every file. */
+    /** @var list<array{string, string}> WPCS message code and message about each rejected prefix, reported at the top of the first file. */
     private readonly array $prefixProblems;
+
+    /**
+     * WPCS validates the prefixes once per run (per process with `--parallel`), so the
+     * problems are reported in the first file this worker lints, not in every file.
+     */
+    private bool $prefixProblemsReported = false;
 
     /** @var list<string> Regexes matching a namespace name that starts with a prefix. */
     private readonly array $namespacePatterns;
@@ -150,7 +156,7 @@ final class PrefixAllGlobalsRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/prefix-all-globals',
             name: 'Prefix all globals',
-            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants, global variables and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured; the prefixes `wordpress`, `wp`, `_` and `php` and prefixes shorter than three characters are reported at the top of each file and ignored. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. Global variable writes are checked in the top-level scope, in functions that import the variable with `global`, and through `$GLOBALS[...]` anywhere; superglobals and WordPress core globals are exempt. A constant or hook name built dynamically is reported unless its leading literal part is prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks, PHP built-in names, functions documented as @deprecated and unit test classes are exempt.',
+            description: 'Reports global-namespace functions, classes, interfaces, traits, enums, constants, global variables and hook names that do not start with a configured plugin/theme prefix. WordPress plugins and themes share one global namespace. The rule is inert until the `prefixes` setting is configured; the prefixes `wordpress`, `wp`, `_` and `php` and prefixes shorter than three characters are reported once, at the top of the first file each worker lints, and ignored. Inside a namespace only `define()` constants and hook names are checked, since those stay global, and the namespace name itself must be prefixed. Global variable writes are checked in the top-level scope, in functions that import the variable with `global`, and through `$GLOBALS[...]` anywhere; superglobals and WordPress core globals are exempt. A constant or hook name built dynamically is reported unless its leading literal part is prefixed. Pluggable functions and classes, overridable core constants, allowed core hooks, PHP built-in names, functions documented as @deprecated and unit test classes are exempt.',
             defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [
@@ -579,6 +585,11 @@ final class PrefixAllGlobalsRule implements Rule
 
     private function reportPrefixProblems(LintContext $context): void
     {
+        if ($this->prefixProblemsReported) {
+            return;
+        }
+
+        $this->prefixProblemsReported = true;
         $span = ($context->file->getChildren($context->node)[0] ?? $context->node)->span;
         foreach ($this->prefixProblems as [$code, $problem]) {
             $this->report->issue(
