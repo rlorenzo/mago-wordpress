@@ -154,7 +154,6 @@ doesn't map them:
 | WPCS sniff | `mago analyze` |
 |:---|:---|
 | `Generic.Classes.DuplicateClassName` | `duplicate-definition` (across the whole codebase) |
-| `Generic.CodeAnalysis.UnusedFunctionParameter` | `unused-parameter`, with `find-unused-parameters = true` under `[analyzer]` |
 | `Generic.PHP.DeprecatedFunctions` | `deprecated-function` |
 | `Generic.PHP.Syntax` | parse errors |
 | `Squiz.Functions.FunctionDuplicateArgument` | a semantics error |
