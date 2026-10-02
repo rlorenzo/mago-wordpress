@@ -51,6 +51,41 @@ comments are honoured by this package's rules only.
 
 Inline `// phpcs:set` comments are not read.
 
+## Converting phpcs comments to Mago pragmas
+
+This package's rules honour `phpcs:ignore` comments, but Mago core rules (`no-debug-symbols`,
+`no-error-control-operator`, the `Generic.*` ports) never do, and a phpcs comment never reports as
+stale. `vendor/bin/mago-wordpress convert-comments` rewrites them as `@mago-expect` pragmas:
+
+```sh
+vendor/bin/mago-wordpress convert-comments [<path>...]   # dry run: one line per comment
+vendor/bin/mago-wordpress convert-comments --write
+```
+
+It runs `mago lint` once with phpcs comments ignored and converts each comment from the issues it
+actually covers, not from the sniff name:
+
+- `phpcs:ignore` becomes `// @mago-expect lint:<rule>(N) -- <reason>`, with a count when the
+  statement has more than one issue and one code per rule. A comment that covers nothing keeps its
+  reason as a plain comment, or is dropped when it has none. In inline HTML the pragma gets a
+  three-line `<?php` block, because a one-line block does not reach the HTML after it.
+- A `phpcs:disable` … `phpcs:enable` region gets a pragma before each statement in it that has
+  issues, or, when that would be several pragmas and the region holds all of the function's issues
+  of those rules, one in the function's docblock.
+- `phpcs:ignoreFile` and the legacy `@codingStandardsIgnore*` comments are listed, not converted:
+  Mago has no file-level pragma.
+- An existing `@mago-expect` or `@mago-ignore` naming a Mago core rule this package replaces
+  (`no-unescaped-output`, `validated-sanitized-input`, `nonce-verification`, `use-wp-functions`,
+  `prepared-sql`, `no-direct-db-query`, `no-db-schema-change`, `require-preg-quote-delimiter`) is
+  retargeted to the `wordpress/*` rule and recounted.
+
+`--write` then lints again and fails if any pragma is unfulfilled or a converted file's issue counts
+changed. Set `"honor-phpcs-comments": false` afterwards, so Mago's `unfulfilled-expect` warnings
+catch stale suppressions from then on.
+
+On bcap_website's 67 phpcs comments: 44 converted, 8 regions (16 comments),
+6 kept as plain comments, 1 dropped, and zero `unfulfilled-expect` afterwards.
+
 ## Results on real rulesets
 
 - **wordpress-develop** (`WordPress-Core`): 54 of 55 path exclusions migrate, and every rule this

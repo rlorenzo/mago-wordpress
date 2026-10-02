@@ -3,6 +3,7 @@
 
 declare(strict_types=1);
 
+use Rlorenzo\MagoWordPress\Internal\CommentConversion;
 use Rlorenzo\MagoWordPress\Internal\FormatCommand;
 use Rlorenzo\MagoWordPress\Internal\PhpcsMigration;
 
@@ -33,6 +34,7 @@ $command = match ($args[0] ?? '') {
 
         return 0;
     },
+    'convert-comments' => static fn(): int => CommentConversion::run(array_slice($args, 1), $cwd),
     'format' => static fn(): int => FormatCommand::run(array_slice($args, 1), $cwd),
     default => null,
 };
@@ -40,12 +42,17 @@ if ($command === null) {
     fwrite(STDERR, <<<'USAGE'
         Usage: mago-wordpress migrate [<phpcs.xml or directory>] [--write] [--force]
                mago-wordpress format [<paths>...] [--check] [--staged]
+               mago-wordpress convert-comments [<path>...] [--write]
 
         migrate: converts a phpcs ruleset into mago.toml and composer.json extra.mago-wordpress.
         Prints the result by default; --write saves both next to the ruleset (--force
         overwrites an existing mago.toml). Lists everything that could not be migrated.
 
         format: formats PHP files for WordPress (`mago-wordpress format --help` for details).
+
+        convert-comments: converts phpcs:ignore/disable comments, and @mago-expect pragmas naming superseded
+        core rules, into @mago-expect pragmas counted from a lint run. Prints a per-comment
+        report by default; --write applies it and re-lints to check the result.
 
         USAGE);
     exit(($args[0] ?? '') === '--help' ? 0 : 2);
