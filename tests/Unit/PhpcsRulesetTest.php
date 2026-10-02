@@ -6,10 +6,92 @@ namespace Rlorenzo\MagoWordPress\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\PhpcsRuleset;
+use Rlorenzo\MagoWordPress\Internal\SettingsDiscovery;
 use Rlorenzo\MagoWordPress\Settings;
+
+use function file_get_contents;
+use function file_put_contents;
+use function mkdir;
+use function rmdir;
+use function unlink;
 
 final class PhpcsRulesetTest extends TestCase
 {
+    use TempProject;
+
+    public function testNestedRulesetsAreMergedAndCyclesStop(): void
+    {
+        $dir = $this->directory;
+        mkdir("{$dir}/sub");
+        $head = '<?xml version="1.0"?><ruleset name="x">';
+        // main -> sub/inner.xml (relative to main) -> ../outer.xml (relative to inner) -> main again.
+        file_put_contents(
+            "{$dir}/main.xml",
+            $head
+            . '<rule ref="./sub/inner.xml"/><rule ref="WordPress.WP.I18n"><properties><property name="text_domain" value="main"/></properties></rule></ruleset>',
+        );
+        file_put_contents(
+            "{$dir}/sub/inner.xml",
+            $head
+            . '<rule ref="../outer.xml"/><rule ref="WordPress.Files.FileName.NotHyphenatedLowercase"><exclude-pattern>*/a_b\\.php$</exclude-pattern></rule></ruleset>',
+        );
+        file_put_contents(
+            "{$dir}/outer.xml",
+            $head . '<rule ref="./main.xml"/><config name="minimum_wp_version" value="6.1"/></ruleset>',
+        );
+
+        $settings = Settings::fromArray(PhpcsRuleset::values((string) file_get_contents("{$dir}/main.xml"), $dir));
+        unlink("{$dir}/sub/inner.xml");
+        rmdir("{$dir}/sub");
+
+        self::assertSame(
+            ['*/a_b\\.php$'],
+            $settings->excludePatterns['WordPress.Files.FileName.NotHyphenatedLowercase'],
+        );
+        self::assertSame(['main'], $settings->textDomains);
+        self::assertSame('6.1', $settings->minimumWpVersion);
+        // Without a directory nothing is followed.
+        self::assertSame(
+            [],
+            Settings::fromArray(PhpcsRuleset::values((string) file_get_contents("{$dir}/main.xml")))->excludePatterns,
+        );
+    }
+
+    public function testEntryRulesetIsNotInlinedAgainWhenAnIncludeLeadsBackToIt(): void
+    {
+        $dir = sys_get_temp_dir() . '/mago-wp-cycle-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        $head = '<?xml version="1.0"?><ruleset name="x">';
+        file_put_contents(
+            "{$dir}/a.xml",
+            $head
+            . '<rule ref="./b.xml"/><rule ref="WordPress.Files.FileName"><exclude-pattern>*/a\\.php$</exclude-pattern></rule></ruleset>',
+        );
+        file_put_contents("{$dir}/b.xml", $head . '<rule ref="./a.xml"/></ruleset>');
+
+        $xpath = PhpcsRuleset::load((string) file_get_contents("{$dir}/a.xml"), $dir, 'a.xml');
+        unlink("{$dir}/a.xml");
+        unlink("{$dir}/b.xml");
+        rmdir($dir);
+
+        self::assertNotNull($xpath);
+        self::assertSame(1.0, $xpath->evaluate('count(//exclude-pattern)'));
+    }
+
+    public function testSettingsDiscoveryFollowsNestedRulesetsInPhpcsXml(): void
+    {
+        file_put_contents(
+            "{$this->directory}/phpcs.xml",
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="./other.xml"/></ruleset>',
+        );
+        file_put_contents(
+            "{$this->directory}/other.xml",
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress.WP.I18n"><properties><property name="text_domain" value="nested"/></properties></rule></ruleset>',
+        );
+
+        self::assertSame(['nested'], SettingsDiscovery::in($this->directory)->textDomains);
+    }
+
     public function testRulesetExclusionsBecomeExcludePatterns(): void
     {
         $xml = <<<'XML'

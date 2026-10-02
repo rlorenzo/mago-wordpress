@@ -22,6 +22,10 @@ vendor/bin/mago-wordpress migrate --write
 | `<exclude name="WordPress...">`, `<severity>0</severity>` | the same, for that code |
 | `<exclude-pattern>` inside `<rule ref="WordPress...">` | `exclude-patterns` for this package's rules; `exclude` on a Mago core rule when the ref is the whole sniff |
 | `<type>` on a whole sniff ported by a Mago core rule | `level` on that rule |
+| `<rule ref="./other.xml"/>` (a path to a ruleset file that exists) | the file is loaded and merged, as phpcs does; its refs resolve relative to it, and a cycle is cut. Settings in `phpcs.xml` that the worker falls back to follow it too |
+| `Generic.Metrics.CyclomaticComplexity` (`complexity`) | `cyclomatic-complexity` with `threshold` and `method-threshold` set to it, level `warning`; Mago counts `&&`/`\|\|`, phpcs does not |
+| `Generic.Metrics.NestingLevel` (`nestingLevel`) | `excessive-nesting` `threshold = nestingLevel + 1` (measured: Mago counts the function body as level 1) |
+| `Squiz.Commenting.{Function,Class,Variable}Comment.Missing` | `missing-docs` with `functions`/`methods`, `classes` or `properties` on, level `error` |
 | WPCS properties | the matching `extra.mago-wordpress` setting |
 | `<config name="minimum_wp_version">` | `minimum-wp-version` |
 
@@ -38,7 +42,12 @@ vendor/bin/mago-wordpress migrate --write
 - Non-WordPress sniffs. See [Generic sniffs](wpcs-coverage.md#generic-sniffs) for the Mago rules
   that cover some.
 - `PHPCompatibility` and `testVersion` (PHP 8.1+ target).
+- `absoluteComplexity` and `absoluteNestingLevel`.
 - `<arg>` and `<ini>`.
+
+It ends with how to replace a phpcs hook: `mago lint --minimum-fail-level warning` to fail on
+warnings, `--reporting-format short` for `phpcs --report=emacs`-style lines, and that `phpcs:ignore`
+comments are honoured by this package's rules only.
 
 Inline `// phpcs:set` comments are not read.
 
