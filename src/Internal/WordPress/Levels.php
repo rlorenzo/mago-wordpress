@@ -179,6 +179,10 @@ final class Levels
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
         ],
+        'Universal.Operators.DisallowStandalonePostIncrementDecrement' => [
+            'MultipleOperatorsFound' => 'warning',
+            'Post*Found' => 'warning',
+        ],
         'Universal.Operators.StrictComparisons' => [
             '*' => 'warning',
         ],
