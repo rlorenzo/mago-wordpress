@@ -148,6 +148,17 @@ jobs:
             }
           done
 
+          # The WordPress-Extra preset passes --standard=WordPress-Extra to the worker, which
+          # drops ValidatedSanitizedInput (not in Extra) and keeps the rest.
+          sed -i 's#/wordpress.mago.toml#/wordpress-extra.mago.toml#' mago.toml
+          out=$(vendor/bin/mago lint --reporting-format short 2>&1 || true)
+          echo "$out"
+          grep -q '\[wordpress/nonce-verification\]' <<< "$out" || { echo "error: Extra preset lost nonce-verification" >&2; exit 1; }
+          if grep -q '\[wordpress/validated-sanitized-input\]' <<< "$out"; then
+            echo "error: Extra preset still reports validated-sanitized-input" >&2
+            exit 1
+          fi
+
   wpcs-lists:
     name: WPCS lists
     runs-on: ubuntu-latest

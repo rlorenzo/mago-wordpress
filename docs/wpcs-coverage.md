@@ -1,30 +1,68 @@
 # WPCS coverage
 
-The WPCS sniffs this package does not port, and what covers them instead: Mago's own WordPress
-rules, `missing-docs` for `WordPress-Docs`, Mago's core rules and `mago analyze` for the generic
-sniffs. The last section lists what nothing covers.
+What each preset runs, then the WPCS sniffs this package does not port and what covers them
+instead: Mago's own WordPress rules, `missing-docs` for `WordPress-Docs`, Mago's core rules and
+`mago analyze` for the generic sniffs. The last section lists what nothing covers.
+
+## What each standard runs
+
+The three presets in [Install](../README.md#install) match the three WPCS standards. Each runs the
+rules for the sniffs its standard includes and turns the rest off: this package's rules through the
+[`standard`](configuration.md#settings) setting, Mago's core rules in the preset file.
+
+- `WordPress-Core` (`wordpress-core.mago.toml`): the `WordPress-Core` sniffs, such as `Files.FileName`,
+  `NamingConventions.Valid*Name`, `PHP.YodaConditions`, `PHP.StrictInArray`, `DB.PreparedSQL`,
+  `WP.I18n`, plus the generic ones it pulls in.
+- `WordPress-Extra` (`wordpress-extra.mago.toml`): Core, plus `CodeAnalysis.EscapedNotTranslated`,
+  `NamingConventions.PrefixAllGlobals`, `NamingConventions.ValidPostTypeSlug`,
+  `PHP.DevelopmentFunctions`, `PHP.DiscouragedPHPFunctions`, `PHP.IniSet`, `PHP.PregQuoteDelimiter`,
+  `Security.EscapeOutput`, `Security.NonceVerification`, `Security.PluginMenuSlug`,
+  `Security.SafeRedirect`, `WP.AlternativeFunctions`, `WP.Capabilities`, `WP.CronInterval`,
+  `WP.Deprecated*`, `WP.DiscouragedConstants`, `WP.DiscouragedFunctions`,
+  `WP.EnqueuedResourceParameters`, `WP.EnqueuedResources`, `WP.GetMetaSingle`,
+  `WP.GlobalVariablesOverride`, `WP.PostsPerPage` (all `WordPress.*`), and the generic sniffs
+  `ForLoopShouldBeWhileLoop`, `ForLoopWithTestFunctionCall`, `JumbledIncrementer`,
+  `RequireExplicitBooleanOperatorPrecedence`, `UnconditionalIfStatement`, `UnnecessaryFinalModifier`,
+  `UselessOverridingMethod`, `ForbiddenFunctions`, `UnnecessaryStringConcat`,
+  `DisallowSizeFunctionsInLoops` and `ForeachUniqueAssignment`.
+- `WordPress` (`wordpress.mago.toml`): Extra, plus `WordPress-Docs` (`missing-docs`, below) and the
+  three sniffs no group lists: `DB.DirectDatabaseQuery`, `DB.SlowDBQuery` and
+  `Security.ValidatedSanitizedInput`.
+
+All three turn off the Mago core rules that report what no WPCS sniff does (`strict-types`,
+`no-isset`, `no-empty`, `literal-named-argument`, `cyclomatic-complexity`, `halstead`, `file-name`,
+`no-request-variable`, `tainted-data-to-sink`, ... about ninety), and two that are mapped to a sniff
+but report code it accepts: `class-name` (PEAR's `ValidClassName` accepts `My_Class`) and
+`no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so templates). Turn any of
+them back on in your `mago.toml`, for example `strict-types = { enabled = true }`.
+`bin/generate-presets.php` derives the lists from `SniffMap` and Mago's default rules.
+
+The ported sniff lists match WPCS 3.4.1's `ruleset.xml` files. Two differences inside a standard:
+`WordPress.PHP.NoSilencedErrors` is `no-error-control-operator` in every preset (Core allows the PHP
+functions WPCS lists, Extra doesn't), and Mago's core rules don't read `phpcs:ignore` comments.
 
 ## Mago's own WordPress rules
 
 Mago's core linter has its own `wordpress` integration: eight rules, independent of this package's
-`wordpress/*` rules. Mago ships three disabled. The `extends` in [Install](../README.md#install) turns
-on nothing: this package ports all of the WordPress security and database rules below as
-`wordpress/*` rules, and the `extends` turns off the ones that ship on.
+`wordpress/*` rules, that run only when `[linter] integrations = ["wordpress"]` is set. The presets
+don't set it: this package ports all of the WordPress security and database rules below as
+`wordpress/*` rules. "Mago default" is with the integration on.
 
 | Mago rule | Covers | Mago default |
 |:---|:---|:---|
 | `nonce-verification` | `WordPress.Security.NonceVerification`, ported as [`wordpress/nonce-verification`](rules.md) | off |
 | `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput`, ported as [`wordpress/validated-sanitized-input`](rules.md) | off |
-| `prepared-sql` | `WordPress.DB.PreparedSQL`; replaced by [`wordpress/prepared-sql`](rules.md), so the `extends` leaves it off | off |
-| `no-unescaped-output` | `WordPress.Security.EscapeOutput`, ported as [`wordpress/escape-output`](rules.md); the `extends` turns this one off | on |
-| `use-wp-functions` | `WordPress.WP.AlternativeFunctions`; the `extends` turns it off for [`wordpress/alternative-functions`](rules.md) | on |
-| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`); the `extends` turns it off for [`wordpress/direct-database-query`](rules.md) | on |
-| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange`; the `extends` turns it off for [`wordpress/direct-database-query`](rules.md) | on |
-| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part); the `extends` turns it off, since [`wordpress/capabilities`](rules.md) reports `RoleFound` | on |
+| `prepared-sql` | `WordPress.DB.PreparedSQL`, ported as [`wordpress/prepared-sql`](rules.md) | off |
+| `no-unescaped-output` | `WordPress.Security.EscapeOutput`, ported as [`wordpress/escape-output`](rules.md) | on |
+| `use-wp-functions` | `WordPress.WP.AlternativeFunctions`, ported as [`wordpress/alternative-functions`](rules.md) | on |
+| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`), ported as [`wordpress/direct-database-query`](rules.md) | on |
+| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange`, ported as [`wordpress/direct-database-query`](rules.md) | on |
+| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part); [`wordpress/capabilities`](rules.md) reports `RoleFound` | on |
 
-Three core PHP rules, on for every project, cover the remaining `WordPress.PHP` sniffs
-(`WordPress.PHP.PregQuoteDelimiter` is [`wordpress/preg-quote-delimiter`](rules.md); the `extends`
-turns off Mago's `require-preg-quote-delimiter`):
+Three core PHP rules cover the remaining `WordPress.PHP` sniffs; the Core preset turns off the
+two whose sniffs are Extra-only (`WordPress.PHP.PregQuoteDelimiter` is
+[`wordpress/preg-quote-delimiter`](rules.md); the presets turn off Mago's
+`require-preg-quote-delimiter`):
 
 | Mago rule | Covers |
 |:---|:---|
@@ -37,14 +75,13 @@ turns off Mago's `require-preg-quote-delimiter`):
 The `WordPress` ruleset includes `WordPress-Docs`: eleven `Squiz.Commenting` and `Generic.Commenting`
 sniffs, with the codes WPCS excludes. This package ports none of them.
 
-Mago covers missing docblocks. The `extends` in [Install](../README.md#install) turns on Mago's
-`missing-docs` for functions, methods, classes and properties, the declarations WPCS checks (not
+Mago covers missing docblocks. `wordpress.mago.toml` turns on Mago's `missing-docs` for functions, methods, classes and properties, the declarations WPCS checks (not
 interfaces, traits, enums or constants). On Akismet and Contact Form 7 it reports as many as
 `FunctionComment`, `ClassComment` and `VariableComment` report as `Missing` or `WrongStyle` (156 and 512).
 
 It reports at Mago's `help` level, so it does not fail a build. Raise it with
-`missing-docs = { level = "warning" }` or turn it off with `{ enabled = false }`.
-`mago-wordpress migrate` does the latter for a `WordPress-Core` or `WordPress-Extra` ruleset without
+`missing-docs = { level = "warning" }` or turn it off with `{ enabled = false }`. The
+`wordpress-core` and `wordpress-extra` presets turn it off, as those standards don't include
 `WordPress-Docs`.
 
 Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisation, full stops):
@@ -72,8 +109,9 @@ WPCS doesn't check `@since`, which the WordPress documentation standard asks for
 `Generic`, `PEAR`, `PSR2`, `Squiz` and `Universal`. The bug-catching ones nothing else covers are
 the `generic/*` rules in [Rules](rules.md).
 
-Mago's own core lint rules cover some of the rest. They run on every PHP project, regardless of the
-`wordpress` integration, and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
+Mago's own core lint rules cover some of the rest. They don't need the `wordpress` integration;
+each preset keeps the ones its standard's sniffs map to (except `class-name` and `no-closing-tag`,
+above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
 sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
 The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
@@ -117,7 +155,7 @@ doesn't map them:
 | `Generic.CodeAnalysis.EmptyStatement` | partly: `no-empty-loop` (lint) covers empty loops, not an empty `if` |
 | `Universal.CodeAnalysis.ConstructorDestructorReturn` | partly: a semantics error for a return type on `__construct`/`__destruct`, not a `return $value;` inside one |
 
-Enable these, and the rest of Mago's ~100 core rules, in `mago.toml`:
+Enable these, and any core rule the presets turn off, in `mago.toml`:
 
 ```toml
 [linter.rules]
