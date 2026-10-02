@@ -61,6 +61,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
@@ -199,6 +200,9 @@ final class WordPressExtension
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
                 new NoSilencedErrorsRule($report, $settings),
+                new AssignmentInConditionRule($report),
+                new DisallowMultipleAssignmentsRule($report),
+                new StrictComparisonsRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),

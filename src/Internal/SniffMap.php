@@ -126,6 +126,7 @@ final class SniffMap
         'Universal.CodeAnalysis.StaticInFinalClass' => ['generic/static-in-final-class'],
         'Universal.Files.SeparateFunctionsFromOO' => ['generic/separate-functions-from-oo'],
         'Universal.Operators.DisallowShortTernary' => ['no-shorthand-ternary'],
+        'Universal.Operators.StrictComparisons' => ['generic/strict-comparisons'],
     ];
 
     /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */

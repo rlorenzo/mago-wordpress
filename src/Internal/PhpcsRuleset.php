@@ -177,6 +177,7 @@ final class PhpcsRuleset
         'Squiz.Classes.SelfMemberReference',
         'PSR2.Methods.MethodDeclaration',
         'PSR2.ControlStructures.ElseIfDeclaration',
+        'Universal.Operators.StrictComparisons',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
