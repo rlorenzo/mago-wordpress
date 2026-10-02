@@ -31,15 +31,27 @@ rules for the sniffs its standard includes and turns the rest off: this package'
 
 All three turn off the Mago core rules that report what no WPCS sniff does (`strict-types`,
 `no-isset`, `no-empty`, `literal-named-argument`, `cyclomatic-complexity`, `halstead`, `file-name`,
-`no-request-variable`, `tainted-data-to-sink`, ... about ninety), and two that are mapped to a sniff
-but report code it accepts: `class-name` (PEAR's `ValidClassName` accepts `My_Class`) and
-`no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so templates). Turn any of
-them back on in your `mago.toml`, for example `strict-types = { enabled = true }`.
-`bin/generate-presets.php` derives the lists from `SniffMap` and Mago's default rules.
+`no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety), and two
+that are mapped to a sniff but report code it accepts: `class-name` (PEAR's `ValidClassName` accepts
+`My_Class`) and `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
+templates). Turn any of them back on in your `mago.toml`, for example
+`strict-types = { enabled = true }`.
 
-The ported sniff lists match WPCS 3.4.1's `ruleset.xml` files. Two differences inside a standard:
-`WordPress.PHP.NoSilencedErrors` is `no-error-control-operator` in every preset (Core allows the PHP
-functions WPCS lists, Extra doesn't), and Mago's core rules don't read `phpcs:ignore` comments.
+Four security rules no WPCS sniff runs stay on, because they make code safer and almost never fire
+(2 reports across the 10 bake-off plugins, wordpress-develop and one private site):
+`tainted-data-to-sink`, `no-unsafe-finally`, `no-variable-variable` and `no-ffi`.
+`no-request-variable` stays off: 1,380 reports there, mostly false positives, and it overlaps
+`wordpress/validated-sanitized-input`. So do `no-literal-password` and `no-insecure-comparison`,
+which match option names and any variable named `token` or `key`.
+
+The core rules a preset keeps report at the level phpcs gives their sniff (`constant-name` and
+`single-class-per-file` are errors, `no-goto` a warning). `bin/generate-presets.php` derives all of
+this from `SniffMap`, `src/Internal/WordPress/Levels.php` and Mago's default rules.
+
+The ported sniff lists match WPCS 3.4.1's `ruleset.xml` files, including
+`WordPress.PHP.NoSilencedErrors` (`wordpress/no-silenced-errors`): Core allows `@` before the PHP
+functions WPCS lists (`is_file()`, `fopen()`, `unserialize()`, ...), Extra and the full standard
+don't. One difference inside a standard: Mago's core rules don't read `phpcs:ignore` comments.
 
 ## Mago's own WordPress rules
 
@@ -59,14 +71,13 @@ don't set it: this package ports all of the WordPress security and database rule
 | `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange`, ported as [`wordpress/direct-database-query`](rules.md) | on |
 | `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part); [`wordpress/capabilities`](rules.md) reports `RoleFound` | on |
 
-Three core PHP rules cover the remaining `WordPress.PHP` sniffs; the Core preset turns off the
-two whose sniffs are Extra-only (`WordPress.PHP.PregQuoteDelimiter` is
+Two core PHP rules cover the remaining `WordPress.PHP` sniffs; the Core preset turns them off,
+as their sniffs are Extra-only (`WordPress.PHP.PregQuoteDelimiter` is
 [`wordpress/preg-quote-delimiter`](rules.md); the presets turn off Mago's
 `require-preg-quote-delimiter`):
 
 | Mago rule | Covers |
 |:---|:---|
-| `no-error-control-operator` | `WordPress.PHP.NoSilencedErrors` |
 | `no-ini-set` | `WordPress.PHP.IniSet` (partial: it reports every `ini_set()`, without WPCS's safe-option allowlist) |
 | `no-debug-symbols` | `WordPress.PHP.DevelopmentFunctions` (partial; `wordpress/discouraged-wp-functions` covers the rest) |
 
@@ -110,14 +121,13 @@ WPCS doesn't check `@since`, which the WordPress documentation standard asks for
 the `generic/*` rules in [Rules](rules.md).
 
 Mago's own core lint rules cover some of the rest. They don't need the `wordpress` integration;
-each preset keeps the ones its standard's sniffs map to (except `class-name` and `no-closing-tag`,
-above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
+each preset keeps the ones its standard's sniffs map to, at the sniff's phpcs level (except
+`class-name` and `no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
 sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
 The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
 | WPCS sniff | Mago rule | Recall |
 |:---|:---|---:|
-| `Generic.CodeAnalysis.AssignmentInCondition` | `no-assign-in-condition` | 82% |
 | `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` | 76% |
 | `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | `prefer-while-loop` | 100% |
 | `Generic.CodeAnalysis.UnconditionalIfStatement` | `constant-condition` | 40% |
@@ -135,7 +145,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` | 57% |
 | `PEAR.NamingConventions.ValidClassName` | `class-name` | 21% |
 | `PSR2.Files.ClosingTag` | `no-closing-tag` | 80% |
-| `Squiz.PHP.DisallowMultipleAssignments` | `no-multi-assignments` | 22% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
 | `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` | - |
@@ -159,7 +168,7 @@ Enable these, and any core rule the presets turn off, in `mago.toml`:
 
 ```toml
 [linter.rules]
-"no-assign-in-condition" = { enabled = true }
+"no-request-variable" = { enabled = true }
 ```
 
 ## Not ported
