@@ -14,12 +14,18 @@ use function array_filter;
 use function array_keys;
 use function array_values;
 use function count;
+use function dirname;
 use function explode;
+use function file_get_contents;
 use function in_array;
+use function is_file;
 use function libxml_clear_errors;
 use function libxml_use_internal_errors;
+use function realpath;
 use function str_starts_with;
 use function trim;
+
+use const DIRECTORY_SEPARATOR;
 
 /**
  * Reads the WPCS properties a `phpcs.xml` ruleset sets on its sniffs, and the codes it
@@ -29,7 +35,8 @@ use function trim;
  * property names that sniff actually accepts. A `<rule ref="SomeGroup">` that merely
  * *includes* one of these sniffs (a custom or third-party ruleset, or a WPCS group like
  * `WordPress-Extra`) is not followed, so properties set on it are not picked up; set them
- * directly on the sniff ref instead, as phpcs itself recommends.
+ * directly on the sniff ref instead, as phpcs itself recommends. A `<rule ref>` that is a
+ * path to a project ruleset file, absolute or relative to the including one, is merged in.
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
@@ -195,9 +202,28 @@ final class PhpcsRuleset
     private function __construct() {}
 
     /**
-     * Parses a ruleset, or returns NULL when it is empty or not well-formed XML.
+     * Parses a ruleset, or returns NULL when it is empty or not well-formed XML. Given the
+     * directory the ruleset lives in, a `<rule ref>` that names an existing ruleset file is
+     * replaced by that file's `<rule>`, `<config>` and `<exclude-pattern>` elements, as
+     * phpcs includes it. `$file` is the ruleset's own file name in that directory, so a chain
+     * that leads back to it is cut instead of inlining it once more.
      */
-    public static function load(string $xml): ?DOMXPath
+    public static function load(string $xml, ?string $directory = null, ?string $file = null): ?DOMXPath
+    {
+        $document = self::parse($xml);
+        if ($document === null) {
+            return null;
+        }
+
+        if ($directory !== null) {
+            $own = $file === null ? false : realpath($directory . DIRECTORY_SEPARATOR . $file);
+            self::inline($document, $directory, $own === false ? [] : [$own]);
+        }
+
+        return new DOMXPath($document);
+    }
+
+    private static function parse(string $xml): ?DOMDocument
     {
         $previous = libxml_use_internal_errors(true);
         $document = new DOMDocument();
@@ -205,15 +231,48 @@ final class PhpcsRuleset
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 
-        return $loaded ? new DOMXPath($document) : null;
+        return $loaded ? $document : null;
+    }
+
+    /**
+     * @param list<string> $seen the real paths of the rulesets being included, to stop a cycle
+     */
+    private static function inline(DOMDocument $document, string $directory, array $seen): void
+    {
+        foreach (self::elements(new DOMXPath($document), '/ruleset/rule[@ref]') as $rule) {
+            $ref = $rule->getAttribute('ref');
+            $path = str_starts_with($ref, '/') ? $ref : $directory . DIRECTORY_SEPARATOR . $ref;
+            $real = is_file($path) ? realpath($path) : false;
+            if ($real === false) {
+                continue;
+            }
+
+            $included = in_array($real, $seen, strict: true) ? null : self::parse((string) file_get_contents($real));
+            if ($included !== null) {
+                self::inline($included, dirname($real), [...$seen, $real]);
+                $children = self::elements(
+                    new DOMXPath($included),
+                    '/ruleset/*[self::rule or self::config or self::exclude-pattern]',
+                );
+                foreach ($children as $child) {
+                    $copy = $document->importNode($child, true);
+                    if ($copy !== false) {
+                        $rule->parentNode?->insertBefore($copy, $rule);
+                    }
+                }
+            }
+
+            // The include itself is not a sniff ref; an unreadable or cyclic one is dropped.
+            $rule->parentNode?->removeChild($rule);
+        }
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function values(string $xml): array
+    public static function values(string $xml, ?string $directory = null, ?string $file = null): array
     {
-        $xpath = self::load($xml);
+        $xpath = self::load($xml, $directory, $file);
         if ($xpath === null) {
             return [];
         }
@@ -262,6 +321,13 @@ final class PhpcsRuleset
     {
         if (str_starts_with($code, 'WordPress.')) {
             return true;
+        }
+
+        // The metrics and docs sniffs migrate() turns into core rule settings.
+        foreach (array_keys(PhpcsMigration::CONFIGURED_SNIFFS) as $sniff) {
+            if (str_starts_with($sniff . '.', $code . '.') || str_starts_with($code, $sniff . '.')) {
+                return true;
+            }
         }
 
         // A mapped sniff, one of its message codes, or a category or standard that holds one,

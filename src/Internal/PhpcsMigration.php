@@ -10,6 +10,7 @@ use Rlorenzo\MagoWordPress\Settings;
 use stdClass;
 
 use function array_filter;
+use function array_key_exists;
 use function array_keys;
 use function array_map;
 use function array_replace;
@@ -29,6 +30,7 @@ use function in_array;
 use function is_array;
 use function is_bool;
 use function is_dir;
+use function is_int;
 use function json_decode;
 use function json_encode;
 use function ksort;
@@ -72,8 +74,33 @@ final class PhpcsMigration
     /** Mago core rules that ship disabled and that wordpress.mago.toml turns on. */
     private const ENABLED_BY_EXTENDS = ['nonce-verification', 'validated-sanitized-input', 'prepared-sql'];
 
+    /**
+     * Sniffs that become settings of a Mago core rule (`metricRules()`, `docsRule()`), and the
+     * properties of each that are read; any other property is listed as not migrated.
+     */
+    public const CONFIGURED_SNIFFS = [
+        'Generic.Metrics.CyclomaticComplexity' => ['complexity'],
+        'Generic.Metrics.NestingLevel' => ['nestingLevel'],
+        'Squiz.Commenting.FunctionComment.Missing' => [],
+        'Squiz.Commenting.ClassComment.Missing' => [],
+        'Squiz.Commenting.VariableComment.Missing' => [],
+    ];
+
+    /** What changes for scripts and hooks that ran phpcs. */
+    private const HOOK_NOTES = <<<'TXT'
+
+        If a hook or CI script ran phpcs:
+        - `mago lint` exits non-zero only on errors; pass `--minimum-fail-level warning` to fail on warnings as phpcs did.
+        - `mago lint --reporting-format short` prints `file:line:col: level[code]: message`, like `phpcs --report=emacs`.
+        - `// phpcs:ignore` and `phpcs:disable` comments are honoured by this package's rules only; Mago's own rules need `@mago-expect lint:<code>`.
+
+        TXT;
+
     /** @var list<string> */
     private array $unmapped = [];
+
+    /** @var array<string, list<string>> comment lines to print above a `[linter.rules]` entry */
+    private array $comments = [];
 
     private function __construct(
         private readonly DOMXPath $xpath,
@@ -118,7 +145,7 @@ final class PhpcsMigration
             return 1;
         }
 
-        $result = self::migrate((string) file_get_contents($ruleset), basename($ruleset));
+        $result = self::migrate((string) file_get_contents($ruleset), basename($ruleset), dirname($ruleset));
         if ($result === null) {
             fwrite(STDERR, "{$ruleset} is not well-formed XML.\n");
 
@@ -177,7 +204,7 @@ final class PhpcsMigration
             $text .= "- {$line}\n";
         }
 
-        return $text;
+        return $text . self::HOOK_NOTES;
     }
 
     /**
@@ -225,15 +252,15 @@ final class PhpcsMigration
     /**
      * @return null|array{toml: string, extra: array<string, mixed>, unmapped: list<string>}
      */
-    public static function migrate(string $xml, string $rulesetName): ?array
+    public static function migrate(string $xml, string $rulesetName, ?string $directory = null): ?array
     {
-        $xpath = PhpcsRuleset::load($xml);
+        $xpath = PhpcsRuleset::load($xml, $directory, $rulesetName);
         if ($xpath === null) {
             return null;
         }
 
         $migration = new self($xpath);
-        $values = PhpcsRuleset::values($xml);
+        $values = PhpcsRuleset::values($xml, $directory, $rulesetName);
         $patterns = Settings::fromArray($values)->excludePatterns;
 
         $toml = $migration->toml($rulesetName, $migration->coreRules($patterns));
@@ -303,12 +330,12 @@ final class PhpcsMigration
      * and the `<type>` it sets on the sniffs they port.
      *
      * @param array<string, list<string>> $patterns
-     * @return array<string, array{enabled?: bool, exclude?: list<string>, level?: string}>
+     * @return array<string, array<string, bool|int|string|list<string>>>
      */
     private function coreRules(array $patterns): array
     {
         $rules = [];
-        /** @var array<string, array<string, array{enabled?: bool, exclude?: list<string>, level?: string}>> $bySniff */
+        /** @var array<string, array<string, array<string, bool|int|string|list<string>>>> $bySniff */
         $bySniff = [];
         foreach (SniffMap::RULES as $sniff => $codes) {
             $core = array_values(array_filter(
@@ -368,13 +395,140 @@ final class PhpcsMigration
                 : $settings;
         }
 
-        if ($this->leavesOutDocs()) {
+        $rules = [...$rules, ...$this->metricRules($patterns)];
+        $docs = $this->docsRule($patterns);
+        if ($docs !== null) {
+            $rules['missing-docs'] = $docs;
+        } elseif ($this->leavesOutDocs()) {
             $rules['missing-docs'] = ['enabled' => false];
         }
 
         ksort($rules);
 
         return $rules;
+    }
+
+    /**
+     * The last value a ruleset sets for a property of a sniff, or NULL.
+     */
+    private function property(string $ref, string $name): ?string
+    {
+        $query = '//rule[@ref="' . $ref . '"]/properties/property[@name="' . $name . '"]';
+        $found = PhpcsRuleset::elements($this->xpath, $query);
+
+        return $found === [] ? null : $found[count($found) - 1]->getAttribute('value');
+    }
+
+    private function refers(string $ref): bool
+    {
+        return PhpcsRuleset::elements($this->xpath, '/ruleset/rule[@ref="' . $ref . '"]') !== [];
+    }
+
+    /**
+     * What a ruleset's `<exclude-pattern>`s and `<type>` on one sniff add to its Mago rule.
+     *
+     * @param array<string, list<string>> $patterns
+     * @param array<string, bool|int|string|list<string>> $settings
+     * @return array<string, bool|int|string|list<string>>
+     */
+    private function configured(string $ref, array $patterns, array $settings, string $level): array
+    {
+        $found = self::patternsFor($patterns, $ref);
+        if (in_array('*', $found, strict: true)) {
+            return ['enabled' => false];
+        }
+
+        $settings['level'] = $this->level($ref) ?? $level;
+        $excludes = $this->ruleExcludes($ref, $found);
+
+        return $excludes === [] ? $settings : [...$settings, 'exclude' => $excludes];
+    }
+
+    /**
+     * `cyclomatic-complexity` and `excessive-nesting`, from the phpcs metrics sniffs.
+     *
+     * @param array<string, list<string>> $patterns
+     * @return array<string, array<string, bool|int|string|list<string>>>
+     */
+    private function metricRules(array $patterns): array
+    {
+        $rules = [];
+        $ref = 'Generic.Metrics.CyclomaticComplexity';
+        if ($this->refers($ref)) {
+            $threshold = (int) ($this->property($ref, 'complexity') ?? 10);
+            $rules['cyclomatic-complexity'] = $this->configured(
+                $ref,
+                $patterns,
+                ['threshold' => $threshold, 'method-threshold' => $threshold],
+                'warning',
+            );
+            $this->comments['cyclomatic-complexity'] = [
+                "{$ref} complexity {$threshold}. Without method-threshold Mago does not check methods and scores",
+                'a class as the sum of its methods. Mago counts && and || and phpcs does not, so the same',
+                'number is stricter there; plain branches score one lower in Mago (phpcs counts the function',
+                'itself), so it is laxer there. absoluteComplexity has no equivalent.',
+            ];
+        }
+
+        $ref = 'Generic.Metrics.NestingLevel';
+        if ($this->refers($ref)) {
+            $level = (int) ($this->property($ref, 'nestingLevel') ?? 5);
+            $rules['excessive-nesting'] = $this->configured($ref, $patterns, ['threshold' => $level + 1], 'warning');
+            $this->comments['excessive-nesting'] = [
+                "{$ref} nestingLevel {$level}. Mago counts the function body as level 1, so the same depth is",
+                'threshold = nestingLevel + 1 (measured: identical on nested if blocks). Mago counts fewer',
+                'constructs than phpcs (switch/case, else chains), so it can report less. absoluteNestingLevel',
+                'has no equivalent.',
+            ];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * `missing-docs` for the `Squiz.Commenting.*Comment.Missing` codes a ruleset names, unless it
+     * builds on WordPress or WordPress-Docs (the shipped config already covers those).
+     *
+     * @param array<string, list<string>> $patterns
+     * @return null|array<string, bool|int|string|list<string>>
+     */
+    private function docsRule(array $patterns): ?array
+    {
+        $standards = PhpcsRuleset::standards($this->xpath);
+        if (in_array('WordPress', $standards, strict: true) || $this->refers('WordPress-Docs')) {
+            return null;
+        }
+
+        $refs = [
+            'functions' => 'Squiz.Commenting.FunctionComment.Missing',
+            'classes' => 'Squiz.Commenting.ClassComment.Missing',
+            'properties' => 'Squiz.Commenting.VariableComment.Missing',
+        ];
+        $on = array_filter($refs, $this->refers(...));
+        if ($on === []) {
+            return null;
+        }
+
+        $settings = [
+            'enabled' => true,
+            'functions' => array_key_exists('functions', $on),
+            'methods' => array_key_exists('functions', $on),
+            'classes' => array_key_exists('classes', $on),
+            'properties' => array_key_exists('properties', $on),
+            'constants' => false,
+            'enum-cases' => false,
+            'statics' => false,
+        ];
+        $per = array_values(array_map(fn(string $ref): array => $this->configured($ref, $patterns, [], 'error'), $on));
+        if (count(array_unique(array_map(serialize(...), $per))) > 1) {
+            $this->unmapped[] = 'Squiz.Commenting *Comment.Missing refs have different <exclude-pattern>/<type> settings; Mago has one missing-docs rule, so the first is used';
+        }
+
+        $this->comments['missing-docs'] = [
+            'Squiz.Commenting.*Comment.Missing: an error, as in phpcs (the shipped config reports at help).',
+        ];
+
+        return [...$settings, ...$per[0]];
     }
 
     /**
@@ -505,7 +659,9 @@ final class PhpcsMigration
 
         $parts = explode('.', $ref);
         $sniff = implode('.', array_slice($parts, offset: 0, length: 3));
+        $configured = array_key_exists($ref, self::CONFIGURED_SNIFFS);
         $reason = match (true) {
+            $configured => null,
             $ref === 'WordPress-Docs' => 'only missing docblocks are checked (missing-docs); see docs/wpcs-coverage.md',
             str_starts_with($ref, 'PHPCompatibility') => 'ignored (the package targets PHP 8.1+)',
             !str_starts_with($ref, 'WordPress.') && count($parts) === 1 && !str_contains($ref, '/')
@@ -529,7 +685,11 @@ final class PhpcsMigration
         $rules = SniffMap::RULES[$sniff] ?? [];
         $extension = array_values(array_filter($rules, SniffMap::isExtensionRule(...)));
         // A <type> on a whole sniff that only core rules port becomes their level.
-        if (PhpcsRuleset::elements($this->xpath, 'type', $rule) !== [] && ($ref !== $sniff || $extension !== [])) {
+        if (
+            !$configured
+            && PhpcsRuleset::elements($this->xpath, 'type', $rule) !== []
+            && ($ref !== $sniff || $extension !== [])
+        ) {
             $this->unmapped[] =
                 "<type> on {$ref}: Mago cannot re-level "
                 . ($extension !== [] ? 'extension rules (' . implode(', ', $extension) . ')' : 'part of a rule');
@@ -541,14 +701,18 @@ final class PhpcsMigration
 
         foreach (PhpcsRuleset::elements($this->xpath, 'properties/property', $rule) as $property) {
             $name = $property->getAttribute('name');
-            if (!in_array($name, PhpcsRuleset::OWNED_PROPERTIES[$ref] ?? [], strict: true)) {
-                $this->unmapped[] = "property {$name} on {$ref}: no setting";
+            if (!in_array(
+                $name,
+                self::CONFIGURED_SNIFFS[$ref] ?? PhpcsRuleset::OWNED_PROPERTIES[$ref] ?? [],
+                strict: true,
+            )) {
+                $this->unmapped[] = "property {$name} on {$ref}: " . ($configured ? 'no equivalent' : 'no setting');
             }
         }
     }
 
     /**
-     * @param array<string, array{enabled?: bool, exclude?: list<string>, level?: string}> $coreRules
+     * @param array<string, array<string, bool|int|string|list<string>>> $coreRules
      */
     private function toml(string $rulesetName, array $coreRules): string
     {
@@ -605,9 +769,14 @@ final class PhpcsMigration
                     $literal = match (true) {
                         is_array($value) => self::list($value, inline: true),
                         is_bool($value) => $value ? 'true' : 'false',
+                        is_int($value) => (string) $value,
                         default => self::string($value),
                     };
                     $pairs[] = $key . ' = ' . $literal;
+                }
+
+                foreach ($this->comments[$rule] ?? [] as $comment) {
+                    $toml .= "# {$comment}\n";
                 }
 
                 $toml .= $rule . ' = { ' . implode(', ', $pairs) . " }\n";

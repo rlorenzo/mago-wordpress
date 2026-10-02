@@ -13,7 +13,11 @@ use function file_get_contents;
 use function file_put_contents;
 use function implode;
 use function json_encode;
+use function unlink;
 
+/**
+ * @mago-expect lint:too-many-methods
+ */
 final class PhpcsMigrationTest extends TestCase
 {
     use TempProject;
@@ -206,6 +210,103 @@ final class PhpcsMigrationTest extends TestCase
         $settings = Settings::fromArray($result['extra']);
         self::assertSame(['my\testcase'], $settings->customList('custom-test-classes'));
         self::assertFalse($settings->strictClassFileNames);
+    }
+
+    public function testMetricsAndDocsSniffsBecomeCoreRuleSettings(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress-Extra"/>
+              <rule ref="Generic.Metrics.CyclomaticComplexity">
+                <properties><property name="complexity" value="8"/><property name="absoluteComplexity" value="12"/></properties>
+                <exclude-pattern>*/class-*admin*.php</exclude-pattern>
+              </rule>
+              <rule ref="Generic.Metrics.NestingLevel">
+                <properties><property name="nestingLevel" value="4"/><property name="absoluteNestingLevel" value="6"/></properties>
+              </rule>
+              <rule ref="Squiz.Commenting.FunctionComment.Missing">
+                <exclude-pattern>*/templates/*</exclude-pattern>
+              </rule>
+            </ruleset>
+            XML;
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+
+        $toml = $result['toml'];
+        self::assertStringContainsString(
+            'cyclomatic-complexity = { threshold = 8, method-threshold = 8, level = "warning", exclude = ["class-*admin*?php*", "*/class-*admin*?php*"] }',
+            $toml,
+        );
+        self::assertStringContainsString('Mago counts && and ||', $toml);
+        self::assertStringContainsString('excessive-nesting = { threshold = 5, level = "warning" }', $toml);
+        self::assertStringContainsString('threshold = nestingLevel + 1', $toml);
+        self::assertStringContainsString(
+            'missing-docs = { enabled = true, functions = true, methods = true, classes = false, properties = false, constants = false, enum-cases = false, statics = false, level = "error", exclude = ["templates/*", "*/templates/*"] }',
+            $toml,
+        );
+        self::assertStringNotContainsString('Generic.Metrics', (string) json_encode($result['extra']));
+        self::assertSame(
+            [
+                'property absoluteComplexity on Generic.Metrics.CyclomaticComplexity: no equivalent',
+                'property absoluteNestingLevel on Generic.Metrics.NestingLevel: no equivalent',
+            ],
+            $result['unmapped'],
+        );
+    }
+
+    public function testClassAndVariableCommentsTurnOnClassesAndProperties(): void
+    {
+        $xml =
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress-Extra"/>'
+            . '<rule ref="Squiz.Commenting.ClassComment.Missing"/><rule ref="Squiz.Commenting.VariableComment.Missing"/></ruleset>';
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+
+        self::assertStringContainsString(
+            'missing-docs = { enabled = true, functions = false, methods = false, classes = true, properties = true,',
+            $result['toml'],
+        );
+        self::assertSame([], $result['unmapped']);
+    }
+
+    public function testMetricDefaultsAndExclusion(): void
+    {
+        $xml =
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="Generic.Metrics.CyclomaticComplexity"/>'
+            . '<rule ref="Generic.Metrics.NestingLevel"><exclude-pattern>/legacy/*</exclude-pattern></rule>'
+            . '<rule ref="Generic.Metrics.NestingLevel"><severity>0</severity></rule></ruleset>';
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+
+        self::assertStringContainsString(
+            'cyclomatic-complexity = { threshold = 10, method-threshold = 10, level = "warning" }',
+            $result['toml'],
+        );
+        self::assertStringContainsString('excessive-nesting = { enabled = false }', $result['toml']);
+    }
+
+    public function testNestedRulesetIsMergedAndFooterExplainsHooks(): void
+    {
+        $dir = $this->directory;
+        file_put_contents(
+            "{$dir}/phpcs.xml",
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress-Extra"/><rule ref="./names.xml"/></ruleset>',
+        );
+        file_put_contents(
+            "{$dir}/names.xml",
+            '<?xml version="1.0"?><ruleset name="n"><rule ref="WordPress.Files.FileName.NotHyphenatedLowercase"><exclude-pattern>*/a_b\\.php$</exclude-pattern></rule></ruleset>',
+        );
+
+        $output = PhpcsMigration::run([$dir], $dir);
+        self::assertIsString($output);
+        unlink("{$dir}/names.xml");
+
+        self::assertStringContainsString('"*/a_b\\\\.php$"', $output);
+        self::assertStringContainsString('Everything was migrated.', $output);
+        self::assertStringContainsString('--minimum-fail-level warning', $output);
+        self::assertStringContainsString('--reporting-format short', $output);
+        self::assertStringContainsString('phpcs:ignore', $output);
     }
 
     public function testWriteMergesComposerAndRefusesToOverwriteMagoToml(): void

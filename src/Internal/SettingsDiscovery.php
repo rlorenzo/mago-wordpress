@@ -32,7 +32,11 @@ final class SettingsDiscovery
         foreach (self::RULESETS as $name) {
             $ruleset = $directory . '/' . $name;
             if (file_exists($ruleset)) {
-                return Settings::fromArray(PhpcsRuleset::values((string) file_get_contents($ruleset)));
+                return Settings::fromArray(PhpcsRuleset::values(
+                    (string) file_get_contents($ruleset),
+                    $directory,
+                    $name,
+                ));
             }
         }
 
