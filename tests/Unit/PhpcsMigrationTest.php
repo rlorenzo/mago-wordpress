@@ -17,6 +17,7 @@ use function unlink;
 
 /**
  * @mago-expect lint:too-many-methods
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class PhpcsMigrationTest extends TestCase
 {
@@ -79,23 +80,21 @@ final class PhpcsMigrationTest extends TestCase
         self::assertNotNull($result);
 
         $toml = $result['toml'];
-        self::assertStringContainsString('extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"', $toml);
+        // Built on WordPress-Extra: the preset turns off what Extra leaves out (the three
+        // WordPress-only sniffs, WordPress-Docs' missing-docs), so none of it is repeated here.
+        self::assertStringContainsString('extends = "vendor/rlorenzo/mago-wordpress/wordpress-extra.mago.toml"', $toml);
         self::assertStringContainsString('paths = ["."]', $toml);
         self::assertStringContainsString('"*/vendor/*",', $toml);
         self::assertStringContainsString('"build/*",', $toml);
         // Mago's core rules get [linter.rules] entries; a partial override keeps the shipped enable.
         self::assertStringNotContainsString('prepared-sql', $toml);
-        // WordPress-Extra leaves out the three WordPress-only sniffs.
-        self::assertSame(
-            ['*'],
-            $result['extra']['exclude-patterns']['WordPress.Security.ValidatedSanitizedInput'] ?? null,
-        );
-        // ...and WordPress-Docs, which the shipped missing-docs stands in for.
-        self::assertStringContainsString('missing-docs = { enabled = false }', $toml);
+        self::assertNull($result['extra']['exclude-patterns']['WordPress.Security.ValidatedSanitizedInput'] ?? null);
+        self::assertNull($result['extra']['exclude-patterns']['WordPress.DB.SlowDBQuery'] ?? null);
+        self::assertStringNotContainsString('missing-docs', $toml);
+        self::assertArrayNotHasKey('standard', $result['extra']);
 
         self::assertSame(['my-plugin'], $result['extra']['text-domains'] ?? null);
         self::assertSame('6.2', $result['extra']['minimum-wp-version'] ?? null);
-        self::assertSame(['*'], $result['extra']['exclude-patterns']['WordPress.DB.SlowDBQuery'] ?? null);
         // EscapeOutput is ported, so its exclude-pattern reaches the extension, not no-unescaped-output.
         self::assertSame(
             ['/templates/*'],
@@ -127,6 +126,39 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('testVersion', $unmapped);
         self::assertStringContainsString('parallel', $unmapped);
         self::assertStringNotContainsString('text_domain', $unmapped);
+    }
+
+    public function testCoreRulesetExtendsTheCorePreset(): void
+    {
+        $result = PhpcsMigration::migrate(
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress-Core"/></ruleset>',
+            'phpcs.xml',
+        );
+        self::assertNotNull($result);
+
+        self::assertStringContainsString('wordpress-core.mago.toml', $result['toml']);
+        self::assertStringNotContainsString('[linter.rules]', $result['toml']);
+        self::assertSame([], $result['extra']);
+    }
+
+    public function testReIncludedSniffKeepsTheFullConfig(): void
+    {
+        $result = PhpcsMigration::migrate(
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress-Core"/>'
+            . '<rule ref="WordPress.Security.EscapeOutput"/></ruleset>',
+            'phpcs.xml',
+        );
+        self::assertNotNull($result);
+
+        // The Core preset would turn EscapeOutput off, so the full config plus explicit exclusions.
+        self::assertStringContainsString(
+            'extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"',
+            $result['toml'],
+        );
+        self::assertStringContainsString('missing-docs = { enabled = false }', $result['toml']);
+        self::assertStringContainsString('no-ini-set = { enabled = false }', $result['toml']);
+        self::assertSame(['*'], $result['extra']['exclude-patterns']['WordPress.Security.NonceVerification'] ?? null);
+        self::assertNull($result['extra']['exclude-patterns']['WordPress.Security.EscapeOutput'] ?? null);
     }
 
     public function testDocsStandardKeepsMissingDocs(): void
@@ -274,11 +306,14 @@ final class PhpcsMigrationTest extends TestCase
 
         $toml = $result['toml'];
         self::assertStringContainsString(
-            'cyclomatic-complexity = { threshold = 8, method-threshold = 8, level = "warning", exclude = ["class-*admin*?php*", "*/class-*admin*?php*"] }',
+            'cyclomatic-complexity = { enabled = true, threshold = 8, method-threshold = 8, level = "warning", exclude = ["class-*admin*?php*", "*/class-*admin*?php*"] }',
             $toml,
         );
         self::assertStringContainsString('Mago counts && and ||', $toml);
-        self::assertStringContainsString('excessive-nesting = { threshold = 5, level = "warning" }', $toml);
+        self::assertStringContainsString(
+            'excessive-nesting = { enabled = true, threshold = 5, level = "warning" }',
+            $toml,
+        );
         self::assertStringContainsString('threshold = nestingLevel + 1', $toml);
         self::assertStringContainsString(
             'missing-docs = { enabled = true, functions = true, methods = true, classes = false, properties = false, constants = false, enum-cases = false, statics = false, level = "error", exclude = ["templates/*", "*/templates/*"] }',
@@ -319,7 +354,7 @@ final class PhpcsMigrationTest extends TestCase
         self::assertNotNull($result);
 
         self::assertStringContainsString(
-            'cyclomatic-complexity = { threshold = 10, method-threshold = 10, level = "warning" }',
+            'cyclomatic-complexity = { enabled = true, threshold = 10, method-threshold = 10, level = "warning" }',
             $result['toml'],
         );
         self::assertStringContainsString('excessive-nesting = { enabled = false }', $result['toml']);

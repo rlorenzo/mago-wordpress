@@ -22,25 +22,33 @@ final class SettingsDiscovery
 
     private function __construct() {}
 
-    public static function in(string $directory): Settings
+    /**
+     * @param string $standard the WPCS standard to use when the project does not set one: the
+     *     worker's `--standard=` argument, which the wordpress-core and wordpress-extra presets pass
+     */
+    public static function in(string $directory, string $standard = Settings::DEFAULT_STANDARD): Settings
     {
         $extra = self::composerExtra($directory . '/composer.json');
         if ($extra !== null) {
-            return Settings::fromArray($extra);
+            return Settings::fromArray($extra + ['standard' => $standard]);
         }
 
         foreach (self::RULESETS as $name) {
             $ruleset = $directory . '/' . $name;
             if (file_exists($ruleset)) {
-                return Settings::fromArray(PhpcsRuleset::values(
-                    (string) file_get_contents($ruleset),
-                    $directory,
-                    $name,
-                ));
+                $xml = (string) file_get_contents($ruleset);
+                $values = PhpcsRuleset::values($xml, $directory, $name);
+                // A ruleset built on a WPCS standard already excludes what that standard leaves out.
+                $xpath = PhpcsRuleset::load($xml, $directory, $name);
+                if ($xpath === null || PhpcsRuleset::standard($xpath) === null) {
+                    $values['standard'] = $standard;
+                }
+
+                return Settings::fromArray($values);
             }
         }
 
-        return new Settings();
+        return Settings::fromArray(['standard' => $standard]);
     }
 
     /**

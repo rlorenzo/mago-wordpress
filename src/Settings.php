@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress;
 
+use Rlorenzo\MagoWordPress\Internal\PhpcsRuleset;
 use Rlorenzo\MagoWordPress\Internal\Shape;
 
+use function array_fill_keys;
 use function array_filter;
 use function array_keys;
 use function array_map;
@@ -37,6 +39,9 @@ final class Settings
     private const DEFAULT_MAX_POSTS_PER_PAGE = 100;
 
     private const DEFAULT_MIN_CRON_INTERVAL = 900;
+
+    /** The WPCS standard whose sniffs run; `WordPress-Core` and `WordPress-Extra` leave some out. */
+    public const DEFAULT_STANDARD = 'WordPress';
 
     /**
      * Keys accepted in composer.json `extra.mago-wordpress` for the custom lists,
@@ -90,6 +95,7 @@ final class Settings
         public readonly bool $treatFilesAsScoped = false,
         public readonly bool $strictClassFileNames = true,
         public readonly bool $isTheme = false,
+        public readonly string $standard = self::DEFAULT_STANDARD,
     ) {}
 
     /**
@@ -138,6 +144,14 @@ final class Settings
             };
         }
 
+        // The sniffs the standard leaves out are excluded everywhere, like a phpcs.xml built on it;
+        // any other name (`WordPress` included) runs every sniff.
+        $standard = Shape::string($values['standard'] ?? null) ?? self::DEFAULT_STANDARD;
+        $excludePatterns = [
+            ...self::stringListMap($values['exclude-patterns'] ?? []),
+            ...array_fill_keys(PhpcsRuleset::excludedSniffs($standard), ['*']),
+        ];
+
         return new self(
             textDomains: self::unique(self::stringList($values['text-domains'] ?? [])),
             prefixes: self::lowercased(self::stringList($values['prefixes'] ?? [])),
@@ -147,11 +161,12 @@ final class Settings
             minCronInterval: self::integer($values['min-cron-interval'] ?? null) ?? self::DEFAULT_MIN_CRON_INTERVAL,
             additionalWordDelimiters: Shape::string($values['additional-word-delimiters'] ?? null) ?? '',
             honorPhpcsComments: ($values['honor-phpcs-comments'] ?? true) !== false,
-            excludePatterns: self::stringListMap($values['exclude-patterns'] ?? []),
+            excludePatterns: $excludePatterns,
             excludeGroups: self::stringListMap($values['exclude-groups'] ?? []),
             treatFilesAsScoped: self::boolean($values['treat-files-as-scoped'] ?? null) ?? false,
             strictClassFileNames: self::boolean($values['strict-class-file-names'] ?? null) ?? true,
             isTheme: self::boolean($values['is-theme'] ?? null) ?? false,
+            standard: $standard,
         );
     }
 
