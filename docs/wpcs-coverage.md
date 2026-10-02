@@ -198,7 +198,6 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `PEAR.Files.IncludingFile`
 - `PSR12.Files.FileHeader`
 - `PSR12.Keywords.ShortFormTypeKeywords`
-- `PSR2.Classes.PropertyDeclaration`
 - `PSR2.ControlStructures.ElseIfDeclaration`
 - `PSR2.Methods.MethodDeclaration`
 - `Squiz.Classes.SelfMemberReference`
