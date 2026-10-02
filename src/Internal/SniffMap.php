@@ -118,6 +118,7 @@ final class SniffMap
         'PSR2.Methods.MethodDeclaration' => ['generic/method-declaration', 'generic/method-declaration-warning'],
         'Squiz.Classes.SelfMemberReference' => ['generic/self-member-reference'],
         'Squiz.ControlStructures.ControlSignature' => ['generic/control-signature'],
+        'Squiz.Operators.IncrementDecrementUsage' => ['generic/increment-decrement-usage'],
         'Squiz.Operators.ValidLogicalOperators' => ['generic/valid-logical-operators'],
         'Squiz.PHP.DisallowMultipleAssignments' => ['generic/disallow-multiple-assignments'],
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => ['generic/disallow-size-functions-in-loops'],
