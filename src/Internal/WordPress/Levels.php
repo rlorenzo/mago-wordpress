@@ -132,6 +132,9 @@ final class Levels
         'Squiz.PHP.Eval' => [
             'Discouraged' => 'error',
         ],
+        'Squiz.Scope.MethodScope' => [
+            'Missing' => 'error',
+        ],
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],

@@ -7,6 +7,7 @@ generic/for-loop-with-test-function-call
 generic/foreach-unique-assignment
 generic/git-merge-conflict
 generic/jumbled-incrementer
+generic/method-scope
 generic/property-declaration
 generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence
