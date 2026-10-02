@@ -8,7 +8,8 @@
  *       [--phpcs=/path/to/php_codesniffer/src/Standards] [--phpcsextra=/path/to/PHPCSExtra]
  *
  * Non-WordPress sniffs are run against phpcs's own tests (`--phpcs`, default the global
- * Composer install) and totalled on a separate line.
+ * Composer install) or, for Universal and Modernize, a PHPCSExtra checkout (`--phpcsextra`,
+ * default ~/Projects/phpcsextra-src), and totalled on a separate line.
  *
  * For every mapped sniff, each `<Sniff>UnitTest[.N].inc` is copied into a scratch Mago
  * workspace (keeping its name, so file-name checks see the original), the `phpcs:set`
