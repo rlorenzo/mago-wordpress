@@ -194,6 +194,13 @@ final class RuleFixesTest extends TestCase
             "\$a = 'plain \"q\" \$x';\n\$b = \"it's\";\n\$c = \"tab\\t\";",
         ];
 
+        yield 'no-echo-sprintf calls printf directly' => [
+            'generic/no-echo-sprintf',
+            '',
+            "echo sprintf( '%s', \$a );\necho \\VSPRINTF( '%s', [ \$a ] );",
+            "printf( '%s', \$a );\n\\vprintf( '%s', [ \$a ] );",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
