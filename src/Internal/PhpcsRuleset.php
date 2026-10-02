@@ -231,6 +231,7 @@ final class PhpcsRuleset
         'Universal.CodeAnalysis.StaticInFinalClass',
         'Universal.Files.SeparateFunctionsFromOO',
         'Squiz.Operators.ValidLogicalOperators',
+        'Universal.ControlStructures.DisallowLonelyIf',
     ];
 
     /** phpcs hides reports below this severity by default. */

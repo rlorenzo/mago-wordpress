@@ -126,6 +126,7 @@ final class SniffMap
         'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
         'Universal.CodeAnalysis.StaticInFinalClass' => ['generic/static-in-final-class'],
+        'Universal.ControlStructures.DisallowLonelyIf' => ['generic/disallow-lonely-if'],
         'Universal.Files.SeparateFunctionsFromOO' => ['generic/separate-functions-from-oo'],
         'Universal.Operators.DisallowShortTernary' => ['no-shorthand-ternary'],
         'Universal.Operators.DisallowStandalonePostIncrementDecrement' => [
