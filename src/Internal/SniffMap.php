@@ -115,6 +115,7 @@ final class SniffMap
         'Squiz.PHP.DisallowMultipleAssignments' => ['generic/disallow-multiple-assignments'],
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => ['generic/disallow-size-functions-in-loops'],
         'Squiz.PHP.Eval' => ['no-eval'],
+        'Squiz.Scope.MethodScope' => ['generic/method-scope'],
         'Universal.Arrays.DisallowShortArraySyntax' => ['array-style'],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
         'Universal.Operators.DisallowShortTernary' => ['no-shorthand-ternary'],

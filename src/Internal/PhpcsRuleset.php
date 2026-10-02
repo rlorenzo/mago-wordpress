@@ -173,6 +173,7 @@ final class PhpcsRuleset
         'Squiz.PHP.Eval',
         'Universal.Arrays.DisallowShortArraySyntax',
         'Universal.Operators.DisallowShortTernary',
+        'Squiz.Scope.MethodScope',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
