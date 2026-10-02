@@ -22,6 +22,7 @@ generic/method-declaration-warning
 generic/method-scope
 generic/no-double-negative
 generic/no-echo-sprintf
+generic/no-leading-backslash
 generic/no-reserved-keyword-parameter-names
 generic/non-executable-code
 generic/property-declaration
