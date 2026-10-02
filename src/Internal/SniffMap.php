@@ -84,6 +84,7 @@ final class SniffMap
         // Mago core lint rules that cover the rest (analyzer-only coverage is in docs/wpcs-coverage.md).
         'Generic.CodeAnalysis.AssignmentInCondition' => ['generic/assignment-in-condition'],
         'Generic.CodeAnalysis.EmptyPHPStatement' => ['no-noop'],
+        'Generic.CodeAnalysis.EmptyStatement' => ['generic/empty-statement'],
         'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => ['prefer-while-loop'],
         'Generic.CodeAnalysis.ForLoopWithTestFunctionCall' => ['generic/for-loop-with-test-function-call'],
         'Generic.CodeAnalysis.JumbledIncrementer' => ['generic/jumbled-incrementer'],
