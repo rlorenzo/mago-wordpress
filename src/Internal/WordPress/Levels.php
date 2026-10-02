@@ -199,6 +199,11 @@ final class Levels
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
         ],
+        'Universal.CodeAnalysis.NoDoubleNegative' => [
+            'FoundDouble' => 'error',
+            'FoundDoubleWithInstanceof' => 'error',
+            'FoundTriple' => 'error',
+        ],
         'Universal.CodeAnalysis.NoEchoSprintf' => [
             'Found' => 'error',
         ],

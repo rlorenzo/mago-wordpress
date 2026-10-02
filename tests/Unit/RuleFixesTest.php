@@ -200,6 +200,13 @@ final class RuleFixesTest extends TestCase
             "\$a = <<<'EOT'\ncosts \$5 \\ more\nEOT;",
         ];
 
+        yield 'no-double-negative casts a double negative and trims a triple one' => [
+            'generic/no-double-negative',
+            '',
+            "\$a = !!\$b;\n\$c = ! ! ! \$d;\n\$e = !!\$f instanceof Foo;",
+            "\$a = (bool)\$b;\n\$c = ! \$d;\n\$e = !!\$f instanceof Foo;",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

@@ -238,6 +238,7 @@ final class PhpcsRuleset
         'Squiz.Operators.IncrementDecrementUsage',
         'Universal.CodeAnalysis.NoEchoSprintf',
         'Generic.Strings.UnnecessaryHeredoc',
+        'Universal.CodeAnalysis.NoDoubleNegative',
     ];
 
     /** phpcs hides reports below this severity by default. */
