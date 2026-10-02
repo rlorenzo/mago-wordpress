@@ -1,14 +1,14 @@
 # WPCS coverage
 
 The WPCS sniffs this package does not port, and what covers them instead: Mago's own WordPress
-rules, its `missing-docs` for `WordPress-Docs`, Mago's core rules and `mago analyze` for the generic
-sniffs, and what is left.
+rules, `missing-docs` for `WordPress-Docs`, Mago's core rules and `mago analyze` for the generic
+sniffs. The last section lists what nothing covers.
 
 ## Mago's own WordPress rules
 
 Mago's core linter has its own `wordpress` integration: eight rules, independent of this package's
-`wordpress/*` rules. Mago ships three of them disabled; the `extends` in [Install](../README.md#install) turns
-them on so a project keeps the security checks WPCS gave it.
+`wordpress/*` rules. Mago ships three disabled. The `extends` in [Install](../README.md#install) turns
+them on, so a project keeps the security checks WPCS gave it.
 
 | Mago rule | Covers | Mago default |
 |:---|:---|:---|
@@ -21,7 +21,7 @@ them on so a project keeps the security checks WPCS gave it.
 | `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` | on |
 | `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part; overlaps [`wordpress/capabilities`](rules.md)) | on |
 
-Four of Mago's core PHP rules, on for every project, cover the remaining `WordPress.PHP` sniffs:
+Four core PHP rules, on for every project, cover the remaining `WordPress.PHP` sniffs:
 
 | Mago rule | Covers |
 |:---|:---|
@@ -33,16 +33,19 @@ Four of Mago's core PHP rules, on for every project, cover the remaining `WordPr
 ## WordPress-Docs
 
 The `WordPress` ruleset includes `WordPress-Docs`: eleven `Squiz.Commenting` and `Generic.Commenting`
-sniffs, with the codes WPCS excludes. This package ports none of them. The part Mago covers is
-missing docblocks: the `extends` in [Install](../README.md#install) turns on Mago's `missing-docs` for functions,
-methods, classes and properties, the declarations WPCS checks (not interfaces, traits, enums or
-constants). On Akismet and Contact Form 7 it reports as many as `FunctionComment`, `ClassComment` and
-`VariableComment` report as `Missing` or `WrongStyle` (156 and 512). It reports at Mago's
-`help` level, so it does not fail a build; raise it with `missing-docs = { level = "warning" }`, or turn
-it off with `{ enabled = false }` (`mago-wordpress migrate` does this for a `WordPress-Core` or
-`WordPress-Extra` ruleset without `WordPress-Docs`).
+sniffs, with the codes WPCS excludes. This package ports none of them.
 
-What the docblock *contains* (tags, types, capitalisation, full stops) is mostly not checked:
+Mago covers missing docblocks. The `extends` in [Install](../README.md#install) turns on Mago's
+`missing-docs` for functions, methods, classes and properties, the declarations WPCS checks (not
+interfaces, traits, enums or constants). On Akismet and Contact Form 7 it reports as many as
+`FunctionComment`, `ClassComment` and `VariableComment` report as `Missing` or `WrongStyle` (156 and 512).
+
+It reports at Mago's `help` level, so it does not fail a build. Raise it with
+`missing-docs = { level = "warning" }` or turn it off with `{ enabled = false }`.
+`mago-wordpress migrate` does the latter for a `WordPress-Core` or `WordPress-Extra` ruleset without
+`WordPress-Docs`.
+
+Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisation, full stops):
 
 | Sniff | Mago | Not covered |
 |:---|:---|:---|
@@ -58,18 +61,19 @@ What the docblock *contains* (tags, types, capitalisation, full stops) is mostly
 | `Squiz.Commenting.ClosingDeclarationComment` | none | reports only malformed `//end` comments; WPCS excludes `Missing` |
 | `Generic.Commenting.DocComment` | `Empty`: `no-empty-comment` | `MissingShort`, `ShortNotCapital`, `LongNotCapital`, spacing between the short and long description and tags |
 
-`@since`, which the WordPress documentation standard asks for, is not checked by WPCS either.
-`valid-docblock` (on) also reports docblock syntax errors WPCS does not, such as an unclosed `{@see`.
+WPCS doesn't check `@since`, which the WordPress documentation standard asks for. `valid-docblock`
+(on) reports docblock syntax errors WPCS doesn't, such as an unclosed `{@see`.
 
 ## Generic sniffs
 
 `WordPress-Extra` and `WordPress-Core` also pull in generic (non-`WordPress.*`) sniffs from
 `Generic`, `PEAR`, `PSR2`, `Squiz` and `Universal`. The bug-catching ones nothing else covers are
-the `generic/*` rules in [Rules](rules.md). Some of the rest are covered by one of Mago's own core lint rules, which
-run on every PHP project regardless of the `wordpress` integration. `mago-wordpress migrate` maps
-a phpcs.xml exclusion of one of these sniffs to its rule. Recall is on phpcs's own tests for the sniff
-(`bench/wpcs-parity.php`); the Mago rules were not written to mirror the sniffs, so most are close
-cousins rather than ports:
+the `generic/*` rules in [Rules](rules.md).
+
+Mago's own core lint rules cover some of the rest. They run on every PHP project, regardless of the
+`wordpress` integration, and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
+sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
+The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
 | WPCS sniff | Mago rule | Recall |
 |:---|:---|---:|
@@ -96,8 +100,8 @@ cousins rather than ports:
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
 | `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` | - |
 
-`mago analyze` covers these (analyzer issue codes, not lint rules, so they are not mapped by the
-migration tool):
+`mago analyze` covers these. They are analyzer issue codes, not lint rules, so the migration tool
+doesn't map them:
 
 | WPCS sniff | `mago analyze` |
 |:---|:---|
@@ -111,7 +115,7 @@ migration tool):
 | `Generic.CodeAnalysis.EmptyStatement` | partly: `no-empty-loop` (lint) covers empty loops, not an empty `if` |
 | `Universal.CodeAnalysis.ConstructorDestructorReturn` | partly: a semantics error for a return type on `__construct`/`__destruct`, not a `return $value;` inside one |
 
-Enable these (and the rest of Mago's ~100 core rules) the normal way, in `mago.toml`:
+Enable these, and the rest of Mago's ~100 core rules, in `mago.toml`:
 
 ```toml
 [linter.rules]
@@ -121,29 +125,50 @@ Enable these (and the rest of Mago's ~100 core rules) the normal way, in `mago.t
 ## Not ported
 
 Formatting sniffs (whitespace, alignment, braces, quote style, keyword and tag casing not listed
-above) are not ported: that is `mago format`'s job (see [Formatting](formatting.md)).
+above) are not ported. That is `mago format`'s job (see [Formatting](formatting.md)).
 
 <details>
 <summary>Remaining WPCS sniffs with no Mago equivalent</summary>
 
-Generic sniffs that enforce a convention rather than catch a bug, left unported (checked against
-`mago lint` with every core rule on and `mago analyze`; none covers them): `Squiz.PHP.CommentedOutCode`,
-`Squiz.Scope.MethodScope`, `Universal.CodeAnalysis.NoDoubleNegative`,
-`Universal.Namespaces.DisallowDeclarationWithoutName`, `Universal.Namespaces.OneDeclarationPerFile`,
-`Universal.NamingConventions.NoReservedKeywordParameterNames`, `Universal.UseStatements.NoUselessAliases`.
+Generic sniffs that enforce a convention rather than catch a bug. Left unported; checked against
+`mago lint` with every core rule on and `mago analyze`, and neither covers them:
+
+- `Squiz.PHP.CommentedOutCode`
+- `Squiz.Scope.MethodScope`
+- `Universal.CodeAnalysis.NoDoubleNegative`
+- `Universal.Namespaces.DisallowDeclarationWithoutName`
+- `Universal.Namespaces.OneDeclarationPerFile`
+- `Universal.NamingConventions.NoReservedKeywordParameterNames`
+- `Universal.UseStatements.NoUselessAliases`
 
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
-`Generic.Strings.UnnecessaryHeredoc`, `Modernize.FunctionCalls.Dirname`,
-`Modernize.FunctionCalls.Dirname.Nested`, `PEAR.Files.IncludingFile`, `PSR12.Files.FileHeader`,
-`PSR12.Keywords.ShortFormTypeKeywords`, `PSR2.Classes.PropertyDeclaration`, `PSR2.ControlStructures.ElseIfDeclaration`,
-`PSR2.Methods.MethodDeclaration`, `Squiz.Classes.SelfMemberReference`,
-`Squiz.Operators.IncrementDecrementUsage`, `Squiz.Operators.ValidLogicalOperators`, `Squiz.Strings.DoubleQuoteUsage`,
-`Universal.Attributes.DisallowAttributeParentheses`, `Universal.Classes.ModifierKeywordOrder`,
-`Universal.CodeAnalysis.NoEchoSprintf`, `Universal.CodeAnalysis.StaticInFinalClass`,
-`Universal.Constants.LowercaseClassResolutionKeyword`, `Universal.Constants.ModifierKeywordOrder`,
-`Universal.Constants.UppercaseMagicConstants`, `Universal.ControlStructures.DisallowLonelyIf`,
-`Universal.Files.SeparateFunctionsFromOO`, `Universal.Operators.DisallowStandalonePostIncrementDecrement`,
-`Universal.PHP.LowercasePHPTag`, `Universal.UseStatements.DisallowMixedGroupUse`,
-`Universal.UseStatements.LowercaseFunctionConst`, `Universal.UseStatements.NoLeadingBackslash`.
+
+- `Generic.Strings.UnnecessaryHeredoc`
+- `Modernize.FunctionCalls.Dirname`
+- `Modernize.FunctionCalls.Dirname.Nested`
+- `PEAR.Files.IncludingFile`
+- `PSR12.Files.FileHeader`
+- `PSR12.Keywords.ShortFormTypeKeywords`
+- `PSR2.Classes.PropertyDeclaration`
+- `PSR2.ControlStructures.ElseIfDeclaration`
+- `PSR2.Methods.MethodDeclaration`
+- `Squiz.Classes.SelfMemberReference`
+- `Squiz.Operators.IncrementDecrementUsage`
+- `Squiz.Operators.ValidLogicalOperators`
+- `Squiz.Strings.DoubleQuoteUsage`
+- `Universal.Attributes.DisallowAttributeParentheses`
+- `Universal.Classes.ModifierKeywordOrder`
+- `Universal.CodeAnalysis.NoEchoSprintf`
+- `Universal.CodeAnalysis.StaticInFinalClass`
+- `Universal.Constants.LowercaseClassResolutionKeyword`
+- `Universal.Constants.ModifierKeywordOrder`
+- `Universal.Constants.UppercaseMagicConstants`
+- `Universal.ControlStructures.DisallowLonelyIf`
+- `Universal.Files.SeparateFunctionsFromOO`
+- `Universal.Operators.DisallowStandalonePostIncrementDecrement`
+- `Universal.PHP.LowercasePHPTag`
+- `Universal.UseStatements.DisallowMixedGroupUse`
+- `Universal.UseStatements.LowercaseFunctionConst`
+- `Universal.UseStatements.NoLeadingBackslash`
 
 </details>

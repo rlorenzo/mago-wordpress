@@ -1,17 +1,18 @@
 # Benchmarks
 
 `bench/run.sh <project> <text-domain> <prefix>` times phpcs (`WordPress-Extra`, WPCS 3.4.1,
-`--parallel=8`) against `mago lint` running only this extension's rules, mean of three runs after a
-warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.51.0). This is not an
-apples-to-apples comparison of the same rule set: `WordPress-Extra` also runs WPCS's formatting and
-generic sniffs, while the mago side runs this extension's rules only.
+`--parallel=8`) against `mago lint` running only this extension's rules. Each figure is the mean of
+three runs after a warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.51.0).
+
+The comparison isn't apples to apples. `WordPress-Extra` also runs WPCS's formatting and generic
+sniffs, while the mago side runs this extension's rules only.
 
 The bake-off covers the top 10 plugins on WordPress.org by active installs, plus WordPress core
-itself (`src/` from [wordpress-develop](https://github.com/WordPress/wordpress-develop), text
-domain `default`, prefix `wp`). WPCS ships a narrower `WordPress-Core` ruleset for core, but this
-table runs the same `WordPress-Extra` comparison as the plugins throughout, for consistency.
-`classic-editor`, next in active-install rank, was skipped (1 PHP file after excludes) in favour of
-`wp-mail-smtp`, the next plugin down the list.
+(`src/` from [wordpress-develop](https://github.com/WordPress/wordpress-develop), text domain
+`default`, prefix `wp`). WPCS ships a narrower `WordPress-Core` ruleset for core, but the table runs
+the same `WordPress-Extra` comparison throughout, for consistency. `classic-editor`, next in
+active-install rank, was skipped (1 PHP file after excludes) in favour of `wp-mail-smtp`, the next
+plugin down the list.
 
 | Codebase | Version | Active installs | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
 |:---|:---|---:|---:|---:|---:|---:|
@@ -31,10 +32,11 @@ table runs the same `WordPress-Extra` comparison as the plugins throughout, for 
 ¹ WordPress.org publishes active-install counts for plugins only; core has no equivalent figure.
 
 Measured 2026-10-01 on the plugins' release zips (vendor and tests excluded) and a wordpress-develop
-checkout, `mago` at 1.51.0 and this package at 1.2.0, with the rules that are on by default (phpcs
-suppression comments honoured; load average 5–9 from background services, so expect some noise). The
-mago column includes starting the PHP worker. mago never lost a single-codebase comparison. Full
-output, per-codebase mago issue counts by rule, and exact reproduction commands are in
-[`bench/results/2026-10-01-bakeoff.md`](../bench/results/2026-10-01-bakeoff.md).
-Every rule PR re-runs the bake-off (`bench/bakeoff.sh`) and commits the per-rule counts next to it;
-the newest `*-bakeoff.md` in [`bench/results/`](../bench/results/) has the current counts.
+checkout, with `mago` at 1.51.0, this package at 1.2.0 and the rules that are on by default. phpcs
+suppression comments are honoured. Load average was 5–9 from background services, so expect some
+noise. The mago column includes starting the PHP worker. mago never lost a single-codebase comparison.
+
+Full output, per-codebase mago issue counts by rule and exact reproduction commands are in
+[`bench/results/2026-10-01-bakeoff.md`](../bench/results/2026-10-01-bakeoff.md). Every rule PR
+re-runs the bake-off (`bench/bakeoff.sh`) and commits the per-rule counts next to it; the newest
+`*-bakeoff.md` in [`bench/results/`](../bench/results/) has the current counts.

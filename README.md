@@ -8,8 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 WordPress Coding Standards for [Mago](https://github.com/carthage-software/mago). This extension
-ports the WPCS lint sniffs to Mago's linter, so a WordPress plugin or theme is checked in seconds
-instead of minutes.
+ports the WPCS lint sniffs to Mago's linter, so a plugin or theme is checked in seconds, not
+minutes.
 
 ## 2–12× faster than phpcs
 
