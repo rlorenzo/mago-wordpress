@@ -144,6 +144,13 @@ final class Levels
             'SpaceAfter' => 'error',
             'SpaceBefore' => 'error',
         ],
+        'Squiz.ControlStructures.ControlSignature' => [
+            'NewlineAfterOpenBrace' => 'error',
+            'SpaceAfterCloseBrace' => 'error',
+            'SpaceAfterCloseParenthesis' => 'error',
+            'SpaceAfterKeyword' => 'error',
+            'SpaceBeforeSemicolon' => 'error',
+        ],
         'Squiz.Operators.ValidLogicalOperators' => [
             'NotAllowed' => 'error',
         ],

@@ -90,6 +90,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | Rule | Level | Ports | Checks |
 |:---|:---|:---|:---|
 | `generic/byte-order-mark` | Error | `Generic.Files.ByteOrderMark` | a UTF-8 or UTF-16 byte order mark at the start of the file |
+| `generic/control-signature` | Error | `Squiz.ControlStructures.ControlSignature` | only `SpaceAfterCloseBrace`: a closing brace not followed by one space before `else`, `elseif`, `catch`, `finally` or a do-`while`, such as `} // note` then `else` on the next line, which `mago format` keeps; fixed where no comment is in the way. The sniff's other codes are `mago format`'s job |
 | `generic/disallow-alternative-php-tags` | Warning | `Generic.PHP.DisallowAlternativePHPTags` | `<%`, `<%=` and `<script language="php">` in inline HTML (removed in PHP 7, so the code inside is output as HTML) |
 | `generic/disallow-lonely-if` | Error | `Universal.ControlStructures.DisallowLonelyIf` | an `else` block whose only statement is an `if`; the fix rewrites the brace form to `elseif` as phpcbf does (comments around the inner `if` and the alternative syntax are not fixed) |
 | `generic/disallow-size-functions-in-loops` | Error | `Squiz.PHP.DisallowSizeFunctionsInLoops` | `count()`, `sizeof()` or `strlen()` in a `while`/do-`while` condition or a `for` loop's test part |
