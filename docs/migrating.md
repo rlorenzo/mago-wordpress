@@ -39,8 +39,7 @@ vendor/bin/mago-wordpress migrate --write
 - Exclusions of a message code that only a Mago core rule ports (core rules have no message codes).
 - `<include-pattern>`.
 - `type="relative"` patterns inside a rule.
-- Properties with no setting (`customAllowedFunctionsList`, `exclude` on a sniff only a Mago core
-  rule ports, ...).
+- Properties with no setting (`exclude` on a sniff only a Mago core rule ports, ...).
 - Custom or third-party standards (`WooCommerce-Core`, `Jetpack`). Their contents are not followed,
   so every extension rule stays on.
 - Non-WordPress sniffs. See [Generic sniffs](wpcs-coverage.md#generic-sniffs) for the Mago rules
@@ -65,7 +64,7 @@ Inline `// phpcs:set` comments are not read.
 ## Converting phpcs comments to Mago pragmas
 
 This package's rules honour `phpcs:ignore` comments, but Mago core rules (`no-debug-symbols`,
-`no-error-control-operator`, the `Generic.*` ports) never do, and a phpcs comment never reports as
+`no-ini-set`, `constant-name` and the other core rules that cover generic sniffs) never do, and a phpcs comment never reports as
 stale. `vendor/bin/mago-wordpress convert-comments` rewrites them as `@mago-expect` pragmas:
 
 ```sh

@@ -13,6 +13,7 @@ use function file_get_contents;
 use function file_put_contents;
 use function implode;
 use function json_encode;
+use function str_replace;
 use function unlink;
 
 /**
@@ -322,11 +323,27 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringNotContainsString('Generic.Metrics', (string) json_encode($result['extra']));
         self::assertSame(
             [
+                'Squiz.Commenting.FunctionComment.Missing without Squiz.Commenting.FunctionComment.WrongStyle: missing-docs also reports a declaration whose comment is not a `/**` docblock (phpcs reports that as WrongStyle); turn the comment into a docblock or add @mago-expect lint:missing-docs',
                 'property absoluteComplexity on Generic.Metrics.CyclomaticComplexity: no equivalent',
                 'property absoluteNestingLevel on Generic.Metrics.NestingLevel: no equivalent',
             ],
             $result['unmapped'],
         );
+        self::assertStringContainsString('which phpcs left to WrongStyle', $toml);
+    }
+
+    public function testExcludedMissingSniffReportsNoWrongStyleDifference(): void
+    {
+        $xml =
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress-Extra"/>'
+            . '<rule ref="Squiz.Commenting.ClassComment.Missing"><exclude-pattern>*</exclude-pattern></rule>'
+            . '<rule ref="Squiz.Commenting.VariableComment.Missing"/></ruleset>';
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+
+        $unmapped = implode("\n", $result['unmapped']);
+        self::assertStringContainsString('VariableComment.WrongStyle', $unmapped);
+        self::assertStringNotContainsString('ClassComment.WrongStyle', $unmapped);
     }
 
     public function testClassAndVariableCommentsTurnOnClassesAndProperties(): void
@@ -341,7 +358,20 @@ final class PhpcsMigrationTest extends TestCase
             'missing-docs = { enabled = true, functions = false, methods = false, classes = true, properties = true,',
             $result['toml'],
         );
-        self::assertSame([], $result['unmapped']);
+        // Neither ruleset names WrongStyle, which phpcs reports for a non-docblock comment.
+        self::assertCount(2, $result['unmapped']);
+        self::assertStringContainsString('ClassComment.WrongStyle', $result['unmapped'][0]);
+
+        $result = PhpcsMigration::migrate(
+            str_replace(
+                '</ruleset>',
+                '<rule ref="Squiz.Commenting.ClassComment"/><rule ref="Squiz.Commenting.VariableComment.WrongStyle"/></ruleset>',
+                $xml,
+            ),
+            'phpcs.xml',
+        );
+        self::assertNotNull($result);
+        self::assertStringNotContainsString('missing-docs also reports', implode("\n", $result['unmapped']));
     }
 
     public function testMetricDefaultsAndExclusion(): void

@@ -164,5 +164,5 @@ Without an `extra.mago-wordpress` block, the same exclusions are read from `phpc
 - a `<severity>` below 5
 - `<exclude-pattern>` inside a `<rule ref>`
 
-Levels of extension rules can't be changed. Mago's own core rules are configured in `mago.toml` as
-usual.
+Change an extension rule's level with the `levels` setting above. Mago's own core rules are
+configured in `mago.toml` as usual.
