@@ -46,6 +46,10 @@ are off, and so are Mago's own rules that no WPCS sniff runs (`strict-types`, `n
 `cyclomatic-complexity` and the like), so a project that was clean under phpcs starts clean.
 All three include a WordPress formatter preset.
 
+Each rule reports at WPCS's level, and `mago lint` fails only on errors. phpcs also failed on
+warnings, so pass `--minimum-fail-level warning` to keep that. `phpcs -n` corresponds to
+`--minimum-report-level error`. See [Migrating](docs/migrating.md).
+
 The worker runs as PHP inside your project and loads its Composer autoloader, like PHPUnit or
 PHPStan, so only lint projects you trust.
 

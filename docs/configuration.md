@@ -107,6 +107,13 @@ extend the escaping, auto-escaped and printing function lists of `wordpress/esca
 `allowed-custom-properties` lists mixed-case object properties `wordpress/valid-variable-name`
 accepts (WPCS's `allowed_custom_properties`), such as `childNodes` for `DOMDocument`.
 
+`levels` sets a rule's level, keyed by rule code: `{"wordpress/capital-p-dangit": "error"}`.
+Values are `error`, `warning`, `note` or `help`. An unknown rule code or level stops the lint run
+with a message naming the entry (`mago-wordpress: levels: unknown rule ...`). In the phpcs.xml fallback, a `<type>` on a whole
+sniff (`<rule ref="WordPress.WP.CapitalPDangit"><type>error</type></rule>`) sets it for the rules
+that port that sniff. A `<type>` on one message code is ignored, because a Mago rule has one level.
+The default levels are WPCS's: see [Rules](rules.md).
+
 Other WPCS sniff properties, under their own names:
 
 | Setting | WPCS property | Effect |

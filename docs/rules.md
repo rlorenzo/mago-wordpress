@@ -4,8 +4,8 @@
 |:---|:---|:---|:---|
 | `wordpress/alternative-functions` | Warning | `WordPress.WP.AlternativeFunctions` | PHP functions with a WordPress alternative (cURL, `parse_url()`, `json_encode()`, `file_get_contents()` on a remote URL, direct filesystem calls, `strip_tags()`, `rand()`), once `minimum-wp-version` has the alternative; replaces Mago's core `use-wp-functions` |
 | `wordpress/assignment-in-ternary-condition` | Warning | `WordPress.CodeAnalysis.AssignmentInTernaryCondition` | a variable, array element or property assignment inside a parenthesized ternary condition |
-| `wordpress/capabilities` | Warning | `WordPress.WP.Capabilities` | roles, deprecated capabilities and unknown capabilities passed to `current_user_can()`, `add_menu_page()` and the other capability checks; accepts `custom-capabilities` |
-| `wordpress/capital-p-dangit` | Note | `WordPress.WP.CapitalPDangit` | "Wordpress"/"wordpress"/"word press" misspellings in strings, inline HTML, comments, class-like and namespace names (not in URLs, paths, arrays or constant declarations) |
+| `wordpress/capabilities` | Error | `WordPress.WP.Capabilities` | roles, deprecated capabilities and unknown capabilities passed to `current_user_can()`, `add_menu_page()` and the other capability checks; accepts `custom-capabilities` |
+| `wordpress/capital-p-dangit` | Warning | `WordPress.WP.CapitalPDangit` | "Wordpress"/"wordpress"/"word press" misspellings in strings, inline HTML, comments, class-like and namespace names (not in URLs, paths, arrays or constant declarations) |
 | `wordpress/class-name-case` | Warning | `WordPress.WP.ClassNameCase` | a WordPress core, default-theme or bundled-library (getID3, PHPMailer, Requests, SimplePie, Avifinfo, AI Client) class referenced with the wrong case (instantiation, static call, class constant, `extends`, `implements`) |
 | `wordpress/cron-interval` | Warning | `WordPress.WP.CronInterval` | `cron_schedules` intervals under `min-cron-interval` (default 900 seconds); closures, arrow functions, and callbacks naming a function or method declared in the same file (string, array, or first-class callable) are inspected, and an unresolvable callback or interval gets a `ChangeDetected` warning |
 | `wordpress/db-restricted-classes` | Error | `WordPress.DB.RestrictedClasses` | `mysqli`, `PDO` and `PDOStatement` usage |
@@ -15,7 +15,7 @@
 | `wordpress/discouraged-wp-functions` | Warning | `WordPress.WP.DiscouragedFunctions`, `WordPress.PHP.DiscouragedPHPFunctions`, `WordPress.PHP.DevelopmentFunctions` | `query_posts()`, `wp_reset_query()`, serialization, obfuscation, system calls, debug output |
 | `wordpress/dont-extract` | Error | `WordPress.PHP.DontExtract` | `extract()` |
 | `wordpress/enqueued-resource-parameters` | Warning | `WordPress.WP.EnqueuedResourceParameters` | missing, `null`, or falsy `$ver` and missing `$in_footer` on enqueue and register calls |
-| `wordpress/enqueued-resources` | Warning | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
+| `wordpress/enqueued-resources` | Error | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
 | `wordpress/escape-output` | Error | `WordPress.Security.EscapeOutput` | unescaped output from `echo`, `print`, `<?=`, `exit`/`die`, uncaught `throw` and the printing functions (`_e()`, `printf()`, `wp_die()`, ...); WPCS's escaping and auto-escaped lists, plus `custom-escaping-functions`, `custom-auto-escaped-functions` and `custom-printing-functions`. Replaces Mago's `no-unescaped-output`, which the shipped config turns off |
 | `wordpress/escaped-not-translated` | Warning | `WordPress.CodeAnalysis.EscapedNotTranslated` | `esc_html()`/`esc_attr()` called with more than one argument, which likely should be `esc_html__()`/`esc_attr__()` |
 | `wordpress/file-name` | Error | `WordPress.Files.FileName` | file names not lowercase and hyphenated, a class file missing its `class-` prefix, a templated `wp-includes` file missing its `-template` suffix |
@@ -26,7 +26,7 @@
 | `wordpress/plugin-menu-slug` | Warning | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | Warning | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` over `max-posts-per-page` (default 100; `-1` and `nopaging` are not flagged, as in WPCS) in any array literal, `$args['key'] = ...`/`??=` assignment, or `posts_per_page=999`-style query string (it does not follow `$args` variables into `WP_Query`) |
 | `wordpress/preg-quote-delimiter` | Warning | `WordPress.PHP.PregQuoteDelimiter` | `preg_quote()` called with arguments but no `$delimiter`; replaces Mago's core `require-preg-quote-delimiter` |
-| `wordpress/prefix-all-globals` | Warning | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants, hook names and file-scope variables (`NonPrefixedVariableFound`), and prefixes shorter than four characters (`ShortPrefixPassed`); inert until `prefixes` is configured. See [Theme templates](#prefix-all-globals-in-theme-templates) |
+| `wordpress/prefix-all-globals` | Error | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants, hook names and file-scope variables (`NonPrefixedVariableFound`), and prefixes shorter than four characters (`ShortPrefixPassed`); inert until `prefixes` is configured. See [Theme templates](#prefix-all-globals-in-theme-templates) |
 | `wordpress/prepared-sql` | Error | `WordPress.DB.PreparedSQL` | variables, function calls and interpolated variables in the query passed to `$wpdb->query()`, `get_var()`, `get_col()`, `get_row()`, `get_results()` and `prepare()`, unless escaped (`esc_sql()`, `absint()`, `intval()`, `(int)`) or `$wpdb` itself; replaces Mago's core `prepared-sql` |
 | `wordpress/prepared-sql-placeholders` | Error | `WordPress.DB.PreparedSQLPlaceholders` | quoted, unsupported or unescaped placeholders, SQL wildcards in `LIKE` operands, dynamic `IN ()` lists and count mismatches in `$wpdb->prepare()` |
 | `wordpress/prepared-sql-unquoted-complex-placeholder` | Warning | `WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder` | unquoted complex placeholders (`%1$s`, `%05s`, `%'.10s`) in `$wpdb->prepare()` queries |
@@ -36,17 +36,17 @@
 | `wordpress/strict-in-array` | Warning | `WordPress.PHP.StrictInArray` | `in_array()`, `array_search()` and `array_keys()` called without `true` as the `$strict` argument |
 | `wordpress/type-casts` | Error | `WordPress.PHP.TypeCasts` | `(double)`/`(real)` normalized to `(float)`, `(unset)` forbidden, `(binary)` and binary string literals discouraged |
 | `wordpress/valid-function-name` | Error | `WordPress.NamingConventions.ValidFunctionName` | function and method names not in snake_case, and double-underscore names that are not PHP magic methods |
-| `wordpress/valid-hook-name` | Warning | `WordPress.NamingConventions.ValidHookName` | hook names with uppercase letters or separators other than `_` and `additional-word-delimiters` |
+| `wordpress/valid-hook-name` | Error | `WordPress.NamingConventions.ValidHookName` | hook names with uppercase letters or separators other than `_` and `additional-word-delimiters` |
 | `wordpress/valid-post-type-slug` | Error | `WordPress.NamingConventions.ValidPostTypeSlug` | invalid characters, reserved names, a reserved prefix, or a slug over 20 characters in `register_post_type()` |
 | `wordpress/valid-variable-name` | Error | `WordPress.NamingConventions.ValidVariableName` | variables, properties and object property accesses not in snake_case, including interpolated variables |
 | `wordpress/validated-sanitized-input` | Error | `WordPress.Security.ValidatedSanitizedInput` | superglobal array elements read without an `isset()`/`empty()`/`array_key_exists()`/`??` check, without `wp_unslash()`, or without a sanitizing function (`custom-sanitizing-functions`, `custom-unslashing-sanitizing-functions`), and superglobals interpolated into strings |
-| `wordpress/wp-date-time` | Warning | `WordPress.DateTime.RestrictedFunctions`, `WordPress.DateTime.CurrentTimeTimestamp` | `date()`, `date_default_timezone_set()`, `current_time('timestamp')` |
-| `wordpress/wp-deprecated-classes` | Warning | `WordPress.WP.DeprecatedClasses` | deprecated core classes; a deprecation newer than `minimum-wp-version` is reported with a note (WPCS lowers it to a warning) |
-| `wordpress/wp-deprecated-functions` | Warning | `WordPress.WP.DeprecatedFunctions` | 386 deprecated core functions with their replacements; a deprecation newer than `minimum-wp-version` is reported with a note (WPCS lowers it to a warning) |
-| `wordpress/wp-deprecated-parameter-values` | Warning | `WordPress.WP.DeprecatedParameterValues` | calls passing a deprecated value for a still-valid parameter (e.g. `bloginfo('home')`); newer than `minimum-wp-version` is reported with a note |
-| `wordpress/wp-deprecated-parameters` | Warning | `WordPress.WP.DeprecatedParameters` | calls passing a non-default value for a now-ignored deprecated parameter; newer than `minimum-wp-version` is reported with a note |
-| `wordpress/wp-i18n` | Warning | `WordPress.WP.I18n` | wrong, missing or empty text domains, missing or extra arguments, non-literal strings, placeholder-only or HTML-wrapped strings, placeholder mismatches in `_n()`, unordered placeholders, missing `translators:` comments, `_()` and the low-level `translate()` functions |
-| `wordpress/yoda-conditions` | Warning | `WordPress.PHP.YodaConditions` | a comparison with a variable, array element or property on the left and a literal or constant on the right |
+| `wordpress/wp-date-time` | Error | `WordPress.DateTime.RestrictedFunctions`, `WordPress.DateTime.CurrentTimeTimestamp` | `date()`, `date_default_timezone_set()`, `current_time('timestamp')` |
+| `wordpress/wp-deprecated-classes` | Error | `WordPress.WP.DeprecatedClasses` | deprecated core classes; a deprecation newer than `minimum-wp-version` is reported with a note (WPCS lowers it to a warning) |
+| `wordpress/wp-deprecated-functions` | Error | `WordPress.WP.DeprecatedFunctions` | 386 deprecated core functions with their replacements; a deprecation newer than `minimum-wp-version` is reported with a note (WPCS lowers it to a warning) |
+| `wordpress/wp-deprecated-parameter-values` | Error | `WordPress.WP.DeprecatedParameterValues` | calls passing a deprecated value for a still-valid parameter (e.g. `bloginfo('home')`); newer than `minimum-wp-version` is reported with a note |
+| `wordpress/wp-deprecated-parameters` | Error | `WordPress.WP.DeprecatedParameters` | calls passing a non-default value for a now-ignored deprecated parameter; newer than `minimum-wp-version` is reported with a note |
+| `wordpress/wp-i18n` | Error | `WordPress.WP.I18n` | wrong, missing or empty text domains, missing or extra arguments, non-literal strings, placeholder-only or HTML-wrapped strings, placeholder mismatches in `_n()`, unordered placeholders, missing `translators:` comments, `_()` and the low-level `translate()` functions |
+| `wordpress/yoda-conditions` | Error | `WordPress.PHP.YodaConditions` | a comparison with a variable, array element or property on the left and a literal or constant on the right |
 
 ### prefix-all-globals in theme templates
 
@@ -94,7 +94,21 @@ example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Cor
 phpcs.xml fallback leaves out the five rules that only `WordPress-Extra` includes.
 
 52 of the 53 rules are on by default. `parentheses-spacing` runs only with `--only`; see
-[Formatting](formatting.md). Levels are in the tables above.
+[Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
+gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
+Some sniffs report some codes as errors and others as warnings, and the deprecation sniffs decide
+against `minimum-wp-version`. A rule has one level, so it takes the majority one. These rules report
+the minority codes at the majority level: `capabilities` (`Undetermined`, `Unknown`),
+`enqueued-resource-parameters` (`NoExplicitVersion` is a WPCS error),
+`nonce-verification` (`Recommended`), `prefix-all-globals` (dynamic names, `InvalidPrefixPassed`),
+`prepared-sql-placeholders` (`LikeWithoutWildcards`, `ReplacementsWrongNumber`,
+`UnfinishedPrepare`, `UnnecessaryPrepare`), `type-casts` (`BinaryFound`), `valid-hook-name`
+(`UseUnderscores`), `valid-post-type-slug` (`NotStringLiteral`, `PartiallyDynamic`), `wp-date-time`
+(`Requested`), `wp-i18n` (`LowLevelTranslationFunction`, `MismatchedPlaceholders`,
+`MissingArgDomainDefault`, `NoHtmlWrappedStrings`, `SuperfluousDefaultTextDomain`), the deprecation
+rules (newer than `minimum-wp-version`) and `generic/disallow-alternative-php-tags`
+(`ScriptOpenTagFound` is a WPCS error). Use the `levels` setting ([Configuration](configuration.md))
+to change a rule's level.
 
 Function, class, constant and capability lists come from WPCS 3.4.1 (`src/Internal/WordPress/Lists.php`,
 generated by `php bin/generate-lists.php /path/to/WordPress-Coding-Standards`).

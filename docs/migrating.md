@@ -23,6 +23,7 @@ vendor/bin/mago-wordpress migrate --write
 | `<exclude name="WordPress...">`, `<severity>0</severity>` | the same, for that code |
 | `<exclude-pattern>` inside `<rule ref="WordPress...">` | `exclude-patterns` for this package's rules; `exclude` on a Mago core rule when the ref is the whole sniff |
 | `<type>` on a whole sniff ported by a Mago core rule | `level` on that rule |
+| `<type>` on a whole sniff ported by this package's rules | `levels` in `extra.mago-wordpress` |
 | `<rule ref="./other.xml"/>` (a path to a ruleset file that exists) | the file is loaded and merged, as phpcs does; its refs resolve relative to it, and a cycle is cut. Settings in `phpcs.xml` that the worker falls back to follow it too |
 | `Generic.Metrics.CyclomaticComplexity` (`complexity`) | `cyclomatic-complexity` with `threshold` and `method-threshold` set to it, level `warning`; Mago counts `&&`/`\|\|`, phpcs does not |
 | `Generic.Metrics.NestingLevel` (`nestingLevel`) | `excessive-nesting` `threshold = nestingLevel + 1` (measured: Mago counts the function body as level 1) |
@@ -32,7 +33,7 @@ vendor/bin/mago-wordpress migrate --write
 
 ## What it lists as not migrated
 
-- `<type>` on this package's rules or on a single message code.
+- `<type>` on a single message code (a Mago rule has one level).
 - Exclusions of a message code that only a Mago core rule ports (core rules have no message codes).
 - `<include-pattern>`.
 - `type="relative"` patterns inside a rule.
@@ -45,6 +46,13 @@ vendor/bin/mago-wordpress migrate --write
 - `PHPCompatibility` and `testVersion` (PHP 8.1+ target).
 - `absoluteComplexity` and `absoluteNestingLevel`.
 - `<arg>` and `<ini>`.
+
+Each rule reports at the level WPCS gives its sniff.
+`mago lint` exits non-zero only on errors. phpcs also failed on warnings, so if your hook relied on
+that, pass `--minimum-fail-level warning`. `phpcs -n` (no warnings) corresponds to
+`--minimum-report-level error`. Where a WPCS sniff reports both errors and warnings, its rule uses
+one level for all of them, as listed in [Rules](rules.md). For example, `TypeCasts.BinaryFound`
+is an error here and a warning in WPCS.
 
 It ends with how to replace a phpcs hook: `mago lint --minimum-fail-level warning` to fail on
 warnings, `--reporting-format short` for `phpcs --report=emacs`-style lines, and that `phpcs:ignore`

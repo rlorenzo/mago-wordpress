@@ -64,6 +64,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\YodaConditionsRule;
 
 use function fwrite;
+use function implode;
 
 use const STDERR;
 
@@ -153,8 +154,9 @@ final class WordPressExtension
     }
 
     /**
-     * Applies the `levels` setting; a mistyped entry is reported on stderr, which Mago shows,
-     * rather than silently doing nothing.
+     * Applies the `levels` setting. A mistyped entry stops the worker with its message on
+     * stderr: Mago shows a worker's stderr only when the worker exits, and a level setting
+     * that silently did nothing would hide the failures it was meant to raise.
      *
      * @param list<Rule> $rules
      * @return list<Rule>
@@ -162,8 +164,9 @@ final class WordPressExtension
     private static function leveled(Settings $settings, array $rules): array
     {
         [$rules, $problems] = LeveledRule::apply($rules, $settings->levels);
-        foreach ($problems as $problem) {
-            fwrite(STDERR, "mago-wordpress: {$problem}\n");
+        if ($problems !== []) {
+            fwrite(STDERR, 'mago-wordpress: ' . implode("\nmago-wordpress: ", $problems) . "\n");
+            exit(1);
         }
 
         return $rules;
