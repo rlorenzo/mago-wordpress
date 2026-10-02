@@ -5,7 +5,7 @@
  * reports per-line agreement with the sniff's getErrorList()/getWarningList().
  *
  *   php bench/wpcs-parity.php /path/to/WordPress-Coding-Standards [--only=Sniff.Name] [--verbose]
- *       [--phpcs=/path/to/php_codesniffer/src/Standards]
+ *       [--phpcs=/path/to/php_codesniffer/src/Standards] [--phpcsextra=/path/to/PHPCSExtra]
  *
  * Non-WordPress sniffs are run against phpcs's own tests (`--phpcs`, default the global
  * Composer install) and totalled on a separate line.
@@ -31,6 +31,9 @@ namespace PHP_CodeSniffer\Tests\Standards {
     {
         public function setCliValues($filename, $config) {}
     }
+
+    // PHPCSExtra's test base (phpcs 3.13+).
+    abstract class AbstractSniffTestCase extends AbstractSniffUnitTest {}
 }
 
 namespace PHPCSUtils\BackCompat {
@@ -84,11 +87,14 @@ namespace {
         // The global Composer install: $COMPOSER_HOME, else ~/.config/composer.
         $composerHome = getenv('COMPOSER_HOME') ?: (getenv('HOME') ? getenv('HOME') . '/.config/composer' : '');
         $phpcs = $composerHome === '' ? '' : "$composerHome/vendor/squizlabs/php_codesniffer/src/Standards";
+        $phpcsExtra = (getenv('HOME') ?: '') . '/Projects/phpcsextra-src';
         foreach (array_slice($argv, 1) as $arg) {
             if (str_starts_with($arg, '--only=')) {
                 $only = substr($arg, 7);
             } elseif (str_starts_with($arg, '--phpcs=')) {
                 $phpcs = rtrim(substr($arg, 8), '/');
+            } elseif (str_starts_with($arg, '--phpcsextra=')) {
+                $phpcsExtra = rtrim(substr($arg, 13), '/');
             } elseif ($arg === '--verbose') {
                 $verbose = true;
             } else {
@@ -122,10 +128,16 @@ namespace {
 
             [$standard, $category, $name] = explode('.', $sniff, 3);
             $class = "{$name}UnitTest";
-            // Non-WordPress sniffs are tested by phpcs itself (PHPCSExtra ships no tests).
-            [$dir, $fqcn] = $standard === 'WordPress'
-                ? ["$wpcs/WordPress/Tests/$category", "WordPressCS\\WordPress\\Tests\\$category\\$class"]
-                : ["$phpcs/$standard/Tests/$category", "PHP_CodeSniffer\\Standards\\$standard\\Tests\\$category\\$class"];
+            // Non-WordPress sniffs are tested by phpcs itself; Universal and Modernize by a
+            // PHPCSExtra checkout (`--phpcsextra`, default ~/Projects/phpcsextra-src).
+            [$dir, $fqcn] = match ($standard) {
+                'WordPress' => ["$wpcs/WordPress/Tests/$category", "WordPressCS\\WordPress\\Tests\\$category\\$class"],
+                'Universal', 'Modernize', 'NormalizedArrays' => [
+                    "$phpcsExtra/$standard/Tests/$category",
+                    "PHPCSExtra\\$standard\\Tests\\$category\\$class",
+                ],
+                default => ["$phpcs/$standard/Tests/$category", "PHP_CodeSniffer\\Standards\\$standard\\Tests\\$category\\$class"],
+            };
             if (!is_file("$dir/$class.php")) {
                 $rows[] = [$sniff, '-', '-', '-', '-', '-', 'no upstream test'];
                 continue;
