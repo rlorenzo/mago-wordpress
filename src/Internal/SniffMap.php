@@ -140,6 +140,9 @@ final class SniffMap
             'generic/disallow-standalone-post-increment-decrement',
         ],
         'Universal.Operators.StrictComparisons' => ['generic/strict-comparisons'],
+        'Universal.NamingConventions.NoReservedKeywordParameterNames' => [
+            'generic/no-reserved-keyword-parameter-names',
+        ],
     ];
 
     /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */

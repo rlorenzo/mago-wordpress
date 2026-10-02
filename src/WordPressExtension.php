@@ -52,6 +52,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoReservedKeywordParameterNamesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
@@ -223,6 +224,7 @@ final class WordPressExtension
                 new SwitchDeclarationRule($report),
                 new UnnecessaryHeredocRule($report),
                 new NoDoubleNegativeRule($report),
+                new NoReservedKeywordParameterNamesRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),

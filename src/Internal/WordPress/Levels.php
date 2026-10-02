@@ -216,6 +216,9 @@ final class Levels
         'Universal.Files.SeparateFunctionsFromOO' => [
             'Mixed' => 'error',
         ],
+        'Universal.NamingConventions.NoReservedKeywordParameterNames' => [
+            '*Found' => 'warning',
+        ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
         ],
