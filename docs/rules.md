@@ -28,7 +28,7 @@
 | `wordpress/plugin-menu-slug` | Warning | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | Warning | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` over `max-posts-per-page` (default 100; `-1` and `nopaging` are not flagged, as in WPCS) in any array literal, `$args['key'] = ...`/`??=` assignment, or `posts_per_page=999`-style query string (it does not follow `$args` variables into `WP_Query`) |
 | `wordpress/preg-quote-delimiter` | Warning | `WordPress.PHP.PregQuoteDelimiter` | `preg_quote()` called with arguments but no `$delimiter`; replaces Mago's core `require-preg-quote-delimiter` |
-| `wordpress/prefix-all-globals` | Error | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants, hook names and file-scope variables (`NonPrefixedVariableFound`), and prefixes shorter than four characters (`ShortPrefixPassed`); inert until `prefixes` is configured. See [Theme templates](#prefix-all-globals-in-theme-templates) |
+| `wordpress/prefix-all-globals` | Error | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants, hook names and file-scope variables (`NonPrefixedVariableFound`), and prefixes shorter than three characters (`ShortPrefixPassed`); inert until `prefixes` is configured. See [Theme templates](#prefix-all-globals-in-theme-templates) |
 | `wordpress/prepared-sql` | Error | `WordPress.DB.PreparedSQL` | variables, function calls and interpolated variables in the query passed to `$wpdb->query()`, `get_var()`, `get_col()`, `get_row()`, `get_results()` and `prepare()`, unless escaped (`esc_sql()`, `absint()`, `intval()`, `(int)`) or `$wpdb` itself; replaces Mago's core `prepared-sql` |
 | `wordpress/prepared-sql-placeholders` | Error | `WordPress.DB.PreparedSQLPlaceholders` | quoted, unsupported or unescaped placeholders, SQL wildcards in `LIKE` operands, dynamic `IN ()` lists and count mismatches in `$wpdb->prepare()` |
 | `wordpress/prepared-sql-placeholders-warning` | Warning | `WordPress.DB.PreparedSQLPlaceholders` (`LikeWithoutWildcards`, `ReplacementsWrongNumber`, `UnfinishedPrepare`, `UnnecessaryPrepare`) | the warning part of `wordpress/prepared-sql-placeholders`: `LIKE` without wildcards, count mismatches, a query with no placeholders or a stray `%`, and a `prepare()` with nothing to prepare |
@@ -68,9 +68,13 @@ Add root-level templates (`*/my-theme/index.php`, `header.php`, ...) the same wa
 113 linted files this took the variable reports from 525 to 251; the rest were root-level templates
 and admin partials.
 
-A prefix shorter than four characters (a legacy `am_`) is reported as too short in every file, and,
-as in WPCS, it is then not accepted: `am_` names are still reported as unprefixed. Silencing the
-message keeps that behaviour and drops only the per-file reminder (113 reports on the same theme):
+A prefix shorter than three characters (a legacy `am`) is reported as too short, and, as in WPCS,
+it is then not accepted: `am_` names are still reported as unprefixed. WPCS reports the bad prefix
+once per run (once per process with `--parallel`); this rule reports it once per worker, at the top
+of the first file that worker lints. Mago's default pool starts up to one worker per thread, so
+expect between one report and one per thread; `workers = 1` under `[extension-hosts.wordpress]` in
+`mago.toml` makes it exactly one. The same holds for `ForbiddenPrefixPassed` and
+`InvalidPrefixPassed`. Silencing the message keeps the prefix rejected and drops only the reminder:
 
 ```json
 "exclude-patterns": {
