@@ -40,6 +40,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapeOutputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
@@ -210,6 +211,7 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new ForbiddenFunctionsRule($report),
                 new NoLeadingBackslashRule($report),
                 new DirnameRule($report),
                 new NoSilencedErrorsRule($report, $settings),
