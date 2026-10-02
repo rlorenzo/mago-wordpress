@@ -185,6 +185,7 @@ final class PhpcsRuleset
         'PSR2.ControlStructures.SwitchDeclaration',
         'Universal.NamingConventions.NoReservedKeywordParameterNames',
         'Modernize.FunctionCalls.Dirname',
+        'Universal.UseStatements.NoLeadingBackslash',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */

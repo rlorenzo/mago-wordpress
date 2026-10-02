@@ -52,6 +52,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoLeadingBackslashRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoReservedKeywordParameterNamesRule;
@@ -209,6 +210,7 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new NoLeadingBackslashRule($report),
                 new DirnameRule($report),
                 new NoSilencedErrorsRule($report, $settings),
                 new AssignmentInConditionRule($report),

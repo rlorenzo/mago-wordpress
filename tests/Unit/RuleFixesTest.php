@@ -80,6 +80,13 @@ final class RuleFixesTest extends TestCase
             "\$a = __DIR__;\n\$b = __DIR__;\n\$c = dirname( __DIR__, 2 );\n\$d = dirname(__FILE__ /* x */);\n\$e = dirname(__FILE__, \$n);",
         ];
 
+        yield 'no-leading-backslash drops the backslash of an import' => [
+            'generic/no-leading-backslash',
+            '',
+            "use \\Foo\\Bar;\nuse function \\foo, \\Bar\\baz as q;\nuse/*x*/\\Baz;",
+            "use Foo\\Bar;\nuse function foo, Bar\\baz as q;\nuse/*x*/ Baz;",
+        ];
+
         yield 'parentheses-spacing adds the WordPress spaces' => [
             'wordpress/parentheses-spacing',
             '',
