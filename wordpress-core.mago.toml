@@ -13,7 +13,6 @@ extends = "wordpress.mago.toml"
 [linter.rules]
 # WordPress-Docs (missing docblocks) is part of the full WordPress standard only.
 missing-docs = { enabled = false }
-constant-condition = { enabled = false }
 disallowed-functions = { enabled = false }
 no-debug-symbols = { enabled = false }
 no-ini-set = { enabled = false }
