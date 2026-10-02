@@ -122,6 +122,9 @@ final class Levels
             'Underscore' => 'warning',
             'VarUsed' => 'error',
         ],
+        'PSR2.ControlStructures.ElseIfDeclaration' => [
+            'NotAllowed' => 'warning',
+        ],
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
         ],

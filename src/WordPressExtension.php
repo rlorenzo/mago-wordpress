@@ -27,6 +27,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
@@ -163,6 +164,7 @@ final class WordPressExtension
                 new DisallowSizeFunctionsInLoopsRule($report),
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
+                new ElseIfDeclarationRule($report),
                 new ValidClassNameRule($report),
                 new NonExecutableCodeRule($report),
                 new EmptyStatementRule($report),
