@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal;
 
+use Closure;
 use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Syntax\SourceFile;
@@ -60,6 +61,25 @@ final class Report
         $this->excludes = $excludes;
     }
 
+    /** @var null|Closure(Issue, list<string>): void */
+    private ?Closure $sink = null;
+
+    /**
+     * Runs $run with every issue it reports handed to $sink instead of the lint context.
+     *
+     * @param Closure(Issue, list<string>): void $sink
+     * @param Closure(): void $run
+     */
+    public function recording(Closure $sink, Closure $run): void
+    {
+        $this->sink = $sink;
+        try {
+            $run();
+        } finally {
+            $this->sink = null;
+        }
+    }
+
     /**
      * Whether the sniff's `exclude` property drops the group, as WPCS's restriction sniffs
      * skip an excluded group before matching.
@@ -87,7 +107,11 @@ final class Report
             return false;
         }
 
-        $context->report($issue);
+        if ($this->sink !== null) {
+            ($this->sink)($issue, $sniffCodes);
+        } else {
+            $context->report($issue);
+        }
 
         return true;
     }

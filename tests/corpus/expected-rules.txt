@@ -9,6 +9,7 @@ generic/require-explicit-boolean-operator-precedence
 wordpress/alternative-functions
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities
+wordpress/capabilities-warning
 wordpress/capital-p-dangit
 wordpress/class-name-case
 wordpress/cron-interval
@@ -26,6 +27,7 @@ wordpress/file-name
 wordpress/get-meta-single
 wordpress/global-variables-override
 wordpress/nonce-verification
+wordpress/nonce-verification-warning
 wordpress/parentheses-spacing
 wordpress/plugin-menu-slug
 wordpress/posts-per-page
@@ -33,6 +35,7 @@ wordpress/prefix-all-globals
 wordpress/preg-quote-delimiter
 wordpress/prepared-sql
 wordpress/prepared-sql-placeholders
+wordpress/prepared-sql-placeholders-warning
 wordpress/prepared-sql-unquoted-complex-placeholder
 wordpress/restricted-php-functions
 wordpress/safe-redirect
@@ -41,6 +44,7 @@ wordpress/strict-in-array
 wordpress/type-casts
 wordpress/valid-function-name
 wordpress/valid-hook-name
+wordpress/valid-hook-name-warning
 wordpress/valid-post-type-slug
 wordpress/valid-variable-name
 wordpress/validated-sanitized-input
