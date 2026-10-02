@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\CommentConversion;
 
 use function array_column;
+use function array_filter;
 use function dirname;
 use function escapeshellarg;
 use function exec;
@@ -16,6 +17,9 @@ use function file_put_contents;
 use function implode;
 use function symlink;
 
+/**
+ * @mago-expect lint:too-many-methods
+ */
 final class CommentConversionTest extends TestCase
 {
     use TempProject;
@@ -157,6 +161,98 @@ final class CommentConversionTest extends TestCase
                 return $a . $b;
             }
             PHP, $result['source']);
+    }
+
+    public function testDisableWithoutEnableRunsToTheEndOfTheFile(): void
+    {
+        $source = <<<'PHP'
+            <?php
+            // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped
+            // phpcs:disable WordPress.Security.NonceVerification.Missing
+            /**
+             * Prints.
+             */
+            function f( $a ) {
+                echo $a;
+                echo $a;
+            }
+            echo sprintf(
+                /* translators: %s: name */
+                __( 'Hi %s', 'd' ),
+                $_POST['a']
+            );
+            ?>
+            <p><?php echo $b; ?></p>
+            PHP;
+
+        $result = CommentConversion::convert($source, [
+            [8,  'wordpress/escape-output'],
+            [9,  'wordpress/escape-output'],
+            [13, 'wordpress/escape-output'],
+            [14, 'wordpress/nonce-verification'],
+            [17, 'wordpress/escape-output'],
+        ]);
+
+        // The pragma before the sprintf() keeps the translators comment next to its string.
+        self::assertSame(<<<'PHP'
+            <?php
+            /**
+             * Prints.
+             * @mago-expect lint:wordpress/escape-output(2)
+             */
+            function f( $a ) {
+                echo $a;
+                echo $a;
+            }
+            // @mago-expect lint:wordpress/escape-output
+            // @mago-expect lint:wordpress/nonce-verification
+            echo sprintf(
+                /* translators: %s: name */
+                __( 'Hi %s', 'd' ),
+                $_POST['a']
+            );
+            ?>
+            <?php
+            // @mago-expect lint:wordpress/escape-output
+            ?>
+            <p><?php echo $b; ?></p>
+            PHP, $result['source']);
+    }
+
+    /**
+     * Only what the phpcs comments really suppressed (the worker matches message codes) is
+     * claimed, and a message code does not cover a Mago core rule.
+     */
+    public function testOnlySuppressedIssuesAreClaimed(): void
+    {
+        $source = <<<'PHP'
+            <?php
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+            // phpcs:disable Squiz.PHP.DisallowMultipleAssignments.FoundInControlStructure
+            $a = $b = sanitize_text_field( $_POST['a'] );
+            $c = $_POST['c'];
+            PHP;
+
+        $result = CommentConversion::convert(
+            $source,
+            [
+                [4, 'wordpress/validated-sanitized-input'],
+                [4, 'no-multi-assignments'],
+                [5, 'wordpress/validated-sanitized-input'],
+            ],
+            [
+                [4, 'no-multi-assignments'],
+                [5, 'wordpress/validated-sanitized-input'],
+            ],
+        );
+
+        self::assertSame(<<<'PHP'
+            <?php
+            // @mago-expect lint:wordpress/validated-sanitized-input
+            $a = $b = sanitize_text_field( $_POST['a'] );
+            $c = $_POST['c'];
+            PHP, $result['source']);
+        self::assertSame([], array_filter($result['extra']));
     }
 
     public function testSupersededCoreCodesAreRetargetedAndRecounted(): void

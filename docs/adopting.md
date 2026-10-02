@@ -108,12 +108,12 @@ stale phpcs comment never reports. Convert them to Mago pragmas:
 
 ```sh
 vendor/bin/mago-wordpress convert-comments          # dry run: one line per comment
-vendor/bin/mago-wordpress convert-comments --write  # rewrite, re-lint, fail if a pragma is unfulfilled
+vendor/bin/mago-wordpress convert-comments --write  # rewrite, re-lint, fail if anything still needs a phpcs comment
 ```
 
 On the sample: 39 converted, 4 regions, 2 kept as plain comments, 1 dropped, issue counts unchanged.
-Then set `"honor-phpcs-comments": false` in `extra.mago-wordpress`, so a leftover phpcs comment no
-longer hides anything. How each comment is converted: [Migrating](migrating.md#converting-phpcs-comments-to-mago-pragmas).
+When `--write` reports that no phpcs comment suppresses anything any more, set
+`"honor-phpcs-comments": false` in `extra.mago-wordpress`; until then, it lists what is left. How each comment is converted: [Migrating](migrating.md#converting-phpcs-comments-to-mago-pragmas).
 
 Pragma cheat sheet:
 
