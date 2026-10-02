@@ -31,9 +31,10 @@ rules for the sniffs its standard includes and turns the rest off: this package'
 
 All three turn off the Mago core rules that report what no WPCS sniff does (`strict-types`,
 `no-isset`, `no-empty`, `literal-named-argument`, `cyclomatic-complexity`, `halstead`, `file-name`,
-`no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety), and two
-that are mapped to a sniff but report code it accepts: `class-name` (PEAR's `ValidClassName` accepts
-`My_Class`) and `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
+`no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety, among them
+`class-name`, which wants PascalCase where PEAR's `ValidClassName`, ported as
+`generic/valid-class-name`, accepts `My_Class`), and one that is mapped to a sniff but reports code
+it accepts: `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
 templates). Turn any of them back on in your `mago.toml`, for example
 `strict-types = { enabled = true }`.
 
@@ -122,7 +123,7 @@ the `generic/*` rules in [Rules](rules.md).
 
 Mago's own core lint rules cover some of the rest. They don't need the `wordpress` integration;
 each preset keeps the ones its standard's sniffs map to, at the sniff's phpcs level (except
-`class-name` and `no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
+`no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
 sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
 The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
@@ -143,7 +144,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
 | `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` | 57% |
-| `PEAR.NamingConventions.ValidClassName` | `class-name` | 21% |
 | `PSR2.Files.ClosingTag` | `no-closing-tag` | 80% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
