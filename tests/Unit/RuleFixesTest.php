@@ -136,6 +136,21 @@ final class RuleFixesTest extends TestCase
             "final class A {\n\tconst B = 1;\n\tpublic function f(): self {\n\t\treturn self::B ? new self() : \$this;\n\t}\n}",
         ];
 
+        yield 'inline-control-structure adds braces, keeping a trailing comment inside' => [
+            'generic/inline-control-structure',
+            '',
+            "if (\$a) foo(); else bar(); // done\nforeach (\$b as \$c)\n\tbaz(\$c);\nif (\$d);",
+            "if (\$a) { foo(); } else { bar(); // done\n}\nforeach (\$b as \$c) {\n\tbaz(\$c);\n}\nif (\$d) {}",
+        ];
+
+        yield 'inline-control-structure fixes the inner of nested bodies first, like phpcbf; a rerun fixes the outer' =>
+            [
+                'generic/inline-control-structure',
+                '',
+                "\tif (\$a)\n\t\tif (\$b) foo();",
+                "\tif (\$a)\n\t\tif (\$b) { foo();\n\t\t}",
+            ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',
