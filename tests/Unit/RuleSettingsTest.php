@@ -53,6 +53,18 @@ final class RuleSettingsTest extends TestCase
             "\$query = new WP_Query(['posts_per_page' => 500]);",
             0,
         ];
+        yield 'core_allows_silencing_listed_php_functions' => [
+            'wordpress/no-silenced-errors',
+            ['standard' => 'WordPress-Core'],
+            "\$a = @is_file(\$p); \$b = @\\fopen(\$p, 'r'); \$c = @hex2bin(\$p);",
+            1,
+        ];
+        yield 'custom_allowed_functions_list_is_respected' => [
+            'wordpress/no-silenced-errors',
+            ['custom-allowed-functions-list' => ['hex2bin']],
+            "\$a = @is_file(\$p); \$c = @hex2bin(\$p);",
+            1,
+        ];
         yield 'configured_minimum_is_respected' => [
             'wordpress/cron-interval',
             ['min-cron-interval' => 60],

@@ -47,6 +47,7 @@ kan-defect = { enabled = false }
 literal-named-argument = { enabled = false }
 loop-does-not-iterate = { enabled = false }
 no-alias-function = { enabled = false }
+no-assign-in-condition = { enabled = false }
 no-boolean-flag-parameter = { enabled = false }
 no-closing-tag = { enabled = false }
 no-duplicate-match-arm = { enabled = false }
@@ -55,6 +56,7 @@ no-empty = { enabled = false }
 no-empty-catch-clause = { enabled = false }
 no-empty-comment = { enabled = false }
 no-empty-loop = { enabled = false }
+no-error-control-operator = { enabled = false }
 no-ffi = { enabled = false }
 no-global = { enabled = false }
 no-hash-comment = { enabled = false }
@@ -63,6 +65,7 @@ no-insecure-comparison = { enabled = false }
 no-isset = { enabled = false }
 no-literal-password = { enabled = false }
 no-missing-format-argument = { enabled = false }
+no-multi-assignments = { enabled = false }
 no-nested-ternary = { enabled = false }
 no-php-tag-terminator = { enabled = false }
 no-protected-in-final = { enabled = false }
@@ -117,9 +120,7 @@ disallowed-functions = { level = "error" }
 lowercase-keyword = { level = "error" }
 lowercase-type-hint = { level = "error" }
 no-debug-symbols = { level = "warning" }
-no-error-control-operator = { level = "warning" }
 no-goto = { level = "warning" }
-no-multi-assignments = { level = "error" }
 no-noop = { level = "warning" }
 no-redundant-final = { level = "warning" }
 no-redundant-method-override = { level = "warning" }

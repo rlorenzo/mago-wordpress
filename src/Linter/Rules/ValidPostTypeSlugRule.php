@@ -30,7 +30,9 @@ use function strtolower;
  *
  * WPCS mixes `addError()` and `addWarning()` in this sniff; a Mago rule
  * reports at one level, so every check here reports at `Level::Error`, the
- * level of the sniff's majority (slug validity) checks.
+ * level of the sniff's majority (slug validity) checks. A slug that is not a
+ * string literal is not reported: phpcs reports it at severity 3, below the
+ * default of 5 that phpcs and the WordPress standards run at.
  *
  * @mago-expect lint:cyclomatic-complexity
  */
@@ -106,19 +108,10 @@ final class ValidPostTypeSlugRule extends CallRule
             return;
         }
 
+        // A slug that is not a string literal (a constant, a variable, a call) is WPCS's
+        // NotStringLiteral, a severity-3 warning that phpcs hides at its default severity of 5.
         $literal = $this->literal($context->file, $argument);
         if ($literal === null) {
-            $this->report->issue(
-                $context,
-                Issue::new(
-                    "register_post_type() called with a post type slug that is not a string literal: {$context->file->getText(
-                        $argument,
-                    )}.",
-                    $argument->span,
-                )->withHelp('It is not possible to automatically determine the validity of a dynamic post type slug.'),
-                [self::SNIFF . '.NotStringLiteral'],
-            );
-
             return;
         }
 

@@ -63,25 +63,21 @@ register_post_type("my_post_type_{$suffix}");
 // @mago-expect lint:wordpress/valid-post-type-slug
 register_post_type("my_\qtype", []);
 
-// non_string_literal_function_call
-// @mago-expect lint:wordpress/valid-post-type-slug
+// non_string_literal_function_call_is_not_reported (WPCS severity 3)
 register_post_type(sprintf('my_post_type_%d', $suffix));
 
-// non_string_literal_constant
-// @mago-expect lint:wordpress/valid-post-type-slug
+// non_string_literal_constant_is_not_reported (WPCS severity 3)
 register_post_type(POST_TYPE_CONST);
 
-// non_string_literal_variable
-// @mago-expect lint:wordpress/valid-post-type-slug
+// non_string_literal_variable_is_not_reported (WPCS severity 3)
 register_post_type($post_type_name);
 
-// non_string_literal_null
-// @mago-expect lint:wordpress/valid-post-type-slug
+// non_string_literal_null_is_not_reported (WPCS severity 3)
 register_post_type(null, []);
 
-// non_string_literal_int
-// @mago-expect lint:wordpress/valid-post-type-slug
+// non_string_literal_int_is_not_reported (WPCS severity 3)
 register_post_type(1000, []);
+register_post_type(self::POST_TYPE, []);
 
 // safeguard_php_8_named_arguments_ok
 register_post_type(args: [], post_type: 'my_own_post_type');

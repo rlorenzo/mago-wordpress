@@ -114,7 +114,7 @@ The other mixed rules take the majority level and report the minority codes at i
 `capabilities` (`Deprecated` newer than `minimum-wp-version`),
 `enqueued-resource-parameters` (`NoExplicitVersion` is a WPCS error),
 `prefix-all-globals` (dynamic names, `InvalidPrefixPassed`), `type-casts` (`BinaryFound`),
-`valid-post-type-slug` (`NotStringLiteral`, `PartiallyDynamic`), `wp-date-time` (`Requested`),
+`valid-post-type-slug` (`PartiallyDynamic`; `NotStringLiteral` is not reported, as phpcs hides its severity 3), `wp-date-time` (`Requested`),
 `wp-i18n` (`LowLevelTranslationFunction`, `MismatchedPlaceholders`, `MissingArgDomainDefault`,
 `NoHtmlWrappedStrings`, `SuperfluousDefaultTextDomain`), the deprecation rules (newer than
 `minimum-wp-version`) and `generic/disallow-alternative-php-tags` (`ScriptOpenTagFound` is a WPCS

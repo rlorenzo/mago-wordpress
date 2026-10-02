@@ -52,7 +52,12 @@ namespace {
         'minimum_wp_version' => 'minimum-wp-version',
         // Keyed by the sniff the directive names (settingsRegions()).
         'exclude' => 'exclude-groups',
+        // NoSilencedErrors uses the PHP function list under WordPress-Core only (SNIFF_DEFAULTS).
+        'usePHPFunctionsList' => 'standard',
     ]);
+
+    /** Settings that reproduce a sniff's own property defaults where this package derives them from the standard. */
+    const SNIFF_DEFAULTS = ['WordPress.PHP.NoSilencedErrors' => ['standard' => 'WordPress-Core']];
 
     /** What the test classes' setCliValues() set per file, mirrored here. */
     const CLI_OVERRIDES = [
@@ -65,6 +70,12 @@ namespace {
 
     /** Test files that depend on groups the test class injects into the sniff; no setting reproduces them. */
     const SKIP_FILES = ['RestrictedClassesUnitTest.2.inc', 'RestrictedClassesUnitTest.3.inc'];
+
+    /**
+     * Expected lines whose only message has a severity below phpcs's default of 5, which phpcs
+     * (and so this package) does not report: ValidPostTypeSlug's NotStringLiteral (severity 3).
+     */
+    const LOW_SEVERITY_LINES = ['ValidPostTypeSlugUnitTest.1.inc' => [27, 28, 29, 30, 31, 33, 34, 67]];
 
     (static function (array $argv): void {
         $wpcs = null;
@@ -135,7 +146,7 @@ namespace {
                     continue;
                 }
 
-                $expected = expectedLines($test, $base);
+                $expected = array_diff_key(expectedLines($test, $base), array_flip(LOW_SEVERITY_LINES[$base] ?? []));
                 $unmapped = [];
                 $regions = settingsRegions($path, $sniff, $unmapped);
                 if ($sniff === 'WordPress.Files.FileName') {
@@ -303,8 +314,8 @@ namespace {
      */
     function settingsRegions(string $path, string $sniff, array &$unmapped): array
     {
-        $regions = [1 => []];
-        $current = [];
+        $current = SNIFF_DEFAULTS[$sniff] ?? [];
+        $regions = [1 => $current];
         foreach (explode("\n", (string) file_get_contents($path)) as $index => $text) {
             if (
                 preg_match('/phpcs:set\s+(\S+)\s+([A-Za-z_]\w*)(\[\])?[ \t]*([^*\n]*?)\s*(?:\*\/)?\s*$/', $text, $match) !== 1
@@ -320,7 +331,9 @@ namespace {
 
             [, , $property, $isList, $value] = $match;
             $key = SETTING_KEYS[$property];
-            if ($key === 'exclude-groups') {
+            if ($key === 'standard') {
+                $current[$key] = $value === 'false' ? 'WordPress' : 'WordPress-Core';
+            } elseif ($key === 'exclude-groups') {
                 $current[$key] = [$sniff => array_values(array_filter(explode(',', $value), 'strlen'))];
             } elseif ($isList !== '') {
                 $current[$key] = array_values(array_filter(explode(',', $value), 'strlen'));
