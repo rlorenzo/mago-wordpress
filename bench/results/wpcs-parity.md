@@ -15,6 +15,10 @@ files 2 and 3, which depend on test-only sniff groups, are skipped.
 
 Snapshots below are newest first; the top table is the current state.
 
+Mago 1.51.0, 2026-10-01: `no-unescaped-output` now checks `<?= ?>` echo tags and accepts the
+WordPress escaping functions (mago#2397), so `WordPress.Security.EscapeOutput` goes from 57 % to 60 %
+(101 → 106 matched, 65 → 60 extra). No other row changed.
+
 After Sprint E, 2026-09-30: the `exclude` (group), `custom_test_classes`, `treat_files_as_scoped`,
 `allowed_custom_properties`, `is_theme` and `strict_class_file_names` properties now have settings,
 so their `phpcs:set` directives are honoured, and `WordPress.Files.FileName` runs the 78 files in
@@ -52,7 +56,7 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `WordPress.PHP.StrictInArray` | 1 | 15 | 15 | 0 | 1 | 100% |  |
 | `WordPress.PHP.TypeCasts` | 1 | 10 | 10 | 0 | 0 | 100% |  |
 | `WordPress.PHP.YodaConditions` | 1 | 19 | 19 | 0 | 0 | 100% |  |
-| `WordPress.Security.EscapeOutput` | 23 | 176 | 101 | 75 | 65 | 57% | EscapeOutputUnitTest.1.inc: 4 phpcs:set directive(s), honoured by region; EscapeOutputUnitTest.1.inc: no setting for phpcs:set customPrintingFunctions |
+| `WordPress.Security.EscapeOutput` | 23 | 176 | 106 | 70 | 60 | 60% | EscapeOutputUnitTest.1.inc: 4 phpcs:set directive(s), honoured by region; EscapeOutputUnitTest.1.inc: no setting for phpcs:set customPrintingFunctions |
 | `WordPress.Security.NonceVerification` | 8 | 66 | 38 | 28 | 25 | 58% | NonceVerificationUnitTest.1.inc: 5 phpcs:set directive(s), honoured by region; NonceVerificationUnitTest.1.inc: no setting for phpcs:set customNonceVerificationFunctions |
 | `WordPress.Security.PluginMenuSlug` | 1 | 5 | 5 | 0 | 0 | 100% |  |
 | `WordPress.Security.SafeRedirect` | 1 | 4 | 4 | 0 | 0 | 100% |  |
@@ -74,7 +78,7 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `WordPress.WP.GlobalVariablesOverride` | 8 | 43 | 43 | 0 | 2 | 100% | GlobalVariablesOverrideUnitTest.1.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.4.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.6.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.WP.I18n` | 3 | 149 | 149 | 0 | 0 | 100% | I18nUnitTest.1.inc: 8 phpcs:set directive(s), honoured by region; I18nUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.WP.PostsPerPage` | 1 | 26 | 26 | 0 | 0 | 100% | PostsPerPageUnitTest.inc: 5 phpcs:set directive(s), honoured by region |
-| **Total** | **194** | **2158** | **1916** | **242** | **176** | **89%** | |
+| **Total** | **194** | **2158** | **1921** | **237** | **171** | **89%** | |
 
 Only reports carrying the mapped rule codes count (Mago's parser/semantics errors on WPCS's
 deliberately odd test files no longer count as matches or extras), so numbers from this run on

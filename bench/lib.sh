@@ -28,4 +28,11 @@ file_put_contents("$work/composer.json", json_encode(
 }
 
 rules_file="$here/tests/corpus/expected-rules.txt"
-codes=$(paste -sd, - < "$rules_file")
+# The rules a consumer gets by default: off-by-default ones (parentheses-spacing) would skew counts
+# and timings. Needs $mago.
+# shellcheck disable=SC2016 # $r is a PHP variable
+codes=$("$mago" --workspace "$here/tests/corpus" extension list --json 2>/dev/null | php -r '
+foreach (json_decode(stream_get_contents(STDIN), true)["extensions"][0]["linter-rules"] as $r) {
+    if ($r["default-enabled"]) { echo $r["code"], ","; }
+}' | sed 's/,$//')
+[[ -n $codes ]] || { echo "could not list the extension rules" >&2; exit 1; }

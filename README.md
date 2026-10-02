@@ -14,11 +14,11 @@ plugin or theme is checked in seconds instead of minutes.
 Formatting sniffs (whitespace, alignment, braces) are not ported: that is `mago format`'s job, and
 the shipped config sets it as close to WordPress style as it goes (see [Formatting](#formatting)).
 
-## 2–11× faster than phpcs
+## 2–12× faster than phpcs
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/benchmarks-dark.svg">
-  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on the top 10 WordPress.org plugins by active installs and WordPress core, from WooCommerce (35.73 s vs 3.37 s) down to Akismet (0.53 s vs 0.23 s)" src="docs/benchmarks-light.svg" width="800">
+  <img alt="Bar chart: phpcs WordPress-Extra vs mago + mago-wordpress lint time on the top 10 WordPress.org plugins by active installs and WordPress core, from WooCommerce (33.40 s vs 3.32 s) down to Akismet (0.52 s vs 0.26 s)" src="docs/benchmarks-light.svg" width="800">
 </picture>
 
 Same machine, same code, mean of three runs, on the top 10 WordPress.org plugins by active installs plus WordPress core itself; details and the reproducible script are in [Benchmarks](#benchmarks).
@@ -129,7 +129,7 @@ Other WPCS sniff properties, under their own names:
 | `is-theme` | `is_theme` | `true` lets `file-name` accept theme template-hierarchy names (`single-my_post_type.php`, `taxonomy-post_format-...`, `text_plain.php`). |
 | `treat-files-as-scoped` | `treat_files_as_scoped` | `true` makes `global-variables-override` treat each file like a function: file-scope writes count only after a `global` statement (`$GLOBALS[...]` writes still count). |
 
-Mago (as of 1.50) rejects extension rule codes under `[linter.rules]` in `mago.toml` (`unknown field
+Mago (as of 1.51) rejects extension rule codes under `[linter.rules]` in `mago.toml` (`unknown field
 "wordpress/..."`), so this package's rules are turned off with `exclude-patterns` instead: WPCS code
 (standard, category, sniff or message code) mapped to phpcs `<exclude-pattern>` values, with phpcs's
 semantics (a regex in which `*` means `.*`, matched case-insensitively anywhere in the path). `"*"`
@@ -278,11 +278,11 @@ editor's format-on-save) it undoes the third step. For the same reason `mago for
 fails on code formatted this way; check with `mago lint --only wordpress/parentheses-spacing` instead.
 Lines are not re-wrapped after the spaces go in, so a few may run past `print-width`.
 
-The first step has an upstream bug in Mago 1.50: `array-style` rewrites a short-list destructuring
-`[ $a, $b ] = f();` as `array( $a, $b ) = f();`, which does not parse (one file in Yoast SEO). It is
-fixed upstream ([#2407](https://github.com/carthage-software/mago/pull/2407),
-[#2408](https://github.com/carthage-software/mago/pull/2408)) for the next Mago release; until then run
-`php -l` on the changed files, or fix those lines to `list( ... )` by hand.
+Before Mago 1.51 the first step had an upstream bug: `array-style` rewrote a short-list destructuring
+`[ $a, $b ] = f();` as `array( $a, $b ) = f();`, which does not parse. Use Mago 1.51 or later
+([#2407](https://github.com/carthage-software/mago/pull/2407),
+[#2408](https://github.com/carthage-software/mago/pull/2408)); on older versions run `php -l` on the
+changed files.
 
 Without that step, `mago format` cannot produce WordPress formatting exactly. Measured on Akismet, Contact Form 7 and
 Yoast SEO ([results](bench/results/2026-09-30-formatter.md)), formatting with this preset leaves
@@ -470,7 +470,7 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 
 `bench/run.sh <project> <text-domain> <prefix>` times phpcs (`WordPress-Extra`, WPCS 3.4.1,
 `--parallel=8`) against `mago lint` running only this extension's rules, mean of three runs after a
-warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.50.0). This is not an
+warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.51.0). This is not an
 apples-to-apples comparison of the same rule set: `WordPress-Extra` also runs WPCS's formatting and
 generic sniffs, while the mago side runs this extension's rules only.
 
@@ -483,24 +483,25 @@ table runs the same `WordPress-Extra` comparison as the plugins throughout, for 
 
 | Codebase | Version | Active installs | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
 |:---|:---|---:|---:|---:|---:|---:|
-| WooCommerce | 11.1.2 | 7,000,000+ | 3,528 | 35.73 s | 3.37 s | 10.6× |
-| WordPress core | trunk | — | 1,868 | 22.53 s | 3.08 s | 7.3× |
-| Elementor | 4.3.2 | 10,000,000+ | 1,460 | 14.29 s | 1.97 s | 7.3× |
-| Google Site Kit | 1.188.0 | 5,000,000+ | 1,869 | 13.60 s | 1.91 s | 7.1× |
-| Yoast SEO | 28.5 | 10,000,000+ | 1,511 | 9.84 s | 1.30 s | 7.6× |
-| WPForms Lite | 2.0.2.1 | 5,000,000+ | 963 | 8.89 s | 1.29 s | 6.9× |
-| LiteSpeed Cache | 7.9.1 | 7,000,000+ | 212 | 2.08 s | 0.62 s | 3.4× |
-| WP Mail SMTP | 4.9.0 | 4,000,000+ | 185 | 1.68 s | 0.46 s | 3.7× |
-| All-in-One WP Migration | 7.111 | 5,000,000+ | 147 | 1.34 s | 0.26 s | 5.2× |
-| Contact Form 7 | 6.1.7 | 10,000,000+ | 111 | 1.09 s | 0.37 s | 2.9× |
-| Akismet | 5.7.2 | 5,000,000+ | 29 | 0.53 s | 0.23 s | 2.3× |
-| **Total** | | | **11,883** | **111.60 s** | **14.86 s** | **7.5×** |
+| WooCommerce | 11.1.2 | 7,000,000+ | 3,528 | 33.40 s | 3.32 s | 10.1× |
+| WordPress core | trunk | — | 1,868 | 25.89 s | 3.78 s | 6.8× |
+| Elementor | 4.3.2 | 10,000,000+ | 1,460 | 13.02 s | 1.35 s | 9.6× |
+| Google Site Kit | 1.188.0 | 5,000,000+ | 1,869 | 15.92 s | 1.33 s | 12.0× |
+| Yoast SEO | 28.5 | 10,000,000+ | 1,511 | 12.32 s | 1.25 s | 9.9× |
+| WPForms Lite | 2.0.2.1 | 5,000,000+ | 963 | 11.11 s | 1.68 s | 6.6× |
+| LiteSpeed Cache | 7.9.1 | 7,000,000+ | 212 | 2.53 s | 0.62 s | 4.1× |
+| WP Mail SMTP | 4.9.0 | 4,000,000+ | 185 | 2.35 s | 0.56 s | 4.2× |
+| All-in-One WP Migration | 7.111 | 5,000,000+ | 147 | 1.67 s | 0.35 s | 4.8× |
+| Contact Form 7 | 6.1.7 | 10,000,000+ | 111 | 1.40 s | 0.34 s | 4.1× |
+| Akismet | 5.7.2 | 5,000,000+ | 29 | 0.52 s | 0.26 s | 2.0× |
+| **Total** | | | **11,883** | **120.13 s** | **14.84 s** | **8.1×** |
 
-Measured 2026-09-28 on the plugins' release zips (vendor and tests excluded) and a fresh
-wordpress-develop checkout, `mago` at 1.50.0 and this package at 1.0.1 (phpcs suppression
-comments honoured). The mago column includes starting the PHP worker. mago never lost a single-codebase
-comparison. Full output, per-codebase mago issue counts by rule, and exact reproduction commands are
-in [`bench/results/2026-09-bakeoff.md`](bench/results/2026-09-bakeoff.md).
+Measured 2026-10-01 on the plugins' release zips (vendor and tests excluded) and a wordpress-develop
+checkout, `mago` at 1.51.0 and this package at 1.2.0, with the rules that are on by default (phpcs
+suppression comments honoured; load average 5–9 from background services, so expect some noise). The
+mago column includes starting the PHP worker. mago never lost a single-codebase comparison. Full
+output, per-codebase mago issue counts by rule, and exact reproduction commands are in
+[`bench/results/2026-10-01-bakeoff.md`](bench/results/2026-10-01-bakeoff.md).
 Every rule PR re-runs the bake-off (`bench/bakeoff.sh`) and commits the per-rule counts next to it;
 the newest `*-bakeoff.md` in [`bench/results/`](bench/results/) has the current counts.
 
