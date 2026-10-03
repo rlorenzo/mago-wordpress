@@ -51,7 +51,7 @@ final class SniffMap
         'WordPress.PHP.StrictInArray' => ['wordpress/strict-in-array'],
         'WordPress.PHP.TypeCasts' => ['wordpress/type-casts'],
         'WordPress.PHP.YodaConditions' => ['wordpress/yoda-conditions'],
-        'WordPress.Security.EscapeOutput' => ['no-unescaped-output'],
+        'WordPress.Security.EscapeOutput' => ['wordpress/escape-output'],
         'WordPress.Security.NonceVerification' => ['wordpress/nonce-verification'],
         'WordPress.Security.PluginMenuSlug' => ['wordpress/plugin-menu-slug'],
         'WordPress.Security.SafeRedirect' => ['wordpress/safe-redirect'],

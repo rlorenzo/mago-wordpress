@@ -14,6 +14,7 @@
 | `wordpress/dont-extract` | Error | `WordPress.PHP.DontExtract` | `extract()` |
 | `wordpress/enqueued-resource-parameters` | Warning | `WordPress.WP.EnqueuedResourceParameters` | missing, `null`, or falsy `$ver` and missing `$in_footer` on enqueue and register calls |
 | `wordpress/enqueued-resources` | Warning | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
+| `wordpress/escape-output` | Error | `WordPress.Security.EscapeOutput` | unescaped output from `echo`, `print`, `<?=`, `exit`/`die`, uncaught `throw` and the printing functions (`_e()`, `printf()`, `wp_die()`, ...); WPCS's escaping and auto-escaped lists, plus `custom-escaping-functions`, `custom-auto-escaped-functions` and `custom-printing-functions`. Replaces Mago's `no-unescaped-output`, which the shipped config turns off |
 | `wordpress/escaped-not-translated` | Warning | `WordPress.CodeAnalysis.EscapedNotTranslated` | `esc_html()`/`esc_attr()` called with more than one argument, which likely should be `esc_html__()`/`esc_attr__()` |
 | `wordpress/file-name` | Error | `WordPress.Files.FileName` | file names not lowercase and hyphenated, a class file missing its `class-` prefix, a templated `wp-includes` file missing its `-template` suffix |
 | `wordpress/get-meta-single` | Warning | `WordPress.WP.GetMetaSingle` | `get_*meta()`/`get_metadata*()` calls that pass the key parameter without also passing `$single` |
@@ -62,7 +63,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the five rules that only `WordPress-Extra` includes.
 
-47 of the 48 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+48 of the 49 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above.
 
 Function, class, constant and capability lists come from WPCS 3.4.1 (`src/Internal/WordPress/Lists.php`,

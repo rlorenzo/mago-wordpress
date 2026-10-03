@@ -22,6 +22,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EscapeOutputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
@@ -86,6 +87,7 @@ final class WordPressExtension
                 new PreparedSqlPlaceholdersRule($report, $settings),
                 new PreparedSqlUnquotedComplexPlaceholderRule($report),
                 new SafeRedirectRule($report),
+                new EscapeOutputRule($report, $settings),
                 new ValidHookNameRule($report, $settings),
                 new WpI18nRule($report, $settings),
                 new PrefixAllGlobalsRule($report, $settings),

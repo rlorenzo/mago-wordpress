@@ -45,6 +45,7 @@ final class Settings
     public const CUSTOM_LISTS = [
         'custom-escaping-functions' => 'customEscapingFunctions',
         'custom-auto-escaped-functions' => 'customAutoEscapedFunctions',
+        'custom-printing-functions' => 'customPrintingFunctions',
         'custom-sanitizing-functions' => 'customSanitizingFunctions',
         'custom-unslashing-sanitizing-functions' => 'customUnslashingSanitizingFunctions',
         'custom-nonce-verification-functions' => 'customNonceVerificationFunctions',

@@ -22,6 +22,12 @@ final class RuleSettingsTest extends TestCase
      */
     public static function cases(): iterable
     {
+        yield 'custom_auto_escaped_get_the_id_is_honoured' => [
+            'wordpress/escape-output',
+            ['custom-auto-escaped-functions' => ['get_the_ID']],
+            'echo get_the_ID();',
+            0,
+        ];
         yield 'custom_limit_is_respected' => [
             'wordpress/posts-per-page',
             ['max-posts-per-page' => 10],

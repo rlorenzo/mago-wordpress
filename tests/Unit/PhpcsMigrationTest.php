@@ -84,7 +84,6 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('"*/vendor/*",', $toml);
         self::assertStringContainsString('"build/*",', $toml);
         // Mago's core rules get [linter.rules] entries; a partial override keeps the shipped enable.
-        self::assertStringContainsString('no-unescaped-output = { exclude = ["templates/*", "*/templates/*"] }', $toml);
         self::assertStringContainsString('prepared-sql = { enabled = true, level = "warning" }', $toml);
         // WordPress-Extra leaves out the three WordPress-only sniffs.
         self::assertSame(
@@ -97,8 +96,12 @@ final class PhpcsMigrationTest extends TestCase
         self::assertSame(['my-plugin'], $result['extra']['text-domains'] ?? null);
         self::assertSame('6.2', $result['extra']['minimum-wp-version'] ?? null);
         self::assertSame(['*'], $result['extra']['exclude-patterns']['WordPress.DB.SlowDBQuery'] ?? null);
-        // Codes that only reach core rules stay out of the extension's settings.
-        self::assertStringNotContainsString('WordPress.Security.EscapeOutput', (string) json_encode($result['extra']));
+        // EscapeOutput is ported, so its exclude-pattern reaches the extension, not no-unescaped-output.
+        self::assertSame(
+            ['/templates/*'],
+            $result['extra']['exclude-patterns']['WordPress.Security.EscapeOutput'] ?? null,
+        );
+        self::assertStringNotContainsString('no-unescaped-output', $toml);
 
         $unmapped = implode("\n", $result['unmapped']);
         self::assertStringContainsString('(?!twenty)', $unmapped);

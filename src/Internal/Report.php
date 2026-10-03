@@ -74,18 +74,22 @@ final class Report
      * the line where its primary span starts.
      *
      * @param non-empty-list<string> $sniffCodes
+     *
+     * @return bool whether it was reported, as phpcs's addError() returns
      */
-    public function issue(LintContext $context, Issue $issue, array $sniffCodes): void
+    public function issue(LintContext $context, Issue $issue, array $sniffCodes): bool
     {
         if ($this->excludes !== [] && $this->isExcluded($context->file->path, $sniffCodes)) {
-            return;
+            return false;
         }
 
         if ($this->honorPhpcsComments && $this->isSuppressed($context->file, $issue, $sniffCodes)) {
-            return;
+            return false;
         }
 
         $context->report($issue);
+
+        return true;
     }
 
     /**

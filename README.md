@@ -32,7 +32,7 @@ composer require --dev carthage-software/mago rlorenzo/mago-wordpress
 extends = "vendor/rlorenzo/mago-wordpress/wordpress.mago.toml"
 ```
 
-Run `mago lint`. You get this package's 47 default rules, Mago's own WordPress security rules
+Run `mago lint`. You get this package's 48 default rules, Mago's own WordPress security rules
 and a WordPress formatter preset.
 
 The worker runs as PHP inside your project and loads its Composer autoloader, like PHPUnit or
@@ -86,7 +86,7 @@ See [Formatting](docs/formatting.md).
 
 ## Docs
 
-- [Rules](docs/rules.md): the 48 rules, their levels and their autofixes.
+- [Rules](docs/rules.md): the 49 rules, their levels and their autofixes.
 - [Configuration](docs/configuration.md): every setting, the `phpcs.xml` fallback and suppression comments.
 - [Formatting](docs/formatting.md): the preset and what still differs from WPCS.
 - [Migrating from phpcs](docs/migrating.md): what `migrate` converts and what it can't.

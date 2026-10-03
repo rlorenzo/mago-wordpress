@@ -16,7 +16,7 @@ on `prepared-sql`, so a project keeps the security checks WPCS gave it; the othe
 | `nonce-verification` | `WordPress.Security.NonceVerification`, ported as [`wordpress/nonce-verification`](rules.md) | off |
 | `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput`, ported as [`wordpress/validated-sanitized-input`](rules.md) | off |
 | `prepared-sql` | `WordPress.DB.PreparedSQL` | off |
-| `no-unescaped-output` | `WordPress.Security.EscapeOutput` | on |
+| `no-unescaped-output` | `WordPress.Security.EscapeOutput`, now ported as [`wordpress/escape-output`](rules.md); the `extends` turns this one off | on |
 | `use-wp-functions` | `WordPress.WP.AlternativeFunctions` | on |
 | `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) | on |
 | `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` | on |
