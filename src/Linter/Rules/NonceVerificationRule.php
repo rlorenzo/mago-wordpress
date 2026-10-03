@@ -82,12 +82,14 @@ final class NonceVerificationRule implements Rule
     public function lint(LintContext $context): void
     {
         if (preg_match('/\$_(?:POST|FILES|GET|REQUEST)\b/', $context->file->contents) !== 1) {
+            PhpcsTokens::release($context->file);
+
             return;
         }
 
         $tokens = PhpcsTokens::of($context->file);
         $this->cache = [];
-        $count = count($tokens->tokens);
+        $count = count($tokens->codes);
         for ($index = 0; $index < $count; $index++) {
             $code = $tokens->code($index);
             // What a list holds is always assigned to.
@@ -129,6 +131,8 @@ final class NonceVerificationRule implements Rule
                 [self::SNIFF . '.' . (self::SUPERGLOBALS[$content] ? 'Missing' : 'Recommended')],
             );
         }
+        // The last of the rules that read PhpcsTokens (WordPressExtension registers it last).
+        PhpcsTokens::release($context->file);
     }
 
     /**
@@ -167,7 +171,7 @@ final class NonceVerificationRule implements Rule
     {
         $end = $index;
         if ($allowAfter) {
-            $end = $start === 0 ? count($tokens->tokens) : (int) $tokens->closer($start);
+            $end = $start === 0 ? count($tokens->codes) : (int) $tokens->closer($start);
         }
 
         $cached = $this->cache[$start] ?? ['end' => 0, 'nonce' => false];

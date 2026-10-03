@@ -11,12 +11,14 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
+use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\FileCache;
 use Rlorenzo\MagoWordPress\Internal\PhpcsToken;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokenStream;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function count;
+use function gc_mem_caches;
 use function in_array;
 use function strlen;
 
@@ -103,6 +105,12 @@ final class AssignmentInConditionRule implements Rule
         );
     }
 
+    public static function releaseTokens(SourceFile $file): void
+    {
+        FileCache::forget($file, 'phpcs-token-stream');
+        gc_mem_caches();
+    }
+
     /**
      * @param list<PhpcsToken> $tokens
      */
@@ -131,7 +139,7 @@ final class AssignmentInConditionRule implements Rule
                 $context,
                 Issue::new(
                     'Variable assignment found within a condition. Did you mean to do a comparison?',
-                    new Span($token->pos, $token->pos + strlen($token->content)),
+                    new Span($token->pos, $token->pos + strlen($token->text)),
                     'assignment',
                 )->withHelp('Assign before the condition, or compare with `===` if a comparison was meant.'),
                 [

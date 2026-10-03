@@ -98,7 +98,7 @@ final class PreparedSqlRule implements Rule
         }
 
         $tokens = PhpcsTokens::of($context->file);
-        $count = count($tokens->tokens);
+        $count = count($tokens->codes);
         $at = 0;
         while ($at < $count) {
             $i = $at;

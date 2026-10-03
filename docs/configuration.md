@@ -75,7 +75,8 @@ Properties are read only when set directly on the sniff's own ref, such as
 ## Settings
 
 `standard` is the WPCS standard whose sniffs run: `WordPress-Core`, `WordPress-Extra` or
-`WordPress` (every sniff; any other value counts as `WordPress`). The rules for sniffs the
+`WordPress` (every sniff). The name is matched regardless of case, as phpcs finds it on macOS
+and Windows; any other value stops the lint run (see [Invalid settings](#invalid-settings)). The rules for sniffs the
 standard leaves out are turned off everywhere, as if each had `"*"` under `exclude-patterns`:
 `WordPress-Extra` drops `DB.DirectDatabaseQuery`, `DB.SlowDBQuery` and
 `Security.ValidatedSanitizedInput`; `WordPress-Core` also drops the sniffs Extra adds, such as
@@ -109,7 +110,7 @@ accepts (WPCS's `allowed_custom_properties`), such as `childNodes` for `DOMDocum
 
 `levels` sets a rule's level, keyed by rule code: `{"wordpress/capital-p-dangit": "error"}`.
 Values are `error`, `warning`, `note` or `help`. An unknown rule code or level stops the lint run
-with a message naming the entry (`mago-wordpress: levels: unknown rule ...`). In the phpcs.xml fallback, a `<type>` on a whole
+with a message naming the entry (`mago-wordpress: invalid configuration: levels: unknown rule ...`). In the phpcs.xml fallback, a `<type>` on a whole
 sniff (`<rule ref="WordPress.WP.CapitalPDangit"><type>error</type></rule>`) sets it for the rules
 that port that sniff. A `<type>` on one message code is ignored, because a Mago rule has one level.
 The default levels are WPCS's: see [Rules](rules.md).
@@ -123,6 +124,20 @@ Other WPCS sniff properties, under their own names:
 | `strict-class-file-names` | `strict_class_file_names` | `false` stops `file-name` requiring the `class-` prefix on class files. |
 | `is-theme` | `is_theme` | `true` lets `file-name` accept theme template-hierarchy names (`single-my_post_type.php`, `taxonomy-post_format-...`, `text_plain.php`). |
 | `treat-files-as-scoped` | `treat_files_as_scoped` | `true` makes `global-variables-override` treat each file like a function: file-scope writes count only after a `global` statement (`$GLOBALS[...]` writes still count). |
+
+### Invalid settings
+
+The worker checks every setting before it lints. An unknown key, a value of the wrong type
+(`"levels": "warning"`, `"text-domains": 5`, `"max-posts-per-page": "many"`) or an unknown
+`standard` stops the run with exit code 2 and one line per problem. Mago has no way for a worker
+to report a configuration error, so the lines come after Mago's own prefix for a worker that exited:
+
+```text
+ERROR Orchestrator error: External linter error: external linter worker failed: extension worker 0 disconnected: worker closed stdout; stderr: mago-wordpress: invalid configuration: composer.json extra.mago-wordpress: `levels` must be an object of rule code => level, such as {"wordpress/capital-p-dangit": "error"}, not "warning".
+```
+
+Look for `mago-wordpress: invalid configuration:`; the rest of the line names the file, the key and
+what it accepts. A list setting also takes a single string (`"text-domains": "my-plugin"`).
 
 ## phpcs suppression comments
 
