@@ -247,10 +247,9 @@ Four security rules with no WPCS counterpart stay on, because they make code saf
 fire: `tainted-data-to-sink`, `no-unsafe-finally`, `no-variable-variable` and `no-ffi` (2 reports in
 total on the 10 bake-off plugins, wordpress-develop and one private site).
 
-`class-name` and `no-closing-tag` are off for another reason: they cover
-`PEAR.NamingConventions.ValidClassName` and `PSR2.Files.ClosingTag`, which WordPress-Core runs, but
-they report code those sniffs accept (`My_Class` names, templates that end in `?>` after inline
-HTML).
+`class-name` and `no-closing-tag` are off for another reason: this package ports the sniffs they
+stand in for, `PEAR.NamingConventions.ValidClassName` as `generic/valid-class-name` (which accepts
+`My_Class` names) and `PSR2.Files.ClosingTag` as `generic/closing-tag` (which leaves templates alone).
 
 Turn a rule back on in your `mago.toml`:
 

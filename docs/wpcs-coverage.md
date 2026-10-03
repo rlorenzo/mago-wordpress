@@ -34,10 +34,9 @@ All three turn off the Mago core rules that report what no WPCS sniff does (`str
 `no-isset`, `no-empty`, `literal-named-argument`, `cyclomatic-complexity`, `halstead`, `file-name`,
 `no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety, among them
 `class-name`, which wants PascalCase where PEAR's `ValidClassName`, ported as
-`generic/valid-class-name`, accepts `My_Class`), and one that is mapped to a sniff but reports code
-it accepts: `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
-templates). Turn any of them back on in your `mago.toml`, for example
-`strict-types = { enabled = true }`.
+`generic/valid-class-name`, accepts `My_Class`). `no-closing-tag` is off too: `generic/closing-tag`
+ports `PSR2.Files.ClosingTag`, which skips templates. Turn any of them back on in your `mago.toml`,
+for example `strict-types = { enabled = true }`.
 
 Four security rules no WPCS sniff runs stay on, because they make code safer and almost never fire
 (2 reports across the 10 bake-off plugins, wordpress-develop and one private site):
@@ -123,9 +122,8 @@ WPCS doesn't check `@since`, which the WordPress documentation standard asks for
 the `generic/*` rules in [Rules](rules.md).
 
 Mago's own core lint rules cover some of the rest. They don't need the `wordpress` integration;
-each preset keeps the ones its standard's sniffs map to, at the sniff's phpcs level (except
-`no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
-sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
+each preset keeps the ones its standard's sniffs map to, at the sniff's phpcs level, and
+`mago-wordpress migrate` maps a phpcs.xml exclusion of one of these sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
 The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
 | WPCS sniff | Mago rule | Recall |
@@ -133,17 +131,13 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` | 76% |
 | `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | `prefer-while-loop` | 100% |
 | `Generic.CodeAnalysis.UnnecessaryFinalModifier` | `no-redundant-final` | 50% |
-| `Generic.Files.OneObjectStructurePerFile` | `single-class-per-file` | 100% |
-| `Generic.NamingConventions.UpperCaseConstantName` | `constant-name` | 46% |
 | `Generic.PHP.BacktickOperator` | `no-shell-execute-string` | 100% |
 | `Generic.PHP.DisallowShortOpenTag` | `no-short-opening-tag` | 67% |
 | `Generic.PHP.DiscourageGoto` | `no-goto` | 100% |
-| `Generic.PHP.ForbiddenFunctions` | `disallowed-functions` (lists no functions until configured) | 0% |
 | `Generic.PHP.LowerCaseConstant` | `lowercase-keyword` | 92% |
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
 | `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` | 57% |
-| `PSR2.Files.ClosingTag` | `no-closing-tag` | 80% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
 | `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` | - |
@@ -154,7 +148,6 @@ doesn't map them:
 | WPCS sniff | `mago analyze` |
 |:---|:---|
 | `Generic.Classes.DuplicateClassName` | `duplicate-definition` (across the whole codebase) |
-| `Generic.CodeAnalysis.UnusedFunctionParameter` | `unused-parameter`, with `find-unused-parameters = true` under `[analyzer]` |
 | `Generic.PHP.DeprecatedFunctions` | `deprecated-function` |
 | `Generic.PHP.Syntax` | parse errors |
 | `Squiz.Functions.FunctionDuplicateArgument` | a semantics error |
@@ -179,17 +172,12 @@ above) are not ported. That is `mago format`'s job (see [Formatting](formatting.
 Generic sniffs that enforce a convention rather than catch a bug. Left unported; checked against
 `mago lint` with every core rule on and `mago analyze`, and neither covers them:
 
-- `Squiz.PHP.CommentedOutCode`
 - `Universal.Namespaces.DisallowDeclarationWithoutName`
 - `Universal.Namespaces.OneDeclarationPerFile`
-- `Universal.NamingConventions.NoReservedKeywordParameterNames`
 - `Universal.UseStatements.NoUselessAliases`
 
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
 
-- `Modernize.FunctionCalls.Dirname`
-- `Modernize.FunctionCalls.Dirname.Nested`
-- `PEAR.Files.IncludingFile`
 - `PSR12.Files.FileHeader`
 - `PSR12.Keywords.ShortFormTypeKeywords`
 - `Universal.Attributes.DisallowAttributeParentheses`
@@ -200,6 +188,5 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `Universal.PHP.LowercasePHPTag`
 - `Universal.UseStatements.DisallowMixedGroupUse`
 - `Universal.UseStatements.LowercaseFunctionConst`
-- `Universal.UseStatements.NoLeadingBackslash`
 
 </details>

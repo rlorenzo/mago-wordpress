@@ -1,6 +1,9 @@
 generic/assignment-in-condition
 generic/byte-order-mark
+generic/closing-tag
+generic/commented-out-code
 generic/control-signature
+generic/dirname
 generic/disallow-alternative-php-tags
 generic/disallow-lonely-if
 generic/disallow-multiple-assignments
@@ -10,8 +13,11 @@ generic/double-quote-usage
 generic/else-if-declaration
 generic/empty-statement
 generic/for-loop-with-test-function-call
+generic/forbidden-functions
 generic/foreach-unique-assignment
 generic/git-merge-conflict
+generic/including-file
+generic/including-file-warning
 generic/increment-decrement-usage
 generic/inline-control-structure
 generic/jumbled-incrementer
@@ -20,7 +26,10 @@ generic/method-declaration-warning
 generic/method-scope
 generic/no-double-negative
 generic/no-echo-sprintf
+generic/no-leading-backslash
+generic/no-reserved-keyword-parameter-names
 generic/non-executable-code
+generic/one-object-structure-per-file
 generic/property-declaration
 generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence
@@ -31,6 +40,8 @@ generic/strict-comparisons
 generic/switch-declaration
 generic/unconditional-if-statement
 generic/unnecessary-heredoc
+generic/unused-function-parameter
+generic/upper-case-constant-name
 generic/useless-overriding-method
 generic/valid-class-name
 generic/valid-logical-operators

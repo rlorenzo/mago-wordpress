@@ -124,17 +124,19 @@ namespace {
     // @mago-expect lint:wordpress/wp-i18n
     $greeting = __('Hello, World!', 'other-plugin');
 
-    // wrapper_function_definition_is_exempt
+    // wrapper_function_definitions_are_checked_like_wpcs
     function __($text, $domain = 'default')
     {
+        // @mago-expect lint:wordpress/wp-i18n(3)
         return translate($text, $domain);
     }
 
-    // wrapper_method_definition_is_exempt
+    // wrapper_method_definitions_too
     class MyPlugin_Translator
     {
         public function _e($text, $domain = 'default')
         {
+            // @mago-expect lint:wordpress/wp-i18n(2)
             _e($text, $domain);
         }
     }
@@ -144,6 +146,7 @@ namespace {
     {
         public function ESC_HTML__($text, $domain = 'default')
         {
+            // @mago-expect lint:wordpress/wp-i18n(2)
             return esc_html__($text, $domain);
         }
     }
@@ -152,7 +155,7 @@ namespace {
     // @mago-expect lint:wordpress/wp-i18n
     _E($message, 'my-plugin');
 
-    // closure_inside_wrapper_is_checked
+    // closure_inside_a_translation_function_is_checked
     // @mago-expect lint:wordpress/prefix-all-globals
     function _x($text, $context, $domain = 'default')
     {
@@ -171,7 +174,8 @@ namespace {
     $result = $translator->translate($key);
     $other = Translator::translate($key);
 
-    // spread_arguments_are_ignored
+    // a_spread_argument_is_read_as_the_text_like_wpcs
+    // @mago-expect lint:wordpress/wp-i18n
     $greeting = __(...$args);
 
     // named_arguments_are_checked

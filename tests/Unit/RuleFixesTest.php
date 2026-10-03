@@ -73,6 +73,48 @@ final class RuleFixesTest extends TestCase
             ['default'],
         ];
 
+        yield 'dirname of __FILE__ becomes __DIR__, levels lowered by one' => [
+            'generic/dirname',
+            '',
+            "\$a = \\dirname( __FILE__ );\n\$b = dirname(__FILE__, 1);\n\$c = dirname( __FILE__, 3 );\n\$d = dirname(__FILE__ /* x */);\n\$e = dirname(__FILE__, \$n);",
+            "\$a = __DIR__;\n\$b = __DIR__;\n\$c = dirname( __DIR__, 2 );\n\$d = dirname(__FILE__ /* x */);\n\$e = dirname(__FILE__, \$n);",
+        ];
+
+        yield 'no-leading-backslash drops the backslash of an import' => [
+            'generic/no-leading-backslash',
+            '',
+            "use \\Foo\\Bar;\nuse function \\foo, \\Bar\\baz as q;\nuse/*x*/\\Baz;",
+            "use Foo\\Bar;\nuse function foo, Bar\\baz as q;\nuse/*x*/ Baz;",
+        ];
+
+        yield 'including-file drops the parentheses around the path' => [
+            'generic/including-file',
+            '',
+            "require_once('a.php');\nrequire ( 'b.php' ) . '';",
+            "require_once 'a.php';\nrequire  'b.php'  . '';",
+        ];
+
+        yield 'including-file-warning makes an unconditional include a require' => [
+            'generic/including-file-warning',
+            '',
+            "include 'a.php';\ninclude_once 'b.php';\nif (\$x) {\n\tinclude 'c.php';\n}",
+            "require 'a.php';\nrequire_once 'b.php';\nif (\$x) {\n\tinclude 'c.php';\n}",
+        ];
+
+        yield 'closing-tag removes the tag at the end of a PHP-only file' => [
+            'generic/closing-tag',
+            '',
+            "echo 'bye';\n\n?>",
+            "echo 'bye';\n\n",
+        ];
+
+        yield 'closing-tag ends the statement before a trailing comment' => [
+            'generic/closing-tag',
+            '',
+            'echo $foo //hello ?>',
+            'echo $foo; //hello ',
+        ];
+
         yield 'parentheses-spacing adds the WordPress spaces' => [
             'wordpress/parentheses-spacing',
             '',

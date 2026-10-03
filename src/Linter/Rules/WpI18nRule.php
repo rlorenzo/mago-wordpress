@@ -144,11 +144,13 @@ final class WpI18nRule extends CallRule
     {
         $resolved = $context->getResolvedName();
         $written = $resolved !== null && $resolved->imported ? $resolved->name : $call->getName($context->file);
-        if ($written === null || Calls::normalize($written) !== $name || $this->insideWrapper($context)) {
+        if ($written === null || Calls::normalize($written) !== $name) {
             return;
         }
 
         if (Calls::isUnpacked($call)) {
+            $this->reportUnpacked($context, $call, $name);
+
             return;
         }
 
@@ -649,8 +651,11 @@ final class WpI18nRule extends CallRule
     private function checkTranslatorsComment(LintContext $context, string $name, array $texts): void
     {
         $needsComment = false;
-        foreach ($texts as [, $text]) {
-            $needsComment = $needsComment || $text !== null && preg_match(self::WPCS_PLACEHOLDER, $text) === 1;
+        // WPCS matches the source text, so `%1\$s` in a double-quoted string is no placeholder.
+        foreach ($texts as [$argument, $text]) {
+            $needsComment =
+                $needsComment
+                || $text !== null && preg_match(self::WPCS_PLACEHOLDER, $context->file->getText($argument)) === 1;
         }
 
         if (!$needsComment) {
@@ -745,34 +750,34 @@ final class WpI18nRule extends CallRule
     }
 
     /**
-     * Whether the call sits directly inside a function or method that is itself named like a translation function.
+     * A spread argument (`_n( ...$args )`): WPCS reads it as the parameter at its position and
+     * reports it as not a literal.
      */
-    private function insideWrapper(LintContext $context): bool
+    private function reportUnpacked(LintContext $context, CallExpression $call, string $name): void
     {
-        $ancestor = $context->node;
-        while (($ancestor = $context->file->getParent($ancestor)) !== null) {
-            if ($ancestor->kind === NodeKind::Closure || $ancestor->kind === NodeKind::ArrowFunction) {
-                return false;
-            }
-
-            if ($ancestor->kind !== NodeKind::Function && $ancestor->kind !== NodeKind::Method) {
+        $parameters = self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]];
+        foreach ($call->arguments as $index => $argument) {
+            if (!$argument->unpacked || $argument->name !== null) {
                 continue;
             }
 
-            foreach ($context->file->getChildren($ancestor) as $child) {
-                if ($child->kind !== NodeKind::LocalIdentifier) {
-                    continue;
-                }
-
-                $declared = strtolower($context->file->getText($child));
-
-                return array_key_exists($declared, Lists::I18N_FUNCTIONS);
+            $parameter = $parameters[$index] ?? null;
+            if ($parameter === null) {
+                return;
             }
 
-            return false;
-        }
+            $this->report->issue(
+                $context,
+                Issue::new(
+                    'Translatable text must be a literal string',
+                    $argument->node->span,
+                    sprintf('This argument to `%s()` is a spread, not a literal string', $name),
+                ),
+                [self::SNIFF . '.NonSingularStringLiteral' . ucfirst($parameter)],
+            );
 
-        return false;
+            return;
+        }
     }
 
     /**

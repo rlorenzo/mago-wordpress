@@ -17,11 +17,14 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DirnameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
@@ -38,11 +41,13 @@ use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapeOutputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
@@ -50,9 +55,12 @@ use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoLeadingBackslashRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoReservedKeywordParameterNamesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\OneObjectStructurePerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
@@ -75,6 +83,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UpperCaseConstantNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
@@ -210,6 +220,18 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new OneObjectStructurePerFileRule($report),
+                new UpperCaseConstantNameRule($report),
+                new ClosingTagRule($report),
+                ...SplitRule::pair(
+                    new IncludingFileRule($report),
+                    $report,
+                    'Including file (warnings)',
+                    'An include/include_once outside any scope, condition or assignment (phpcs UseRequire, UseRequireOnce, warnings in WordPress-Core); the parentheses check stays with generic/including-file.',
+                ),
+                new ForbiddenFunctionsRule($report),
+                new NoLeadingBackslashRule($report),
+                new DirnameRule($report),
                 new NoSilencedErrorsRule($report, $settings),
                 new StrictComparisonsRule($report),
                 new InlineControlStructureRule($report),
@@ -223,6 +245,9 @@ final class WordPressExtension
                 new SwitchDeclarationRule($report),
                 new UnnecessaryHeredocRule($report),
                 new NoDoubleNegativeRule($report),
+                new CommentedOutCodeRule($report),
+                new UnusedFunctionParameterRule($report),
+                new NoReservedKeywordParameterNamesRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),

@@ -183,6 +183,10 @@ final class PhpcsRuleset
         'Squiz.ControlStructures.ControlSignature',
         'Squiz.Strings.DoubleQuoteUsage',
         'PSR2.ControlStructures.SwitchDeclaration',
+        'Universal.NamingConventions.NoReservedKeywordParameterNames',
+        'Modernize.FunctionCalls.Dirname',
+        'Universal.UseStatements.NoLeadingBackslash',
+        'PEAR.Files.IncludingFile',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
@@ -239,6 +243,8 @@ final class PhpcsRuleset
         'Universal.CodeAnalysis.NoEchoSprintf',
         'Generic.Strings.UnnecessaryHeredoc',
         'Universal.CodeAnalysis.NoDoubleNegative',
+        'Generic.CodeAnalysis.UnusedFunctionParameter',
+        'Squiz.PHP.CommentedOutCode',
     ];
 
     /** phpcs hides reports below this severity by default. */

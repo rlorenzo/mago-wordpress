@@ -52,6 +52,12 @@ final class Levels
         'Generic.CodeAnalysis.UnnecessaryFinalModifier' => [
             'Found' => 'warning',
         ],
+        'Generic.CodeAnalysis.UnusedFunctionParameter' => [
+            '*' => 'warning',
+            '*InExtendedClass' => 'warning',
+            '*InImplementedInterface' => 'warning',
+            'Found' => 'warning',
+        ],
         'Generic.CodeAnalysis.UselessOverridingMethod' => [
             'Found' => 'warning',
         ],
@@ -113,6 +119,17 @@ final class Levels
             'DelimiterFound' => 'error',
             'OpenerFound' => 'error',
         ],
+        'Modernize.FunctionCalls.Dirname' => [
+            'FileConstant' => 'error',
+            'Nested' => 'error',
+        ],
+        'PEAR.Files.IncludingFile' => [
+            'BracketsNotRequired' => 'error',
+            'UseInclude' => 'error',
+            'UseIncludeOnce' => 'error',
+            'UseRequire' => 'warning',
+            'UseRequireOnce' => 'warning',
+        ],
         'PEAR.NamingConventions.ValidClassName' => [
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
@@ -172,6 +189,9 @@ final class Levels
         'Squiz.Operators.ValidLogicalOperators' => [
             'NotAllowed' => 'error',
         ],
+        'Squiz.PHP.CommentedOutCode' => [
+            'Found' => 'warning',
+        ],
         'Squiz.PHP.DisallowMultipleAssignments' => [
             '*InControlStructure' => 'error',
             'Found' => 'error',
@@ -216,6 +236,9 @@ final class Levels
         'Universal.Files.SeparateFunctionsFromOO' => [
             'Mixed' => 'error',
         ],
+        'Universal.NamingConventions.NoReservedKeywordParameterNames' => [
+            '*Found' => 'warning',
+        ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
         ],
@@ -225,6 +248,10 @@ final class Levels
         ],
         'Universal.Operators.StrictComparisons' => [
             '*' => 'warning',
+        ],
+        'Universal.UseStatements.NoLeadingBackslash' => [
+            'LeadingBackslashFound' => 'error',
+            'LeadingBackslashFoundInGroup' => 'error',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',
