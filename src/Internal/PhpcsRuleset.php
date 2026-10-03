@@ -66,6 +66,7 @@ final class PhpcsRuleset
         'is_theme' => ['is-theme', 'flag'],
         'customEscapingFunctions' => ['custom-escaping-functions', 'list'],
         'customAutoEscapedFunctions' => ['custom-auto-escaped-functions', 'list'],
+        'customPrintingFunctions' => ['custom-printing-functions', 'list'],
         'customSanitizingFunctions' => ['custom-sanitizing-functions', 'list'],
         'customUnslashingSanitizingFunctions' => ['custom-unslashing-sanitizing-functions', 'list'],
         'customNonceVerificationFunctions' => ['custom-nonce-verification-functions', 'list'],
@@ -84,7 +85,11 @@ final class PhpcsRuleset
     public const OWNED_PROPERTIES = [
         'WordPress.WP.I18n' => ['text_domain'],
         'WordPress.NamingConventions.PrefixAllGlobals' => ['prefixes', 'custom_test_classes'],
-        'WordPress.Security.EscapeOutput' => ['customEscapingFunctions', 'customAutoEscapedFunctions'],
+        'WordPress.Security.EscapeOutput' => [
+            'customEscapingFunctions',
+            'customAutoEscapedFunctions',
+            'customPrintingFunctions',
+        ],
         'WordPress.Security.NonceVerification' => [...self::SANITIZING_PROPERTIES, 'customNonceVerificationFunctions'],
         'WordPress.Security.ValidatedSanitizedInput' => self::SANITIZING_PROPERTIES,
         'WordPress.WP.Capabilities' => ['custom_capabilities'],

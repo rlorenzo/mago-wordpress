@@ -12,6 +12,7 @@ as sniff properties from your project. Put them in `composer.json`:
       "minimum-wp-version": "6.4",
       "custom-escaping-functions": ["mp_esc"],
       "custom-auto-escaped-functions": [],
+      "custom-printing-functions": [],
       "custom-sanitizing-functions": [],
       "custom-unslashing-sanitizing-functions": [],
       "custom-nonce-verification-functions": [],
@@ -73,8 +74,9 @@ Properties are read only when set directly on the sniff's own ref, such as
 `wordpress/nonce-verification`. `custom-nonce-verification-functions` (WPCS's
 `customNonceVerificationFunctions`) adds nonce-checking functions to `wordpress/nonce-verification`.
 
-`custom-escaping-functions` and `custom-auto-escaped-functions` have no effect yet. They belong to
-Mago's core rule `no-unescaped-output`, which can't take per-project options from an extension.
+`custom-escaping-functions`, `custom-auto-escaped-functions` and `custom-printing-functions`
+extend the escaping, auto-escaped and printing function lists of `wordpress/escape-output`
+(WPCS's `customEscapingFunctions`, `customAutoEscapedFunctions` and `customPrintingFunctions`).
 
 `allowed-custom-properties` lists mixed-case object properties `wordpress/valid-variable-name`
 accepts (WPCS's `allowed_custom_properties`), such as `childNodes` for `DOMDocument`.
@@ -83,7 +85,7 @@ Other WPCS sniff properties, under their own names:
 
 | Setting | WPCS property | Effect |
 |:---|:---|:---|
-| `exclude-groups` | `exclude` on a function-restriction sniff | WPCS sniff => the function groups it skips, e.g. `"WordPress.PHP.DevelopmentFunctions": ["error_log"]`. Honoured by every sniff this package ports (`DateTime.RestrictedFunctions`, `DB.RestrictedClasses`, `DB.RestrictedFunctions`, `DB.SlowDBQuery`, `PHP.DevelopmentFunctions`, `PHP.DiscouragedPHPFunctions`, `PHP.DontExtract`, `PHP.RestrictedPHPFunctions`, `Security.SafeRedirect`, `WP.ClassNameCase`, `WP.DeprecatedClasses`, `WP.DeprecatedFunctions`, `WP.DiscouragedFunctions`, `WP.PostsPerPage`); not by Mago's core rules (`WP.AlternativeFunctions`, `Security.EscapeOutput`). |
+| `exclude-groups` | `exclude` on a function-restriction sniff | WPCS sniff => the function groups it skips, e.g. `"WordPress.PHP.DevelopmentFunctions": ["error_log"]`. Honoured by every sniff this package ports (`DateTime.RestrictedFunctions`, `DB.RestrictedClasses`, `DB.RestrictedFunctions`, `DB.SlowDBQuery`, `PHP.DevelopmentFunctions`, `PHP.DiscouragedPHPFunctions`, `PHP.DontExtract`, `PHP.RestrictedPHPFunctions`, `Security.SafeRedirect`, `WP.ClassNameCase`, `WP.DeprecatedClasses`, `WP.DeprecatedFunctions`, `WP.DiscouragedFunctions`, `WP.PostsPerPage`); not by Mago's core rules (`WP.AlternativeFunctions`). `Security.EscapeOutput` ignores `exclude`, as in WPCS. |
 | `custom-test-classes` | `custom_test_classes` | extra test base classes (fully qualified) whose subclasses `file-name`, `global-variables-override` and `prefix-all-globals` skip. WPCS sets it per sniff; here it is one list. |
 | `strict-class-file-names` | `strict_class_file_names` | `false` stops `file-name` requiring the `class-` prefix on class files. |
 | `is-theme` | `is_theme` | `true` lets `file-name` accept theme template-hierarchy names (`single-my_post_type.php`, `taxonomy-post_format-...`, `text_plain.php`). |

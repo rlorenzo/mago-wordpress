@@ -18,6 +18,7 @@ wordpress/discouraged-wp-functions
 wordpress/dont-extract
 wordpress/enqueued-resource-parameters
 wordpress/enqueued-resources
+wordpress/escape-output
 wordpress/escaped-not-translated
 wordpress/file-name
 wordpress/get-meta-single

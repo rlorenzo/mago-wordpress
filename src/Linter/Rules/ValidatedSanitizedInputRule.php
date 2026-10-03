@@ -201,7 +201,12 @@ final class ValidatedSanitizedInputRule implements Rule
                 do {
                     $previous--;
                     if ($tokens->code($previous) === ']') {
-                        $previous = (int) $tokens->closer($previous);
+                        $opener = $tokens->closer($previous);
+                        if ($opener === null) {
+                            break;
+                        }
+
+                        $previous = $opener;
                         continue;
                     }
 
