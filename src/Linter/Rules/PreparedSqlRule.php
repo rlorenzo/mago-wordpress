@@ -12,9 +12,9 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
+use Rlorenzo\MagoWordPress\Internal\PhpcsTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
-use Rlorenzo\MagoWordPress\Internal\WordPress\PhpcsTokens;
 
 use function array_fill_keys;
 use function count;
@@ -98,7 +98,7 @@ final class PreparedSqlRule implements Rule
         }
 
         $tokens = PhpcsTokens::of($context->file);
-        $count = count($tokens);
+        $count = count($tokens->tokens);
         $at = 0;
         while ($at < $count) {
             $i = $at;
@@ -115,47 +115,43 @@ final class PreparedSqlRule implements Rule
     /**
      * A `$wpdb` variable, or a `wpdb` name that is not namespaced (a static call).
      *
-     * @param list<array{t: string, x: string, p: int, m?: int, short?: bool, e?: list<array{string, int}>, h?: bool}> $tokens
      */
-    private function isEntry(array $tokens, int $at): bool
+    private function isEntry(PhpcsTokens $tokens, int $at): bool
     {
-        $token = $tokens[$at];
-        if ($token['t'] === 'var') {
-            return $token['x'] === '$wpdb';
+        $type = $tokens->type($at);
+        if ($type === 'var') {
+            return $tokens->content($at) === '$wpdb';
         }
 
-        if ($token['t'] !== 'name' || strtolower($token['x']) !== 'wpdb') {
+        if ($type !== 'name' || strtolower($tokens->content($at)) !== 'wpdb') {
             return false;
         }
 
-        return !(($tokens[$at - 1]['t'] ?? '') === 'ns' && ($tokens[$at - 2]['t'] ?? '') === 'name');
+        return !($tokens->type($at - 1) === 'ns' && $tokens->type($at - 2) === 'name');
     }
 
     /**
      * WPCS's `is_wpdb_method_call()`: sets $i to the token after the method name, and on a
      * query method sets $end past its first argument.
      *
-     * @param list<array{t: string, x: string, p: int, m?: int, short?: bool, e?: list<array{string, int}>, h?: bool}> $tokens
      */
-    private function wpdbCall(array $tokens, int $at, int &$i, int &$end): bool
+    private function wpdbCall(PhpcsTokens $tokens, int $at, int &$i, int &$end): bool
     {
-        $method = $tokens[$at + 2] ?? null;
-        $open = $tokens[$at + 3] ?? null;
-        if (($tokens[$at + 1]['t'] ?? '') !== 'objop' || $method === null || $open === null) {
+        if ($tokens->type($at + 1) !== 'objop' || $tokens->code($at + 2) === null || $tokens->code($at + 3) === null) {
             return false;
         }
 
         $i = $at + 3;
         if (
-            $open['t'] !== '('
-            || ($open['m'] ?? null) === null
-            || !($this->methods[strtolower($method['x'])] ?? false)
+            $tokens->type($at + 3) !== '('
+            || $tokens->closer($at + 3) === null
+            || !($this->methods[strtolower($tokens->content($at + 2))] ?? false)
         ) {
             return false;
         }
 
-        $end = PhpcsTokens::endOfStatement($tokens, $at + 4);
-        if ($tokens[$end]['t'] !== ',') {
+        $end = $tokens->endOfStatement($at + 4);
+        if ($tokens->type($end) !== ',') {
             $end++;
         }
 
@@ -165,27 +161,26 @@ final class PreparedSqlRule implements Rule
     /**
      * The sniff's walk over the query tokens; returns where the file scan resumes.
      *
-     * @param list<array{t: string, x: string, p: int, m?: int, short?: bool, e?: list<array{string, int}>, h?: bool}> $tokens
      */
-    private function walk(LintContext $context, array $tokens, int $i, int $end): int
+    private function walk(LintContext $context, PhpcsTokens $tokens, int $i, int $end): int
     {
         for (; $i < $end; $i++) {
-            $token = $tokens[$i] ?? null;
-            if ($token === null) {
+            $type = $tokens->type($i);
+            if ($type === null) {
                 break;
             }
 
-            $type = $token['t'];
-            if ((self::IGNORED[$type] ?? false) || ($type === '[' || $type === ']') && !($token['short'] ?? false)) {
+            if ((self::IGNORED[$type] ?? false) || ($type === '[' || $type === ']') && !$tokens->isShortArray($i)) {
                 continue;
             }
 
+            $text = $tokens->content($i);
             if ($type === 'string') {
-                foreach ($token['e'] ?? [] as [$embed, $offset]) {
+                foreach ($tokens->embedTexts($i) as [$embed, $offset]) {
                     if (preg_match('`^\{?\$\{?wpdb\??->`', $embed) !== 1) {
                         // phpcs names the string's line (its own token) that holds the embed.
                         $at = '';
-                        foreach (PhpcsTokens::textLines($token) as [$line, $start]) {
+                        foreach ($tokens->textLines($i) as [$line, $start]) {
                             $at = $start <= $offset ? trim($line) : $at;
                         }
 
@@ -202,22 +197,22 @@ final class PreparedSqlRule implements Rule
             }
 
             if ($type === 'var') {
-                if ($token['x'] === '$wpdb') {
+                if ($text === '$wpdb') {
                     $this->wpdbCall($tokens, $i, $i, $end);
                     continue;
                 }
 
-                if (($tokens[$i - 1]['t'] ?? '') === 'safecast') {
+                if ($tokens->type($i - 1) === 'safecast') {
                     continue;
                 }
             }
 
             if ($type === 'name') {
-                $name = strtolower($token['x']);
-                $next = $tokens[$i + 1] ?? null;
+                $name = strtolower($text);
+                $closer = $tokens->type($i + 1) === '(' ? $tokens->closer($i + 1) : null;
                 if ($this->escaping[$name] ?? false) {
-                    if ($next !== null && $next['t'] === '(' && ($next['m'] ?? null) !== null) {
-                        $i = $next['m'];
+                    if ($closer !== null) {
+                        $i = $closer;
                         continue;
                     }
                 } elseif ($this->formatting[$name] ?? false) {
@@ -227,8 +222,8 @@ final class PreparedSqlRule implements Rule
 
             $this->found(
                 $context,
-                "Use placeholders and \$wpdb->prepare(); found {$token['x']}",
-                new Span($token['p'], $token['p'] + strlen($token['x'])),
+                "Use placeholders and \$wpdb->prepare(); found {$text}",
+                new Span($tokens->pos($i), $tokens->pos($i) + strlen($text)),
                 'NotPrepared',
             );
         }

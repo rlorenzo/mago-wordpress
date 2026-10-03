@@ -10,7 +10,9 @@ use PhpToken;
 use function array_key_last;
 use function array_pop;
 use function array_reverse;
+use function array_slice;
 use function count;
+use function explode;
 use function in_array;
 use function preg_match;
 use function strlen;
@@ -19,14 +21,21 @@ use function strtolower;
 use function substr;
 use function trim;
 
+use const T_CURLY_OPEN;
+use const T_DOLLAR_OPEN_CURLY_BRACES;
+use const T_ENCAPSED_AND_WHITESPACE;
+use const T_NULLSAFE_OBJECT_OPERATOR;
+use const T_OBJECT_OPERATOR;
+
 /**
  * The file's tokens as phpcs sees them, for the WPCS sniffs that are written over tokens
- * rather than a syntax tree (`ValidatedSanitizedInput`, `NonceVerification`), with the
- * phpcs/PHPCSUtils/WPCS helpers they call. Whitespace and comments are dropped, so the
- * previous or next token is always the previous or next non-empty one. A namespaced name is
- * one `T_STRING` holding its last segment (`ns` marks a qualified one), as phpcs splits
- * names. A double-quoted string or heredoc is one token whose `embeds` list the variables it
- * interpolates, as `TextStrings::getEmbeds()` names them.
+ * rather than a syntax tree (`ValidatedSanitizedInput`, `NonceVerification`, `DB.PreparedSQL`,
+ * `DB.DirectDatabaseQuery`), with the phpcs/PHPCSUtils/WPCS helpers they call. Built once per
+ * file. Whitespace and comments are dropped, so the previous or next token is always the
+ * previous or next non-empty one. A namespaced name is split at `\` as phpcs splits it
+ * (`T_NS_SEPARATOR`, `T_STRING`); `ns` marks the last part of a qualified one. A double-quoted
+ * string or heredoc is one token whose `embeds` list the variables it interpolates, as
+ * `TextStrings::getEmbeds()` names them.
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
@@ -121,6 +130,65 @@ final class PhpcsTokens
         'is_string' => true,
     ];
 
+    /** Codes whose `type()` is `ignored`: numbers, increments, arithmetic, some casts, `<?php`. */
+    private const DB_IGNORED = [
+        'T_LNUMBER' => true,
+        'T_DNUMBER' => true,
+        'T_INC' => true,
+        'T_DEC' => true,
+        'T_POW' => true,
+        'T_STRING_CAST' => true,
+        'T_ARRAY_CAST' => true,
+        'T_OBJECT_CAST' => true,
+        'T_OPEN_TAG' => true,
+        '.' => true,
+        '+' => true,
+        '-' => true,
+        '*' => true,
+        '/' => true,
+        '%' => true,
+    ];
+
+    private const DB_TYPES = [
+        'T_VARIABLE' => 'var',
+        'T_STRING' => 'name',
+        'T_NS_SEPARATOR' => 'ns',
+        'T_CONSTANT_ENCAPSED_STRING' => 'text',
+        'T_DOUBLE_QUOTED_STRING' => 'string',
+        'T_HEREDOC' => 'string',
+        'T_INLINE_HTML' => 'html',
+        'T_FUNCTION' => 'function',
+        'T_OBJECT_OPERATOR' => 'objop',
+        'T_NULLSAFE_OBJECT_OPERATOR' => 'objop',
+        'T_DOUBLE_COLON' => 'objop',
+        'T_INT_CAST' => 'safecast',
+        'T_DOUBLE_CAST' => 'safecast',
+        'T_BOOL_CAST' => 'safecast',
+        'T_OPEN_SHORT_ARRAY' => '[',
+        'T_CLOSE_SHORT_ARRAY' => ']',
+        '(' => '(',
+        ')' => ')',
+        '[' => '[',
+        ']' => ']',
+        '{' => '{',
+        '}' => '}',
+        ',' => ',',
+        ';' => ';',
+        'T_CLOSE_TAG' => ';',
+        'T_DOUBLE_ARROW' => '=>',
+    ];
+
+    /** `type()`s after which the DB sniff ports read `[` as an index rather than a short array. */
+    private const DB_INDEXABLE = [
+        'var' => true,
+        'name' => true,
+        'string' => true,
+        'text' => true,
+        ')' => true,
+        ']' => true,
+        '}' => true,
+    ];
+
     public const KEY_EXISTS = ['array_key_exists' => true, 'key_exists' => true];
 
     private const ARRAY_COMPARE = ['in_array' => true, 'array_search' => true, 'array_keys' => true];
@@ -132,6 +200,8 @@ final class PhpcsTokens
      * @param array<int, int> $scopes scope owner (function, closure, class-like, `fn`) => its closer
      * @param array<int, int> $functions token => the `{` of the innermost function or closure around it
      * @param array<int, true> $ooDirect tokens directly in a class-like body
+     * @param list<PhpToken> $raw PHP's own tokens
+     * @param array<int, array{int, int}> $strings string token => its first and last token in $raw
      */
     private function __construct(
         public readonly array $tokens,
@@ -140,6 +210,8 @@ final class PhpcsTokens
         private readonly array $scopes,
         private readonly array $functions,
         private readonly array $ooDirect,
+        private readonly array $raw,
+        private readonly array $strings,
     ) {}
 
     public static function of(SourceFile $file): self
@@ -149,7 +221,7 @@ final class PhpcsTokens
 
     public static function build(string $contents): self
     {
-        $tokens = self::tokenize($contents);
+        [$tokens, $raw, $strings] = self::tokenize($contents);
         $pairs = self::pair($tokens);
         [$scopes, $owners] = self::scopes($tokens, $pairs);
 
@@ -198,7 +270,7 @@ final class PhpcsTokens
             }
         }
 
-        return new self($tokens, $pairs, $nested, $scopes, $functions, $ooDirect);
+        return new self($tokens, $pairs, $nested, $scopes, $functions, $ooDirect, $raw, $strings);
     }
 
     public function code(int $index): ?string
@@ -517,6 +589,142 @@ final class PhpcsTokens
         return $parameters;
     }
 
+    /**
+     * The coarse token type the DB sniff ports walk: `var`, `name`, `ns`, `text` (a plain
+     * string), `string` (an interpolated string or heredoc), `html`, `function`, `objop`,
+     * `safecast`, `ignored`, a bracket, `,`, `;` (also `?>`), `=>`, `:` (a named argument's
+     * colon) or `other`; null past either end.
+     */
+    public function type(int $index): ?string
+    {
+        $code = $this->code($index);
+        if ($code === null) {
+            return null;
+        }
+
+        if ((self::DB_IGNORED[$code] ?? null) !== null) {
+            return 'ignored';
+        }
+
+        if ($code === ':') {
+            // A named argument's colon; any other is a ternary's (T_INLINE_ELSE in phpcs).
+            $named = $this->type($index - 1) === 'name' && in_array($this->type($index - 2), ['(', ','], strict: true);
+
+            return $named ? ':' : 'other';
+        }
+
+        return self::DB_TYPES[$code] ?? 'other';
+    }
+
+    /** Whether a `[` or `]` belongs to a short array, as the DB sniff ports tell them apart. */
+    public function isShortArray(int $index): bool
+    {
+        $type = $this->type($index);
+        if ($type === ']') {
+            $opener = $this->closer($index);
+
+            return $opener !== null && $this->isShortArray($opener);
+        }
+
+        return $type === '[' && (self::DB_INDEXABLE[$this->type($index - 1) ?? ''] ?? null) === null;
+    }
+
+    /** The token's byte offset. */
+    public function pos(int $index): int
+    {
+        return $this->tokens[$index]['pos'];
+    }
+
+    /**
+     * An interpolated string's or heredoc's embeds as their full text and offset, with an
+     * embed's index, property or braces (`TextStrings::getEmbeds()` as `DB.PreparedSQL` reads it).
+     *
+     * @return list<array{string, int}>
+     * @mago-expect lint:halstead
+     */
+    public function embedTexts(int $index): array
+    {
+        [$k, $last] = $this->strings[$index] ?? [0, 0];
+        $raw = $this->raw;
+        $embeds = [];
+        for ($k++; $k < $last; $k++) {
+            if ($raw[$k]->id === T_ENCAPSED_AND_WHITESPACE) {
+                continue;
+            }
+
+            $first = $k;
+            if ($raw[$k]->id === T_CURLY_OPEN || $raw[$k]->id === T_DOLLAR_OPEN_CURLY_BRACES) {
+                for ($depth = 1; $depth > 0 && ($k + 1) < $last;) {
+                    $text = $raw[++$k]->text;
+                    $depth += match (true) {
+                        $text === '}' => -1,
+                        $text === '{' || $raw[$k]->id === T_CURLY_OPEN || $raw[$k]->id === T_DOLLAR_OPEN_CURLY_BRACES
+                            => 1,
+                        default => 0,
+                    };
+                }
+            } elseif (($raw[$k + 1]->text ?? '') === '[') {
+                while (($k + 1) < $last && $raw[$k]->text !== ']') {
+                    $k++;
+                }
+            } elseif (in_array($raw[$k + 1]->id ?? 0, [T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR], strict: true)) {
+                $k += 2;
+            }
+
+            $text = '';
+            for ($part = $first; $part <= $k; $part++) {
+                $text .= $raw[$part]->text;
+            }
+
+            $embeds[] = [$text, $raw[$first]->pos];
+        }
+
+        return $embeds;
+    }
+
+    /**
+     * The per-line text tokens phpcs makes of a string or inline HTML token (a heredoc's body
+     * lines only), as text and offset.
+     *
+     * @return list<array{string, int}>
+     */
+    public function textLines(int $index): array
+    {
+        $lines = [];
+        $offset = $this->pos($index);
+        foreach (explode("\n", $this->content($index)) as $line) {
+            $lines[] = [$line, $offset];
+            $offset += strlen($line) + 1;
+        }
+
+        return $this->code($index) === 'T_HEREDOC' ? array_slice($lines, offset: 1, length: count($lines) - 2) : $lines;
+    }
+
+    /** phpcs's `File::findEndOfStatement()`, over `type()`s. */
+    public function endOfStatement(int $start): int
+    {
+        $last = $start;
+        $count = count($this->tokens);
+        for ($k = $start; $k < $count; $k++) {
+            $type = $this->type($k);
+            if ($k !== $start && in_array($type, [':', ',', '=>', ';'], strict: true)) {
+                return $k;
+            }
+
+            if ($k !== $start && in_array($type, [')', ']', '}'], strict: true)) {
+                return $last;
+            }
+
+            if (in_array($type, ['(', '[', '{'], strict: true) && ($closer = $this->closer($k)) !== null) {
+                $k = $closer;
+            }
+
+            $last = $k;
+        }
+
+        return $count - 1;
+    }
+
     /** `TextStrings::stripQuotes()`. */
     public static function stripQuotes(string $text): string
     {
@@ -526,13 +734,14 @@ final class PhpcsTokens
     }
 
     /**
-     * @return list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}>
+     * @return array{list<array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}>, list<PhpToken>, array<int, array{int, int}>}
      * @mago-expect lint:halstead
      */
     private static function tokenize(string $contents): array
     {
         $raw = PhpToken::tokenize($contents);
         $tokens = [];
+        $strings = [];
         $gap = false;
         /** @var list<string> $squares */
         $squares = [];
@@ -546,16 +755,34 @@ final class PhpcsTokens
             }
 
             $content = $token->text;
-            $ns = false;
             $embeds = [];
             if ((self::NAMES[$code] ?? null) !== null) {
-                $last = strrpos($content, needle: '\\');
-                $ns = $code !== 'T_NAME_FULLY_QUALIFIED' || $last !== 0;
-                $content = substr($content, (int) $last + 1);
-                $code = 'T_STRING';
-            } elseif ($code === '"' || $code === 'T_START_HEREDOC') {
+                // phpcs splits a name at `\`; the last part is namespaced unless it is `\name`.
+                $ns = $code !== 'T_NAME_FULLY_QUALIFIED' || strrpos($content, needle: '\\') !== 0;
+                $pos = $token->pos;
+                $parts = explode('\\', $content);
+                $last = count($parts) - 1;
+                foreach ($parts as $part => $text) {
+                    if ($part > 0) {
+                        $tokens[] = self::token('T_NS_SEPARATOR', '\\', $pos++, $gap);
+                        $gap = false;
+                    }
+
+                    if ($text !== '') {
+                        $tokens[] = self::token('T_STRING', $text, $pos, $gap, $part === $last && $ns);
+                        $gap = false;
+                        $pos += strlen($text);
+                    }
+                }
+
+                continue;
+            }
+
+            if ($code === '"' || $code === 'T_START_HEREDOC') {
+                $first = $index;
                 [$index, $embeds, $content] = self::string($raw, $index);
                 $code = $code === '"' ? 'T_DOUBLE_QUOTED_STRING' : 'T_HEREDOC';
+                $strings[count($tokens)] = [$first, $index];
             } elseif ($code === '[') {
                 $previous = $tokens === [] ? '' : $tokens[count($tokens) - 1]['code'];
                 $code = (self::ACCESS_BEFORE[$previous] ?? null) !== null ? '[' : 'T_OPEN_SHORT_ARRAY';
@@ -566,18 +793,26 @@ final class PhpcsTokens
                 $code = array_pop($squares) === 'T_OPEN_SHORT_ARRAY' ? 'T_CLOSE_SHORT_ARRAY' : ']';
             }
 
-            $tokens[] = [
-                'code' => $code,
-                'content' => $content,
-                'pos' => $token->pos,
-                'ns' => $ns,
-                'gap' => $gap,
-                'embeds' => $embeds,
-            ];
+            $tokens[] = self::token($code, $content, $token->pos, $gap, embeds: $embeds);
             $gap = false;
         }
 
-        return $tokens;
+        return [$tokens, $raw, $strings];
+    }
+
+    /**
+     * @param list<array{string, int}> $embeds
+     * @return array{code: string, content: string, pos: int, ns: bool, gap: bool, embeds: list<array{string, int}>}
+     */
+    private static function token(
+        string $code,
+        string $content,
+        int $pos,
+        bool $gap,
+        bool $ns = false,
+        array $embeds = [],
+    ): array {
+        return ['code' => $code, 'content' => $content, 'pos' => $pos, 'ns' => $ns, 'gap' => $gap, 'embeds' => $embeds];
     }
 
     /**

@@ -2,20 +2,22 @@
 # Needs $here (repo root).
 
 # write_configs <project> <worker> <domain> <prefix> <work>: writes mago.toml and composer.json
-# into <work>. PHP encodes every value; a JSON string with unescaped slashes is also a valid
-# TOML basic string.
+# into <work>. The mago.toml extends the package's wordpress.mago.toml (the package being the
+# directory above <worker>'s resources/), so the bench runs the config a consumer gets with the
+# full WordPress standard. PHP encodes every value; a JSON string with unescaped slashes is also
+# a valid TOML basic string.
 write_configs() {
     # shellcheck disable=SC2016 # the single-quoted $ are PHP variables, not shell ones
     php -r '
 [, $project, $worker, $domain, $prefix, $work] = $argv;
 $json = fn (mixed $value): string => json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$preset = dirname($worker, 2) . "/wordpress.mago.toml";
 file_put_contents("$work/mago.toml", <<<TOML
+extends = {$json($preset)}
 php-version = "8.2"
 [source]
 paths = [{$json($project)}]
 excludes = ["**/vendor/**", "**/vendor_prefixed/**", "**/node_modules/**", "**/tests/**"]
-[linter]
-integrations = ["wordpress"]
 [extension-hosts.wordpress]
 command = ["php", {$json($worker)}]
 
