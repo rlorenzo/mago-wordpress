@@ -11,18 +11,44 @@ use function escapeshellarg;
 use function exec;
 use function file_put_contents;
 use function implode;
+use function is_dir;
+use function is_file;
+use function is_link;
 use function json_encode;
+use function mkdir;
+use function rmdir;
 use function str_repeat;
+use function symlink;
+use function unlink;
 
 use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
+use const PATH_SEPARATOR;
 
 /**
  * The real worker under every rule of the full standard, as `mago lint` runs it.
  */
 final class WorkerTest extends TestCase
 {
-    use TempProject;
+    use TempProject {
+        tearDown as private removeTempProject;
+    }
+
+    protected function tearDown(): void
+    {
+        // lintWith() links the package under vendor/ and adds an ini directory: remove them before
+        // the trait removes the rest.
+        foreach (['vendor/rlorenzo/mago-wordpress', 'vendor/rlorenzo', 'vendor', 'ini/memory.ini', 'ini'] as $path) {
+            $path = "{$this->directory}/{$path}";
+            if (is_link($path) || is_file($path)) {
+                unlink($path);
+            } elseif (is_dir($path)) {
+                rmdir($path);
+            }
+        }
+
+        $this->removeTempProject();
+    }
 
     /**
      * A 380 KB file dense with findings ran the worker out of memory at PHP's default 128M
@@ -64,20 +90,28 @@ final class WorkerTest extends TestCase
     {
         $root = dirname(__DIR__, levels: 2);
         file_put_contents("{$this->directory}/composer.json", '{"extra": {"mago-wordpress": ' . $settings . '}}');
+        // The preset starts the worker through vendor/rlorenzo/mago-wordpress/, as in a real project;
+        // overriding the command does not work on Mago 1.47.1, which appends it to the preset's.
+        mkdir("{$this->directory}/vendor/rlorenzo", recursive: true);
+        symlink($root, "{$this->directory}/vendor/rlorenzo/mago-wordpress");
         file_put_contents(
             "{$this->directory}/mago.toml",
             'extends = '
             . json_encode("{$root}/wordpress.mago.toml", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "\nversion = \"1\"\nphp-version = \"8.1\"\n[extension-hosts.wordpress]\n"
-            . 'command = ["php", "-d", "memory_limit=128M", '
-            . json_encode("{$root}/resources/worker.php", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "]\n",
+            . "\nversion = \"1\"\nphp-version = \"8.1\"\n",
         );
+        // PHP's default memory_limit, whatever the machine's php.ini says; the leading separator
+        // keeps the default scan directory, so the worker's extensions still load.
+        mkdir("{$this->directory}/ini");
+        file_put_contents("{$this->directory}/ini/memory.ini", data: "memory_limit=128M\n");
 
         $output = [];
         $status = 0;
         exec(
-            escapeshellarg("{$root}/vendor/bin/mago")
+            'PHP_INI_SCAN_DIR='
+            . escapeshellarg(PATH_SEPARATOR . "{$this->directory}/ini")
+            . ' '
+            . escapeshellarg("{$root}/vendor/bin/mago")
             . ' --workspace '
             . escapeshellarg($this->directory)
             . ' lint --reporting-format code-count '

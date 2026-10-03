@@ -61,10 +61,6 @@ final class Report
         $this->excludes = $excludes;
     }
 
-    /**
-     * Whether the sniff's `exclude` property drops the group, as WPCS's restriction sniffs
-     * skip an excluded group before matching.
-     */
     /** @var null|Closure(Issue, list<string>): void */
     private ?Closure $sink = null;
 
@@ -84,6 +80,10 @@ final class Report
         }
     }
 
+    /**
+     * Whether the sniff's `exclude` property drops the group, as WPCS's restriction sniffs
+     * skip an excluded group before matching.
+     */
     public function excludesGroup(string $sniff, string $group): bool
     {
         return in_array($group, $this->excludeGroups[$sniff] ?? [], strict: true);
