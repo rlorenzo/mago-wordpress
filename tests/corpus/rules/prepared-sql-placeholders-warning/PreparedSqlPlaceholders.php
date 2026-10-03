@@ -258,3 +258,10 @@ $wpdb->prepare(
 // @mago-expect lint:wordpress/prepared-sql-placeholders-warning
 $wpdb->prepare(sprintf('xxx IN (%s)', implode(',', array_fill(0, count($fields), '%i'))), $fields);
 $wpdb->prepare('xxx IN ( ' . implode(',', array_fill(0, count($fields), "%i")) . ' )', $fields);
+
+// a_wpdb_property_counts_and_unfinished_prepare_is_reported_at_the_end_of_the_query
+$this->wpdb->prepare(
+    // @mago-expect lint:wordpress/prepared-sql-placeholders-warning
+    'SELECT * FROM t WHERE id IN (1)',
+    $ids,
+);
