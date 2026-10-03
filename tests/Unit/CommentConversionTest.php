@@ -16,6 +16,9 @@ use function file_put_contents;
 use function implode;
 use function symlink;
 
+/**
+ * @mago-expect lint:too-many-methods
+ */
 final class CommentConversionTest extends TestCase
 {
     use TempProject;
