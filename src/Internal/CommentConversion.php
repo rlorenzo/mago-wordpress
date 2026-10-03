@@ -940,7 +940,7 @@ final class CommentConversion
 
             foreach ($paths === [] ? [''] : $paths as $path) {
                 $path = trim(preg_replace('#^\./#', replacement: '', subject: $path) ?? $path, characters: '/');
-                if ($path === '' || $file === $path || str_starts_with($file, "{$path}/")) {
+                if ($path === '' || $path === '.' || $file === $path || str_starts_with($file, "{$path}/")) {
                     $files[] = $file;
                     break;
                 }
@@ -1005,9 +1005,8 @@ final class CommentConversion
             fwrite(STDERR, "{$problem}\n");
         }
 
-        echo
-            "\nKeep \"honor-phpcs-comments\" on: the phpcs comments behind the lines above (see the\n"
-                . "\"not convertible\" notes) still suppress issues. Replace them by hand first.\n";
+        $keep = "\nKeep \"honor-phpcs-comments\" on: the phpcs comments behind the lines above (see the\n";
+        echo $keep . "\"not convertible\" notes) still suppress issues. Replace them by hand first.\n";
 
         return 1;
     }
