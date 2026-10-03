@@ -707,7 +707,7 @@ final class CommentConversion
 
             foreach ($paths === [] ? [''] : $paths as $path) {
                 $path = trim(preg_replace('#^\./#', replacement: '', subject: $path) ?? $path, characters: '/');
-                if ($path === '' || $file === $path || str_starts_with($file, "{$path}/")) {
+                if ($path === '' || $path === '.' || $file === $path || str_starts_with($file, "{$path}/")) {
                     $files[] = $file;
                     break;
                 }
@@ -760,9 +760,8 @@ final class CommentConversion
             fwrite(STDERR, "{$problem}\n");
         }
 
-        echo
-            "\nSet \"honor-phpcs-comments\": false in composer.json extra.mago-wordpress, or the remaining\n"
-                . "phpcs comments keep suppressing this package's rules.\n";
+        $setting = "\nSet \"honor-phpcs-comments\": false in composer.json extra.mago-wordpress, or the remaining\n";
+        echo $setting . "phpcs comments keep suppressing this package's rules.\n";
 
         return $problems === [] ? 0 : 1;
     }
