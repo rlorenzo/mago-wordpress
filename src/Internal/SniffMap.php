@@ -97,7 +97,7 @@ final class SniffMap
         'Generic.ControlStructures.InlineControlStructure' => ['generic/inline-control-structure'],
         'Generic.Files.ByteOrderMark' => ['generic/byte-order-mark'],
         'Generic.Files.OneObjectStructurePerFile' => ['single-class-per-file'],
-        'Generic.NamingConventions.UpperCaseConstantName' => ['constant-name'],
+        'Generic.NamingConventions.UpperCaseConstantName' => ['generic/upper-case-constant-name'],
         'Generic.PHP.BacktickOperator' => ['no-shell-execute-string'],
         'Generic.PHP.DisallowAlternativePHPTags' => ['generic/disallow-alternative-php-tags'],
         'Generic.PHP.DisallowShortOpenTag' => ['no-short-opening-tag'],

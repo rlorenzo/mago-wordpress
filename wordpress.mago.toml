@@ -27,6 +27,7 @@ braced-string-interpolation = { enabled = false }
 class-name = { enabled = false }
 combine-consecutive-issets = { enabled = false }
 constant-condition = { enabled = false }
+constant-name = { enabled = false }
 cyclomatic-complexity = { enabled = false }
 deprecated-cast = { enabled = false }
 deprecated-shell-execute-string = { enabled = false }
@@ -115,7 +116,6 @@ trait-name = { enabled = false }
 use-compound-assignment = { enabled = false }
 valid-docblock = { enabled = false }
 array-style = { style = "long", level = "error" }
-constant-name = { level = "error" }
 lowercase-keyword = { level = "error" }
 lowercase-type-hint = { level = "error" }
 no-debug-symbols = { level = "warning" }
