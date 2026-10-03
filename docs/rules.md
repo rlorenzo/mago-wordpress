@@ -89,10 +89,12 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 
 | Rule | Level | Ports | Checks |
 |:---|:---|:---|:---|
+| `generic/assignment-in-condition` | Warning | `Generic.CodeAnalysis.AssignmentInCondition` | an assignment in an `if`, `elseif`, `switch`, `case`, `while`, `match` or `for` condition, including `! $a = f()` |
 | `generic/byte-order-mark` | Error | `Generic.Files.ByteOrderMark` | a UTF-8 or UTF-16 byte order mark at the start of the file |
 | `generic/control-signature` | Error | `Squiz.ControlStructures.ControlSignature` | only `SpaceAfterCloseBrace`: a closing brace not followed by one space before `else`, `elseif`, `catch`, `finally` or a do-`while`, such as `} // note` then `else` on the next line, which `mago format` keeps; fixed where no comment is in the way. The sniff's other codes are `mago format`'s job |
 | `generic/disallow-alternative-php-tags` | Warning | `Generic.PHP.DisallowAlternativePHPTags` | `<%`, `<%=` and `<script language="php">` in inline HTML (removed in PHP 7, so the code inside is output as HTML) |
 | `generic/disallow-lonely-if` | Error | `Universal.ControlStructures.DisallowLonelyIf` | an `else` block whose only statement is an `if`; the fix rewrites the brace form to `elseif` as phpcbf does (comments around the inner `if` and the alternative syntax are not fixed) |
+| `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
 | `generic/disallow-size-functions-in-loops` | Error | `Squiz.PHP.DisallowSizeFunctionsInLoops` | `count()`, `sizeof()` or `strlen()` in a `while`/do-`while` condition or a `for` loop's test part |
 | `generic/disallow-standalone-post-increment-decrement` | Warning | `Universal.Operators.DisallowStandalonePostIncrementDecrement` | `$i++;` or `$i--;` as a statement of its own (WordPress-Core makes it a warning); the fix moves the operator to the front |
 | `generic/double-quote-usage` | Error | `Squiz.Strings.DoubleQuoteUsage` | only `NotRequired` (the code WordPress-Core includes): a double-quoted string that needs no double quotes; the fix single-quotes it as phpcbf does |
@@ -101,8 +103,6 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/for-loop-with-test-function-call` | Warning | `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | any function or method call in a `for` loop's test part |
 | `generic/foreach-unique-assignment` | Error | `Universal.CodeAnalysis.ForeachUniqueAssignment` | `foreach ($a as $k => $k)`, or a key reused as a destructuring target (the key wins, so the value is lost); no fix, since phpcbf's changes which value the variable gets |
 | `generic/git-merge-conflict` | Error | `Generic.VersionControl.GitMergeConflict` | merge conflict markers at the start of a line, including in inline HTML, comments and heredocs, where the file still parses |
-| `generic/assignment-in-condition` | Warning | `Generic.CodeAnalysis.AssignmentInCondition` | an assignment in an `if`, `elseif`, `switch`, `case`, `while`, `match` or `for` condition, including `! $a = f()` |
-| `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
 | `generic/increment-decrement-usage` | Error | `Squiz.Operators.IncrementDecrementUsage` | `$i = $i + 1`, `$i += 1` or `$i -= 1` where `++`/`--` would do, and `++`/`--` inside arithmetic or an unbracketed concatenation; no fix, as in phpcs |
 | `generic/inline-control-structure` | Error | `Generic.ControlStructures.InlineControlStructure` | an `if`, `elseif`, `else`, `foreach`, `for`, `while` or `do` body without braces; the fix adds them as phpcbf does |
 | `generic/jumbled-incrementer` | Warning | `Generic.CodeAnalysis.JumbledIncrementer` | a nested `for` loop incrementing the outer loop's variable |
@@ -124,13 +124,13 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/unnecessary-heredoc` | Warning | `Generic.Strings.UnnecessaryHeredoc` | a heredoc with nothing interpolated and no escape a nowdoc would lose; the fix turns it into a nowdoc as phpcbf does |
 | `generic/useless-overriding-method` | Warning | `Generic.CodeAnalysis.UselessOverridingMethod` | a method whose body only calls the parent method of the same name with its own parameters, unchanged; replaces Mago's `no-redundant-method-override` |
 | `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |
-| `generic/valid-logical-operators` | Error | `Squiz.Operators.ValidLogicalOperators` | the `and` and `or` operators; no fix, as `&&` and `||` bind tighter |
+| `generic/valid-logical-operators` | Error | `Squiz.Operators.ValidLogicalOperators` | the `and` and `or` operators; no fix, as `&&` and `\|\|` bind tighter |
 
 The generic rules honour phpcs comments and `exclude-patterns` under their own sniff codes. For
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-73 of the 74 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+85 of the 86 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For six of them the warning
