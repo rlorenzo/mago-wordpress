@@ -8,6 +8,7 @@ use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
@@ -65,7 +66,7 @@ final class PreparedSqlPlaceholdersRule extends CallRule
             [$message, $annotation, $help] = self::describe($code, $found);
             $this->report->issue(
                 $context,
-                Issue::new($message, $node->span, $annotation)->withHelp($help),
+                Issue::new($message, $node instanceof Span ? $node : $node->span, $annotation)->withHelp($help),
                 [self::SNIFF . '.' . $code],
             );
         }

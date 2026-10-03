@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Internal\WordPress;
 
+use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallArgument;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\Node;
@@ -48,7 +49,7 @@ final class PreparedQuery
      */
     private const GAP = "\0";
 
-    /** @var list<array{string, Node, string}> */
+    /** @var list<array{string, Node|Span, string}> */
     private array $findings = [];
 
     private bool $textFound = false;
@@ -75,7 +76,7 @@ final class PreparedQuery
      * $identifierSupported says whether the minimum WordPress version has
      * `%i`.
      *
-     * @return list<array{string, Node, string}> Each finding's WPCS message
+     * @return list<array{string, Node|Span, string}> Each finding's WPCS message
      *     code, the node it is on, and the text it found.
      */
     public static function analyze(SourceFile $file, CallExpression $call, bool $identifierSupported): array
@@ -107,6 +108,13 @@ final class PreparedQuery
             return in_array(strtolower($text), ['wpdb', '\\wpdb'], strict: true);
         }
 
+        if (in_array($receiver->kind, [NodeKind::PropertyAccess, NodeKind::NullSafePropertyAccess], strict: true)) {
+            // WPCS matches the `wpdb` name token, so `$this->wpdb->prepare()` counts too.
+            $selector = $file->getChildren($receiver)[1] ?? null;
+
+            return $selector !== null && strtolower($file->getText($selector)) === 'wpdb';
+        }
+
         return $receiver->kind === NodeKind::Variable && $text === '$wpdb';
     }
 
@@ -127,7 +135,7 @@ final class PreparedQuery
         return $argument !== null && $argument->name === null ? $argument : null;
     }
 
-    private function add(string $code, Node $node, string $found = ''): void
+    private function add(string $code, Node|Span $node, string $found = ''): void
     {
         $this->findings[] = [$code, $node, $found];
     }
@@ -136,12 +144,15 @@ final class PreparedQuery
     {
         $total = count($call->arguments);
         if ($this->placeholders === 0) {
+            // WPCS reports these at the query's last token.
+            $query = self::parameter($call, 1, 'query')?->node->span;
+            $end = $query === null ? $call->node : new Span($query->end - 1, $query->end);
             if ($total === 1 && !$this->variableFound && !$this->wildcardFound) {
-                $this->add('UnnecessaryPrepare', $call->node);
+                $this->add('UnnecessaryPrepare', $end);
             }
 
             if ($total > 1 && $this->usesIn === 0) {
-                $this->add('UnfinishedPrepare', $call->node);
+                $this->add('UnfinishedPrepare', $end);
             }
 
             return;
