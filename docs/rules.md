@@ -118,14 +118,17 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the five rules that only `WordPress-Extra` includes.
 
-59 of the 60 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+73 of the 74 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
-Some sniffs report some codes as errors and others as warnings. For four of them the warning
+Some sniffs report some codes as errors and others as warnings. For six of them the warning
 codes have their own rule, so each half reports at WPCS's level: `nonce-verification-warning`
-(`Recommended`), `valid-hook-name-warning` (`UseUnderscores`), `capabilities-warning` (`Unknown`) and
+(`Recommended`), `valid-hook-name-warning` (`UseUnderscores`), `capabilities-warning` (`Unknown`),
 `prepared-sql-placeholders-warning` (`LikeWithoutWildcards`, `ReplacementsWrongNumber`,
-`UnfinishedPrepare`, `UnnecessaryPrepare`). Each pair analyses a file once and shares the result.
+`UnfinishedPrepare`, `UnnecessaryPrepare`), and `generic/property-declaration-warning` and
+`generic/method-declaration-warning` (`Underscore`, which `WordPress-Core` silences and
+`WordPress-Extra` restores; under the `WordPress-Core` standard they report nothing, as does
+`generic/self-member-reference`'s `NotUsed`). Each pair analyses a file once and shares the result.
 A phpcs comment or exclusion that names the message code applies to whichever rule reports it.
 The other mixed rules take the majority level and report the minority codes at it:
 `capabilities` (`Deprecated` newer than `minimum-wp-version`),

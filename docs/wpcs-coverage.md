@@ -24,7 +24,8 @@ rules for the sniffs its standard includes and turns the rest off: this package'
   `ForLoopShouldBeWhileLoop`, `ForLoopWithTestFunctionCall`, `JumbledIncrementer`,
   `RequireExplicitBooleanOperatorPrecedence`, `UnconditionalIfStatement`, `UnnecessaryFinalModifier`,
   `UselessOverridingMethod`, `ForbiddenFunctions`, `UnnecessaryStringConcat`,
-  `DisallowSizeFunctionsInLoops` and `ForeachUniqueAssignment`.
+  `DisallowSizeFunctionsInLoops`, `ForeachUniqueAssignment`, `EmptyStatement`, `NonExecutableCode`,
+  `StaticInFinalClass` and `SeparateFunctionsFromOO`.
 - `WordPress` (`wordpress.mago.toml`): Extra, plus `WordPress-Docs` (`missing-docs`, below) and the
   three sniffs no group lists: `DB.DirectDatabaseQuery`, `DB.SlowDBQuery` and
   `Security.ValidatedSanitizedInput`.
