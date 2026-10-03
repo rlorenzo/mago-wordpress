@@ -994,9 +994,8 @@ final class CommentConversion
         }
 
         if ($problems === []) {
-            echo
-                "\nNo phpcs comment suppresses anything any more. Set \"honor-phpcs-comments\": false in\n"
-                    . "composer.json extra.mago-wordpress.\n";
+            $done = "\nNo phpcs comment suppresses anything any more. Set \"honor-phpcs-comments\": false in\n";
+            echo $done . "composer.json extra.mago-wordpress.\n";
 
             return 0;
         }
