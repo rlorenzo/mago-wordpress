@@ -3,7 +3,8 @@
 The `extends` in [Install](../README.md#install) also sets Mago's formatter to the closest it gets to
 `WordPress-Core`: tabs, braces on the same line, `! $x`, spaces inside grouping parentheses
 `( $a + $b )`, aligned `=` and `=>`, argument and parameter lists kept broken where you broke them,
-no line limit (`print-width = 1000`), `exit;` rather than `exit();`, a final `?>` kept, and no blank
+a broken concatenation kept broken (one operand per line; joined, `'a' . 'b'` on one line is what
+`Generic.Strings.UnnecessaryStringConcat` reports), no line limit (`print-width = 1000`), `exit;` rather than `exit();`, a final `?>` kept, and no blank
 line added after `<?php`. Trailing commas in multi-line lists stay on: WordPress-Core requires one
 after the last item of a multi-line array. It also sets `array-style` to `long`. Override any of
 these under `[formatter]` in your own `mago.toml`.
@@ -35,6 +36,13 @@ space before an alternative-syntax colon (`if ( $x ) :`, `else :`). Since `mago 
 again, the command is idempotent only as a whole: running `mago format` on its own undoes step 3.
 `mago format` is also not always stable on its own (a comment between `<?php` and `endif;` moves a
 little on each run), so the command repeats it until `mago format --check` passes.
+
+Formatting must not create findings. After the steps, the command lints each file they changed,
+formatted and as it was, and puts back the original of any file that gained a finding, with
+`<file>: left unformatted: formatting adds <rule> findings`. The known case: a `/* translators: */`
+comment inside a multi-line call that `mago format` moves so it is no longer on the line before its
+`__()` (`WordPress.WP.I18n.MissingTranslatorsComment`). Format such a file by hand, or leave it;
+`--check` does not count it as unformatted.
 
 `--check` copies the files into a temporary directory with your top-level files (`mago.toml`,
 `composer.json`, the baseline) and a link to `vendor/`, runs the same steps there, and prints a

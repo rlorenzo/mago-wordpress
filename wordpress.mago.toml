@@ -127,6 +127,9 @@ space-within-grouping-parenthesis = true
 align-assignment-like = true
 preserve-breaking-argument-list = true
 preserve-breaking-parameter-list = true
+# Keep a broken concatenation broken: joined, literals trip Generic.Strings.UnnecessaryStringConcat
+# (allowMultiline in WordPress-Extra) and a translators comment ends up away from its string.
+preserve-breaking-binary-expression = true
 # WordPress has no line limit; 120 wraps long calls, even `<?php esc_html_e( '...' ); ?>` in HTML.
 print-width = 1000
 # `exit;`, not `exit();`.
@@ -134,6 +137,9 @@ parentheses-in-exit-and-die = false
 # WordPress-Core asks for neither: templates keep a final `?>`, files don't gain a blank line after `<?php`.
 remove-trailing-close-tag = false
 empty-line-after-opening-tag = false
+# Keep `a || ( b && c )`: without the parentheses Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence
+# (generic/require-explicit-boolean-operator-precedence) reports the line.
+preserve-redundant-logical-binary-expression-parentheses = true
 # trailing-comma stays on (Mago's default): WordPress-Core requires one after a multi-line array's last item.
 
 [extension-hosts.wordpress]
