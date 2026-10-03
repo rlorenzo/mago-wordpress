@@ -46,21 +46,24 @@ trait TempProject
     }
 
     /**
-     * @param array<string, mixed> $settings composer.json `extra.mago-wordpress`
+     * @param null|array<string, mixed> $settings composer.json `extra.mago-wordpress`; NULL writes no composer.json
      * @param string $linterToml extra `mago.toml` lines placed before the extension host
      * @return array{int, string} exit status and combined output
      */
     private function lint(
         string $rule,
-        array $settings,
+        ?array $settings,
         string $code,
         string $flags = '',
         string $linterToml = '',
     ): array {
         $root = dirname(__DIR__, levels: 2);
-        file_put_contents("{$this->directory}/composer.json", json_encode([
-            'extra' => ['mago-wordpress' => $settings],
-        ], flags: JSON_THROW_ON_ERROR));
+        if ($settings !== null) {
+            file_put_contents("{$this->directory}/composer.json", json_encode([
+                'extra' => ['mago-wordpress' => $settings],
+            ], flags: JSON_THROW_ON_ERROR));
+        }
+
         file_put_contents(
             "{$this->directory}/mago.toml",
             "version = \"1\"\nphp-version = \"8.1\"\n{$linterToml}[extension-hosts.wordpress]\ncommand = [\"php\", "

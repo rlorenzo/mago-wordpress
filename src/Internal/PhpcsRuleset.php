@@ -470,22 +470,11 @@ final class PhpcsRuleset
                     continue;
                 }
 
-                // An array property can also be given as a comma-separated `value`.
-                $inline = explode(',', $property->getAttribute('value'));
-                // As in phpcs, a later assignment replaces the array unless it says extend="true".
-                $values = $property->getAttribute('extend') === 'true' ? $groups[$sniff] ?? [] : [];
-                foreach ([...self::elementValues($xpath, $property), ...$inline] as $group) {
-                    $group = trim($group);
-                    if ($group !== '') {
-                        $values[] = $group;
-                    }
-                }
-
-                $groups[$sniff] = $values;
+                $groups[$sniff] = self::arrayValues($xpath, $property, $groups[$sniff] ?? []);
             }
         }
 
-        return array_filter($groups, static fn(array $values): bool => $values !== []);
+        return array_filter(array_map(array_values(...), $groups), static fn(array $values): bool => $values !== []);
     }
 
     /**
@@ -494,14 +483,26 @@ final class PhpcsRuleset
     private static function properties(DOMXPath $xpath): array
     {
         $properties = [];
+        $arrays = [];
         foreach (self::elements($xpath, '//rule[@ref]') as $rule) {
+            $ref = $rule->getAttribute('ref');
             foreach (self::ownedProperties($xpath, $rule) as $property) {
                 $name = $property->getAttribute('name');
-                $values = $property->getAttribute('type') === 'array'
-                    ? self::elementValues($xpath, $property)
-                    : [$property->getAttribute('value')];
-                $properties[$name] = [...($properties[$name] ?? []), ...$values];
+                if ($property->getAttribute('type') === 'array') {
+                    // Keys survive until the last assignment, so a later `extend` can replace by key.
+                    $arrays[$name][$ref] = self::arrayValues($xpath, $property, $arrays[$name][$ref] ?? []);
+                } else {
+                    $properties[$name] = [...($properties[$name] ?? []), $property->getAttribute('value')];
+                }
             }
+        }
+
+        // Each sniff keeps its own array; the one setting is the union across the sniffs.
+        foreach ($arrays as $name => $perSniff) {
+            $properties[$name] = array_values(array_unique(array_merge(...array_values(array_map(
+                array_values(...),
+                $perSniff,
+            )))));
         }
 
         return $properties;
@@ -548,13 +549,43 @@ final class PhpcsRuleset
     }
 
     /**
-     * @return list<string>
+     * An array property as phpcs reads it: `<element [key] value>` children, else the
+     * deprecated comma-separated `value` with optional `key=>value` pairs. A later
+     * assignment replaces the array unless it says `extend="true"`. Keyed entries keep
+     * their key, so a map is not a list (`array_is_list()`).
+     *
+     * @param array<array-key, string> $previous
+     * @return array<array-key, string>
      */
-    private static function elementValues(DOMXPath $xpath, DOMElement $property): array
+    public static function arrayValues(DOMXPath $xpath, DOMElement $property, array $previous = []): array
     {
-        $values = [];
-        foreach (self::elements($xpath, 'element', $property) as $element) {
-            $values[] = $element->getAttribute('value');
+        $values = $property->getAttribute('extend') === 'true' ? $previous : [];
+        $elements = self::elements($xpath, 'element', $property);
+        if ($elements !== []) {
+            foreach ($elements as $element) {
+                if ($element->getAttribute('phpcbf-only') === 'true') {
+                    continue;
+                }
+
+                $key = $element->getAttribute('key');
+                if (trim($key) !== '') {
+                    $values[$key] = $element->getAttribute('value');
+                } else {
+                    $values[] = $element->getAttribute('value');
+                }
+            }
+
+            return $values;
+        }
+
+        $value = $property->getAttribute('value');
+        foreach ($value === '' ? [] : explode(',', $value) as $item) {
+            [$key, $mapped] = explode('=>', $item . '=>');
+            if ($mapped !== '') {
+                $values[trim($key)] = trim($mapped);
+            } else {
+                $values[] = trim($key);
+            }
         }
 
         return $values;

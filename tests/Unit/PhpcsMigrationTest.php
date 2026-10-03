@@ -228,6 +228,29 @@ final class PhpcsMigrationTest extends TestCase
         self::assertFalse($settings->strictClassFileNames);
     }
 
+    public function testValueFormArrayPropertiesMigrateAndKeyedOnesAreListed(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress.WP.I18n">
+                <properties><property name="text_domain" type="array" value="mydomain,other"/></properties>
+              </rule>
+              <rule ref="WordPress.Files.FileName">
+                <properties><property name="custom_test_classes" type="array" value="k=>\My\Case"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        $result = PhpcsMigration::migrate($xml, 'phpcs.xml');
+        self::assertNotNull($result);
+        self::assertSame(['mydomain', 'other'], $result['extra']['text-domains'] ?? null);
+        self::assertContains(
+            'property custom_test_classes on WordPress.Files.FileName: key=>value entries are read as plain values, the keys are ignored',
+            $result['unmapped'],
+        );
+    }
+
     public function testMetricsAndDocsSniffsBecomeCoreRuleSettings(): void
     {
         $xml = <<<'XML'

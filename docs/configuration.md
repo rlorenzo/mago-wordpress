@@ -59,6 +59,9 @@ With no `extra.mago-wordpress` block, the worker reads the same values from your
   `posts_per_page`, `min_interval`, `additionalWordDelimiters`, `allowed_custom_properties`,
   `exclude`, `custom_test_classes`, `strict_class_file_names`, `is_theme`,
   `treat_files_as_scoped`, ...
+- Array properties written either way: `<element value="..."/>` children, or the older
+  comma-separated `value="a,b"` (also `key=>value` pairs), with `extend="true"` appending to an
+  earlier value as in phpcs.
 - The codes it turns off (see [Turning rules off](#turning-rules-off)).
 
 An explicitly present but empty block (`{"extra": {"mago-wordpress": {}}}`) means "use the

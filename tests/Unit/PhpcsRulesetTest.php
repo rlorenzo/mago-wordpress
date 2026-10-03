@@ -15,6 +15,9 @@ use function mkdir;
 use function rmdir;
 use function unlink;
 
+/**
+ * @mago-expect lint:too-many-methods
+ */
 final class PhpcsRulesetTest extends TestCase
 {
     use TempProject;
@@ -199,6 +202,101 @@ final class PhpcsRulesetTest extends TestCase
             ['WordPress.PHP.DevelopmentFunctions' => ['prevent_path_disclosure', 'error_log']],
             Settings::fromArray(PhpcsRuleset::values($xml))->excludeGroups,
         );
+    }
+
+    public function testArrayPropertyValueFormIsReadLikePhpcs(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress.WP.I18n">
+                <properties><property name="text_domain" type="array" value="mydomain, other"/></properties>
+              </rule>
+              <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+                <properties><property name="prefixes" type="array" value="a"/></properties>
+              </rule>
+              <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+                <properties><property name="prefixes" type="array" extend="true" value="b,c"/></properties>
+              </rule>
+              <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+                <properties><property name="custom_test_classes" type="array" value="k=>One, Two"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        $settings = Settings::fromArray(PhpcsRuleset::values($xml));
+        self::assertSame(['mydomain', 'other'], $settings->textDomains);
+        self::assertSame(['a', 'b', 'c'], $settings->prefixes);
+        // A map keeps its key for phpcs; a list setting takes the values.
+        self::assertSame(['one', 'two'], $settings->customList('custom-test-classes'));
+    }
+
+    public function testKeysSurviveExtendAndSniffsAreUnioned(): void
+    {
+        $xml = <<<'XML'
+            <?xml version="1.0"?>
+            <ruleset name="x">
+              <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+                <properties><property name="custom_test_classes" type="array" value="k=>One"/></properties>
+              </rule>
+              <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+                <properties><property name="custom_test_classes" type="array" extend="true" value="k=>Two, Three"/></properties>
+              </rule>
+              <rule ref="WordPress.Files.FileName">
+                <properties><property name="custom_test_classes" type="array" value="Four"/></properties>
+              </rule>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array" value="k=>error_log"/></properties>
+              </rule>
+              <rule ref="WordPress.PHP.DevelopmentFunctions">
+                <properties><property name="exclude" type="array" extend="true" value="k=>var_dump"/></properties>
+              </rule>
+            </ruleset>
+            XML;
+
+        $settings = Settings::fromArray(PhpcsRuleset::values($xml));
+        // `k` is replaced, not appended; the other sniff's class is kept.
+        self::assertSame(['two', 'three', 'four'], $settings->customList('custom-test-classes'));
+        self::assertSame(['WordPress.PHP.DevelopmentFunctions' => ['var_dump']], $settings->excludeGroups);
+    }
+
+    public function testArrayValueKeyMapAndReplacement(): void
+    {
+        $xml =
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress.WP.I18n"><properties>'
+            . '<property name="text_domain" type="array" value="k=>v, w"/></properties></rule></ruleset>';
+        $xpath = PhpcsRuleset::load($xml);
+        self::assertNotNull($xpath);
+        $property = PhpcsRuleset::elements($xpath, '//property')[0];
+
+        self::assertSame(['k' => 'v', 0 => 'w'], PhpcsRuleset::arrayValues($xpath, $property));
+        // Without extend a later property replaces; with it, it appends.
+        self::assertSame(['k' => 'v', 0 => 'w'], PhpcsRuleset::arrayValues($xpath, $property, ['old']));
+    }
+
+    public function testValueFormTextDomainReachesTheRealWorker(): void
+    {
+        file_put_contents(
+            "{$this->directory}/phpcs.xml",
+            '<?xml version="1.0"?><ruleset name="x"><rule ref="WordPress.WP.I18n"><properties>'
+            . '<property name="text_domain" type="array" value="mydomain"/></properties></rule></ruleset>',
+        );
+
+        [, $report] = $this->lint(
+            'wordpress/wp-i18n',
+            null,
+            "__('Greeting', 'other');",
+            linterToml: "[linter]\nminimum-fail-level = \"note\"\n",
+        );
+        self::assertStringContainsString('Unexpected text domain', $report);
+
+        [$status, $report] = $this->lint(
+            'wordpress/wp-i18n',
+            null,
+            "__('Greeting', 'mydomain');",
+            linterToml: "[linter]\nminimum-fail-level = \"note\"\n",
+        );
+        self::assertSame(0, $status, $report);
     }
 
     public function testWordPressStandardExcludesNothing(): void
