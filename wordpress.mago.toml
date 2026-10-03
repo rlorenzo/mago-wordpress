@@ -102,6 +102,7 @@ prefer-static-closure = { enabled = false }
 readable-literal = { enabled = false }
 require-preg-quote-delimiter = { enabled = false }
 sensitive-parameter = { enabled = false }
+single-class-per-file = { enabled = false }
 str-contains = { enabled = false }
 str-starts-with = { enabled = false }
 strict-behavior = { enabled = false }
@@ -126,7 +127,6 @@ no-redundant-string-concat = { level = "error" }
 no-short-opening-tag = { level = "error" }
 no-shorthand-ternary = { level = "error" }
 prefer-while-loop = { level = "warning" }
-single-class-per-file = { level = "error" }
 # END generated
 
 # The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
