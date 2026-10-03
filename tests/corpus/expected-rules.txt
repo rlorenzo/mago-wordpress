@@ -29,6 +29,7 @@ generic/no-echo-sprintf
 generic/no-leading-backslash
 generic/no-reserved-keyword-parameter-names
 generic/non-executable-code
+generic/one-object-structure-per-file
 generic/property-declaration
 generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence

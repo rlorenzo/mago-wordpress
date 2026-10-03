@@ -138,7 +138,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` | 76% |
 | `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | `prefer-while-loop` | 100% |
 | `Generic.CodeAnalysis.UnnecessaryFinalModifier` | `no-redundant-final` | 50% |
-| `Generic.Files.OneObjectStructurePerFile` | `single-class-per-file` | 100% |
 | `Generic.PHP.BacktickOperator` | `no-shell-execute-string` | 100% |
 | `Generic.PHP.DisallowShortOpenTag` | `no-short-opening-tag` | 67% |
 | `Generic.PHP.DiscourageGoto` | `no-goto` | 100% |
