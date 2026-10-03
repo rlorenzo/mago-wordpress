@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
+use Rlorenzo\MagoWordPress\Internal\CommentConversion;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
@@ -77,7 +78,11 @@ final class WordPressExtension
     public static function create(?Settings $settings = null): Extension
     {
         $settings ??= new Settings();
-        $report = new Report($settings->honorPhpcsComments, $settings->excludePatterns, $settings->excludeGroups);
+        $report = new Report(
+            $settings->honorPhpcsComments && getenv(CommentConversion::ENV) === false,
+            $settings->excludePatterns,
+            $settings->excludeGroups,
+        );
 
         return new Extension(
             identifier: 'rlorenzo/mago-wordpress',
