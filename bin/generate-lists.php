@@ -313,15 +313,17 @@ function call_args(array $tokens, int $open): array
     return $args;
 }
 
-/** The right-hand sides assigned to $variable between the enclosing function's start and $at. */
+/** The right-hand sides assigned (or `.=` appended) to $variable between the enclosing function's start and $at. */
 function assignments(array $tokens, int $at, string $variable): array
 {
     $values = [];
     for ($i = $at; $i > 0 && !(is_array($tokens[$i]) && $tokens[$i][0] === T_FUNCTION); $i--) {
-        if (!is_array($tokens[$i]) || $tokens[$i][1] !== $variable || ($tokens[$i + 1] ?? null) !== '=') {
+        $append = is_array($tokens[$i + 1] ?? null) && $tokens[$i + 1][0] === T_CONCAT_EQUAL;
+        if (!is_array($tokens[$i]) || $tokens[$i][1] !== $variable || (($tokens[$i + 1] ?? null) !== '=' && !$append)) {
             continue;
         }
-        $value = [];
+        // `.=` appends to whatever the variable held: `*` followed by the appended text.
+        $value = $append ? [[T_STRING, '*'], '.'] : [];
         $depth = 0;
         for ($j = $i + 2; $j < count($tokens); $j++) {
             $text = text($tokens[$j]);
@@ -437,14 +439,13 @@ function sniff_levels(string $wpcs, string $file): array
 
 require_once __DIR__ . '/../src/Internal/SniffMap.php';
 $sniffLevels = [];
-foreach (Rlorenzo\MagoWordPress\Internal\SniffMap::RULES as $sniff => $rules) {
-    if (array_filter($rules, Rlorenzo\MagoWordPress\Internal\SniffMap::isExtensionRule(...)) === []) {
-        continue;
-    }
+// Every mapped sniff: the extension rules take their levels from here, and bin/generate-presets.php
+// sets the level of the Mago core rules the presets keep on.
+foreach (array_keys(Rlorenzo\MagoWordPress\Internal\SniffMap::RULES) as $sniff) {
     [$standard, $category, $name] = explode('.', $sniff);
     $sniffLevels[$sniff] = sniff_levels($wpcs, match ($standard) {
         'WordPress' => "{$wpcs}/WordPress/Sniffs/{$category}/{$name}Sniff.php",
-        'Universal' => "{$vendor}/phpcsstandards/phpcsextra/Universal/Sniffs/{$category}/{$name}Sniff.php",
+        'Universal', 'Modernize', 'NormalizedArrays' => "{$vendor}/phpcsstandards/phpcsextra/{$standard}/Sniffs/{$category}/{$name}Sniff.php",
         default => "{$vendor}/squizlabs/php_codesniffer/src/Standards/{$standard}/Sniffs/{$category}/{$name}Sniff.php",
     });
 }

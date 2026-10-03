@@ -562,6 +562,18 @@ final class PhpcsMigration
             'Squiz.Commenting.*Comment.Missing: an error, as in phpcs (the shipped config reports at help).',
         ];
 
+        // phpcs reports a `//` or `/* */` comment in place of a docblock as WrongStyle, not Missing;
+        // missing-docs accepts only `/**`, so it reports those too.
+        foreach ($on as $ref) {
+            $sniff = substr($ref, offset: 0, length: -strlen('.Missing'));
+            if (!$this->refers($sniff) && !$this->refers("{$sniff}.WrongStyle")) {
+                $this->unmapped[] = "{$ref} without {$sniff}.WrongStyle: missing-docs also reports a declaration whose comment is not a `/**` docblock (phpcs reports that as WrongStyle); turn the comment into a docblock or add @mago-expect lint:missing-docs";
+                $this->comments['missing-docs'][] = 'It also reports a `//` or `/* */` comment in place of a docblock, which phpcs left to WrongStyle.';
+            }
+        }
+
+        $this->comments['missing-docs'] = array_values(array_unique($this->comments['missing-docs']));
+
         return [...$settings, ...$per[0]];
     }
 

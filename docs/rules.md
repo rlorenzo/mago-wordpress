@@ -15,6 +15,7 @@
 | `wordpress/discouraged-constants` | Warning | `WordPress.WP.DiscouragedConstants` | usage and (re-)declaration of discouraged WordPress constants such as `STYLESHEETPATH` or `PLUGINDIR` |
 | `wordpress/discouraged-wp-functions` | Warning | `WordPress.WP.DiscouragedFunctions`, `WordPress.PHP.DiscouragedPHPFunctions`, `WordPress.PHP.DevelopmentFunctions` | `query_posts()`, `wp_reset_query()`, serialization, obfuscation, system calls, debug output |
 | `wordpress/dont-extract` | Error | `WordPress.PHP.DontExtract` | `extract()` |
+| `wordpress/no-silenced-errors` | Warning | `WordPress.PHP.NoSilencedErrors` | the `@` operator; under `WordPress-Core` not before the PHP functions WPCS allows (`is_file()`, `fopen()`, ...); `custom-allowed-functions-list` adds names |
 | `wordpress/enqueued-resource-parameters` | Warning | `WordPress.WP.EnqueuedResourceParameters` | missing, `null`, or falsy `$ver` and missing `$in_footer` on enqueue and register calls |
 | `wordpress/enqueued-resources` | Error | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
 | `wordpress/escape-output` | Error | `WordPress.Security.EscapeOutput` | unescaped output from `echo`, `print`, `<?=`, `exit`/`die`, uncaught `throw` and the printing functions (`_e()`, `printf()`, `wp_die()`, ...); WPCS's escaping and auto-escaped lists, plus `custom-escaping-functions`, `custom-auto-escaped-functions` and `custom-printing-functions`. Replaces Mago's `no-unescaped-output`, which the shipped config turns off |
@@ -94,6 +95,8 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/for-loop-with-test-function-call` | Warning | `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | any function or method call in a `for` loop's test part |
 | `generic/foreach-unique-assignment` | Error | `Universal.CodeAnalysis.ForeachUniqueAssignment` | `foreach ($a as $k => $k)`, or a key reused as a destructuring target (the key wins, so the value is lost); no fix, since phpcbf's changes which value the variable gets |
 | `generic/git-merge-conflict` | Error | `Generic.VersionControl.GitMergeConflict` | merge conflict markers at the start of a line, including in inline HTML, comments and heredocs, where the file still parses |
+| `generic/assignment-in-condition` | Warning | `Generic.CodeAnalysis.AssignmentInCondition` | an assignment in an `if`, `elseif`, `switch`, `case`, `while`, `match` or `for` condition, including `! $a = f()` |
+| `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
 | `generic/jumbled-incrementer` | Warning | `Generic.CodeAnalysis.JumbledIncrementer` | a nested `for` loop incrementing the outer loop's variable |
 | `generic/require-explicit-boolean-operator-precedence` | Error | `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | `&&`, `\|\|`, `and`, `or`, `xor` mixed without parentheses, as in `$a && $b \|\| $c` |
 
@@ -101,7 +104,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the five rules that only `WordPress-Extra` includes.
 
-56 of the 57 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+59 of the 60 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For four of them the warning
@@ -114,7 +117,7 @@ The other mixed rules take the majority level and report the minority codes at i
 `capabilities` (`Deprecated` newer than `minimum-wp-version`),
 `enqueued-resource-parameters` (`NoExplicitVersion` is a WPCS error),
 `prefix-all-globals` (dynamic names, `InvalidPrefixPassed`), `type-casts` (`BinaryFound`),
-`valid-post-type-slug` (`NotStringLiteral`, `PartiallyDynamic`), `wp-date-time` (`Requested`),
+`valid-post-type-slug` (`PartiallyDynamic`; `NotStringLiteral` is not reported, as phpcs hides its severity 3), `wp-date-time` (`Requested`),
 `wp-i18n` (`LowLevelTranslationFunction`, `MismatchedPlaceholders`, `MissingArgDomainDefault`,
 `NoHtmlWrappedStrings`, `SuperfluousDefaultTextDomain`), the deprecation rules (newer than
 `minimum-wp-version`) and `generic/disallow-alternative-php-tags` (`ScriptOpenTagFound` is a WPCS

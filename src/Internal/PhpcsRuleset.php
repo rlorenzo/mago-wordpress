@@ -76,6 +76,7 @@ final class PhpcsRuleset
         'customCacheGetFunctions' => ['custom-cache-get-functions', 'list'],
         'customCacheSetFunctions' => ['custom-cache-set-functions', 'list'],
         'customCacheDeleteFunctions' => ['custom-cache-delete-functions', 'list'],
+        'customAllowedFunctionsList' => ['custom-allowed-functions-list', 'list'],
     ];
 
     /**
@@ -102,6 +103,7 @@ final class PhpcsRuleset
             'customCacheDeleteFunctions',
         ],
         'WordPress.WP.CronInterval' => ['min_interval'],
+        'WordPress.PHP.NoSilencedErrors' => ['customAllowedFunctionsList'],
         'WordPress.NamingConventions.ValidHookName' => ['additionalWordDelimiters'],
         'WordPress.NamingConventions.ValidVariableName' => ['allowed_custom_properties'],
         'WordPress.Files.FileName' => ['strict_class_file_names', 'is_theme', 'custom_test_classes'],
