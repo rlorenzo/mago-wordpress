@@ -12,6 +12,7 @@ use function array_map;
 use function array_merge;
 use function array_unique;
 use function array_values;
+use function bin2hex;
 use function copy;
 use function dirname;
 use function escapeshellarg;
@@ -30,12 +31,12 @@ use function passthru;
 use function rtrim;
 use function scandir;
 use function sort;
+use function str_replace;
 use function str_starts_with;
 use function strlen;
 use function substr;
 use function symlink;
 use function sys_get_temp_dir;
-use function uniqid;
 
 use const ARRAY_FILTER_USE_BOTH;
 use const STDERR;
@@ -139,14 +140,34 @@ final class FormatCommand
 
         foreach (self::STEPS as $step) {
             $runs = $step === ['format'] ? 5 : 1; // ponytail: gives up after 5 runs; mago converged in 3 on bcap.
-            do {
+            for ($run = 1;; ++$run) {
                 [$status, $output] = self::exec([$mago, ...$step, ...$paths], $cwd, $capture);
                 if ($status !== 0) {
                     fwrite(STDERR, $output);
 
                     return $status;
                 }
-            } while (--$runs > 0 && self::exec([$mago, 'format', '--check', ...$paths], $cwd)[0] !== 0);
+
+                if ($runs === 1) {
+                    break;
+                }
+
+                // `mago format --check` exits 1 for files still unformatted and 2 for a tool error.
+                $check = self::exec([$mago, 'format', '--check', ...$paths], $cwd)[0];
+                if ($check === 0) {
+                    break;
+                }
+
+                if ($check !== 1) {
+                    return $check;
+                }
+
+                if ($run >= $runs) {
+                    fwrite(STDERR, "mago format did not settle after {$runs} runs\n");
+
+                    return 1;
+                }
+            }
         }
 
         return self::keepFindings($mago, $cwd, $before);
@@ -239,8 +260,14 @@ final class FormatCommand
             return 1;
         }
 
-        $temp = sys_get_temp_dir() . '/' . uniqid('mago-wordpress-format-', more_entropy: true);
-        mkdir($temp);
+        // Private (0700) and unpredictable: the copy holds the project's configuration and source.
+        $temp = sys_get_temp_dir() . '/mago-wordpress-format-' . bin2hex(random_bytes(8));
+        if (!mkdir($temp, 0o700)) {
+            fwrite(STDERR, "Could not create the temporary directory {$temp}\n");
+
+            return 1;
+        }
+
         try {
             if (is_dir("{$cwd}/vendor")) {
                 symlink("{$cwd}/vendor", "{$temp}/vendor");
@@ -356,6 +383,7 @@ final class FormatCommand
             'git',
             'diff',
             '--cached',
+            '-z',
             '--name-only',
             '--relative',
             '--diff-filter=ACMR',
@@ -366,14 +394,20 @@ final class FormatCommand
             return null;
         }
 
-        $files = array_values(array_intersect($files, explode("\n", $staged)));
+        // NUL-delimited: without -z git quotes names with non-ASCII bytes, and they would not match.
+        $files = array_values(array_intersect($files, explode("\0", $staged)));
         if ($files === []) {
             return [];
         }
 
-        $partial = self::exec(['git', 'diff', '--name-only', '--relative', '--', ...$files], $cwd)[1];
+        $partial = self::exec(['git', 'diff', '-z', '--name-only', '--relative', '--', ...$files], $cwd)[1];
         if ($partial !== '') {
-            fwrite(STDERR, "Staged files also have unstaged changes; stage or stash them first:\n{$partial}");
+            fwrite(
+                STDERR,
+                "Staged files also have unstaged changes; stage or stash them first:\n"
+                . str_replace("\0", "\n", $partial)
+                . "\n",
+            );
 
             return null;
         }
