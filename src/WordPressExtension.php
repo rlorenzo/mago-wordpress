@@ -6,6 +6,7 @@ namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
@@ -14,6 +15,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
@@ -35,7 +37,9 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\PregQuoteDelimiterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
@@ -127,6 +131,10 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new AlternativeFunctionsRule($report, $settings),
+                new PreparedSqlRule($report),
+                new DirectDatabaseQueryRule($report, $settings),
+                new PregQuoteDelimiterRule($report),
                 new ValidatedSanitizedInputRule($report, $settings),
                 new NonceVerificationRule($report, $settings),
             ],

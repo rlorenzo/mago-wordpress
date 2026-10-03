@@ -11,10 +11,16 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Calls;
+use Rlorenzo\MagoWordPress\Internal\FileCache;
 use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\Values;
 
+use function array_map;
+use function array_values;
+use function implode;
 use function in_array;
+use function preg_match_all;
+use function preg_quote;
 use function strtolower;
 
 /**
@@ -22,6 +28,7 @@ use function strtolower;
  *
  * @internal
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:too-many-methods
  */
 abstract class CallRule implements Rule
 {
@@ -36,6 +43,17 @@ abstract class CallRule implements Rule
      * @return list<string>
      */
     abstract protected function names(): array;
+
+    /**
+     * Name prefixes this rule also reports, as WPCS's `curl_*` wildcard. The
+     * match ignores case.
+     *
+     * @return list<string>
+     */
+    protected function prefixes(): array
+    {
+        return [];
+    }
 
     /**
      * Checks one matched call. $name is the normalized matched name.
@@ -54,15 +72,12 @@ abstract class CallRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $this->gate ??= self::buildGate($this->names());
+        $this->gate ??= self::buildGate($this->names(), $this->prefixes());
         if (!$this->gate->passes($context->file)) {
             return;
         }
 
-        // The rule normalizes the wanted set once, not once per node.
-        $this->wanted ??= Calls::normalizeAll($this->names());
-        $wanted = $this->wanted;
-
+        $wanted = $this->wanted($context->file);
         if ($this->lintReference($context, $wanted)) {
             return;
         }
@@ -168,6 +183,44 @@ abstract class CallRule implements Rule
     }
 
     /**
+     * The normalized names to match: names(), plus the words in the file that
+     * start with one of prefixes().
+     *
+     * @return array<string, true>
+     */
+    private function wanted(SourceFile $file): array
+    {
+        // The rule normalizes the wanted set once, not once per node.
+        $this->wanted ??= Calls::normalizeAll($this->names());
+        $wanted = $this->wanted;
+        if ($this->prefixes() === []) {
+            return $wanted;
+        }
+
+        return $wanted + FileCache::remember($file, 'prefixed:' . static::class, function () use ($file): array {
+            $matches = [];
+            preg_match_all(
+                '/(?<![\w$])(?:' . self::alternation($this->prefixes()) . ')\w*/i',
+                $file->contents,
+                $matches,
+            );
+
+            return Calls::normalizeAll(array_values($matches[0]));
+        });
+    }
+
+    /**
+     * @param list<string> $prefixes
+     */
+    private static function alternation(array $prefixes): string
+    {
+        return implode('|', array_map(static fn(string $prefix): string => preg_quote(
+            $prefix,
+            delimiter: '/',
+        ), $prefixes));
+    }
+
+    /**
      * Builds the file gate from the rule's call names.
      *
      * Every match puts a wanted name in the source as a whole word. This
@@ -178,9 +231,12 @@ abstract class CallRule implements Rule
      * import.
      *
      * @param list<string> $names
+     * @param list<string> $prefixes
      */
-    private static function buildGate(array $names): FileGate
+    private static function buildGate(array $names, array $prefixes): FileGate
     {
-        return FileGate::forWords($names, pattern: '/\buse\s[^;]*\bfunction\b/i');
+        $prefixed = $prefixes === [] ? '' : '|(?<!\w)(?:' . self::alternation($prefixes) . ')';
+
+        return FileGate::forWords($names, pattern: '/\buse\s[^;]*\bfunction\b' . $prefixed . '/i');
     }
 }

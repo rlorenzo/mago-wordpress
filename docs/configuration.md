@@ -19,6 +19,9 @@ as sniff properties from your project. Put them in `composer.json`:
       "custom-capabilities": [],
       "allowed-custom-properties": [],
       "custom-test-classes": [],
+      "custom-cache-get-functions": [],
+      "custom-cache-set-functions": [],
+      "custom-cache-delete-functions": [],
       "max-posts-per-page": 100,
       "min-cron-interval": 900,
       "additional-word-delimiters": "",
@@ -69,6 +72,10 @@ Properties are read only when set directly on the sniff's own ref, such as
 
 `custom-capabilities` lists capabilities `wordpress/capabilities` accepts.
 
+`custom-cache-get-functions`, `custom-cache-set-functions` and `custom-cache-delete-functions` add
+cache functions that `wordpress/direct-database-query` counts as caching (WPCS's
+`customCacheGetFunctions`, `customCacheSetFunctions`, `customCacheDeleteFunctions`).
+
 `custom-sanitizing-functions` and `custom-unslashing-sanitizing-functions` add sanitizing functions
 (the second kind also unslash) to `wordpress/validated-sanitized-input` and
 `wordpress/nonce-verification`. `custom-nonce-verification-functions` (WPCS's
@@ -85,7 +92,7 @@ Other WPCS sniff properties, under their own names:
 
 | Setting | WPCS property | Effect |
 |:---|:---|:---|
-| `exclude-groups` | `exclude` on a function-restriction sniff | WPCS sniff => the function groups it skips, e.g. `"WordPress.PHP.DevelopmentFunctions": ["error_log"]`. Honoured by every sniff this package ports (`DateTime.RestrictedFunctions`, `DB.RestrictedClasses`, `DB.RestrictedFunctions`, `DB.SlowDBQuery`, `PHP.DevelopmentFunctions`, `PHP.DiscouragedPHPFunctions`, `PHP.DontExtract`, `PHP.RestrictedPHPFunctions`, `Security.SafeRedirect`, `WP.ClassNameCase`, `WP.DeprecatedClasses`, `WP.DeprecatedFunctions`, `WP.DiscouragedFunctions`, `WP.PostsPerPage`); not by Mago's core rules (`WP.AlternativeFunctions`). `Security.EscapeOutput` ignores `exclude`, as in WPCS. |
+| `exclude-groups` | `exclude` on a function-restriction sniff | WPCS sniff => the function groups it skips, e.g. `"WordPress.PHP.DevelopmentFunctions": ["error_log"]`. Honoured by every sniff this package ports (`DateTime.RestrictedFunctions`, `DB.RestrictedClasses`, `DB.RestrictedFunctions`, `DB.SlowDBQuery`, `PHP.DevelopmentFunctions`, `PHP.DiscouragedPHPFunctions`, `PHP.DontExtract`, `PHP.RestrictedPHPFunctions`, `Security.SafeRedirect`, `WP.AlternativeFunctions`, `WP.ClassNameCase`, `WP.DeprecatedClasses`, `WP.DeprecatedFunctions`, `WP.DiscouragedFunctions`, `WP.PostsPerPage`); `Security.EscapeOutput` ignores `exclude`, as in WPCS. |
 | `custom-test-classes` | `custom_test_classes` | extra test base classes (fully qualified) whose subclasses `file-name`, `global-variables-override` and `prefix-all-globals` skip. WPCS sets it per sniff; here it is one list. |
 | `strict-class-file-names` | `strict_class_file_names` | `false` stops `file-name` requiring the `class-` prefix on class files. |
 | `is-theme` | `is_theme` | `true` lets `file-name` accept theme template-hierarchy names (`single-my_post_type.php`, `taxonomy-post_format-...`, `text_plain.php`). |

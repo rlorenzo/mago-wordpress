@@ -484,7 +484,7 @@ final class PhpcsTokens
         for ($index = $start; $index <= $close; $index++) {
             $code = $this->code($index);
             if ($index < $close && $code !== ',') {
-                if (in_array($code, ['(', '[', 'T_OPEN_SHORT_ARRAY', '{'], strict: true)) {
+                if (in_array($code, ['(', '[', 'T_ATTRIBUTE', 'T_OPEN_SHORT_ARRAY', '{'], strict: true)) {
                     $index = $this->closer($index) ?? $index;
                 }
 
@@ -559,6 +559,8 @@ final class PhpcsTokens
             } elseif ($code === '[') {
                 $previous = $tokens === [] ? '' : $tokens[count($tokens) - 1]['code'];
                 $code = (self::ACCESS_BEFORE[$previous] ?? null) !== null ? '[' : 'T_OPEN_SHORT_ARRAY';
+                $squares[] = $code;
+            } elseif ($code === 'T_ATTRIBUTE') {
                 $squares[] = $code;
             } elseif ($code === ']') {
                 $code = array_pop($squares) === 'T_OPEN_SHORT_ARRAY' ? 'T_CLOSE_SHORT_ARRAY' : ']';
@@ -646,7 +648,13 @@ final class PhpcsTokens
      */
     private static function pair(array $tokens): array
     {
-        $openers = ['(' => ')', '[' => ']', 'T_OPEN_SHORT_ARRAY' => 'T_CLOSE_SHORT_ARRAY', '{' => '}'];
+        $openers = [
+            '(' => ')',
+            '[' => ']',
+            'T_ATTRIBUTE' => ']',
+            'T_OPEN_SHORT_ARRAY' => 'T_CLOSE_SHORT_ARRAY',
+            '{' => '}',
+        ];
         /** @var array<string, list<int>> $stacks */
         $stacks = [];
         /** @var array<int, int> $pairs */
@@ -729,7 +737,7 @@ final class PhpcsTokens
 
             if (
                 ($pairs[$index] ?? null) !== null
-                && in_array($code, ['(', '[', 'T_OPEN_SHORT_ARRAY', '{'], strict: true)
+                && in_array($code, ['(', '[', 'T_ATTRIBUTE', 'T_OPEN_SHORT_ARRAY', '{'], strict: true)
             ) {
                 $index = $pairs[$index];
             }

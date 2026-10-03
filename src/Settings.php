@@ -52,6 +52,9 @@ final class Settings
         'custom-capabilities' => 'custom_capabilities',
         'allowed-custom-properties' => 'allowed_custom_properties',
         'custom-test-classes' => 'custom_test_classes',
+        'custom-cache-get-functions' => 'customCacheGetFunctions',
+        'custom-cache-set-functions' => 'customCacheSetFunctions',
+        'custom-cache-delete-functions' => 'customCacheDeleteFunctions',
     ];
 
     /**

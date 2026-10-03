@@ -47,6 +47,9 @@ final class NonceVerificationRule implements Rule
     /** @var array<string, true> */
     private readonly array $nonceFunctions;
 
+    /** @var array<string, true> */
+    private readonly array $unslashingFunctions;
+
     /** @var array<int, array{end: int, nonce: false|int}> scope start => how far it was searched, and the nonce check found */
     private array $cache = [];
 
@@ -55,6 +58,7 @@ final class NonceVerificationRule implements Rule
         Settings $settings,
     ) {
         $this->sanitization = new Sanitization($settings);
+        $this->unslashingFunctions = array_fill_keys(Lists::UNSLASHING_FUNCTIONS, value: true);
         $this->nonceFunctions = array_fill_keys([
             'wp_verify_nonce',
             'check_admin_referer',
@@ -152,7 +156,7 @@ final class NonceVerificationRule implements Rule
             || $tokens->isComparison($index)
             || $tokens->isAssignment($index)
             || $tokens->inArrayComparison($index)
-            || $tokens->inFunctionCall($index, array_fill_keys(Lists::UNSLASHING_FUNCTIONS, value: true)) !== null
+            || $tokens->inFunctionCall($index, $this->unslashingFunctions) !== null
             || $this->sanitization->isOnlySanitized($tokens, $index);
 
         return $after ? 'after' : 'before';

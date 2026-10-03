@@ -26,8 +26,8 @@ use function in_array;
  *
  * Only a capability passed as a single string literal is checked; the sniff's
  * low-severity `Undetermined` warning for any other value is hidden by PHPCS's
- * default severity and is not ported. The role check overlaps Mago's core
- * `no-roles-as-capabilities` rule.
+ * default severity and is not ported. Its `RoleFound` covers Mago's core
+ * `no-roles-as-capabilities` rule, which the shipped config turns off.
  */
 final class CapabilitiesRule extends CallRule
 {
