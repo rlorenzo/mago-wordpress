@@ -1,5 +1,7 @@
 # Migrating from phpcs
 
+For the whole switch (baseline, CI, hooks, formatting), see [Adopting](adopting.md).
+
 `vendor/bin/mago-wordpress migrate` reads `phpcs.xml` (or `.phpcs.xml`, `phpcs.xml.dist`,
 `.phpcs.xml.dist`, or a path you pass). It prints the `mago.toml` and composer.json
 `extra.mago-wordpress` block that reproduce it, then everything it could not migrate and why.

@@ -7,6 +7,7 @@ namespace Rlorenzo\MagoWordPress\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function file_put_contents;
 use function str_contains;
 
 /**
@@ -302,5 +303,19 @@ final class RuleSettingsTest extends TestCase
         );
         self::assertSame($issues, $status, $report);
         self::assertSame($issues === 1, str_contains($report, $expectedText ?? $rule), $report);
+    }
+
+    public function testPrefixProblemsAreReportedOncePerWorker(): void
+    {
+        // WPCS validates the prefixes once per run, not in every file.
+        file_put_contents("{$this->directory}/second.php", data: "<?php\n\nfunction ab_second() {}\n");
+        [, $report] = $this->lint(
+            'wordpress/prefix-all-globals',
+            ['prefixes' => 'ab'],
+            'function ab_init() {}',
+            flags: '--reporting-format code-count second.php',
+            linterToml: "threads = 1\n",
+        );
+        self::assertStringContainsString('error[wordpress/prefix-all-globals]: 1', $report);
     }
 }

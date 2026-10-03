@@ -50,6 +50,9 @@ Each rule reports at WPCS's level, and `mago lint` fails only on errors. phpcs a
 warnings, so pass `--minimum-fail-level warning` to keep that. `phpcs -n` corresponds to
 `--minimum-report-level error`. See [Migrating](docs/migrating.md).
 
+Switching a project with phpcs in CI and a pre-commit hook: [Adopting](docs/adopting.md) walks
+through config, suppressions, baseline, CI, hooks and formatting.
+
 The worker runs as PHP inside your project and loads its Composer autoloader, like PHPUnit or
 PHPStan, so only lint projects you trust.
 
@@ -102,6 +105,7 @@ an editor's Mago format-on-save) on WordPress code. See [Formatting](docs/format
 - [Configuration](docs/configuration.md): every setting, the `phpcs.xml` fallback and suppression comments.
 - [Formatting](docs/formatting.md): the preset and what still differs from WPCS.
 - [Migrating from phpcs](docs/migrating.md): what `migrate` converts and what it can't.
+- [Adopting](docs/adopting.md): moving a phpcs project over, step by step, with CI and hooks.
 - [WPCS coverage](docs/wpcs-coverage.md): Mago's own WordPress rules, `WordPress-Docs`, the generic sniffs, and what isn't ported.
 - [Benchmarks](docs/benchmarks.md): method and full results.
 
