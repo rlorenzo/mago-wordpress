@@ -177,6 +177,12 @@ final class PhpcsRuleset
         'Squiz.Classes.SelfMemberReference',
         'PSR2.Methods.MethodDeclaration',
         'PSR2.ControlStructures.ElseIfDeclaration',
+        'Universal.Operators.StrictComparisons',
+        'Generic.ControlStructures.InlineControlStructure',
+        'Universal.Operators.DisallowStandalonePostIncrementDecrement',
+        'Squiz.ControlStructures.ControlSignature',
+        'Squiz.Strings.DoubleQuoteUsage',
+        'PSR2.ControlStructures.SwitchDeclaration',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
@@ -227,6 +233,12 @@ final class PhpcsRuleset
         'Squiz.PHP.NonExecutableCode',
         'Universal.CodeAnalysis.StaticInFinalClass',
         'Universal.Files.SeparateFunctionsFromOO',
+        'Squiz.Operators.ValidLogicalOperators',
+        'Universal.ControlStructures.DisallowLonelyIf',
+        'Squiz.Operators.IncrementDecrementUsage',
+        'Universal.CodeAnalysis.NoEchoSprintf',
+        'Generic.Strings.UnnecessaryHeredoc',
+        'Universal.CodeAnalysis.NoDoubleNegative',
     ];
 
     /** phpcs hides reports below this severity by default. */

@@ -119,7 +119,7 @@ disallowed-functions = { level = "error" }
 lowercase-keyword = { level = "error" }
 lowercase-type-hint = { level = "error" }
 no-debug-symbols = { level = "warning" }
-no-goto = { level = "warning" }
+no-goto = { level = "error" }
 no-noop = { level = "warning" }
 no-redundant-final = { level = "warning" }
 no-redundant-string-concat = { level = "error" }

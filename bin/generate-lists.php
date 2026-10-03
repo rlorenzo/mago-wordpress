@@ -459,6 +459,9 @@ foreach (glob("{$wpcs}/WordPress-*/ruleset.xml") as $ruleset) {
         $sniff = implode('.', array_slice($parts, 0, 3));
         if (isset($rule->type, $parts[3], $sniffLevels[$sniff])) {
             $sniffLevels[$sniff][$parts[3]] = (string) $rule->type;
+        } elseif (isset($rule->type, $sniffLevels[$sniff])) {
+            // A whole-sniff `<type>` (WordPress-Core makes StrictComparisons a warning).
+            $sniffLevels[$sniff] = array_map(static fn(): string => (string) $rule->type, $sniffLevels[$sniff]);
         }
     }
 }

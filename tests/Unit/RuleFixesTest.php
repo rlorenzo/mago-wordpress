@@ -136,6 +136,77 @@ final class RuleFixesTest extends TestCase
             "final class A {\n\tconst B = 1;\n\tpublic function f(): self {\n\t\treturn self::B ? new self() : \$this;\n\t}\n}",
         ];
 
+        yield 'inline-control-structure adds braces, keeping a trailing comment inside' => [
+            'generic/inline-control-structure',
+            '',
+            "if (\$a) foo(); else bar(); // done\nforeach (\$b as \$c)\n\tbaz(\$c);\nif (\$d);",
+            "if (\$a) { foo(); } else { bar(); // done\n}\nforeach (\$b as \$c) {\n\tbaz(\$c);\n}\nif (\$d) {}",
+        ];
+
+        yield 'inline-control-structure fixes the inner of nested bodies first, like phpcbf; a rerun fixes the outer' =>
+            [
+                'generic/inline-control-structure',
+                '',
+                "\tif (\$a)\n\t\tif (\$b) foo();",
+                "\tif (\$a)\n\t\tif (\$b) { foo();\n\t\t}",
+            ];
+
+        yield 'disallow-standalone-post-increment-decrement moves the operator to the front' => [
+            'generic/disallow-standalone-post-increment-decrement',
+            '',
+            "\$i++;\n\$obj->a[\$k] --;\n\$b = \$i++;",
+            "++\$i;\n--\$obj->a[\$k] ;\n\$b = \$i++;",
+        ];
+
+        yield 'disallow-lonely-if merges the else and the if into elseif' => [
+            'generic/disallow-lonely-if',
+            '',
+            "if (\$a) {\n\tx();\n} else {\n\tif (\$b) {\n\t\ty();\n\t} else {\n\t\tz();\n\t}\n}",
+            "if (\$a) {\n\tx();\n} elseif (\$b) {\n\t\ty();\n\t} else {\n\t\tz();\n}",
+        ];
+
+        yield 'disallow-lonely-if leaves a comment around the inner if unfixed' => [
+            'generic/disallow-lonely-if',
+            '',
+            "if (\$a) {\n\tx();\n} else { // why\n\tif (\$b) {\n\t\ty();\n\t}\n}",
+            "if (\$a) {\n\tx();\n} else { // why\n\tif (\$b) {\n\t\ty();\n\t}\n}",
+        ];
+
+        yield 'control-signature puts one space after the brace unless a comment is in the way' => [
+            'generic/control-signature',
+            '',
+            "if (\$a) {\n}\nelse {\n}\ntry {\n}catch (E \$e) {\n} // x\nfinally {\n}",
+            "if (\$a) {\n} else {\n}\ntry {\n} catch (E \$e) {\n} // x\nfinally {\n}",
+        ];
+
+        yield 'double-quote-usage single-quotes strings that need no double quotes' => [
+            'generic/double-quote-usage',
+            '',
+            "\$a = \"plain \\\"q\\\" \\\$x\";\n\$b = \"it's\";\n\$c = \"tab\\t\";",
+            "\$a = 'plain \"q\" \$x';\n\$b = \"it's\";\n\$c = \"tab\\t\";",
+        ];
+
+        yield 'no-echo-sprintf calls printf directly' => [
+            'generic/no-echo-sprintf',
+            '',
+            "echo sprintf( '%s', \$a );\necho \\VSPRINTF( '%s', [ \$a ] );",
+            "printf( '%s', \$a );\n\\vprintf( '%s', [ \$a ] );",
+        ];
+
+        yield 'unnecessary-heredoc turns the heredoc into a nowdoc' => [
+            'generic/unnecessary-heredoc',
+            '',
+            "\$a = <<<\"EOT\"\ncosts \\\$5 \\\\ more\nEOT;",
+            "\$a = <<<'EOT'\ncosts \$5 \\ more\nEOT;",
+        ];
+
+        yield 'no-double-negative casts a double negative and trims a triple one' => [
+            'generic/no-double-negative',
+            '',
+            "\$a = !!\$b;\n\$c = ! ! ! \$d;\n\$e = !!\$f instanceof Foo;",
+            "\$a = (bool)\$b;\n\$c = ! \$d;\n\$e = !!\$f instanceof Foo;",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

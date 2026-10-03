@@ -55,6 +55,10 @@ final class Levels
         'Generic.CodeAnalysis.UselessOverridingMethod' => [
             'Found' => 'warning',
         ],
+        'Generic.ControlStructures.InlineControlStructure' => [
+            'Discouraged' => 'warning',
+            'NotAllowed' => 'error',
+        ],
         'Generic.Files.ByteOrderMark' => [
             'Found' => 'error',
         ],
@@ -81,7 +85,7 @@ final class Levels
             'PossibleFound' => 'warning',
         ],
         'Generic.PHP.DiscourageGoto' => [
-            'Found' => 'warning',
+            'Found' => 'error',
         ],
         'Generic.PHP.ForbiddenFunctions' => [
             '*' => 'error',
@@ -97,6 +101,9 @@ final class Levels
         ],
         'Generic.PHP.LowerCaseType' => [
             '*' => 'error',
+        ],
+        'Generic.Strings.UnnecessaryHeredoc' => [
+            'Found' => 'warning',
         ],
         'Generic.Strings.UnnecessaryStringConcat' => [
             'Found' => 'error|warning',
@@ -125,6 +132,16 @@ final class Levels
         'PSR2.ControlStructures.ElseIfDeclaration' => [
             'NotAllowed' => 'warning',
         ],
+        'PSR2.ControlStructures.SwitchDeclaration' => [
+            '*NotLower' => 'error',
+            'BodyOnNextLine*' => 'error',
+            'BreakIndent' => 'error',
+            'BreakNotNewLine' => 'error',
+            'SpaceBeforeColon*' => 'error',
+            'SpacingAfterCase' => 'error',
+            'TerminatingComment' => 'error',
+            'WrongOpener*' => 'error',
+        ],
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
         ],
@@ -139,6 +156,21 @@ final class Levels
             'NotUsed' => 'error',
             'SpaceAfter' => 'error',
             'SpaceBefore' => 'error',
+        ],
+        'Squiz.ControlStructures.ControlSignature' => [
+            'NewlineAfterOpenBrace' => 'error',
+            'SpaceAfterCloseBrace' => 'error',
+            'SpaceAfterCloseParenthesis' => 'error',
+            'SpaceAfterKeyword' => 'error',
+            'SpaceBeforeSemicolon' => 'error',
+        ],
+        'Squiz.Operators.IncrementDecrementUsage' => [
+            'Found' => 'error',
+            'NoBrackets' => 'error',
+            'NotAllowed' => 'error',
+        ],
+        'Squiz.Operators.ValidLogicalOperators' => [
+            'NotAllowed' => 'error',
         ],
         'Squiz.PHP.DisallowMultipleAssignments' => [
             '*InControlStructure' => 'error',
@@ -157,20 +189,42 @@ final class Levels
         'Squiz.Scope.MethodScope' => [
             'Missing' => 'error',
         ],
+        'Squiz.Strings.DoubleQuoteUsage' => [
+            'ContainsVar' => 'error',
+            'NotRequired' => 'error',
+        ],
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
         ],
+        'Universal.CodeAnalysis.NoDoubleNegative' => [
+            'FoundDouble' => 'error',
+            'FoundDoubleWithInstanceof' => 'error',
+            'FoundTriple' => 'error',
+        ],
+        'Universal.CodeAnalysis.NoEchoSprintf' => [
+            'Found' => 'error',
+        ],
         'Universal.CodeAnalysis.StaticInFinalClass' => [
             '*' => 'error',
+        ],
+        'Universal.ControlStructures.DisallowLonelyIf' => [
+            'Found' => 'error',
         ],
         'Universal.Files.SeparateFunctionsFromOO' => [
             'Mixed' => 'error',
         ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',
+        ],
+        'Universal.Operators.DisallowStandalonePostIncrementDecrement' => [
+            'MultipleOperatorsFound' => 'warning',
+            'Post*Found' => 'warning',
+        ],
+        'Universal.Operators.StrictComparisons' => [
+            '*' => 'warning',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',

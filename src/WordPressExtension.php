@@ -17,16 +17,20 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DoubleQuoteUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
@@ -39,9 +43,13 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
@@ -61,14 +69,18 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidLogicalOperatorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidVariableNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
@@ -199,6 +211,18 @@ final class WordPressExtension
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
                 new NoSilencedErrorsRule($report, $settings),
+                new StrictComparisonsRule($report),
+                new InlineControlStructureRule($report),
+                new ValidLogicalOperatorsRule($report),
+                new DisallowStandalonePostIncrementDecrementRule($report),
+                new DisallowLonelyIfRule($report),
+                new ControlSignatureRule($report),
+                new IncrementDecrementUsageRule($report),
+                new DoubleQuoteUsageRule($report),
+                new NoEchoSprintfRule($report),
+                new SwitchDeclarationRule($report),
+                new UnnecessaryHeredocRule($report),
+                new NoDoubleNegativeRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),
