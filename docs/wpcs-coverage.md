@@ -24,16 +24,18 @@ rules for the sniffs its standard includes and turns the rest off: this package'
   `ForLoopShouldBeWhileLoop`, `ForLoopWithTestFunctionCall`, `JumbledIncrementer`,
   `RequireExplicitBooleanOperatorPrecedence`, `UnconditionalIfStatement`, `UnnecessaryFinalModifier`,
   `UselessOverridingMethod`, `ForbiddenFunctions`, `UnnecessaryStringConcat`,
-  `DisallowSizeFunctionsInLoops` and `ForeachUniqueAssignment`.
+  `DisallowSizeFunctionsInLoops`, `ForeachUniqueAssignment`, `EmptyStatement`, `NonExecutableCode`,
+  `StaticInFinalClass` and `SeparateFunctionsFromOO`.
 - `WordPress` (`wordpress.mago.toml`): Extra, plus `WordPress-Docs` (`missing-docs`, below) and the
   three sniffs no group lists: `DB.DirectDatabaseQuery`, `DB.SlowDBQuery` and
   `Security.ValidatedSanitizedInput`.
 
 All three turn off the Mago core rules that report what no WPCS sniff does (`strict-types`,
 `no-isset`, `no-empty`, `literal-named-argument`, `cyclomatic-complexity`, `halstead`, `file-name`,
-`no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety), and two
-that are mapped to a sniff but report code it accepts: `class-name` (PEAR's `ValidClassName` accepts
-`My_Class`) and `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
+`no-request-variable`, `no-literal-password`, `no-insecure-comparison`, ... about ninety, among them
+`class-name`, which wants PascalCase where PEAR's `ValidClassName`, ported as
+`generic/valid-class-name`, accepts `My_Class`), and one that is mapped to a sniff but reports code
+it accepts: `no-closing-tag` (`PSR2.Files.ClosingTag` skips files with inline HTML, so
 templates). Turn any of them back on in your `mago.toml`, for example
 `strict-types = { enabled = true }`.
 
@@ -122,7 +124,7 @@ the `generic/*` rules in [Rules](rules.md).
 
 Mago's own core lint rules cover some of the rest. They don't need the `wordpress` integration;
 each preset keeps the ones its standard's sniffs map to, at the sniff's phpcs level (except
-`class-name` and `no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
+`no-closing-tag`, above), and `mago-wordpress migrate` maps a phpcs.xml exclusion of one of these
 sniffs to its rule. Recall is measured on phpcs's own tests for the sniff (`bench/wpcs-parity.php`).
 The Mago rules weren't written to mirror the sniffs, so most are close cousins rather than ports:
 
@@ -130,9 +132,7 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 |:---|:---|---:|
 | `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` | 76% |
 | `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | `prefer-while-loop` | 100% |
-| `Generic.CodeAnalysis.UnconditionalIfStatement` | `constant-condition` | 40% |
 | `Generic.CodeAnalysis.UnnecessaryFinalModifier` | `no-redundant-final` | 50% |
-| `Generic.CodeAnalysis.UselessOverridingMethod` | `no-redundant-method-override` | 36% |
 | `Generic.Files.OneObjectStructurePerFile` | `single-class-per-file` | 100% |
 | `Generic.NamingConventions.UpperCaseConstantName` | `constant-name` | 46% |
 | `Generic.PHP.BacktickOperator` | `no-shell-execute-string` | 100% |
@@ -143,7 +143,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
 | `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` | 57% |
-| `PEAR.NamingConventions.ValidClassName` | `class-name` | 21% |
 | `PSR2.Files.ClosingTag` | `no-closing-tag` | 80% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
@@ -159,9 +158,7 @@ doesn't map them:
 | `Generic.PHP.DeprecatedFunctions` | `deprecated-function` |
 | `Generic.PHP.Syntax` | parse errors |
 | `Squiz.Functions.FunctionDuplicateArgument` | a semantics error |
-| `Squiz.PHP.NonExecutableCode` | `unevaluated-code` |
 | `Universal.Arrays.DuplicateArrayKey` | `duplicate-array-key` |
-| `Generic.CodeAnalysis.EmptyStatement` | partly: `no-empty-loop` (lint) covers empty loops, not an empty `if` |
 | `Universal.CodeAnalysis.ConstructorDestructorReturn` | partly: a semantics error for a return type on `__construct`/`__destruct`, not a `return $value;` inside one |
 
 Enable these, and any core rule the presets turn off, in `mago.toml`:
@@ -183,7 +180,6 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 `mago lint` with every core rule on and `mago analyze`, and neither covers them:
 
 - `Squiz.PHP.CommentedOutCode`
-- `Squiz.Scope.MethodScope`
 - `Universal.CodeAnalysis.NoDoubleNegative`
 - `Universal.Namespaces.DisallowDeclarationWithoutName`
 - `Universal.Namespaces.OneDeclarationPerFile`
@@ -198,22 +194,16 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `PEAR.Files.IncludingFile`
 - `PSR12.Files.FileHeader`
 - `PSR12.Keywords.ShortFormTypeKeywords`
-- `PSR2.Classes.PropertyDeclaration`
-- `PSR2.ControlStructures.ElseIfDeclaration`
-- `PSR2.Methods.MethodDeclaration`
-- `Squiz.Classes.SelfMemberReference`
 - `Squiz.Operators.IncrementDecrementUsage`
 - `Squiz.Operators.ValidLogicalOperators`
 - `Squiz.Strings.DoubleQuoteUsage`
 - `Universal.Attributes.DisallowAttributeParentheses`
 - `Universal.Classes.ModifierKeywordOrder`
 - `Universal.CodeAnalysis.NoEchoSprintf`
-- `Universal.CodeAnalysis.StaticInFinalClass`
 - `Universal.Constants.LowercaseClassResolutionKeyword`
 - `Universal.Constants.ModifierKeywordOrder`
 - `Universal.Constants.UppercaseMagicConstants`
 - `Universal.ControlStructures.DisallowLonelyIf`
-- `Universal.Files.SeparateFunctionsFromOO`
 - `Universal.Operators.DisallowStandalonePostIncrementDecrement`
 - `Universal.PHP.LowercasePHPTag`
 - `Universal.UseStatements.DisallowMixedGroupUse`

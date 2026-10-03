@@ -167,11 +167,23 @@ final class PhpcsRuleset
         'Generic.PHP.LowerCaseType',
         'Generic.VersionControl.GitMergeConflict',
         'PEAR.NamingConventions.ValidClassName',
+        'PSR2.Classes.PropertyDeclaration',
         'PSR2.Files.ClosingTag',
         'Squiz.PHP.DisallowMultipleAssignments',
         'Squiz.PHP.Eval',
         'Universal.Arrays.DisallowShortArraySyntax',
         'Universal.Operators.DisallowShortTernary',
+        'Squiz.Scope.MethodScope',
+        'Squiz.Classes.SelfMemberReference',
+        'PSR2.Methods.MethodDeclaration',
+        'PSR2.ControlStructures.ElseIfDeclaration',
+    ];
+
+    /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
+    private const CORE_SILENCED_CODES = [
+        'PSR2.Classes.PropertyDeclaration.Underscore',
+        'Squiz.Classes.SelfMemberReference.NotUsed',
+        'PSR2.Methods.MethodDeclaration.Underscore',
     ];
 
     private const EXTRA_SNIFFS = [
@@ -211,6 +223,10 @@ final class PhpcsRuleset
         'Generic.Strings.UnnecessaryStringConcat',
         'Squiz.PHP.DisallowSizeFunctionsInLoops',
         'Universal.CodeAnalysis.ForeachUniqueAssignment',
+        'Generic.CodeAnalysis.EmptyStatement',
+        'Squiz.PHP.NonExecutableCode',
+        'Universal.CodeAnalysis.StaticInFinalClass',
+        'Universal.Files.SeparateFunctionsFromOO',
     ];
 
     /** phpcs hides reports below this severity by default. */
@@ -456,8 +472,8 @@ final class PhpcsRuleset
     }
 
     /**
-     * The mapped sniffs a WPCS standard leaves out: none for `WordPress` (or an unknown name),
-     * which runs every sniff.
+     * The mapped sniffs a WPCS standard leaves out, and the message codes it silences: none for
+     * `WordPress` (or an unknown name), which runs every sniff.
      *
      * @return list<string>
      */
@@ -472,10 +488,13 @@ final class PhpcsRuleset
             return [];
         }
 
-        return array_values(array_filter(
-            array_keys(SniffMap::RULES),
-            static fn(string $sniff): bool => !in_array($sniff, $included, strict: true),
-        ));
+        return [
+            ...array_values(array_filter(
+                array_keys(SniffMap::RULES),
+                static fn(string $sniff): bool => !in_array($sniff, $included, strict: true),
+            )),
+            ...($standard === 'WordPress-Core' ? self::CORE_SILENCED_CODES : []),
+        ];
     }
 
     /**

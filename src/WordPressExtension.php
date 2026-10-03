@@ -27,6 +27,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
@@ -38,7 +40,10 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
@@ -48,13 +53,20 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PregQuoteDelimiterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\PropertyDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
@@ -161,6 +173,28 @@ final class WordPressExtension
                 new DisallowSizeFunctionsInLoopsRule($report),
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
+                new UselessOverridingMethodRule($report),
+                new SeparateFunctionsFromOORule($report),
+                new StaticInFinalClassRule($report),
+                new UnconditionalIfStatementRule($report),
+                new ElseIfDeclarationRule($report),
+                new ValidClassNameRule($report),
+                new NonExecutableCodeRule($report),
+                new EmptyStatementRule($report),
+                new SelfMemberReferenceRule($report),
+                new MethodScopeRule($report),
+                ...SplitRule::pair(
+                    new MethodDeclarationRule($report),
+                    $report,
+                    'Method declaration (warnings)',
+                    'A method name with a single leading underscore (PSR2 MethodDeclaration Underscore, a warning; WordPress-Core leaves it out).',
+                ),
+                ...SplitRule::pair(
+                    new PropertyDeclarationRule($report),
+                    $report,
+                    'Property declaration (warnings)',
+                    'A property name with a leading underscore (PSR2 PropertyDeclaration Underscore, a warning; WordPress-Core leaves it out).',
+                ),
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),

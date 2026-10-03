@@ -101,6 +101,41 @@ final class RuleFixesTest extends TestCase
             "?>\n<?php if ( \$x ) : ?>\n<?php elseif ( \$y ) : ?>\n<?php else : ?>\n<?php endif; ?>\n<?php",
         ];
 
+        yield 'property-declaration moves modifiers and fixes the space after the type' => [
+            'generic/property-declaration',
+            '',
+            "class A {\n\tstatic public int   \$a;\n\treadonly protected ?string\$b;\n}",
+            "class A {\n\tpublic static int \$a;\n\tprotected readonly ?string \$b;\n}",
+        ];
+
+        yield 'self-member-reference uses self:: without spaces' => [
+            'generic/self-member-reference',
+            '',
+            "class A {\n\tconst B = 1;\n\tfunction f() {\n\t\treturn A::B + self :: B + SELF::B;\n\t}\n}",
+            "class A {\n\tconst B = 1;\n\tfunction f() {\n\t\treturn self::B + self::B + self::B;\n\t}\n}",
+        ];
+
+        yield 'method-declaration moves final before and static after the visibility' => [
+            'generic/method-declaration',
+            '',
+            "class A {\n\tstatic public function a() {}\n\tpublic final function b() {}\n}",
+            "class A {\n\tpublic static function a() {}\n\tfinal public function b() {}\n}",
+        ];
+
+        yield 'else-if-declaration joins else if into elseif' => [
+            'generic/else-if-declaration',
+            '',
+            "if (\$a) {\n} else  if (\$b) {\n}",
+            "if (\$a) {\n} elseif (\$b) {\n}",
+        ];
+
+        yield 'static-in-final-class uses self' => [
+            'generic/static-in-final-class',
+            '',
+            "final class A {\n\tconst B = 1;\n\tpublic function f(): static {\n\t\treturn static::B ? new static() : \$this;\n\t}\n}",
+            "final class A {\n\tconst B = 1;\n\tpublic function f(): self {\n\t\treturn self::B ? new self() : \$this;\n\t}\n}",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

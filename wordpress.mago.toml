@@ -26,6 +26,7 @@ block-statement = { enabled = false }
 braced-string-interpolation = { enabled = false }
 class-name = { enabled = false }
 combine-consecutive-issets = { enabled = false }
+constant-condition = { enabled = false }
 cyclomatic-complexity = { enabled = false }
 deprecated-cast = { enabled = false }
 deprecated-shell-execute-string = { enabled = false }
@@ -78,6 +79,7 @@ no-redundant-isset = { enabled = false }
 no-redundant-label = { enabled = false }
 no-redundant-literal-return = { enabled = false }
 no-redundant-math = { enabled = false }
+no-redundant-method-override = { enabled = false }
 no-redundant-nullsafe = { enabled = false }
 no-redundant-parentheses = { enabled = false }
 no-redundant-readonly = { enabled = false }
@@ -112,7 +114,6 @@ trait-name = { enabled = false }
 use-compound-assignment = { enabled = false }
 valid-docblock = { enabled = false }
 array-style = { style = "long", level = "error" }
-constant-condition = { level = "warning" }
 constant-name = { level = "error" }
 disallowed-functions = { level = "error" }
 lowercase-keyword = { level = "error" }
@@ -121,7 +122,6 @@ no-debug-symbols = { level = "warning" }
 no-goto = { level = "warning" }
 no-noop = { level = "warning" }
 no-redundant-final = { level = "warning" }
-no-redundant-method-override = { level = "warning" }
 no-redundant-string-concat = { level = "error" }
 no-short-opening-tag = { level = "error" }
 no-shorthand-ternary = { level = "error" }

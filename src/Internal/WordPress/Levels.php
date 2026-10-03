@@ -31,6 +31,9 @@ final class Levels
             'EmptyPHPOpenCloseTagsDetected' => 'warning',
             'SemicolonWithoutCodeDetected' => 'warning',
         ],
+        'Generic.CodeAnalysis.EmptyStatement' => [
+            'Detected*' => 'error',
+        ],
         'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => [
             'CanSimplify' => 'warning',
         ],
@@ -107,8 +110,35 @@ final class Levels
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
         ],
+        'PSR2.Classes.PropertyDeclaration' => [
+            'AbstractAfterVisibility' => 'error',
+            'AvizKeywordOrder' => 'error',
+            'FinalAfterVisibility' => 'error',
+            'Multiple' => 'error',
+            'ReadonlyBeforeVisibility' => 'error',
+            'ScopeMissing' => 'error',
+            'SpacingAfterType' => 'error',
+            'StaticBeforeVisibility' => 'error',
+            'Underscore' => 'warning',
+            'VarUsed' => 'error',
+        ],
+        'PSR2.ControlStructures.ElseIfDeclaration' => [
+            'NotAllowed' => 'warning',
+        ],
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
+        ],
+        'PSR2.Methods.MethodDeclaration' => [
+            'AbstractAfterVisibility' => 'error',
+            'FinalAfterVisibility' => 'error',
+            'StaticBeforeVisibility' => 'error',
+            'Underscore' => 'warning',
+        ],
+        'Squiz.Classes.SelfMemberReference' => [
+            'IncorrectCase' => 'error',
+            'NotUsed' => 'error',
+            'SpaceAfter' => 'error',
+            'SpaceBefore' => 'error',
         ],
         'Squiz.PHP.DisallowMultipleAssignments' => [
             '*InControlStructure' => 'error',
@@ -120,11 +150,24 @@ final class Levels
         'Squiz.PHP.Eval' => [
             'Discouraged' => 'error',
         ],
+        'Squiz.PHP.NonExecutableCode' => [
+            'ReturnNotRequired' => 'warning',
+            'Unreachable' => 'warning',
+        ],
+        'Squiz.Scope.MethodScope' => [
+            'Missing' => 'error',
+        ],
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
+        ],
+        'Universal.CodeAnalysis.StaticInFinalClass' => [
+            '*' => 'error',
+        ],
+        'Universal.Files.SeparateFunctionsFromOO' => [
+            'Mixed' => 'error',
         ],
         'Universal.Operators.DisallowShortTernary' => [
             'Found' => 'error',

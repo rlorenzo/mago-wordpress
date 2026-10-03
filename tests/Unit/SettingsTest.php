@@ -201,6 +201,11 @@ final class SettingsTest extends TestCase
         self::assertSame(['*'], $core['WordPress.Security.EscapeOutput'] ?? null);
         self::assertSame(['*'], $core['Generic.PHP.ForbiddenFunctions'] ?? null);
         self::assertArrayNotHasKey('WordPress.WP.I18n', $core);
+        // Message codes WordPress-Core sets to severity 0 (WordPress-Extra restores them).
+        self::assertSame(['*'], $core['PSR2.Classes.PropertyDeclaration.Underscore'] ?? null);
+        self::assertArrayNotHasKey('PSR2.Classes.PropertyDeclaration', $core);
+        self::assertSame(['*'], $core['Squiz.Classes.SelfMemberReference.NotUsed'] ?? null);
+        self::assertSame(['*'], $core['PSR2.Methods.MethodDeclaration.Underscore'] ?? null);
 
         // phpcs finds a standard regardless of case on macOS and Windows.
         self::assertSame('WordPress-Extra', Settings::fromArray(['standard' => 'wordpress-EXTRA'])->standard);
