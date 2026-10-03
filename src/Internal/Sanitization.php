@@ -27,6 +27,15 @@ final class Sanitization
     /** @var array<string, true> */
     private readonly array $unslashingSanitizing;
 
+    /** @var array<string, true> */
+    private readonly array $walking;
+
+    /** @var array<string, true> */
+    private readonly array $unslashing;
+
+    /** @var array<string, true> */
+    private readonly array $allSanitizing;
+
     public function __construct(Settings $settings)
     {
         $this->sanitizing = array_fill_keys([
@@ -37,6 +46,9 @@ final class Sanitization
             ...Lists::UNSLASHING_SANITIZING_FUNCTIONS,
             ...$settings->customList('custom-unslashing-sanitizing-functions'),
         ], value: true);
+        $this->walking = array_fill_keys(Lists::ARRAY_WALKING_FUNCTIONS, value: true);
+        $this->unslashing = array_fill_keys(Lists::UNSLASHING_FUNCTIONS, value: true);
+        $this->allSanitizing = $this->sanitizing + $this->unslashingSanitizing + $this->walking;
     }
 
     /** `is_only_sanitized()`: sanitized, and nothing else is done with the value. */
@@ -74,9 +86,9 @@ final class Sanitization
             return false;
         }
 
-        $walking = array_fill_keys(Lists::ARRAY_WALKING_FUNCTIONS, value: true);
-        $unslashing = array_fill_keys(Lists::UNSLASHING_FUNCTIONS, value: true);
-        $sanitizing = $this->sanitizing + $this->unslashingSanitizing + $walking;
+        $walking = $this->walking;
+        $unslashing = $this->unslashing;
+        $sanitizing = $this->allSanitizing;
         $function = $tokens->inFunctionCall($index, $sanitizing + $unslashing);
         if ($function === null) {
             if ($missingUnslash !== null) {

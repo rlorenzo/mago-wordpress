@@ -84,7 +84,7 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('"*/vendor/*",', $toml);
         self::assertStringContainsString('"build/*",', $toml);
         // Mago's core rules get [linter.rules] entries; a partial override keeps the shipped enable.
-        self::assertStringContainsString('prepared-sql = { enabled = true, level = "warning" }', $toml);
+        self::assertStringNotContainsString('prepared-sql', $toml);
         // WordPress-Extra leaves out the three WordPress-only sniffs.
         self::assertSame(
             ['*'],
@@ -105,8 +105,15 @@ final class PhpcsMigrationTest extends TestCase
 
         $unmapped = implode("\n", $result['unmapped']);
         self::assertStringContainsString('(?!twenty)', $unmapped);
-        self::assertStringContainsString('json_encode_json_encode', $unmapped);
+        self::assertSame(
+            ['*'],
+            $result['extra']['exclude-patterns']['WordPress.WP.AlternativeFunctions.json_encode_json_encode'] ?? null,
+        );
         self::assertStringContainsString('<type> on WordPress.Files.FileName.InvalidClassFileName', $unmapped);
+        self::assertStringContainsString(
+            '<type> on WordPress.DB.PreparedSQL: Mago cannot re-level extension rules (wordpress/prepared-sql)',
+            $unmapped,
+        );
         self::assertStringContainsString('customAllowedFunctionsList', $unmapped);
         // Generic sniffs map to this package's generic/* rules and Mago core rules.
         self::assertStringNotContainsString('Generic.PHP.DiscourageGoto', $unmapped);
@@ -184,6 +191,9 @@ final class PhpcsMigrationTest extends TestCase
               <rule ref="WordPress.WP.AlternativeFunctions">
                 <properties><property name="exclude" type="array"><element value="curl"/></property></properties>
               </rule>
+              <rule ref="WordPress.DB.DirectDatabaseQuery">
+                <properties><property name="customCacheGetFunctions" type="array"><element value="My_Cache_Get"/></property></properties>
+              </rule>
               <rule ref="WordPress.Files.FileName">
                 <properties>
                   <property name="strict_class_file_names" value="false"/>
@@ -203,6 +213,7 @@ final class PhpcsMigrationTest extends TestCase
             [
                 'WordPress.PHP.DevelopmentFunctions' => ['error_log'],
                 'WordPress.WP.DiscouragedFunctions' => ['query_posts', 'wp_reset_query'],
+                'WordPress.WP.AlternativeFunctions' => ['curl'],
             ],
             $result['extra']['exclude-groups'] ?? null,
         );
@@ -210,11 +221,10 @@ final class PhpcsMigrationTest extends TestCase
         self::assertTrue($result['extra']['is-theme'] ?? null);
         self::assertTrue($result['extra']['treat-files-as-scoped'] ?? null);
         self::assertSame(['\My\TestCase'], $result['extra']['custom-test-classes'] ?? null);
-        // Mago's core `use-wp-functions` ports AlternativeFunctions and has no group setting.
-        self::assertContains('property exclude on WordPress.WP.AlternativeFunctions: no setting', $result['unmapped']);
 
         $settings = Settings::fromArray($result['extra']);
         self::assertSame(['my\testcase'], $settings->customList('custom-test-classes'));
+        self::assertSame(['my_cache_get'], $settings->customList('custom-cache-get-functions'));
         self::assertFalse($settings->strictClassFileNames);
     }
 

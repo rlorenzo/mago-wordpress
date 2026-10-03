@@ -73,6 +73,9 @@ final class PhpcsRuleset
         'custom_capabilities' => ['custom-capabilities', 'list'],
         'allowed_custom_properties' => ['allowed-custom-properties', 'list'],
         'custom_test_classes' => ['custom-test-classes', 'list'],
+        'customCacheGetFunctions' => ['custom-cache-get-functions', 'list'],
+        'customCacheSetFunctions' => ['custom-cache-set-functions', 'list'],
+        'customCacheDeleteFunctions' => ['custom-cache-delete-functions', 'list'],
     ];
 
     /**
@@ -93,6 +96,11 @@ final class PhpcsRuleset
         'WordPress.Security.NonceVerification' => [...self::SANITIZING_PROPERTIES, 'customNonceVerificationFunctions'],
         'WordPress.Security.ValidatedSanitizedInput' => self::SANITIZING_PROPERTIES,
         'WordPress.WP.Capabilities' => ['custom_capabilities'],
+        'WordPress.DB.DirectDatabaseQuery' => [
+            'customCacheGetFunctions',
+            'customCacheSetFunctions',
+            'customCacheDeleteFunctions',
+        ],
         'WordPress.WP.CronInterval' => ['min_interval'],
         'WordPress.NamingConventions.ValidHookName' => ['additionalWordDelimiters'],
         'WordPress.NamingConventions.ValidVariableName' => ['allowed_custom_properties'],
@@ -108,6 +116,7 @@ final class PhpcsRuleset
         'WordPress.PHP.DontExtract' => ['exclude'],
         'WordPress.PHP.RestrictedPHPFunctions' => ['exclude'],
         'WordPress.Security.SafeRedirect' => ['exclude'],
+        'WordPress.WP.AlternativeFunctions' => ['exclude'],
         'WordPress.WP.ClassNameCase' => ['exclude'],
         'WordPress.WP.DeprecatedClasses' => ['exclude'],
         'WordPress.WP.DeprecatedFunctions' => ['exclude'],

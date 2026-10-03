@@ -72,7 +72,7 @@ final class PhpcsMigration
     public const EXTENDS = 'vendor/rlorenzo/mago-wordpress/wordpress.mago.toml';
 
     /** Mago core rules that ship disabled and that wordpress.mago.toml turns on. */
-    private const ENABLED_BY_EXTENDS = ['prepared-sql'];
+    private const ENABLED_BY_EXTENDS = [];
 
     /**
      * Sniffs that become settings of a Mago core rule (`metricRules()`, `docsRule()`), and the

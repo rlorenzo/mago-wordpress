@@ -6,6 +6,7 @@ generic/foreach-unique-assignment
 generic/git-merge-conflict
 generic/jumbled-incrementer
 generic/require-explicit-boolean-operator-precedence
+wordpress/alternative-functions
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities
 wordpress/capital-p-dangit
@@ -13,6 +14,7 @@ wordpress/class-name-case
 wordpress/cron-interval
 wordpress/db-restricted-classes
 wordpress/db-restricted-functions
+wordpress/direct-database-query
 wordpress/discouraged-constants
 wordpress/discouraged-wp-functions
 wordpress/dont-extract
@@ -28,6 +30,8 @@ wordpress/parentheses-spacing
 wordpress/plugin-menu-slug
 wordpress/posts-per-page
 wordpress/prefix-all-globals
+wordpress/preg-quote-delimiter
+wordpress/prepared-sql
 wordpress/prepared-sql-placeholders
 wordpress/prepared-sql-unquoted-complex-placeholder
 wordpress/restricted-php-functions

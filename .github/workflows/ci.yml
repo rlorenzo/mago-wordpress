@@ -138,11 +138,10 @@ jobs:
           EOF
 
           # mago exits non-zero when it reports issues; the greps below are the assertion.
-          # prepared-sql is a Mago core rule that ships disabled; wordpress.mago.toml enables it.
           # Pin the format: on GitHub Actions Mago otherwise emits ::warning annotations.
           out=$(vendor/bin/mago lint --reporting-format short 2>&1 || true)
           echo "$out"
-          for rule in wordpress/safe-redirect wordpress/nonce-verification wordpress/validated-sanitized-input prepared-sql; do
+          for rule in wordpress/safe-redirect wordpress/nonce-verification wordpress/validated-sanitized-input wordpress/prepared-sql; do
             grep -q "\[$rule\]" <<< "$out" || {
               echo "error: $rule was not reported" >&2
               exit 1

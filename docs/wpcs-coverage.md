@@ -8,26 +8,27 @@ sniffs. The last section lists what nothing covers.
 
 Mago's core linter has its own `wordpress` integration: eight rules, independent of this package's
 `wordpress/*` rules. Mago ships three disabled. The `extends` in [Install](../README.md#install) turns
-on `prepared-sql`, so a project keeps the security checks WPCS gave it; the other two are ported as
-`wordpress/*` rules and stay off.
+on nothing: this package ports all of the WordPress security and database rules below as
+`wordpress/*` rules, and the `extends` turns off the ones that ship on.
 
 | Mago rule | Covers | Mago default |
 |:---|:---|:---|
 | `nonce-verification` | `WordPress.Security.NonceVerification`, ported as [`wordpress/nonce-verification`](rules.md) | off |
 | `validated-sanitized-input` | `WordPress.Security.ValidatedSanitizedInput`, ported as [`wordpress/validated-sanitized-input`](rules.md) | off |
-| `prepared-sql` | `WordPress.DB.PreparedSQL` | off |
-| `no-unescaped-output` | `WordPress.Security.EscapeOutput`, now ported as [`wordpress/escape-output`](rules.md); the `extends` turns this one off | on |
-| `use-wp-functions` | `WordPress.WP.AlternativeFunctions` | on |
-| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`) | on |
-| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange` | on |
-| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part; overlaps [`wordpress/capabilities`](rules.md)) | on |
+| `prepared-sql` | `WordPress.DB.PreparedSQL`; replaced by [`wordpress/prepared-sql`](rules.md), so the `extends` leaves it off | off |
+| `no-unescaped-output` | `WordPress.Security.EscapeOutput`, ported as [`wordpress/escape-output`](rules.md); the `extends` turns this one off | on |
+| `use-wp-functions` | `WordPress.WP.AlternativeFunctions`; the `extends` turns it off for [`wordpress/alternative-functions`](rules.md) | on |
+| `no-direct-db-query` | `WordPress.DB.DirectDatabaseQuery` (`DirectQuery`, `NoCaching`); the `extends` turns it off for [`wordpress/direct-database-query`](rules.md) | on |
+| `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange`; the `extends` turns it off for [`wordpress/direct-database-query`](rules.md) | on |
+| `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part); the `extends` turns it off, since [`wordpress/capabilities`](rules.md) reports `RoleFound` | on |
 
-Four core PHP rules, on for every project, cover the remaining `WordPress.PHP` sniffs:
+Three core PHP rules, on for every project, cover the remaining `WordPress.PHP` sniffs
+(`WordPress.PHP.PregQuoteDelimiter` is [`wordpress/preg-quote-delimiter`](rules.md); the `extends`
+turns off Mago's `require-preg-quote-delimiter`):
 
 | Mago rule | Covers |
 |:---|:---|
 | `no-error-control-operator` | `WordPress.PHP.NoSilencedErrors` |
-| `require-preg-quote-delimiter` | `WordPress.PHP.PregQuoteDelimiter` |
 | `no-ini-set` | `WordPress.PHP.IniSet` (partial: it reports every `ini_set()`, without WPCS's safe-option allowlist) |
 | `no-debug-symbols` | `WordPress.PHP.DevelopmentFunctions` (partial; `wordpress/discouraged-wp-functions` covers the rest) |
 
