@@ -26,7 +26,7 @@
 | `wordpress/plugin-menu-slug` | Warning | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | Warning | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` over `max-posts-per-page` (default 100; `-1` and `nopaging` are not flagged, as in WPCS) in any array literal, `$args['key'] = ...`/`??=` assignment, or `posts_per_page=999`-style query string (it does not follow `$args` variables into `WP_Query`) |
 | `wordpress/preg-quote-delimiter` | Warning | `WordPress.PHP.PregQuoteDelimiter` | `preg_quote()` called with arguments but no `$delimiter`; replaces Mago's core `require-preg-quote-delimiter` |
-| `wordpress/prefix-all-globals` | Warning | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants and hook names; inert until `prefixes` is configured |
+| `wordpress/prefix-all-globals` | Warning | `WordPress.NamingConventions.PrefixAllGlobals` | unprefixed global functions, classes, constants, hook names and file-scope variables (`NonPrefixedVariableFound`), and prefixes shorter than four characters (`ShortPrefixPassed`); inert until `prefixes` is configured. See [Theme templates](#prefix-all-globals-in-theme-templates) |
 | `wordpress/prepared-sql` | Error | `WordPress.DB.PreparedSQL` | variables, function calls and interpolated variables in the query passed to `$wpdb->query()`, `get_var()`, `get_col()`, `get_row()`, `get_results()` and `prepare()`, unless escaped (`esc_sql()`, `absint()`, `intval()`, `(int)`) or `$wpdb` itself; replaces Mago's core `prepared-sql` |
 | `wordpress/prepared-sql-placeholders` | Error | `WordPress.DB.PreparedSQLPlaceholders` | quoted, unsupported or unescaped placeholders, SQL wildcards in `LIKE` operands, dynamic `IN ()` lists and count mismatches in `$wpdb->prepare()` |
 | `wordpress/prepared-sql-unquoted-complex-placeholder` | Warning | `WordPress.DB.PreparedSQLPlaceholders.UnquotedComplexPlaceholder` | unquoted complex placeholders (`%1$s`, `%05s`, `%'.10s`) in `$wpdb->prepare()` queries |
@@ -47,6 +47,32 @@
 | `wordpress/wp-deprecated-parameters` | Warning | `WordPress.WP.DeprecatedParameters` | calls passing a non-default value for a now-ignored deprecated parameter; newer than `minimum-wp-version` is reported with a note |
 | `wordpress/wp-i18n` | Warning | `WordPress.WP.I18n` | wrong, missing or empty text domains, missing or extra arguments, non-literal strings, placeholder-only or HTML-wrapped strings, placeholder mismatches in `_n()`, unordered placeholders, missing `translators:` comments, `_()` and the low-level `translate()` functions |
 | `wordpress/yoda-conditions` | Warning | `WordPress.PHP.YodaConditions` | a comparison with a variable, array element or property on the left and a literal or constant on the right |
+
+### prefix-all-globals in theme templates
+
+WordPress loads theme templates through `load_template()`, inside a function, so a template's
+file-scope variables aren't globals. WPCS doesn't know that and reports them, and so does this
+rule. Exclude the template directories for that one message code in `composer.json`:
+
+```json
+"exclude-patterns": {
+  "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound": ["*/template_parts/*", "*/page-templates/*"]
+}
+```
+
+Add root-level templates (`*/my-theme/index.php`, `header.php`, ...) the same way. On a theme with
+113 linted files this took the variable reports from 525 to 251; the rest were root-level templates
+and admin partials.
+
+A prefix shorter than four characters (a legacy `am_`) is reported as too short in every file, and,
+as in WPCS, it is then not accepted: `am_` names are still reported as unprefixed. Silencing the
+message keeps that behaviour and drops only the per-file reminder (113 reports on the same theme):
+
+```json
+"exclude-patterns": {
+  "WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed": ["*"]
+}
+```
 
 `WordPress-Core` and `WordPress-Extra` also pull in generic sniffs that catch real bugs and that
 Mago doesn't cover. They are ported as `generic/*` rules and matched against phpcs's own tests

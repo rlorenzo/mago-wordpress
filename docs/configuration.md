@@ -10,6 +10,7 @@ as sniff properties from your project. Put them in `composer.json`:
       "text-domains": ["my-plugin"],
       "prefixes": ["myplugin", "mp_"],
       "minimum-wp-version": "6.4",
+      "standard": "WordPress-Extra",
       "custom-escaping-functions": ["mp_esc"],
       "custom-auto-escaped-functions": [],
       "custom-printing-functions": [],
@@ -72,6 +73,21 @@ Properties are read only when set directly on the sniff's own ref, such as
 *includes* the sniff is not followed. Set properties on the sniff ref itself, as phpcs recommends.
 
 ## Settings
+
+`standard` is the WPCS standard whose sniffs run: `WordPress-Core`, `WordPress-Extra` or
+`WordPress` (every sniff; any other value counts as `WordPress`). The rules for sniffs the
+standard leaves out are turned off everywhere, as if each had `"*"` under `exclude-patterns`:
+`WordPress-Extra` drops `DB.DirectDatabaseQuery`, `DB.SlowDBQuery` and
+`Security.ValidatedSanitizedInput`; `WordPress-Core` also drops the sniffs Extra adds, such as
+`Security.EscapeOutput`, `Security.NonceVerification` and `NamingConventions.PrefixAllGlobals`.
+Which sniffs each standard runs: [WPCS coverage](wpcs-coverage.md#what-each-standard-runs).
+
+You rarely set it here: `wordpress-core.mago.toml` and `wordpress-extra.mago.toml` pass
+`--standard=WordPress-Core` / `--standard=WordPress-Extra` to the worker, which is the default
+when `composer.json` doesn't set `standard`. `wordpress.mago.toml` passes nothing, so the default
+is `WordPress`. Set it in `composer.json` to override the preset's choice for the extension's rules
+(the Mago core rules the preset turns off stay off). Without an `extra.mago-wordpress` block,
+a `phpcs.xml` built on `WordPress`, `WordPress-Extra` or `WordPress-Core` decides instead, as below.
 
 `custom-capabilities` lists capabilities `wordpress/capabilities` accepts.
 

@@ -8,6 +8,9 @@ use PHPUnit\Framework\TestCase;
 use Rlorenzo\MagoWordPress\Internal\PhpcsRuleset;
 use Rlorenzo\MagoWordPress\Settings;
 
+/**
+ * @mago-expect lint:too-many-methods
+ */
 final class SettingsTest extends TestCase
 {
     public function testFromArrayLowercasesAndDefaults(): void
@@ -171,5 +174,35 @@ final class SettingsTest extends TestCase
         self::assertTrue(Settings::fromArray([])->honorPhpcsComments);
         self::assertTrue(Settings::fromArray(['honor-phpcs-comments' => 'no'])->honorPhpcsComments);
         self::assertFalse(Settings::fromArray(['honor-phpcs-comments' => false])->honorPhpcsComments);
+    }
+
+    public function testStandardExcludesTheSniffsItLeavesOut(): void
+    {
+        $full = Settings::fromArray(['exclude-patterns' => ['WordPress.WP.I18n' => ['*/legacy/*']]]);
+        self::assertSame('WordPress', $full->standard);
+        self::assertSame(['WordPress.WP.I18n' => ['*/legacy/*']], $full->excludePatterns);
+
+        $extra = Settings::fromArray([
+            'standard' => 'WordPress-Extra',
+            'exclude-patterns' => ['WordPress.WP.I18n' => ['*/legacy/*']],
+        ]);
+        self::assertSame('WordPress-Extra', $extra->standard);
+        self::assertSame(
+            [
+                'WordPress.WP.I18n' => ['*/legacy/*'],
+                'WordPress.DB.DirectDatabaseQuery' => ['*'],
+                'WordPress.DB.SlowDBQuery' => ['*'],
+                'WordPress.Security.ValidatedSanitizedInput' => ['*'],
+            ],
+            $extra->excludePatterns,
+        );
+
+        $core = Settings::fromArray(['standard' => 'WordPress-Core'])->excludePatterns;
+        self::assertSame(['*'], $core['WordPress.Security.EscapeOutput'] ?? null);
+        self::assertSame(['*'], $core['Generic.PHP.ForbiddenFunctions'] ?? null);
+        self::assertArrayNotHasKey('WordPress.WP.I18n', $core);
+
+        // An unknown name runs the full standard rather than silently dropping sniffs.
+        self::assertSame([], Settings::fromArray(['standard' => 'WordPress-Docs'])->excludePatterns);
     }
 }

@@ -18,7 +18,8 @@ vendor/bin/mago-wordpress migrate --write
 |:---|:---|
 | `<file>` | `[source] paths` (`vendor/*` is excluded when the whole project is listed) |
 | `<exclude-pattern>` | `[source] excludes`, translated to a glob; a pattern a glob cannot express (lookarounds, alternation, classes) is listed for you to handle |
-| `<rule ref="WordPress-Core">` / `WordPress-Extra` | `exclude-patterns: "*"` for the extension sniffs that standard leaves out, `enabled = false` for Mago core rules whose sniffs it leaves out (`WordPress` keeps everything) |
+| `<rule ref="WordPress-Core">` / `WordPress-Extra` | `extends` of `wordpress-core.mago.toml` / `wordpress-extra.mago.toml`, which turn off what that standard leaves out; only the ruleset's own exclusions are written out. `WordPress` (or a custom standard) extends `wordpress.mago.toml` |
+| a sniff the standard leaves out, named again (`<rule ref="WordPress-Core"/>` plus `<rule ref="WordPress.Security.EscapeOutput"/>`) | `extends` of `wordpress.mago.toml` with `exclude-patterns: "*"` for the extension sniffs the standard leaves out and `enabled = false` for the Mago core rules whose sniffs it leaves out, so the re-included sniff runs |
 | `<exclude name="WordPress...">`, `<severity>0</severity>` | the same, for that code |
 | `<exclude-pattern>` inside `<rule ref="WordPress...">` | `exclude-patterns` for this package's rules; `exclude` on a Mago core rule when the ref is the whole sniff |
 | `<type>` on a whole sniff ported by a Mago core rule | `level` on that rule |

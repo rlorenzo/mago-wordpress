@@ -31,4 +31,9 @@ test-corpus:
     {{mago}} --workspace tests/corpus extension list --json | php tests/check-registered-rules.php
     for code in $(cat tests/corpus/expected-rules.txt); do dir="rules/${code#wordpress/}"; test -d "tests/corpus/$dir" || { echo "missing fixture directory tests/corpus/$dir" >&2; exit 1; }; {{mago}} --workspace tests/corpus lint --only "$code" "$dir" || exit 1; done
 
-check: validate format-check test lint analyze test-corpus
+# wordpress.mago.toml's core rule switches and the wordpress-core/-extra presets must be what
+# bin/generate-presets.php derives from SniffMap and the installed Mago's default rules.
+presets-check:
+    php bin/generate-presets.php --check
+
+check: validate format-check presets-check test lint analyze test-corpus
