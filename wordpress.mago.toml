@@ -79,6 +79,7 @@ no-redundant-isset = { enabled = false }
 no-redundant-label = { enabled = false }
 no-redundant-literal-return = { enabled = false }
 no-redundant-math = { enabled = false }
+no-redundant-method-override = { enabled = false }
 no-redundant-nullsafe = { enabled = false }
 no-redundant-parentheses = { enabled = false }
 no-redundant-readonly = { enabled = false }
@@ -121,7 +122,6 @@ no-debug-symbols = { level = "warning" }
 no-goto = { level = "warning" }
 no-noop = { level = "warning" }
 no-redundant-final = { level = "warning" }
-no-redundant-method-override = { level = "warning" }
 no-redundant-string-concat = { level = "error" }
 no-short-opening-tag = { level = "error" }
 no-shorthand-ternary = { level = "error" }

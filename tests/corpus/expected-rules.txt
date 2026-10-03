@@ -20,6 +20,7 @@ generic/self-member-reference
 generic/separate-functions-from-oo
 generic/static-in-final-class
 generic/unconditional-if-statement
+generic/useless-overriding-method
 generic/valid-class-name
 wordpress/alternative-functions
 wordpress/assignment-in-ternary-condition
