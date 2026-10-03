@@ -211,8 +211,6 @@ final class WordPressExtension
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
                 new NoSilencedErrorsRule($report, $settings),
-                new AssignmentInConditionRule($report),
-                new DisallowMultipleAssignmentsRule($report),
                 new StrictComparisonsRule($report),
                 new InlineControlStructureRule($report),
                 new ValidLogicalOperatorsRule($report),
