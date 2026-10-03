@@ -83,6 +83,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UpperCaseConstantNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
@@ -213,6 +214,7 @@ final class WordPressExtension
                 new GitMergeConflictRule($report),
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
+                new UpperCaseConstantNameRule($report),
                 new ClosingTagRule($report),
                 ...SplitRule::pair(
                     new IncludingFileRule($report),
