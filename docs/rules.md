@@ -111,6 +111,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/separate-functions-from-oo` | Error | `Universal.Files.SeparateFunctionsFromOO` | a file that declares both functions and classes, interfaces, traits or enums (once per file) |
 | `generic/static-in-final-class` | Error | `Universal.CodeAnalysis.StaticInFinalClass` | `static` return types, `static::`, `new static` and `instanceof static` in a final class, anonymous class or enum, where `self` means the same (fixed) |
 | `generic/unconditional-if-statement` | Warning | `Generic.CodeAnalysis.UnconditionalIfStatement` | an `if` or `elseif` whose condition is the literal `true` or `false`; replaces Mago's `constant-condition` |
+| `generic/useless-overriding-method` | Warning | `Generic.CodeAnalysis.UselessOverridingMethod` | a method whose body only calls the parent method of the same name with its own parameters, unchanged; replaces Mago's `no-redundant-method-override` |
 | `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |
 
 The generic rules honour phpcs comments and `exclude-patterns` under their own sniff codes. For

@@ -93,7 +93,7 @@ final class SniffMap
         ],
         'Generic.CodeAnalysis.UnconditionalIfStatement' => ['generic/unconditional-if-statement'],
         'Generic.CodeAnalysis.UnnecessaryFinalModifier' => ['no-redundant-final'],
-        'Generic.CodeAnalysis.UselessOverridingMethod' => ['no-redundant-method-override'],
+        'Generic.CodeAnalysis.UselessOverridingMethod' => ['generic/useless-overriding-method'],
         'Generic.Files.ByteOrderMark' => ['generic/byte-order-mark'],
         'Generic.Files.OneObjectStructurePerFile' => ['single-class-per-file'],
         'Generic.NamingConventions.UpperCaseConstantName' => ['constant-name'],
