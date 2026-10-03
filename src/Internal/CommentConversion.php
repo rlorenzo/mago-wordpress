@@ -707,7 +707,7 @@ final class CommentConversion
 
             foreach ($paths === [] ? [''] : $paths as $path) {
                 $path = trim(preg_replace('#^\./#', replacement: '', subject: $path) ?? $path, characters: '/');
-                if ($path === '' || $file === $path || str_starts_with($file, "{$path}/")) {
+                if ($path === '' || $path === '.' || $file === $path || str_starts_with($file, "{$path}/")) {
                     $files[] = $file;
                     break;
                 }
