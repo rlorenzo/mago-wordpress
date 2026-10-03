@@ -10,6 +10,7 @@ use Rlorenzo\MagoWordPress\Settings;
 use stdClass;
 
 use function array_filter;
+use function array_is_list;
 use function array_key_exists;
 use function array_keys;
 use function array_map;
@@ -707,6 +708,14 @@ final class PhpcsMigration
                 strict: true,
             )) {
                 $this->unmapped[] = "property {$name} on {$ref}: " . ($configured ? 'no equivalent' : 'no setting');
+                continue;
+            }
+
+            if (
+                $property->getAttribute('type') === 'array'
+                && !array_is_list(PhpcsRuleset::arrayValues($this->xpath, $property))
+            ) {
+                $this->unmapped[] = "property {$name} on {$ref}: key=>value entries are read as plain values, the keys are ignored";
             }
         }
     }
