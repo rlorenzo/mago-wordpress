@@ -115,7 +115,15 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/property-declaration-warning` | Warning | `PSR2.Classes.PropertyDeclaration` | a property name with a leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |
 | `generic/property-declaration` | Error | `PSR2.Classes.PropertyDeclaration` | a property without visibility, declared with `var`, several per statement, modifiers out of order, not one space after its type (fixes the last two) |
 | `generic/require-explicit-boolean-operator-precedence` | Error | `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | `&&`, `\|\|`, `and`, `or`, `xor` mixed without parentheses, as in `$a && $b \|\| $c` |
+| `generic/closing-tag` | Error | `PSR2.Files.ClosingTag` | a `?>` at the end of a file with no inline HTML (autofix); templates are left alone, as the sniff leaves them |
+| `generic/commented-out-code` | Warning | `Squiz.PHP.CommentedOutCode` | a comment whose text is more than 40 % PHP code tokens (WordPress-Extra's `maxPercentage`), usually code commented out instead of deleted |
+| `generic/dirname` | Error | `Modernize.FunctionCalls.Dirname` | `dirname(__FILE__)`, which is `__DIR__` (`FileConstant`; autofix); not the `Nested` code, which WordPress-Extra turns off |
+| `generic/forbidden-functions` | Error | `Generic.PHP.ForbiddenFunctions` | `sizeof()` and `delete()`, the sniff's default list, which WordPress-Extra keeps |
+| `generic/including-file-warning` | Warning | `PEAR.Files.IncludingFile` | an `include`/`include_once` outside any scope, condition or assignment, which should be `require`/`require_once` (`UseRequire`, `UseRequireOnce`; autofix) |
+| `generic/including-file` | Error | `PEAR.Files.IncludingFile` | `require( 'file.php' )`: parentheses around the path (`BracketsNotRequired`; autofix) |
+| `generic/no-leading-backslash` | Error | `Universal.UseStatements.NoLeadingBackslash` | `use \Foo\Bar;`: an import name with a leading backslash (autofix) |
 | `generic/no-reserved-keyword-parameter-names` | Warning | `Universal.NamingConventions.NoReservedKeywordParameterNames` | a parameter named after a reserved keyword or a type (`$string`, `$default`, `$class`), confusing with named arguments |
+| `generic/one-object-structure-per-file` | Error | `Generic.Files.OneObjectStructurePerFile` | a second class, interface, trait or enum in a file, conditional declarations included |
 | `generic/self-member-reference` | Error | `Squiz.Classes.SelfMemberReference` | the enclosing class named instead of `self::`, `self` in another case, spaces around `::` (fixed; `NotUsed` is off in `WordPress-Core`) |
 | `generic/separate-functions-from-oo` | Error | `Universal.Files.SeparateFunctionsFromOO` | a file that declares both functions and classes, interfaces, traits or enums (once per file) |
 | `generic/static-in-final-class` | Error | `Universal.CodeAnalysis.StaticInFinalClass` | `static` return types, `static::`, `new static` and `instanceof static` in a final class, anonymous class or enum, where `self` means the same (fixed) |
@@ -124,15 +132,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/unconditional-if-statement` | Warning | `Generic.CodeAnalysis.UnconditionalIfStatement` | an `if` or `elseif` whose condition is the literal `true` or `false`; replaces Mago's `constant-condition` |
 | `generic/unnecessary-heredoc` | Warning | `Generic.Strings.UnnecessaryHeredoc` | a heredoc with nothing interpolated and no escape a nowdoc would lose; the fix turns it into a nowdoc as phpcbf does |
 | `generic/unused-function-parameter` | Warning | `Generic.CodeAnalysis.UnusedFunctionParameter` | parameters the body never uses after the last used one (`Found`, `FoundAfterLastUsed`); like WordPress-Extra, not earlier ones and not methods of a class that extends or implements |
-| `generic/commented-out-code` | Warning | `Squiz.PHP.CommentedOutCode` | a comment whose text is more than 40 % PHP code tokens (WordPress-Extra's `maxPercentage`), usually code commented out instead of deleted |
-| `generic/dirname` | Error | `Modernize.FunctionCalls.Dirname` | `dirname(__FILE__)`, which is `__DIR__` (`FileConstant`; autofix); not the `Nested` code, which WordPress-Extra turns off |
-| `generic/no-leading-backslash` | Error | `Universal.UseStatements.NoLeadingBackslash` | `use \Foo\Bar;`: an import name with a leading backslash (autofix) |
-| `generic/forbidden-functions` | Error | `Generic.PHP.ForbiddenFunctions` | `sizeof()` and `delete()`, the sniff's default list, which WordPress-Extra keeps |
-| `generic/including-file-warning` | Warning | `PEAR.Files.IncludingFile` | an `include`/`include_once` outside any scope, condition or assignment, which should be `require`/`require_once` (`UseRequire`, `UseRequireOnce`; autofix) |
-| `generic/closing-tag` | Error | `PSR2.Files.ClosingTag` | a `?>` at the end of a file with no inline HTML (autofix); templates are left alone, as the sniff leaves them |
-| `generic/including-file` | Error | `PEAR.Files.IncludingFile` | `require( 'file.php' )`: parentheses around the path (`BracketsNotRequired`; autofix) |
 | `generic/upper-case-constant-name` | Error | `Generic.NamingConventions.UpperCaseConstantName` | a `const` or `define()` constant whose name is not all uppercase |
-| `generic/one-object-structure-per-file` | Error | `Generic.Files.OneObjectStructurePerFile` | a second class, interface, trait or enum in a file, conditional declarations included |
 | `generic/useless-overriding-method` | Warning | `Generic.CodeAnalysis.UselessOverridingMethod` | a method whose body only calls the parent method of the same name with its own parameters, unchanged; replaces Mago's `no-redundant-method-override` |
 | `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |
 | `generic/valid-logical-operators` | Error | `Squiz.Operators.ValidLogicalOperators` | the `and` and `or` operators; no fix, as `&&` and `\|\|` bind tighter |
@@ -141,14 +141,15 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-85 of the 86 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+96 of the 97 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
-Some sniffs report some codes as errors and others as warnings. For six of them the warning
+Some sniffs report some codes as errors and others as warnings. For seven of them the warning
 codes have their own rule, so each half reports at WPCS's level: `nonce-verification-warning`
 (`Recommended`), `valid-hook-name-warning` (`UseUnderscores`), `capabilities-warning` (`Unknown`),
 `prepared-sql-placeholders-warning` (`LikeWithoutWildcards`, `ReplacementsWrongNumber`,
-`UnfinishedPrepare`, `UnnecessaryPrepare`), and `generic/property-declaration-warning` and
+`UnfinishedPrepare`, `UnnecessaryPrepare`), `generic/including-file-warning` (`UseRequire`,
+`UseRequireOnce`), and `generic/property-declaration-warning` and
 `generic/method-declaration-warning` (`Underscore`, which `WordPress-Core` silences and
 `WordPress-Extra` restores; under the `WordPress-Core` standard they report nothing, as does
 `generic/self-member-reference`'s `NotUsed`). Each pair analyses a file once and shares the result.

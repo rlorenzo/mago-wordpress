@@ -79,7 +79,7 @@ final class UnusedFunctionParameterRule implements Rule
     public function lint(LintContext $context): void
     {
         foreach ([NodeKind::Function, NodeKind::Method, NodeKind::Closure, NodeKind::ArrowFunction] as $kind) {
-            foreach ($context->file->getDescendants($context->node, $kind) as $function) {
+            foreach ($context->file->getNodes($kind) as $function) {
                 $this->check($context, $function);
             }
         }

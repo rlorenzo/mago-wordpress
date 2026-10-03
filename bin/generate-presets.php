@@ -54,14 +54,7 @@ $defaultLevel = array_map(strtolower(...), array_column($listed, 'level', 'code'
  * Core rules SniffMap maps to a sniff but that report code the sniff accepts, measured on the
  * bake-off plugins and bcap_website (phpcs-clean): off in every preset.
  */
-const DIVERGENT = [
-    // PSR2.Files.ClosingTag skips any file with inline HTML; Mago's no-closing-tag flags a
-    // template that ends in a closing tag (19 on bcap_website, none from phpcs).
-    'no-closing-tag',
-    // PEAR.NamingConventions.ValidClassName accepts WordPress's `Foo_Bar`; Mago's class-name
-    // wants PascalCase (1,216 reports on wordpress-seo, 10 on akismet, none from phpcs).
-    'class-name',
-];
+const DIVERGENT = [];
 
 /**
  * Kept core rules over a sniff that reports some codes as errors and others as warnings, at the
