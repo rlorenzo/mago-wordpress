@@ -94,6 +94,13 @@ final class RuleFixesTest extends TestCase
             "\$s = \"\$a[0] {\$b[\$i]}\" . bar() . baz(\n\t1\n);",
         ];
 
+        yield 'parentheses-spacing adds the space before an alternative-syntax colon' => [
+            'wordpress/parentheses-spacing',
+            '',
+            "?>\n<?php if ( \$x ): ?>\n<?php elseif ( \$y ): ?>\n<?php else: ?>\n<?php endif; ?>\n<?php",
+            "?>\n<?php if ( \$x ) : ?>\n<?php elseif ( \$y ) : ?>\n<?php else : ?>\n<?php endif; ?>\n<?php",
+        ];
+
         // Regressions from review: a fix must never change behaviour or break the file, even where WPCS's does.
         yield 'capital-p-dangit leaves interpolated expressions alone' => [
             'wordpress/capital-p-dangit',

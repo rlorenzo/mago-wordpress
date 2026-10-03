@@ -73,16 +73,13 @@ It also lists anything it couldn't carry over. See [Migrating from phpcs](docs/m
 
 ## Format
 
-`mago format` can't add the spaces WordPress puts inside parentheses, so a lint fix adds them
-afterwards. Always run the three steps together, because `mago format` removes the spaces again:
-
 ```sh
-mago lint --fix --only array-style
-mago format
-mago lint --fix --only wordpress/parentheses-spacing
+vendor/bin/mago-wordpress format          # format
+vendor/bin/mago-wordpress format --check  # CI: fail with a diff if anything would change
 ```
 
-See [Formatting](docs/formatting.md).
+`mago format` alone can't add the spaces WordPress puts inside parentheses, so don't use it (or
+an editor's Mago format-on-save) on WordPress code. See [Formatting](docs/formatting.md).
 
 ## Docs
 

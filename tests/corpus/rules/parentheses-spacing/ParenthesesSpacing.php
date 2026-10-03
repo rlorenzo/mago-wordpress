@@ -79,3 +79,18 @@ if (	$x	) {
 // @mago-expect lint:wordpress/parentheses-spacing
 if /* ( */ ($x) {
 }
+
+// alternative_syntax_colon
+// @mago-expect lint:wordpress/parentheses-spacing
+if ( $x ):
+	// @mago-expect lint:wordpress/parentheses-spacing
+	foreach ( $a as $b ):
+	endforeach;
+// @mago-expect lint:wordpress/parentheses-spacing
+elseif ( $y ):
+// @mago-expect lint:wordpress/parentheses-spacing
+else:
+endif;
+
+while ( $x ) :
+endwhile;

@@ -31,7 +31,8 @@ use function trim;
 /**
  * The spaces WordPress wants inside parentheses and brackets, which `mago format` removes and
  * upstream will not add an option for (mago #446, #490): `foo( $a )`, `function f( $a )`,
- * `if ( $x )`, `array( 1 )`, `[ 1 ]` and `$a[ $i ]` (but `$a['key']`, `$a[0]`).
+ * `if ( $x )`, `array( 1 )`, `[ 1 ]` and `$a[ $i ]` (but `$a['key']`, `$a[0]`), and the space before
+ * an alternative-syntax colon (`if ( $x ) :`, `else :`).
  *
  * Off by default: it is meant to run after `mago format` as
  * `mago lint --fix --only wordpress/parentheses-spacing`, and checked the same way, since
@@ -47,6 +48,7 @@ use function trim;
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 final class ParenthesesSpacingRule implements Rule
 {
@@ -135,6 +137,8 @@ final class ParenthesesSpacingRule implements Rule
         NodeKind::MatchArm,
     ];
 
+    private const COLON = 'WordPress.WhiteSpace.ControlStructureSpacing.NoSpaceBetweenStructureColon';
+
     private const STRINGS = [NodeKind::InterpolatedString, NodeKind::DocumentString, NodeKind::ShellExecuteString];
 
     public function __construct(
@@ -161,6 +165,7 @@ final class ParenthesesSpacingRule implements Rule
                 NodeKind::If,
                 NodeKind::IfStatementBodyElseIfClause,
                 NodeKind::IfColonDelimitedBodyElseIfClause,
+                NodeKind::IfColonDelimitedBodyElseClause,
                 NodeKind::While,
                 NodeKind::DoWhile,
                 NodeKind::For,
@@ -187,6 +192,12 @@ final class ParenthesesSpacingRule implements Rule
         }
 
         $kind = $node->kind;
+        if ($kind === NodeKind::IfColonDelimitedBodyElseClause) {
+            $this->checkColon($context, $node->span->start + 4); // after `else`
+
+            return;
+        }
+
         if ($kind === NodeKind::ArrayAccess) {
             $this->checkArrayAccess($context);
 
@@ -278,6 +289,27 @@ final class ParenthesesSpacingRule implements Rule
         }
 
         $this->check($context, $open, $close, 1, self::CONTROL);
+        $this->checkColon($context, $close + 1);
+    }
+
+    /**
+     * Alternative syntax wants a space before its `:` (`if ( $x ) :`, `else :`), which
+     * `mago format` removes.
+     */
+    private function checkColon(LintContext $context, int $at): void
+    {
+        if (($context->file->contents[$at] ?? '') !== ':') {
+            return;
+        }
+
+        $this->report->issue(
+            $context,
+            Issue::new(
+                'Expected 1 space before the alternative syntax ":"; found none.',
+                new Span($at - 1, $at + 1),
+            )->withEdit(TextEdit::insert($at, ' ')),
+            [self::COLON],
+        );
     }
 
     /**
