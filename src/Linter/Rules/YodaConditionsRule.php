@@ -16,6 +16,8 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Values;
 
 use function in_array;
+use function rtrim;
+use function str_ends_with;
 use function strtolower;
 use function trim;
 
@@ -32,6 +34,7 @@ use function trim;
  * forward scan (cast, then `self`/`parent`/`static` `::`, then a variable).
  *
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class YodaConditionsRule implements Rule
 {
@@ -128,8 +131,28 @@ final class YodaConditionsRule implements Rule
             NodeKind::ClassConstantAccess => $this->leftIsVariableSide($file, $file->getChildren($node)[0] ?? null),
             NodeKind::UnaryPrefix => $this->leftIsVariableSide($file, $file->getChildren($node)[1] ?? null),
             NodeKind::UnaryPostfix => $this->leftIsVariableSide($file, $file->getChildren($node)[0] ?? null),
+            NodeKind::Binary => $this->binaryIsVariableSide($file, $node),
             default => false,
         };
+    }
+
+    /**
+     * `$a % $b == 0`, `$x . 'y' === 'z'`, `$x instanceof Foo === false`: the backward scan
+     * meets the right operand first, and passes over one that holds no variable, `]` or `)`.
+     */
+    private function binaryIsVariableSide(SourceFile $file, Node $node): bool
+    {
+        $children = $file->getChildren($node);
+        $right = $children[2] ?? null;
+        if ($right === null || str_ends_with(rtrim($file->getText($right)), ')')) {
+            return false;
+        }
+
+        if ($this->leftIsVariableSide($file, $right)) {
+            return true;
+        }
+
+        return $this->leftIsVariableSide($file, $children[0] ?? null);
     }
 
     /**
@@ -212,6 +235,7 @@ final class YodaConditionsRule implements Rule
             NodeKind::FunctionCall,
             NodeKind::MethodCall,
             NodeKind::NullSafeMethodCall,
+            NodeKind::Assignment,
                 => $this->headIsVariable($file, $file->getChildren($node)[0] ?? null),
             default => false,
         };

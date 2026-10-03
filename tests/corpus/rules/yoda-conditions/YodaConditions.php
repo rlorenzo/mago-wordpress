@@ -247,3 +247,14 @@ if ($topic_slug === 'resource.' . $event) {
     echo 'flagged';
 }
 
+
+// left_operand_ending_in_a_variable_like_wpcs_backward_scan
+// @mago-expect lint:wordpress/yoda-conditions
+$even = $value % $step == 0;
+// @mago-expect lint:wordpress/yoda-conditions
+$same = $parts[0] . "::" . $parts[1] === "A::b";
+// @mago-expect lint:wordpress/yoda-conditions
+$not = $value instanceof Foo === false;
+
+// right_operand_starting_with_an_assignment_is_exempt
+$changed = $this_value === $value = strtolower($value);
