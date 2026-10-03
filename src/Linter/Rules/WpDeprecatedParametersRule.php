@@ -97,10 +97,12 @@ final class WpDeprecatedParametersRule extends CallRule
         $issue = Issue::new(
             "The \"{$paramName}\" parameter (position #{$position}) of `{$name}()` has been deprecated "
             . "since WordPress {$parameter['version']}.",
-            $argument->span,
-        )->withNote('Deprecated parameters are ignored; passing anything but their default has no effect.')->withHelp(
-            $help,
-        );
+            // At the function name, as WPCS reports (and reads phpcs comments) there.
+            $call->callee->span,
+        )
+            ->withSecondaryAnnotation($argument->span, 'deprecated parameter')
+            ->withNote('Deprecated parameters are ignored; passing anything but their default has no effect.')
+            ->withHelp($help);
         $pending = WpVersion::pendingNote($this->settings->normalizedMinimumWpVersion(), $parameter['version']);
         if ($pending !== null) {
             $issue = $issue->withNote($pending);
