@@ -180,8 +180,6 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 `mago lint` with every core rule on and `mago analyze`, and neither covers them:
 
 - `Squiz.PHP.CommentedOutCode`
-- `Universal.CodeAnalysis.NoDoubleNegative`
-- `Squiz.Scope.MethodScope`
 - `Universal.Namespaces.DisallowDeclarationWithoutName`
 - `Universal.Namespaces.OneDeclarationPerFile`
 - `Universal.NamingConventions.NoReservedKeywordParameterNames`
@@ -194,21 +192,11 @@ Low-value style sniffs, mostly formatting concerns `mago format` already makes m
 - `PEAR.Files.IncludingFile`
 - `PSR12.Files.FileHeader`
 - `PSR12.Keywords.ShortFormTypeKeywords`
-- `Squiz.Operators.IncrementDecrementUsage`
-- `PSR2.Classes.PropertyDeclaration`
-- `PSR2.ControlStructures.ElseIfDeclaration`
-- `PSR2.Methods.MethodDeclaration`
-- `Squiz.Classes.SelfMemberReference`
 - `Universal.Attributes.DisallowAttributeParentheses`
 - `Universal.Classes.ModifierKeywordOrder`
-- `Universal.CodeAnalysis.NoEchoSprintf`
-- `Universal.CodeAnalysis.StaticInFinalClass`
 - `Universal.Constants.LowercaseClassResolutionKeyword`
 - `Universal.Constants.ModifierKeywordOrder`
 - `Universal.Constants.UppercaseMagicConstants`
-- `Universal.ControlStructures.DisallowLonelyIf`
-- `Universal.Operators.DisallowStandalonePostIncrementDecrement`
-- `Universal.Files.SeparateFunctionsFromOO`
 - `Universal.PHP.LowercasePHPTag`
 - `Universal.UseStatements.DisallowMixedGroupUse`
 - `Universal.UseStatements.LowercaseFunctionConst`
