@@ -230,6 +230,42 @@ final class CommentConversionTest extends TestCase
         );
     }
 
+    public function testCommandOnDotConvertsAFileWithNoIssues(): void
+    {
+        $root = dirname(__DIR__, levels: 2);
+        // Without `[source] paths`, `mago list-files` lists nothing; the file must come from it, as it
+        // has no issues for the lint run to report.
+        $this->lint('wordpress/escape-output', [], '', linterToml: "[source]\npaths = [\"fixture.php\"]\n");
+        symlink("{$root}/vendor", "{$this->directory}/vendor");
+        file_put_contents("{$this->directory}/fixture.php", <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            // phpcs:ignore WordPress.Security.EscapeOutput
+            $a = 1;
+
+            PHP);
+
+        $output = [];
+        $status = 0;
+        exec(
+            'cd '
+            . escapeshellarg($this->directory)
+            . ' && php '
+            . escapeshellarg("{$root}/bin/mago-wordpress")
+            . ' convert-comments --write . 2>&1',
+            $output,
+            $status,
+        );
+
+        self::assertSame(0, $status, implode("\n", $output));
+        self::assertSame(
+            "<?php\n\ndeclare(strict_types=1);\n\n\$a = 1;\n",
+            (string) file_get_contents("{$this->directory}/fixture.php"),
+        );
+    }
+
     /**
      * Pragma behaviours the command must avoid relying on (Mago 1.51.0).
      */
