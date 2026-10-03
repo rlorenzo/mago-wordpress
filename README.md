@@ -101,7 +101,7 @@ an editor's Mago format-on-save) on WordPress code. See [Formatting](docs/format
 
 ## Docs
 
-- [Rules](docs/rules.md): the 57 rules, their levels and their autofixes.
+- [Rules](docs/rules.md): the 60 rules, their levels and their autofixes.
 - [Configuration](docs/configuration.md): every setting, the `phpcs.xml` fallback and suppression comments.
 - [Formatting](docs/formatting.md): the preset and what still differs from WPCS.
 - [Migrating from phpcs](docs/migrating.md): what `migrate` converts and what it can't.
