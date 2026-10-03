@@ -119,7 +119,7 @@ Pragma cheat sheet:
 
 | Pragma | Effect |
 |:---|:---|
-| `// @mago-expect lint:<rule>` on the line before | the next statement must have that issue; it is suppressed. If it has none, a `unfulfilled-expect` warning |
+| `// @mago-expect lint:<rule>` on the line before | the next statement must have that issue; it is suppressed. If it has none, an `unfulfilled-expect` warning |
 | `// @mago-expect lint:<rule> -- reason` | the same, with a reason |
 | `// @mago-expect lint:<rule>(3)` | expects 3 issues; fewer gives "only partially fulfilled" |
 | `// @mago-ignore lint:<rule>` | suppresses without expecting; an unused one is an `unused-pragma` note |

@@ -121,6 +121,11 @@ final class WordPressExtension
             name: 'WordPress',
             version: self::VERSION,
             linterRules: self::leveled($settings, [
+                // First, while the file holds the least: they build a phpcs token stream of the whole
+                // file (released after the second), and peak memory is that stream plus what earlier
+                // rules have cached and reported.
+                new AssignmentInConditionRule($report),
+                new DisallowMultipleAssignmentsRule($report),
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
                 new EnqueuedResourcesRule($report),
@@ -206,8 +211,6 @@ final class WordPressExtension
                 new ByteOrderMarkRule($report),
                 new DisallowAlternativePhpTagsRule($report),
                 new NoSilencedErrorsRule($report, $settings),
-                new AssignmentInConditionRule($report),
-                new DisallowMultipleAssignmentsRule($report),
                 new StrictComparisonsRule($report),
                 new InlineControlStructureRule($report),
                 new ValidLogicalOperatorsRule($report),
