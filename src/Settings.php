@@ -79,6 +79,8 @@ final class Settings
      * @param array<string, list<string>> $customLists keyed by composer.json option name
      * @param array<string, list<string>> $excludePatterns WPCS code => phpcs `<exclude-pattern>` values
      * @param array<string, list<string>> $excludeGroups WPCS sniff => names of its function groups to skip
+     * @param array<array-key, mixed> $levels rule code => `error`, `warning`, `note` or `help`, as
+     *        given; `WordPressExtension` validates both
      * @mago-expect lint:excessive-parameter-list
      */
     public function __construct(
@@ -96,6 +98,7 @@ final class Settings
         public readonly bool $strictClassFileNames = true,
         public readonly bool $isTheme = false,
         public readonly string $standard = self::DEFAULT_STANDARD,
+        public readonly array $levels = [],
     ) {}
 
     /**
@@ -167,6 +170,7 @@ final class Settings
             strictClassFileNames: self::boolean($values['strict-class-file-names'] ?? null) ?? true,
             isTheme: self::boolean($values['is-theme'] ?? null) ?? false,
             standard: $standard,
+            levels: Shape::arrayAt($values, 'levels') ?? [],
         );
     }
 

@@ -66,7 +66,7 @@ final class YodaConditionsRule implements Rule
             code: 'wordpress/yoda-conditions',
             name: 'Yoda conditions',
             description: 'Reports a comparison with a variable, array element or property on the left and a literal or constant on the right.',
-            defaultLevel: Level::Warning,
+            defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::Binary],
         );

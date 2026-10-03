@@ -31,62 +31,61 @@ namespace {
     do_action("\u{1F600}_hook_{$type}");
 
     // uppercase_hook_name_is_flagged
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action('MyPlugin_Post_Saved', $post_id);
 
     // named_hook_name_is_flagged
-    // @mago-expect lint:wordpress/valid-hook-name
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action(hook_name: 'Bad-Hook');
 
     // hyphen_separator_is_flagged
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     $value = apply_filters('myplugin-option-value', $value);
 
     // space_separator_is_flagged
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action('myplugin post saved');
 
     // period_is_flagged_by_default
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action('myplugin.loaded');
 
     // uppercase_and_hyphen_are_flagged_separately
-    // @mago-expect lint:wordpress/valid-hook-name
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action('MyPlugin-Loaded');
 
     // literal_parts_of_interpolated_names_are_validated
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action("MyPlugin_{$type}_saved", $post_id);
 
     // fully_qualified_call_is_checked
-    // @mago-expect lint:wordpress/valid-hook-name
     \do_action('MyPlugin_Loaded');
 
     // hex_escaped_uppercase_is_flagged
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action("\x41\x42_hook_{$type}");
 
     // octal_escaped_uppercase_is_flagged
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action("\101\102_hook_{$type}");
 
     // escaped_backslash_in_interpolated_name_is_flagged
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action("myplugin\\action_{$id}");
 
     // ref_array_dispatchers_are_checked
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action_ref_array('MyPlugin_Loaded', [$post]);
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     apply_filters_ref_array('myplugin-value', [$value]);
 
     // bad_delimiter_next_to_escapes_is_still_flagged
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action("\u{1F600}-hook_{$type}");
 
     // binary_prefixed_literal_is_checked
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action(b'MyPlugin_Loaded');
 
     // unknown_escape_keeps_its_backslash
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     do_action("myplugin\d_{$type}");
 
     // heredoc_literal_parts_are_validated
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action(<<<HOOK
         MyPlugin_{$type}
         HOOK);
@@ -100,11 +99,8 @@ namespace {
     do_action_deprecated('MyPlugin-Old', [], '1.0');
 
     // concatenated_literal_parts_are_validated
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action('admin_Head_' . $type . '_Action');
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action('admin_Head_' . get_id() . '_action');
-    // @mago-expect lint:wordpress/valid-hook-name
     do_action('prefix_block_' . $block['blockName'] . '_More_hookname');
 
     // lowercase_concatenation_is_valid
@@ -115,7 +111,7 @@ namespace {
     $value = apply_filters(get_filter_name('UPPERCASE', 'wrong-delimiter'), $value);
 
     // ternary_literals_are_validated
-    // @mago-expect lint:wordpress/valid-hook-name
+    // @mago-expect lint:wordpress/valid-hook-name-warning
     $value = apply_filters($name ? 'UPPERCASE' : 'wrong-delimiter', $value);
 }
 

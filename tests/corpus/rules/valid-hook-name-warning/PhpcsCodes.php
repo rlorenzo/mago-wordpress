@@ -11,6 +11,7 @@ do_action('Myplugin_saved');
 // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 do_action('myplugin-saved');
 
+// @mago-expect lint:wordpress/valid-hook-name-warning
 // phpcs:ignore WordPress.NamingConventions.ValidHookName.NotLowercase
 do_action('myplugin-saved');
 

@@ -46,6 +46,10 @@ are off, and so are Mago's own rules that no WPCS sniff runs (`strict-types`, `n
 `cyclomatic-complexity` and the like), so a project that was clean under phpcs starts clean.
 All three include a WordPress formatter preset.
 
+Each rule reports at WPCS's level, and `mago lint` fails only on errors. phpcs also failed on
+warnings, so pass `--minimum-fail-level warning` to keep that. `phpcs -n` corresponds to
+`--minimum-report-level error`. See [Migrating](docs/migrating.md).
+
 The worker runs as PHP inside your project and loads its Composer autoloader, like PHPUnit or
 PHPStan, so only lint projects you trust.
 
@@ -94,7 +98,7 @@ an editor's Mago format-on-save) on WordPress code. See [Formatting](docs/format
 
 ## Docs
 
-- [Rules](docs/rules.md): the 53 rules, their levels and their autofixes.
+- [Rules](docs/rules.md): the 57 rules, their levels and their autofixes.
 - [Configuration](docs/configuration.md): every setting, the `phpcs.xml` fallback and suppression comments.
 - [Formatting](docs/formatting.md): the preset and what still differs from WPCS.
 - [Migrating from phpcs](docs/migrating.md): what `migrate` converts and what it can't.

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress;
 
 use Mago\Sdk\Extension;
+use Mago\Sdk\Linter\Rule;
 use Rlorenzo\MagoWordPress\Internal\CommentConversion;
+use Rlorenzo\MagoWordPress\Internal\LeveledRule;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\SplitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
@@ -61,6 +64,11 @@ use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedParameterValuesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpI18nRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\YodaConditionsRule;
 
+use function fwrite;
+use function implode;
+
+use const STDERR;
+
 /**
  * Constructs the complete extension advertised by each worker process.
  *
@@ -72,9 +80,6 @@ final class WordPressExtension
 
     private function __construct() {}
 
-    /**
-     * @mago-expect lint:halstead Every rule takes the extension's one Report.
-     */
     public static function create(?Settings $settings = null): Extension
     {
         $settings ??= new Settings();
@@ -88,16 +93,26 @@ final class WordPressExtension
             identifier: 'rlorenzo/mago-wordpress',
             name: 'WordPress',
             version: self::VERSION,
-            linterRules: [
+            linterRules: self::leveled($settings, [
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
                 new EnqueuedResourcesRule($report),
                 new FileNameRule($report, $settings),
-                new PreparedSqlPlaceholdersRule($report, $settings),
+                ...SplitRule::pair(
+                    new PreparedSqlPlaceholdersRule($report, $settings),
+                    $report,
+                    'Prepared SQL placeholders (warnings)',
+                    'The $wpdb->prepare() checks WPCS reports as warnings: LIKE without wildcards, a replacement count mismatch, an unfinished prepare and an unnecessary prepare.',
+                ),
                 new PreparedSqlUnquotedComplexPlaceholderRule($report),
                 new SafeRedirectRule($report),
                 new EscapeOutputRule($report, $settings),
-                new ValidHookNameRule($report, $settings),
+                ...SplitRule::pair(
+                    new ValidHookNameRule($report, $settings),
+                    $report,
+                    'Valid hook name (warnings)',
+                    'Hook names with separators other than an underscore (WPCS UseUnderscores, a warning); uppercase hook names stay with wordpress/valid-hook-name.',
+                ),
                 new WpI18nRule($report, $settings),
                 new PrefixAllGlobalsRule($report, $settings),
                 new SlowDbQueryRule($report),
@@ -119,7 +134,12 @@ final class WordPressExtension
                 new DiscouragedConstantsRule($report),
                 new GetMetaSingleRule($report),
                 new PluginMenuSlugRule($report),
-                new CapabilitiesRule($report, $settings),
+                ...SplitRule::pair(
+                    new CapabilitiesRule($report, $settings),
+                    $report,
+                    'Capabilities (warnings)',
+                    'Capabilities passed to current_user_can() and the other capability checks that are neither core nor in custom-capabilities (WPCS Unknown, a warning).',
+                ),
                 new YodaConditionsRule($report),
                 new ClassNameCaseRule($report),
                 new EscapedNotTranslatedRule($report),
@@ -141,8 +161,32 @@ final class WordPressExtension
                 new DirectDatabaseQueryRule($report, $settings),
                 new PregQuoteDelimiterRule($report),
                 new ValidatedSanitizedInputRule($report, $settings),
-                new NonceVerificationRule($report, $settings),
-            ],
+                ...SplitRule::pair(
+                    new NonceVerificationRule($report, $settings),
+                    $report,
+                    'Nonce verification (warnings)',
+                    'Reads of $_GET and $_REQUEST without a nonce check (WPCS Recommended, a warning); $_POST and $_FILES stay with wordpress/nonce-verification.',
+                ),
+            ]),
         );
+    }
+
+    /**
+     * Applies the `levels` setting. A mistyped entry stops the worker with its message on
+     * stderr: Mago shows a worker's stderr only when the worker exits, and a level setting
+     * that silently did nothing would hide the failures it was meant to raise.
+     *
+     * @param list<Rule> $rules
+     * @return list<Rule>
+     */
+    private static function leveled(Settings $settings, array $rules): array
+    {
+        [$rules, $problems] = LeveledRule::apply($rules, $settings->levels);
+        if ($problems !== []) {
+            fwrite(STDERR, 'mago-wordpress: ' . implode("\nmago-wordpress: ", $problems) . "\n");
+            exit(1);
+        }
+
+        return $rules;
     }
 }
