@@ -8,6 +8,7 @@ use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\CallExpression;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
@@ -53,7 +54,7 @@ final class PreparedSqlUnquotedComplexPlaceholderRule extends CallRule
                 $context,
                 Issue::new(
                     "Complex placeholders in `\$wpdb->prepare()` are not quoted: `{$found}`",
-                    $node->span,
+                    $node instanceof Span ? $node : $node->span,
                     'Unquoted complex placeholder found in this SQL query',
                 )->withNote(
                     '`$wpdb->prepare()` quotes only the simple `%s`, `%d`, `%f` and `%F` placeholders; the value of a complex placeholder is inserted without quotes.',
