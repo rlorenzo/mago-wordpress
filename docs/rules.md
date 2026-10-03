@@ -104,7 +104,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the five rules that only `WordPress-Extra` includes.
 
-56 of the 57 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+59 of the 60 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For four of them the warning
