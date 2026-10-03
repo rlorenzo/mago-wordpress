@@ -17,7 +17,6 @@ disallowed-functions = { enabled = false }
 no-debug-symbols = { enabled = false }
 no-ini-set = { enabled = false }
 no-redundant-final = { enabled = false }
-no-redundant-method-override = { enabled = false }
 no-redundant-string-concat = { enabled = false }
 prefer-while-loop = { enabled = false }
 

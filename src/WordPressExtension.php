@@ -64,6 +64,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
@@ -167,6 +168,7 @@ final class WordPressExtension
                 new DisallowSizeFunctionsInLoopsRule($report),
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
+                new UselessOverridingMethodRule($report),
                 new SeparateFunctionsFromOORule($report),
                 new StaticInFinalClassRule($report),
                 new UnconditionalIfStatementRule($report),
