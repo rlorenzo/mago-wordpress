@@ -12,6 +12,7 @@ use function exec;
 use function file_get_contents;
 use function file_put_contents;
 use function implode;
+use function is_dir;
 use function is_link;
 use function json_encode;
 use function mkdir;
@@ -37,7 +38,11 @@ final class FormatCommandTest extends TestCase
         // The test links the package under vendor/: remove that tree before the trait removes the rest.
         foreach (['vendor/rlorenzo/mago-wordpress', 'vendor/rlorenzo', 'vendor'] as $path) {
             $path = "{$this->directory}/{$path}";
-            is_link($path) ? unlink($path) : @rmdir($path);
+            if (is_link($path)) {
+                unlink($path);
+            } elseif (is_dir($path)) {
+                rmdir($path);
+            }
         }
 
         $this->removeTempProject();
