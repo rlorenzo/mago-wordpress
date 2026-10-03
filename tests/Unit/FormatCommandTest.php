@@ -12,7 +12,12 @@ use function exec;
 use function file_get_contents;
 use function file_put_contents;
 use function implode;
+use function is_link;
 use function json_encode;
+use function mkdir;
+use function rmdir;
+use function symlink;
+use function unlink;
 
 use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
@@ -23,19 +28,35 @@ use const JSON_UNESCAPED_SLASHES;
  */
 final class FormatCommandTest extends TestCase
 {
-    use TempProject;
+    use TempProject {
+        tearDown as private removeTempProject;
+    }
+
+    protected function tearDown(): void
+    {
+        // The test links the package under vendor/: remove that tree before the trait removes the rest.
+        foreach (['vendor/rlorenzo/mago-wordpress', 'vendor/rlorenzo', 'vendor'] as $path) {
+            $path = "{$this->directory}/{$path}";
+            is_link($path) ? unlink($path) : @rmdir($path);
+        }
+
+        $this->removeTempProject();
+    }
 
     public function testFormatThenCheck(): void
     {
         $root = dirname(__DIR__, levels: 2);
         file_put_contents("{$this->directory}/composer.json", data: '{}');
+        // The preset starts the worker through the relative path vendor/rlorenzo/mago-wordpress/...;
+        // Mago 1.47.1 appends a command set here to the preset's instead of replacing it, so the
+        // test provides that path rather than overriding the command.
+        mkdir("{$this->directory}/vendor/rlorenzo", recursive: true);
+        symlink($root, "{$this->directory}/vendor/rlorenzo/mago-wordpress");
         file_put_contents(
             "{$this->directory}/mago.toml",
             'extends = '
             . json_encode("{$root}/wordpress.mago.toml", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "\nphp-version = \"8.1\"\n[source]\npaths = [\".\"]\n[extension-hosts.wordpress]\ncommand = [\"php\", "
-            . json_encode("{$root}/resources/worker.php", flags: JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)
-            . "]\n",
+            . "\nphp-version = \"8.1\"\n[source]\npaths = [\".\"]\nexcludes = [\"vendor/**\"]\n",
         );
         $unformatted = "<?php\nif (\$x): ?>\n\t<p><?php echo foo(\$a, [1, 2]); ?></p>\n<?php else: ?>\n\t<?php exit(); ?>\n<?php endif; ?>\n";
         file_put_contents("{$this->directory}/template.php", $unformatted);
