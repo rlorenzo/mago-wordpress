@@ -24,6 +24,7 @@ use function unlink;
 use const JSON_THROW_ON_ERROR;
 use const JSON_UNESCAPED_SLASHES;
 use const PATH_SEPARATOR;
+use const PHP_BINARY;
 
 /**
  * The real worker under every rule of the full standard, as `mago lint` runs it.
@@ -72,15 +73,40 @@ final class WorkerTest extends TestCase
 
     public function testInvalidSettingStopsTheWorkerWithOneReadableLine(): void
     {
+        $root = dirname(__DIR__, levels: 2);
+        file_put_contents("{$this->directory}/composer.json", '{"extra": {"mago-wordpress": {"levels": "warning"}}}');
+
+        // The worker itself, not `mago lint`: a worker that exits this early can be gone before Mago
+        // has read its stderr, so Mago's own output does not always carry the line.
+        $output = [];
+        $status = 0;
+        exec(
+            'cd '
+            . escapeshellarg($this->directory)
+            . ' && '
+            . escapeshellarg(PHP_BINARY)
+            . ' '
+            . escapeshellarg("{$root}/resources/worker.php")
+            . ' </dev/null 2>&1',
+            $output,
+            $status,
+        );
+
+        self::assertSame(1, $status, implode("\n", $output));
+        self::assertCount(1, $output, implode("\n", $output));
+        self::assertStringStartsWith(
+            'mago-wordpress: invalid configuration: composer.json extra.mago-wordpress: `levels` must be an object',
+            $output[0],
+        );
+    }
+
+    public function testInvalidSettingFailsTheMagoRun(): void
+    {
         file_put_contents("{$this->directory}/a.php", data: "<?php\necho 1;\n");
 
         [$status, $output] = $this->lintWith('{"levels": "warning"}', 'a.php');
 
         self::assertSame(2, $status, $output);
-        self::assertStringContainsString(
-            'mago-wordpress: invalid configuration: composer.json extra.mago-wordpress: `levels` must be an object',
-            $output,
-        );
     }
 
     /**
