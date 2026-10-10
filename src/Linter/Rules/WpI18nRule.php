@@ -152,12 +152,6 @@ final class WpI18nRule extends CallRule
             return;
         }
 
-        if (Calls::isUnpacked($call)) {
-            $this->reportUnpacked($context, $call, $name);
-
-            return;
-        }
-
         $parameters = self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]];
         $arguments = [];
         foreach ($parameters as $index => $parameter) {
@@ -735,40 +729,37 @@ final class WpI18nRule extends CallRule
     }
 
     /**
-     * A spread argument (`_n( ...$args )`): WPCS reads it as the parameter at its position and
-     * reports it as not a literal.
+     * Reads an argument as WPCS does: a spread (`...$args`) is the argument at its own position, and
+     * never a literal. Named arguments bind by parameter name, as in PHP.
      */
-    private function reportUnpacked(LintContext $context, CallExpression $call, string $name): void
-    {
-        $parameters = self::PARAMETERS[Lists::I18N_FUNCTIONS[$name]];
-        foreach ($call->arguments as $index => $argument) {
-            $parameter = $parameters[$index] ?? null;
-            if ($parameter === null) {
-                return;
-            }
+    protected function argument(
+        LintContext $context,
+        CallExpression $call,
+        int $index,
+        string|array|null $parameter = null,
+    ): ?Node {
+        if (!Calls::isUnpacked($call)) {
+            return parent::argument($context, $call, $index, $parameter);
+        }
 
-            if ($argument->unpacked && $argument->name === null) {
-                $this->report->issue(
-                    $context,
-                    Issue::new(
-                        'Translatable text must be a literal string',
-                        $argument->node->span,
-                        sprintf('This argument to `%s()` is a spread, not a literal string', $name),
-                    ),
-                    [self::SNIFF . '.NonSingularStringLiteral' . ucfirst($parameter)],
-                );
-
-                return;
-            }
-
+        foreach ($call->arguments as $argument) {
             if (
-                $argument->name === null
-                && in_array($parameter, self::TEXT_PARAMETERS, strict: true)
-                && $this->literal($context, $argument->node) === null
+                $argument->name !== null
+                && $parameter !== null
+                && in_array($argument->name, (array) $parameter, strict: true)
             ) {
-                $this->reportNotLiteral($context, $name, $parameter, $argument->node->span);
+                return Values::unwrap($context->file, $argument->value);
             }
         }
+
+        $position = 0;
+        foreach ($call->arguments as $argument) {
+            if ($argument->name === null && $position++ === $index) {
+                return $argument->unpacked ? $argument->node : Values::unwrap($context->file, $argument->value);
+            }
+        }
+
+        return null;
     }
 
     private function reportNotLiteral(LintContext $context, string $name, string $parameter, Span $span): void
