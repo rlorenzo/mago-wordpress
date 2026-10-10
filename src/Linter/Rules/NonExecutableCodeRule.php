@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\FileCache;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -22,10 +23,10 @@ use function array_key_last;
 use function array_search;
 use function array_slice;
 use function array_values;
+use function count;
 use function explode;
 use function in_array;
 use function rtrim;
-use function str_ends_with;
 use function strlen;
 use function strtolower;
 use function substr_count;
@@ -209,11 +210,6 @@ final class NonExecutableCodeRule implements Rule
     {
         $file = $context->file;
         $from = $statement->span->end;
-        $text = $file->getText(new Span($from, $end));
-        $html = str_ends_with(trim($file->getText($statement)), '?>');
-        $prefix = $html ? '' : '<?php ';
-        $tokens = PhpToken::tokenize($prefix . $text);
-        $base = $from - strlen($prefix);
 
         $skips = [];
         foreach (self::SKIPPED as $kind) {
@@ -228,10 +224,14 @@ final class NonExecutableCodeRule implements Rule
         $line = self::line($file, $terminal->span->start);
         $message = "Code after the {$type} statement on line {$line} cannot be executed";
         $lastLine = self::line($file, $from - 1);
-        foreach ($tokens as $index => $token) {
+        $tokens = self::tokens($file);
+        for ($index = self::firstAfter($tokens, $from);; ++$index) {
+            $token = $tokens[$index] ?? null;
+            if ($token === null || $token->pos >= $end) {
+                break;
+            }
             if (
-                $index === 0 && !$html
-                || in_array($token->id, self::IGNORED, strict: true)
+                in_array($token->id, self::IGNORED, strict: true)
                 || in_array($token->text, self::BRACKETS, strict: true)
             ) {
                 continue;
@@ -242,7 +242,7 @@ final class NonExecutableCodeRule implements Rule
             foreach ($token->id === T_INLINE_HTML ? explode("\n", $token->text) : [$token->text] as $piece) {
                 $start = $at;
                 $at += strlen($piece) + 1;
-                $offset = $base + $token->pos + $start;
+                $offset = $token->pos + $start;
                 if (trim($piece) === '' || self::skipped($skips, $offset)) {
                     continue;
                 }
@@ -250,6 +250,39 @@ final class NonExecutableCodeRule implements Rule
                 $lastLine = $this->report($context, $offset, $piece, $lastLine, $message);
             }
         }
+    }
+
+    /**
+     * The file's tokens, produced once for all of its terminal statements.
+     *
+     * @return list<PhpToken>
+     */
+    private static function tokens(SourceFile $file): array
+    {
+        return FileCache::remember(
+            $file,
+            'non-executable-code-tokens',
+            static fn(): array => PhpToken::tokenize($file->contents),
+        );
+    }
+
+    /**
+     * Index of the first token that starts at or after $offset.
+     *
+     * @param list<PhpToken> $tokens
+     */
+    private static function firstAfter(array $tokens, int $offset): int
+    {
+        $low = 0;
+        $high = count($tokens);
+        while ($low < $high) {
+            $middle = ($low + $high) >> 1;
+            $before = $tokens[$middle]->pos < $offset;
+            $low = $before ? $middle + 1 : $low;
+            $high = $before ? $high : $middle;
+        }
+
+        return $low;
     }
 
     /** Reports the piece when it starts a line after $lastLine; returns the new last line. */
