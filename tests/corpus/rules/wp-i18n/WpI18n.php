@@ -175,7 +175,7 @@ namespace {
     $other = Translator::translate($key);
 
     // a_spread_argument_is_read_as_the_text_like_wpcs
-    // @mago-expect lint:wordpress/wp-i18n
+    // @mago-expect lint:wordpress/wp-i18n(2)
     $greeting = __(...$args);
 
     // text_before_a_spread_is_still_checked
@@ -185,6 +185,22 @@ namespace {
     // a_spread_into_the_single_underscore_function_is_reported
     // @mago-expect lint:wordpress/wp-i18n
     $greeting = _(...$args);
+
+    // a_spread_counts_as_one_argument_for_the_arity_check
+    // @mago-expect lint:wordpress/wp-i18n
+    $greeting = __('Hello', 'my-plugin', ...$args);
+
+    // a_literal_before_a_spread_is_not_reported_on_its_own
+    // @mago-expect lint:wordpress/wp-i18n
+    $greeting = _x('Post', 'noun', ...$args);
+
+    // a_spread_in_the_first_position_leaves_the_plural_missing
+    // @mago-expect lint:wordpress/wp-i18n(3)
+    $text = _n(...$args);
+
+    // a_named_argument_after_a_spread_binds_by_name
+    // @mago-expect lint:wordpress/wp-i18n
+    $label = _x('Post', ...$args, context: 'noun', domain: 'my-plugin');
 
     // named_arguments_are_checked
     // @mago-expect lint:wordpress/wp-i18n(2)
