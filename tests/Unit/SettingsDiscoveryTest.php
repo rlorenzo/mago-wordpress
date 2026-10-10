@@ -115,6 +115,25 @@ final class SettingsDiscoveryTest extends TestCase
         SettingsDiscovery::in($this->directory);
     }
 
+    public function testComposerSettingsListThrowsWhileEmptyObjectDoesNot(): void
+    {
+        foreach (['[]', '["a"]'] as $block) {
+            file_put_contents(
+                $this->directory . '/composer.json',
+                data: '{"extra": {"mago-wordpress": ' . $block . '}}',
+            );
+            try {
+                SettingsDiscovery::in($this->directory);
+                self::fail("{$block} was accepted");
+            } catch (InvalidArgumentException $exception) {
+                self::assertStringContainsString('must be an object', $exception->getMessage());
+            }
+        }
+
+        file_put_contents($this->directory . '/composer.json', data: '{"extra": {"mago-wordpress": {}}}');
+        SettingsDiscovery::in($this->directory);
+    }
+
     public function testInvalidWorkerStandardThrows(): void
     {
         $this->expectException(InvalidArgumentException::class);

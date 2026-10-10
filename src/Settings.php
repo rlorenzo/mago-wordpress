@@ -169,7 +169,7 @@ final class Settings
      */
     public static function fromArray(array $values): self
     {
-        // A negative maximum is invalid and falls back to the default.
+        // A negative maximum is a problem() and falls back to the default for a direct caller.
         $maxPostsPerPage = self::integer($values['max-posts-per-page'] ?? null) ?? self::DEFAULT_MAX_POSTS_PER_PAGE;
 
         $customLists = [];
@@ -201,7 +201,7 @@ final class Settings
             maxPostsPerPage: $maxPostsPerPage < 0 ? self::DEFAULT_MAX_POSTS_PER_PAGE : $maxPostsPerPage,
             minCronInterval: self::integer($values['min-cron-interval'] ?? null) ?? self::DEFAULT_MIN_CRON_INTERVAL,
             additionalWordDelimiters: Shape::string($values['additional-word-delimiters'] ?? null) ?? '',
-            honorPhpcsComments: ($values['honor-phpcs-comments'] ?? true) !== false,
+            honorPhpcsComments: self::boolean($values['honor-phpcs-comments'] ?? null) ?? true,
             excludePatterns: $excludePatterns,
             excludeGroups: self::stringListMap($values['exclude-groups'] ?? []),
             treatFilesAsScoped: self::boolean($values['treat-files-as-scoped'] ?? null) ?? false,
@@ -224,11 +224,20 @@ final class Settings
         $problems = [];
         foreach ($values as $key => $value) {
             $type = self::KEYS[$key] ?? (array_key_exists($key, self::CUSTOM_LISTS) ? 'list' : null);
-            if ($type === null) {
-                $problems[] = "unknown setting `{$key}`.";
-            } elseif ($value !== null && !self::isValid($type, $value)) {
-                $problems[] =
-                    "`{$key}` must be " . self::EXPECTED[$type] . ', not ' . (string) json_encode($value) . '.';
+            $problem = match (true) {
+                $type === null => "unknown setting `{$key}`.",
+                $value === null => null,
+                !self::isValid($type, $value) => "`{$key}` must be "
+                    . self::EXPECTED[$type]
+                    . ', not '
+                    . (string) json_encode($value)
+                    . '.',
+                $key === 'max-posts-per-page' && (self::integer($value) ?? 0) < 0
+                    => "`{$key}` must not be negative, not " . (string) json_encode($value) . '.',
+                default => null,
+            };
+            if ($problem !== null) {
+                $problems[] = $problem;
             }
         }
 
