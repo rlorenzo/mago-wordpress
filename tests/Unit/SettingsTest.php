@@ -174,6 +174,8 @@ final class SettingsTest extends TestCase
         self::assertTrue(Settings::fromArray([])->honorPhpcsComments);
         self::assertTrue(Settings::fromArray(['honor-phpcs-comments' => 'no'])->honorPhpcsComments);
         self::assertFalse(Settings::fromArray(['honor-phpcs-comments' => false])->honorPhpcsComments);
+        self::assertFalse(Settings::fromArray(['honor-phpcs-comments' => 'false'])->honorPhpcsComments);
+        self::assertTrue(Settings::fromArray(['honor-phpcs-comments' => 'true'])->honorPhpcsComments);
     }
 
     public function testStandardExcludesTheSniffsItLeavesOut(): void
@@ -204,6 +206,19 @@ final class SettingsTest extends TestCase
 
         // phpcs finds a standard regardless of case on macOS and Windows.
         self::assertSame('WordPress-Extra', Settings::fromArray(['standard' => 'wordpress-EXTRA'])->standard);
+    }
+
+    public function testProblemsRejectANegativeMaximum(): void
+    {
+        self::assertSame(
+            ['`max-posts-per-page` must not be negative, not -5.'],
+            Settings::problems(['max-posts-per-page' => -5]),
+        );
+        self::assertSame(
+            ['`max-posts-per-page` must not be negative, not "-5".'],
+            Settings::problems(['max-posts-per-page' => '-5']),
+        );
+        self::assertSame([], Settings::problems(['max-posts-per-page' => 0]));
     }
 
     public function testProblemsNameEachInvalidSetting(): void

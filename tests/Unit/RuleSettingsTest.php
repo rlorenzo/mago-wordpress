@@ -35,18 +35,6 @@ final class RuleSettingsTest extends TestCase
             "\$query = new WP_Query(['posts_per_page' => 25]);",
             1,
         ];
-        yield 'negative_max_falls_back_to_default' => [
-            'wordpress/posts-per-page',
-            ['max-posts-per-page' => -5],
-            "\$query = new WP_Query(['posts_per_page' => 10, 'numberposts' => '10']);",
-            0,
-        ];
-        yield 'negative_max_still_flags_over_default' => [
-            'wordpress/posts-per-page',
-            ['max-posts-per-page' => -5],
-            "\$query = new WP_Query(['posts_per_page' => '500']);",
-            1,
-        ];
         yield 'raised_limit_is_respected' => [
             'wordpress/posts-per-page',
             ['max-posts-per-page' => 1000],

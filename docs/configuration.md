@@ -128,7 +128,7 @@ Other WPCS sniff properties, under their own names:
 ### Invalid settings
 
 The worker checks every setting before it lints. An unknown key, a value of the wrong type
-(`"levels": "warning"`, `"text-domains": 5`, `"max-posts-per-page": "many"`) or an unknown
+(`"levels": "warning"`, `"text-domains": 5`, `"max-posts-per-page": "many"` or `-5`) or an unknown
 `standard` stops the run with exit code 2 and one line per problem. Mago has no way for a worker
 to report a configuration error, so the lines come after Mago's own prefix for a worker that exited:
 

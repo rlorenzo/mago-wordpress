@@ -6,7 +6,9 @@ namespace Rlorenzo\MagoWordPress\Internal;
 
 use InvalidArgumentException;
 use Rlorenzo\MagoWordPress\Settings;
+use stdClass;
 
+use function array_is_list;
 use function array_key_exists;
 use function file_exists;
 use function file_get_contents;
@@ -88,10 +90,28 @@ final class SettingsDiscovery
             return null;
         }
 
-        if (!is_array($extra['mago-wordpress'])) {
+        $block = Shape::arrayAt($extra, 'mago-wordpress');
+        if ($block === null || !self::isObject($block, $path)) {
             throw new InvalidArgumentException('composer.json extra.mago-wordpress: must be an object.');
         }
 
-        return $extra['mago-wordpress'];
+        return $block;
+    }
+
+    /**
+     * `[]` and `{}` both decode to an empty array, so an empty block is told apart by decoding
+     * the file again without `associative`.
+     *
+     * @param array<array-key, mixed> $block
+     */
+    private static function isObject(array $block, string $path): bool
+    {
+        if ($block !== []) {
+            return !array_is_list($block);
+        }
+
+        $plain = json_decode((string) file_get_contents($path));
+
+        return ($plain->extra->{'mago-wordpress'} ?? null) instanceof stdClass;
     }
 }

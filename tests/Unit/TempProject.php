@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Rlorenzo\MagoWordPress\Tests;
 
+use stdClass;
+
 use function dirname;
 use function escapeshellarg;
 use function exec;
@@ -59,9 +61,16 @@ trait TempProject
     ): array {
         $root = dirname(__DIR__, levels: 2);
         if ($settings !== null) {
-            file_put_contents("{$this->directory}/composer.json", json_encode([
-                'extra' => ['mago-wordpress' => $settings],
-            ], flags: JSON_THROW_ON_ERROR));
+            file_put_contents(
+                "{$this->directory}/composer.json",
+                json_encode(
+                    [
+                        // An empty settings array must reach composer.json as `{}`, not `[]`.
+                        'extra' => ['mago-wordpress' => $settings === [] ? new stdClass() : $settings],
+                    ],
+                    flags: JSON_THROW_ON_ERROR,
+                ),
+            );
         }
 
         file_put_contents(
