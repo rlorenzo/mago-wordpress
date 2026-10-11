@@ -30,7 +30,9 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DirnameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAttributeParenthesesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMixedGroupUseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowNamespaceWithoutNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
@@ -57,6 +59,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercasePhpTagRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseUseFunctionConstRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
@@ -66,6 +69,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\NonceVerificationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoReservedKeywordParameterNamesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NoUselessAliasesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\OneNamespaceDeclarationPerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneObjectStructurePerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
@@ -245,6 +250,11 @@ final class WordPressExtension
                 ),
                 new ForbiddenFunctionsRule($report),
                 new NoLeadingBackslashRule($report),
+                new DisallowMixedGroupUseRule($report),
+                new DisallowNamespaceWithoutNameRule($report),
+                new LowercaseUseFunctionConstRule($report),
+                new NoUselessAliasesRule($report),
+                new OneNamespaceDeclarationPerFileRule($report),
                 new ClassModifierKeywordOrderRule($report),
                 new ConstantModifierKeywordOrderRule($report),
                 new DisallowAttributeParenthesesRule($report),

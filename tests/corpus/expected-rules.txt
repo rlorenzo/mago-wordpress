@@ -9,7 +9,9 @@ generic/dirname
 generic/disallow-alternative-php-tags
 generic/disallow-attribute-parentheses
 generic/disallow-lonely-if
+generic/disallow-mixed-group-use
 generic/disallow-multiple-assignments
+generic/disallow-namespace-without-name
 generic/disallow-size-functions-in-loops
 generic/disallow-standalone-post-increment-decrement
 generic/double-quote-usage
@@ -26,6 +28,7 @@ generic/inline-control-structure
 generic/jumbled-incrementer
 generic/lowercase-class-resolution-keyword
 generic/lowercase-php-tag
+generic/lowercase-use-function-const
 generic/method-declaration
 generic/method-declaration-warning
 generic/method-scope
@@ -33,7 +36,9 @@ generic/no-double-negative
 generic/no-echo-sprintf
 generic/no-leading-backslash
 generic/no-reserved-keyword-parameter-names
+generic/no-useless-aliases
 generic/non-executable-code
+generic/one-namespace-declaration-per-file
 generic/one-object-structure-per-file
 generic/property-declaration
 generic/property-declaration-warning

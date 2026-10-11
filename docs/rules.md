@@ -99,7 +99,9 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/disallow-alternative-php-tags` | Warning | `Generic.PHP.DisallowAlternativePHPTags` | `<%`, `<%=` and `<script language="php">` in inline HTML (removed in PHP 7, so the code inside is output as HTML) |
 | `generic/disallow-attribute-parentheses` | Error | `Universal.Attributes.DisallowAttributeParentheses` | `#[Attr()]` instead of `#[Attr]` (`WordPress-Extra`; autofix unless a comment is inside the parentheses) |
 | `generic/disallow-lonely-if` | Error | `Universal.ControlStructures.DisallowLonelyIf` | an `else` block whose only statement is an `if`; the fix rewrites the brace form to `elseif` as phpcbf does (comments around the inner `if` and the alternative syntax are not fixed) |
+| `generic/disallow-mixed-group-use` | Error | `Universal.UseStatements.DisallowMixedGroupUse` | a group `use` that imports more than one kind of construct (classes, functions, constants); no fix, unlike the sniff, which splits the statement |
 | `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
+| `generic/disallow-namespace-without-name` | Error | `Universal.Namespaces.DisallowDeclarationWithoutName` | `namespace { ... }`, which declares the global namespace |
 | `generic/disallow-size-functions-in-loops` | Error | `Squiz.PHP.DisallowSizeFunctionsInLoops` | `count()`, `sizeof()` or `strlen()` in a `while`/do-`while` condition or a `for` loop's test part |
 | `generic/disallow-standalone-post-increment-decrement` | Warning | `Universal.Operators.DisallowStandalonePostIncrementDecrement` | `$i++;` or `$i--;` as a statement of its own (WordPress-Core makes it a warning); the fix moves the operator to the front |
 | `generic/double-quote-usage` | Error | `Squiz.Strings.DoubleQuoteUsage` | only `NotRequired` (the code WordPress-Core includes): a double-quoted string that needs no double quotes; the fix single-quotes it as phpcbf does |
@@ -113,12 +115,15 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/jumbled-incrementer` | Warning | `Generic.CodeAnalysis.JumbledIncrementer` | a nested `for` loop incrementing the outer loop's variable |
 | `generic/lowercase-class-resolution-keyword` | Error | `Universal.Constants.LowercaseClassResolutionKeyword` | `Foo::CLASS` or `$object::Class` instead of `::class` (autofix) |
 | `generic/lowercase-php-tag` | Error | `Universal.PHP.LowercasePHPTag` | `<?PHP` or `<?Php` instead of `<?php` (autofix) |
+| `generic/lowercase-use-function-const` | Error | `Universal.UseStatements.LowercaseFunctionConst` | `use FUNCTION foo;` or `CONST` inside a group: the keyword is not lowercase (autofix) |
 | `generic/method-declaration-warning` | Warning | `PSR2.Methods.MethodDeclaration` | a method name with a single leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |
 | `generic/method-declaration` | Error | `PSR2.Methods.MethodDeclaration` | `final` or `abstract` after a method's visibility, `static` before it (fixed) |
 | `generic/method-scope` | Error | `Squiz.Scope.MethodScope` | a method declared without `public`, `protected` or `private` |
 | `generic/no-double-negative` | Error | `Universal.CodeAnalysis.NoDoubleNegative` | `!!` (use a `(bool)` cast) or `!!!` and more (use one `!`); fixed as phpcbf does, except before `instanceof` or with a comment in the chain |
 | `generic/no-echo-sprintf` | Error | `Universal.CodeAnalysis.NoEchoSprintf` | `echo sprintf(...)` or `echo vsprintf(...)`; the fix drops the `echo` and calls `printf()`/`vprintf()`, as phpcbf does |
+| `generic/no-useless-aliases` | Error | `Universal.UseStatements.NoUselessAliases` | an import aliased to the name it already has, such as `use Foo\Bar as Bar;` (names compare case-insensitively, constants case-sensitively; autofix unless a comment is in the way) |
 | `generic/non-executable-code` | Warning | `Squiz.PHP.NonExecutableCode` | code after a `return`, `break`, `continue`, `throw`, `exit` or `goto` in the same block (one report per line), and a bare `return;` ending a function |
+| `generic/one-namespace-declaration-per-file` | Error | `Universal.Namespaces.OneDeclarationPerFile` | the second and later namespace declarations of a file |
 | `generic/property-declaration-warning` | Warning | `PSR2.Classes.PropertyDeclaration` | a property name with a leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |
 | `generic/property-declaration` | Error | `PSR2.Classes.PropertyDeclaration` | a property without visibility, declared with `var`, several per statement, modifiers out of order, not one space after its type (fixes the last two) |
 | `generic/require-explicit-boolean-operator-precedence` | Error | `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | `&&`, `\|\|`, `and`, `or`, `xor` mixed without parentheses, as in `$a && $b \|\| $c` |
@@ -150,7 +155,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-105 of the 106 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+110 of the 111 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning

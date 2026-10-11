@@ -258,6 +258,12 @@ final class Levels
         'Universal.Files.SeparateFunctionsFromOO' => [
             'Mixed' => 'error',
         ],
+        'Universal.Namespaces.DisallowDeclarationWithoutName' => [
+            'Forbidden' => 'error',
+        ],
+        'Universal.Namespaces.OneDeclarationPerFile' => [
+            'MultipleFound' => 'error',
+        ],
         'Universal.NamingConventions.NoReservedKeywordParameterNames' => [
             '*Found' => 'warning',
         ],
@@ -276,9 +282,18 @@ final class Levels
             'Mixedcase' => 'error',
             'Uppercase' => 'error',
         ],
+        'Universal.UseStatements.DisallowMixedGroupUse' => [
+            'Found' => 'error',
+        ],
+        'Universal.UseStatements.LowercaseFunctionConst' => [
+            'NotLowercase' => 'error',
+        ],
         'Universal.UseStatements.NoLeadingBackslash' => [
             'LeadingBackslashFound' => 'error',
             'LeadingBackslashFoundInGroup' => 'error',
+        ],
+        'Universal.UseStatements.NoUselessAliases' => [
+            'Found' => 'error',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',

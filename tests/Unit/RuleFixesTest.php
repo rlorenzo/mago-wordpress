@@ -136,6 +136,20 @@ final class RuleFixesTest extends TestCase
             "#[Attr, Other(1), Third]\nfunction a() {}\n#[Commented( /* c */ )]\nfunction b() {}",
         ];
 
+        yield 'no-useless-aliases drops an alias that repeats the name' => [
+            'generic/no-useless-aliases',
+            '',
+            "use Foo\\Bar as Bar;\nuse function Foo\\strlen as STRLEN;\nuse const Foo\\X as x;\nuse Foo\\{A as A, B as C};\nuse Foo\\Baz /* c */ as Baz;",
+            "use Foo\\Bar;\nuse function Foo\\strlen;\nuse const Foo\\X as x;\nuse Foo\\{A, B as C};\nuse Foo\\Baz /* c */ as Baz;",
+        ];
+
+        yield 'lowercase-use-function-const lowercases the keyword' => [
+            'generic/lowercase-use-function-const',
+            '',
+            "use FUNCTION Foo\\helper;\nuse Const Foo\\LIMIT;\nuse Foo\\{A, Function b, CONST C};",
+            "use function Foo\\helper;\nuse const Foo\\LIMIT;\nuse Foo\\{A, function b, const C};",
+        ];
+
         yield 'including-file drops the parentheses around the path' => [
             'generic/including-file',
             '',
