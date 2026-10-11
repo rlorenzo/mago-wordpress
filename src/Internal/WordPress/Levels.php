@@ -134,6 +134,13 @@ final class Levels
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
         ],
+        'PSR12.Files.FileHeader' => [
+            'HeaderPosition' => 'error',
+            'IncorrectGrouping' => 'error',
+            'IncorrectOrder' => 'error',
+            'SpacingAfterBlock' => 'error',
+            'SpacingInsideBlock' => 'error',
+        ],
         'PSR12.Keywords.ShortFormTypeKeywords' => [
             'LongFound' => 'error',
         ],

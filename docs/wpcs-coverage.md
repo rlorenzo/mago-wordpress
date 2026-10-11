@@ -159,12 +159,3 @@ Enable these, and any core rule the presets turn off, in `mago.toml`:
 
 Formatting sniffs (whitespace, alignment, braces, quote style, keyword and tag casing not listed
 above) are not ported. That is `mago format`'s job (see [Formatting](formatting.md)).
-
-<details>
-<summary>Remaining WPCS sniffs with no Mago equivalent</summary>
-
-Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
-
-- `PSR12.Files.FileHeader`
-
-</details>

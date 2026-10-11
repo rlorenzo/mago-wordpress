@@ -196,6 +196,7 @@ final class PhpcsRuleset
         'Universal.PHP.LowercasePHPTag',
         'Universal.Classes.ModifierKeywordOrder',
         'Universal.Constants.ModifierKeywordOrder',
+        'PSR12.Files.FileHeader',
         'PSR12.Keywords.ShortFormTypeKeywords',
         'PEAR.Files.IncludingFile',
     ];
