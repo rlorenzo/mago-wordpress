@@ -8,7 +8,7 @@ not expect (some are Mago being right where the sniff is documented as not yet r
 
 Rows for sniffs that `SniffMap` maps to a Mago core rule instead of one of this package's (the
 generic ones that name a core rule, such as `no-goto`, `lowercase-keyword` or `array-style`, and
-`WordPress.PHP.IniSet` and `WordPress.PHP.DevelopmentFunctions` until they are ported) measure Mago's
+`WordPress.PHP.IniSet` and `WordPress.PHP.DevelopmentFunctions` before #44) measure Mago's
 own rules, not this package's. Every other `WordPress.*` row, including `Security.*`, the `DB`
 sniffs, `AlternativeFunctions` and `NoSilencedErrors`, measures this package's rule.
 
@@ -17,8 +17,16 @@ files 2 and 3, which depend on test-only sniff groups, are skipped.
 
 Snapshots below are newest first; the top table is the current state.
 
+Mago 1.51.0, 2026-10-11, after #44, #46 and #48: the WordPress total is unchanged at 2,131 of 2,150
+lines (99 %), and the extras fall from 30 to 11 because `WordPress.PHP.IniSet` (28 of 28) and
+`WordPress.PHP.DevelopmentFunctions` (16 of 16) now run through this package's rules with no extras.
+The new generic rows are `Universal.Namespaces.*` and `Universal.UseStatements.*` (the misses are an
+intentional parse error and two phpcs 3-only spellings) and `PSR12.Files.FileHeader` at 3 of 17: the
+test file mostly expects the spacing codes and `HeaderPosition`, which the port leaves to `mago
+format`, and it reports only `IncorrectOrder` and `IncorrectGrouping`.
+
 Mago 1.51.0, 2026-10-11 (WPCS 3.x tests, phpcs 3.13.6, PHPCSExtra): 2,131 of 2,150 expected lines matched
-(99 %, up from 89 %) with 30 extra reports, after the Security, DB, AlternativeFunctions,
+(99 %, up from 89 %) with 11 extra reports (30 before `WordPress.PHP.IniSet` and `DevelopmentFunctions` moved into this package), after the Security, DB, AlternativeFunctions,
 NoSilencedErrors and PregQuoteDelimiter ports into this package, which the earlier rows measured as
 Mago core rules. The 19 misses are not product gaps:
 
@@ -33,7 +41,7 @@ Mago core rules. The 19 misses are not product gaps:
 - `EnqueuedResourceParameters` file 2: a live-coding parse-error test.
 
 The generic rows (`Generic.*`, `Squiz.*`, `PSR2.*`, `PEAR.*`, `Universal.*`, `Modernize.*`) total
-911 of 1,071 lines (85 %). Several are deliberately partial ports of the codes `WordPress-Core`
+961 of 1,138 lines (84 %). Several are deliberately partial ports of the codes `WordPress-Core`
 includes (`ControlSignature` only `SpaceAfterCloseBrace`, `SwitchDeclaration` only
 `TerminatingComment`, `DoubleQuoteUsage` only `NotRequired`, `Dirname` only `FileConstant`), so their
 recall against the whole sniff is low by design.
@@ -69,10 +77,10 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `WordPress.NamingConventions.ValidHookName` | 3 | 55 | 55 | 0 | 0 | 100% | ValidHookNameUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region; ValidHookNameUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.NamingConventions.ValidPostTypeSlug` | 2 | 21 | 20 | 1 | 0 | 95% |  |
 | `WordPress.NamingConventions.ValidVariableName` | 1 | 70 | 70 | 0 | 0 | 100% | ValidVariableNameUnitTest.inc: 2 phpcs:set directive(s), honoured by region |
-| `WordPress.PHP.DevelopmentFunctions` | 1 | 16 | 16 | 0 | 1 | 100% | DevelopmentFunctionsUnitTest.inc: 3 phpcs:set directive(s), honoured by region |
+| `WordPress.PHP.DevelopmentFunctions` | 1 | 16 | 16 | 0 | 0 | 100% | DevelopmentFunctionsUnitTest.inc: 3 phpcs:set directive(s), honoured by region |
 | `WordPress.PHP.DiscouragedPHPFunctions` | 1 | 24 | 24 | 0 | 0 | 100% |  |
 | `WordPress.PHP.DontExtract` | 1 | 4 | 4 | 0 | 0 | 100% |  |
-| `WordPress.PHP.IniSet` | 1 | 28 | 28 | 0 | 18 | 100% |  |
+| `WordPress.PHP.IniSet` | 1 | 28 | 28 | 0 | 0 | 100% |  |
 | `WordPress.PHP.NoSilencedErrors` | 1 | 29 | 29 | 0 | 0 | 100% | NoSilencedErrorsUnitTest.inc: 6 phpcs:set directive(s), honoured by region; NoSilencedErrorsUnitTest.inc: no setting for phpcs:set context_length |
 | `WordPress.PHP.PregQuoteDelimiter` | 1 | 5 | 5 | 0 | 0 | 100% |  |
 | `WordPress.PHP.RestrictedPHPFunctions` | 1 | 4 | 4 | 0 | 0 | 100% |  |
@@ -157,16 +165,22 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `Squiz.PHP.CommentedOutCode` | 1 | 12 | 11 | 1 | 0 | 92% |  |
 | `Modernize.FunctionCalls.Dirname` | 5 | 34 | 18 | 16 | 1 | 53% |  |
 | `Universal.UseStatements.NoLeadingBackslash` | 6 | 11 | 11 | 0 | 0 | 100% |  |
+| `Universal.Namespaces.OneDeclarationPerFile` | 3 | 7 | 6 | 1 | 0 | 86% |  |
+| `Universal.Namespaces.DisallowDeclarationWithoutName` | 2 | 2 | 2 | 0 | 0 | 100% |  |
+| `Universal.UseStatements.NoUselessAliases` | 1 | 22 | 22 | 0 | 0 | 100% |  |
+| `Universal.UseStatements.DisallowMixedGroupUse` | 1 | 11 | 11 | 0 | 0 | 100% |  |
+| `Universal.UseStatements.LowercaseFunctionConst` | 2 | 8 | 6 | 2 | 0 | 75% |  |
 | `Universal.Constants.UppercaseMagicConstants` | 1 | 16 | 16 | 0 | 0 | 100% |  |
 | `Universal.Constants.LowercaseClassResolutionKeyword` | 1 | 2 | 2 | 0 | 0 | 100% |  |
 | `Universal.PHP.LowercasePHPTag` | 1 | 3 | 3 | 0 | 0 | 100% |  |
 | `Universal.Classes.ModifierKeywordOrder` | 1 | 7 | 5 | 2 | 4 | 71% | ModifierKeywordOrderUnitTest.inc: no setting for phpcs:set order |
 | `Universal.Constants.ModifierKeywordOrder` | 1 | 8 | 5 | 3 | 3 | 63% | ModifierKeywordOrderUnitTest.inc: no setting for phpcs:set order |
+| `PSR12.Files.FileHeader` | 19 | 17 | 3 | 14 | 0 | 18% |  |
 | `PSR12.Keywords.ShortFormTypeKeywords` | 1 | 5 | 5 | 0 | 0 | 100% |  |
 | `Universal.Attributes.DisallowAttributeParentheses` | 5 | 5 | 5 | 0 | 0 | 100% |  |
 | `PEAR.Files.IncludingFile` | 1 | 18 | 8 | 10 | 0 | 44% |  |
-| **Total** | **194** | **2150** | **2131** | **19** | **30** | **99%** | |
-| **Generic sniffs (phpcs tests)** | **151** | **1071** | **911** | **160** | **35** | **85%** | |
+| **Total** | **194** | **2150** | **2131** | **19** | **11** | **99%** | |
+| **Generic sniffs (phpcs tests)** | **179** | **1138** | **961** | **177** | **35** | **84%** | |
 
 Only reports carrying the mapped rule codes count (Mago's parser/semantics errors on WPCS's
 deliberately odd test files no longer count as matches or extras), so numbers from this run on
