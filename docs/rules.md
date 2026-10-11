@@ -91,8 +91,11 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 |:---|:---|:---|:---|
 | `generic/assignment-in-condition` | Warning | `Generic.CodeAnalysis.AssignmentInCondition` | an assignment in an `if`, `elseif`, `switch`, `case`, `while`, `match` or `for` condition, including `! $a = f()` |
 | `generic/byte-order-mark` | Error | `Generic.Files.ByteOrderMark` | a UTF-8 or UTF-16 byte order mark at the start of the file |
+| `generic/class-modifier-keyword-order` | Error | `Universal.Classes.ModifierKeywordOrder` | `readonly final class` instead of `final readonly class` (and the same for `abstract`); autofix |
+| `generic/constant-modifier-keyword-order` | Error | `Universal.Constants.ModifierKeywordOrder` | `public final const` instead of `final public const`; autofix |
 | `generic/control-signature` | Error | `Squiz.ControlStructures.ControlSignature` | only `SpaceAfterCloseBrace`: a closing brace not followed by one space before `else`, `elseif`, `catch`, `finally` or a do-`while`, such as `} // note` then `else` on the next line, which `mago format` keeps; fixed where no comment is in the way. The sniff's other codes are `mago format`'s job |
 | `generic/disallow-alternative-php-tags` | Warning | `Generic.PHP.DisallowAlternativePHPTags` | `<%`, `<%=` and `<script language="php">` in inline HTML (removed in PHP 7, so the code inside is output as HTML) |
+| `generic/disallow-attribute-parentheses` | Error | `Universal.Attributes.DisallowAttributeParentheses` | `#[Attr()]` instead of `#[Attr]` (`WordPress-Extra`; autofix unless a comment is inside the parentheses) |
 | `generic/disallow-lonely-if` | Error | `Universal.ControlStructures.DisallowLonelyIf` | an `else` block whose only statement is an `if`; the fix rewrites the brace form to `elseif` as phpcbf does (comments around the inner `if` and the alternative syntax are not fixed) |
 | `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
 | `generic/disallow-size-functions-in-loops` | Error | `Squiz.PHP.DisallowSizeFunctionsInLoops` | `count()`, `sizeof()` or `strlen()` in a `while`/do-`while` condition or a `for` loop's test part |
@@ -106,6 +109,8 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/increment-decrement-usage` | Error | `Squiz.Operators.IncrementDecrementUsage` | `$i = $i + 1`, `$i += 1` or `$i -= 1` where `++`/`--` would do, and `++`/`--` inside arithmetic or an unbracketed concatenation; no fix, as in phpcs |
 | `generic/inline-control-structure` | Error | `Generic.ControlStructures.InlineControlStructure` | an `if`, `elseif`, `else`, `foreach`, `for`, `while` or `do` body without braces; the fix adds them as phpcbf does |
 | `generic/jumbled-incrementer` | Warning | `Generic.CodeAnalysis.JumbledIncrementer` | a nested `for` loop incrementing the outer loop's variable |
+| `generic/lowercase-class-resolution-keyword` | Error | `Universal.Constants.LowercaseClassResolutionKeyword` | `Foo::CLASS` or `$object::Class` instead of `::class` (autofix) |
+| `generic/lowercase-php-tag` | Error | `Universal.PHP.LowercasePHPTag` | `<?PHP` or `<?Php` instead of `<?php` (autofix) |
 | `generic/method-declaration-warning` | Warning | `PSR2.Methods.MethodDeclaration` | a method name with a single leading underscore (`Underscore`; off in `WordPress-Core`, which silences it) |
 | `generic/method-declaration` | Error | `PSR2.Methods.MethodDeclaration` | `final` or `abstract` after a method's visibility, `static` before it (fixed) |
 | `generic/method-scope` | Error | `Squiz.Scope.MethodScope` | a method declared without `public`, `protected` or `private` |
@@ -126,6 +131,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/one-object-structure-per-file` | Error | `Generic.Files.OneObjectStructurePerFile` | a second class, interface, trait or enum in a file, conditional declarations included |
 | `generic/self-member-reference` | Error | `Squiz.Classes.SelfMemberReference` | the enclosing class named instead of `self::`, `self` in another case, spaces around `::` (fixed; `NotUsed` is off in `WordPress-Core`) |
 | `generic/separate-functions-from-oo` | Error | `Universal.Files.SeparateFunctionsFromOO` | a file that declares both functions and classes, interfaces, traits or enums (once per file) |
+| `generic/short-form-type-keywords` | Error | `PSR12.Keywords.ShortFormTypeKeywords` | the casts `(boolean)` and `(integer)` instead of `(bool)` and `(int)` (autofix) |
 | `generic/static-in-final-class` | Error | `Universal.CodeAnalysis.StaticInFinalClass` | `static` return types, `static::`, `new static` and `instanceof static` in a final class, anonymous class or enum, where `self` means the same (fixed) |
 | `generic/strict-comparisons` | Warning | `Universal.Operators.StrictComparisons` | a loose `==`, `!=` or `<>` comparison; no fix, as WordPress-Core marks the sniff `phpcs-only` (phpcbf leaves it) and `===` can change behaviour |
 | `generic/switch-declaration` | Error | `PSR2.ControlStructures.SwitchDeclaration` | only `TerminatingComment`: a non-empty `case` that falls through to the next one without a comment (a body ending in `return`, `break`, `throw`, ... on every path is not a fall-through). The sniff's other codes are `mago format`'s job |
@@ -133,6 +139,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/unnecessary-heredoc` | Warning | `Generic.Strings.UnnecessaryHeredoc` | a heredoc with nothing interpolated and no escape a nowdoc would lose; the fix turns it into a nowdoc as phpcbf does |
 | `generic/unused-function-parameter` | Warning | `Generic.CodeAnalysis.UnusedFunctionParameter` | parameters the body never uses after the last used one (`Found`, `FoundAfterLastUsed`); like WordPress-Extra, not earlier ones and not methods of a class that extends or implements |
 | `generic/upper-case-constant-name` | Error | `Generic.NamingConventions.UpperCaseConstantName` | a `const` or `define()` constant whose name is not all uppercase |
+| `generic/uppercase-magic-constants` | Error | `Universal.Constants.UppercaseMagicConstants` | `__line__`, `__Dir__` and the other magic constants not in uppercase (autofix) |
 | `generic/useless-overriding-method` | Warning | `Generic.CodeAnalysis.UselessOverridingMethod` | a method whose body only calls the parent method of the same name with its own parameters, unchanged; replaces Mago's `no-redundant-method-override` |
 | `generic/valid-class-name` | Error | `PEAR.NamingConventions.ValidClassName` | a class, interface, trait or enum name that does not start with a capital, or has an `_`-separated word that does not (`My_Class` and `MyClass` pass, `My_class` does not); replaces Mago's `class-name` |
 | `generic/valid-logical-operators` | Error | `Squiz.Operators.ValidLogicalOperators` | the `and` and `or` operators; no fix, as `&&` and `\|\|` bind tighter |
@@ -141,7 +148,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-96 of the 97 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+103 of the 104 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For seven of them the warning

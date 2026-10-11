@@ -134,6 +134,9 @@ final class Levels
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
         ],
+        'PSR12.Keywords.ShortFormTypeKeywords' => [
+            'LongFound' => 'error',
+        ],
         'PSR2.Classes.PropertyDeclaration' => [
             'AbstractAfterVisibility' => 'error',
             'AvizKeywordOrder' => 'error',
@@ -216,6 +219,12 @@ final class Levels
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
+        'Universal.Attributes.DisallowAttributeParentheses' => [
+            'Found' => 'error',
+        ],
+        'Universal.Classes.ModifierKeywordOrder' => [
+            'Incorrect' => 'error',
+        ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
         ],
@@ -229,6 +238,19 @@ final class Levels
         ],
         'Universal.CodeAnalysis.StaticInFinalClass' => [
             '*' => 'error',
+        ],
+        'Universal.Constants.LowercaseClassResolutionKeyword' => [
+            '' => 'error',
+            'Mixedcase' => 'error',
+            'Uppercase' => 'error',
+        ],
+        'Universal.Constants.ModifierKeywordOrder' => [
+            'Incorrect' => 'error',
+        ],
+        'Universal.Constants.UppercaseMagicConstants' => [
+            '' => 'error',
+            'Lowercase' => 'error',
+            'Mixedcase' => 'error',
         ],
         'Universal.ControlStructures.DisallowLonelyIf' => [
             'Found' => 'error',
@@ -248,6 +270,11 @@ final class Levels
         ],
         'Universal.Operators.StrictComparisons' => [
             '*' => 'warning',
+        ],
+        'Universal.PHP.LowercasePHPTag' => [
+            '' => 'error',
+            'Mixedcase' => 'error',
+            'Uppercase' => 'error',
         ],
         'Universal.UseStatements.NoLeadingBackslash' => [
             'LeadingBackslashFound' => 'error',

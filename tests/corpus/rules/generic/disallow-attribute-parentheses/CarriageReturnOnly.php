@@ -1,0 +1,1 @@
+<?phpdeclare(strict_types=1);namespace Vendor\Project;// An argument after a line comment in a CR-only file is not an empty list.#[Argument(// c 1)]function cr(): void {}

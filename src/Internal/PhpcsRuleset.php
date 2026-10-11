@@ -186,6 +186,12 @@ final class PhpcsRuleset
         'Universal.NamingConventions.NoReservedKeywordParameterNames',
         'Modernize.FunctionCalls.Dirname',
         'Universal.UseStatements.NoLeadingBackslash',
+        'Universal.Constants.UppercaseMagicConstants',
+        'Universal.Constants.LowercaseClassResolutionKeyword',
+        'Universal.PHP.LowercasePHPTag',
+        'Universal.Classes.ModifierKeywordOrder',
+        'Universal.Constants.ModifierKeywordOrder',
+        'PSR12.Keywords.ShortFormTypeKeywords',
         'PEAR.Files.IncludingFile',
     ];
 
@@ -245,6 +251,7 @@ final class PhpcsRuleset
         'Universal.CodeAnalysis.NoDoubleNegative',
         'Generic.CodeAnalysis.UnusedFunctionParameter',
         'Squiz.PHP.CommentedOutCode',
+        'Universal.Attributes.DisallowAttributeParentheses',
     ];
 
     /** phpcs hides reports below this severity by default. */
