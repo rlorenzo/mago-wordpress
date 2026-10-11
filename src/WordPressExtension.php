@@ -11,6 +11,7 @@ use Rlorenzo\MagoWordPress\Internal\LeveledRule;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\SplitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ArrayAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
@@ -209,6 +210,7 @@ final class WordPressExtension
                 new DbRestrictedClassesRule($report),
                 new RestrictedPhpFunctionsRule($report),
                 new TypeCastsRule($report),
+                new ArrayAlignmentRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),

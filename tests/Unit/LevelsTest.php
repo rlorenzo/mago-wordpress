@@ -35,6 +35,7 @@ final class LevelsTest extends TestCase
         'generic/forbidden-functions' => Level::Error, // the sniff's `error` property, true unless a ruleset changes it
         'wordpress/capabilities' => Level::Error, // Deprecated: error or warning against minimum_wp_version
         'wordpress/enqueued-resource-parameters' => Level::Warning,
+        'wordpress/array-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap
         'wordpress/prefix-all-globals' => Level::Error,
         'wordpress/prepared-sql-unquoted-complex-placeholder' => Level::Warning, // its one code
