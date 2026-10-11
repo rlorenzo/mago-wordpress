@@ -21,12 +21,13 @@ vendor/bin/mago-wordpress format --staged   # the staged PHP files mago.toml lis
 This is the only supported way to format and to check. `mago format` alone can't produce WordPress
 formatting, and `mago format --check` always fails on code that is.
 
-The command runs four steps in order:
+The command runs five steps in order:
 
 ```sh
 mago lint --fix --only array-style                  # [] to array()
 mago format
 mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format removes
+mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
 mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60
 ```
 
@@ -37,6 +38,13 @@ space before an alternative-syntax colon (`if ( $x ) :`, `else :`). Since `mago 
 again, the command is idempotent only as a whole: running `mago format` on its own undoes step 3.
 `mago format` is also not always stable on its own (a comment between `<?php` and `endif;` moves a
 little on each run), so the command repeats it until `mago format --check` passes.
+
+Steps 4 and 5 undo what `mago format` does and phpcs does not allow. It keeps a closure or array last
+argument on the line of the call's `(`, aligns every `=>` however long the key, and WordPress-Core
+wants `add_action( 'init', function () {` as one argument per line with `)` on its own line, and the
+`=>` aligned only up to column 60. Step 4 moves a hugged argument to a line of its own together with
+the lines it spans, one level deeper (the lines of a multi-line string or heredoc stay as they are),
+and is repeated until no call is left; a call with a comment among its arguments is left alone.
 
 Formatting must not create findings. After the steps, the command lints each file they changed,
 formatted and as it was, and puts back the original of any file that gained a finding, with
@@ -91,20 +99,22 @@ It doesn't occur in the benchmark below.
 ## How close it gets
 
 On Akismet, Contact Form 7 and Yoast SEO (1,834 PHP files), phpcs-fixable `WordPress-Core` reports
-drop from 334,577 (Mago's default formatting) to 2,366 with the four steps of `mago-wordpress format`
-(7,340 before `wordpress/array-alignment`). What's left:
+drop from 334,577 (Mago's default formatting) to 692 with the five steps of `mago-wordpress format`
+(7,340 before `wordpress/array-alignment` and 2,366 before `wordpress/function-call-signature`).
+What's left:
 
 | Cause | Reports | Share |
 |:---|---:|---:|
-| Hugged last argument or several arguments per line in a broken call (`PEAR.Functions.FunctionCallSignature`) | 1,669 | 71 % |
-| Assignment `=` alignment: WPCS stops aligning past 40 spaces of padding, Mago never stops (`Generic.Formatting.MultipleStatementAlignment`) | 263 | 11 % |
-| Associative arrays with several items on one line, which WPCS wants broken | 147 | 6 % |
-| Fixable but not formatting (loose comparisons) | 113 | 5 % |
-| Other: `echo` followed by a newline, scope indent, embedded PHP, multi-catch `A\|B` | 174 | 7 % |
+| Assignment `=` alignment: WPCS stops aligning past 40 spaces of padding, Mago never stops (`Generic.Formatting.MultipleStatementAlignment`) | 263 | 38 % |
+| Associative arrays with several items on one line, which WPCS wants broken | 147 | 21 % |
+| Fixable but not formatting (loose comparisons) | 113 | 16 % |
+| `Generic.WhiteSpace.LanguageConstructSpacing` | 61 | 9 % |
+| Other: scope indent, operator spacing, embedded PHP, inline tabs | 108 | 16 % |
 
-`wordpress/array-alignment` (step 4) removes the `=>` alignment share: on the same plugins phpcs
-reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in 51 files after the first
-three steps, and 0 after it.
+On the same plugins phpcs reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in
+51 files after the first three steps (`wordpress/array-alignment` takes them to 0), and 1,669
+`PEAR.Functions.FunctionCallSignature` layout reports (`wordpress/function-call-signature` takes
+them to 0 without adding a report of any other sniff).
 
 How these were measured: a fresh copy of each plugin (Akismet 5.7.2, Contact Form 7 6.1.7, Yoast SEO
 28.5; 1,834 PHP files) with a `mago.toml` that extends the preset, the steps run one by one with
@@ -114,7 +124,7 @@ WPCS 3.4.1), counting the reports phpcs marks fixable by sniff code. This is a m
 steps, not the output of `mago-wordpress format`, whose final check can put a file back unformatted
 (see above); the figures are what the steps do, not a measure of that check.
 
-Most of the alignment share is one generated file in Yoast SEO. On bcap_website, a phpcs-clean site
+On bcap_website (measured before steps 4 and 5), a phpcs-clean site
 of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
 sniff codes and how `print-width` trades off: [formatter results](../bench/results/2026-10-01-formatter.md).
 

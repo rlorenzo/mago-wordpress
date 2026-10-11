@@ -7,6 +7,7 @@ namespace Rlorenzo\MagoWordPress\Internal;
 use function array_diff;
 use function array_filter;
 use function array_intersect;
+use function array_key_last;
 use function array_keys;
 use function array_map;
 use function array_merge;
@@ -27,6 +28,7 @@ use function in_array;
 use function is_dir;
 use function is_file;
 use function ltrim;
+use function md5;
 use function mkdir;
 use function passthru;
 use function random_bytes;
@@ -46,9 +48,9 @@ use const STDERR;
 use const STDOUT;
 
 /**
- * `mago-wordpress format [paths] [--check] [--staged]`: the four steps that make WordPress
+ * `mago-wordpress format [paths] [--check] [--staged]`: the steps that make WordPress
  * formatting (long arrays, `mago format`, the spaces inside parentheses `mago format` removes, the
- * array arrows `mago format` aligns past column 60), in
+ * arguments `mago format` hugs onto the line of a call's `(`, the array arrows it aligns past column 60), in
  * order, as one command. `--check` runs them on a temporary copy of the project and fails with a
  * unified diff if anything would change; `--staged` limits both to the PHP files staged in git.
  *
@@ -61,7 +63,24 @@ final class FormatCommand
         ['lint',   '--fix', '--only', 'array-style'],
         ['format'],
         ['lint',   '--fix', '--only', 'wordpress/parentheses-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/function-call-signature'],
         ['lint',   '--fix', '--only', 'wordpress/array-alignment'],
+    ];
+
+    /**
+     * The steps that may need more than one run, with the command that says when one is done: a
+     * check that exits 0 once nothing is left. `mago format` is not always stable on its own, and the
+     * call-signature fix changes one nesting level of calls per run.
+     */
+    private const SETTLES = [
+        'format' => ['format', '--check'],
+        'wordpress/function-call-signature' => [
+            'lint',
+            '--only',
+            'wordpress/function-call-signature',
+            '--minimum-fail-level',
+            'help',
+        ],
     ];
 
     public const USAGE = <<<'USAGE'
@@ -69,6 +88,7 @@ final class FormatCommand
 
         Formats PHP files for WordPress: `mago lint --fix --only array-style`, `mago format`,
         `mago lint --fix --only wordpress/parentheses-spacing`, then
+        `mago lint --fix --only wordpress/function-call-signature` and
         `mago lint --fix --only wordpress/array-alignment`. Without paths it formats
         the files your mago.toml lists. --check changes nothing and fails with a diff if any
         file would change; --staged takes the staged PHP files that your mago.toml lists (and re-stages
@@ -198,8 +218,19 @@ final class FormatCommand
             $before[$file] = (string) file_get_contents("{$cwd}/{$file}");
         }
 
+        // A hash of the files' contents, to tell whether a run changed any.
+        $snapshot = static fn(): string => md5(implode("\0", array_map(
+            static fn(string $file): string => (string) file_get_contents("{$cwd}/{$file}"),
+            $files,
+        )));
+
         foreach (self::STEPS as $step) {
-            $runs = $step === ['format'] ? 5 : 1; // ponytail: gives up after 5 runs; mago converged in 3 on bcap.
+            $settle = self::SETTLES[$step[array_key_last($step)]] ?? null;
+            // `mago format` gives up after 5 runs (ponytail: it converged in 3 on bcap). The call-layout
+            // fix changes one nesting level per run, so it goes on while a run still changes a file.
+            $fixPoint = $step !== ['format'];
+            $runs = $settle === null ? 1 : ($fixPoint ? 100 : 5);
+            $seen = $fixPoint ? $snapshot() : '';
             for ($run = 1;; ++$run) {
                 [$status, $output] = self::exec([$mago, ...$step, ...$paths], $cwd, $capture);
                 if ($status !== 0) {
@@ -208,12 +239,12 @@ final class FormatCommand
                     return $status;
                 }
 
-                if ($runs === 1) {
+                if ($settle === null) {
                     break;
                 }
 
-                // `mago format --check` exits 1 for files still unformatted and 2 for a tool error.
-                [$check, $checkOutput] = self::exec([$mago, 'format', '--check', ...$paths], $cwd);
+                // The check exits 1 while files are left and 2 for a tool error.
+                [$check, $checkOutput] = self::exec([$mago, ...$settle, ...$paths], $cwd);
                 if ($check === 0) {
                     break;
                 }
@@ -224,8 +255,17 @@ final class FormatCommand
                     return $check;
                 }
 
+                if ($fixPoint) {
+                    $now = $snapshot();
+                    if ($now === $seen) {
+                        break;
+                    }
+
+                    $seen = $now;
+                }
+
                 if ($run >= $runs) {
-                    fwrite(STDERR, "mago format did not settle after {$runs} runs\n");
+                    fwrite(STDERR, "mago {$step[0]} did not settle after {$runs} runs\n");
 
                     return 1;
                 }

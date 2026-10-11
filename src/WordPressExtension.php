@@ -51,6 +51,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCallSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
@@ -211,6 +212,7 @@ final class WordPressExtension
                 new RestrictedPhpFunctionsRule($report),
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
+                new FunctionCallSignatureRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),
