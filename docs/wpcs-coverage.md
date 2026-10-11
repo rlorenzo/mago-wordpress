@@ -179,13 +179,6 @@ Generic sniffs that enforce a convention rather than catch a bug. Left unported;
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
 
 - `PSR12.Files.FileHeader`
-- `PSR12.Keywords.ShortFormTypeKeywords`
-- `Universal.Attributes.DisallowAttributeParentheses`
-- `Universal.Classes.ModifierKeywordOrder`
-- `Universal.Constants.LowercaseClassResolutionKeyword`
-- `Universal.Constants.ModifierKeywordOrder`
-- `Universal.Constants.UppercaseMagicConstants`
-- `Universal.PHP.LowercasePHPTag`
 - `Universal.UseStatements.DisallowMixedGroupUse`
 - `Universal.UseStatements.LowercaseFunctionConst`
 

@@ -1,10 +1,13 @@
 generic/assignment-in-condition
 generic/byte-order-mark
+generic/class-modifier-keyword-order
 generic/closing-tag
 generic/commented-out-code
+generic/constant-modifier-keyword-order
 generic/control-signature
 generic/dirname
 generic/disallow-alternative-php-tags
+generic/disallow-attribute-parentheses
 generic/disallow-lonely-if
 generic/disallow-multiple-assignments
 generic/disallow-size-functions-in-loops
@@ -21,6 +24,8 @@ generic/including-file-warning
 generic/increment-decrement-usage
 generic/inline-control-structure
 generic/jumbled-incrementer
+generic/lowercase-class-resolution-keyword
+generic/lowercase-php-tag
 generic/method-declaration
 generic/method-declaration-warning
 generic/method-scope
@@ -35,6 +40,7 @@ generic/property-declaration-warning
 generic/require-explicit-boolean-operator-precedence
 generic/self-member-reference
 generic/separate-functions-from-oo
+generic/short-form-type-keywords
 generic/static-in-final-class
 generic/strict-comparisons
 generic/switch-declaration
@@ -42,6 +48,7 @@ generic/unconditional-if-statement
 generic/unnecessary-heredoc
 generic/unused-function-parameter
 generic/upper-case-constant-name
+generic/uppercase-magic-constants
 generic/useless-overriding-method
 generic/valid-class-name
 generic/valid-logical-operators

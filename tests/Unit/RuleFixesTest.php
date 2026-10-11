@@ -87,6 +87,55 @@ final class RuleFixesTest extends TestCase
             "use Foo\\Bar;\nuse function foo, Bar\\baz as q;\nuse/*x*/ Baz;",
         ];
 
+        yield 'uppercase-magic-constants uppercases the constant' => [
+            'generic/uppercase-magic-constants',
+            '',
+            'echo __line__, __Dir__, __FILE__;',
+            'echo __LINE__, __DIR__, __FILE__;',
+        ];
+
+        yield 'lowercase-class-resolution-keyword lowercases the keyword' => [
+            'generic/lowercase-class-resolution-keyword',
+            '',
+            "echo Foo::CLASS, \$object::Class, Foo::class, Foo::CONSTANT;",
+            "echo Foo::class, \$object::class, Foo::class, Foo::CONSTANT;",
+        ];
+
+        yield 'lowercase-php-tag lowercases a later open tag' => [
+            'generic/lowercase-php-tag',
+            '',
+            "echo 1;\n?>\n<?PHP echo 2; ?>",
+            "echo 1;\n?>\n<?php echo 2; ?>",
+        ];
+
+        yield 'class-modifier-keyword-order puts readonly after final and abstract' => [
+            'generic/class-modifier-keyword-order',
+            '',
+            "readonly final class A {}\nreadonly   abstract class B {}\nfinal readonly class C {}",
+            "final readonly class A {}\nabstract readonly class B {}\nfinal readonly class C {}",
+        ];
+
+        yield 'constant-modifier-keyword-order puts final before the visibility' => [
+            'generic/constant-modifier-keyword-order',
+            '',
+            "class A {\n\tpublic final const ONE = 1;\n\tfinal private const TWO = 2;\n}",
+            "class A {\n\tfinal public const ONE = 1;\n\tfinal private const TWO = 2;\n}",
+        ];
+
+        yield 'short-form-type-keywords shortens the casts' => [
+            'generic/short-form-type-keywords',
+            '',
+            "\$a = (boolean) \$x;\n\$b = ( Integer ) \$x;\n\$c = (bool) \$x;",
+            "\$a = (bool) \$x;\n\$b = ( int ) \$x;\n\$c = (bool) \$x;",
+        ];
+
+        yield 'disallow-attribute-parentheses drops empty parentheses' => [
+            'generic/disallow-attribute-parentheses',
+            '',
+            "#[Attr(), Other(1), Third( )]\nfunction a() {}\n#[Commented( /* c */ )]\nfunction b() {}",
+            "#[Attr, Other(1), Third]\nfunction a() {}\n#[Commented( /* c */ )]\nfunction b() {}",
+        ];
+
         yield 'including-file drops the parentheses around the path' => [
             'generic/including-file',
             '',

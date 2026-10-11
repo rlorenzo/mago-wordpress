@@ -16,9 +16,11 @@ use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ClassModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ConstantModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
@@ -26,6 +28,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirnameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAttributeParenthesesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
@@ -51,6 +54,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LowercasePhpTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
@@ -75,6 +80,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ShortFormTypeKeywordsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
@@ -85,6 +91,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UpperCaseConstantNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UppercaseMagicConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
@@ -231,6 +238,13 @@ final class WordPressExtension
                 ),
                 new ForbiddenFunctionsRule($report),
                 new NoLeadingBackslashRule($report),
+                new ClassModifierKeywordOrderRule($report),
+                new ConstantModifierKeywordOrderRule($report),
+                new DisallowAttributeParenthesesRule($report),
+                new LowercaseClassResolutionKeywordRule($report),
+                new LowercasePhpTagRule($report),
+                new ShortFormTypeKeywordsRule($report),
+                new UppercaseMagicConstantsRule($report),
                 new DirnameRule($report),
                 new NoSilencedErrorsRule($report, $settings),
                 new StrictComparisonsRule($report),
