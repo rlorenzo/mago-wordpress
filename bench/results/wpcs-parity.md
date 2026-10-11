@@ -6,14 +6,37 @@ the Mago rule that ports the sniff and compares the lines reported with the line
 honoured per region. `Recall` is matched / expected; `Extra` is lines Mago reports that WPCS does
 not expect (some are Mago being right where the sniff is documented as not yet resolving a case).
 
-Rows for `WordPress.Security.*`, `WordPress.DB.DirectDatabaseQuery`, `WordPress.DB.PreparedSQL`,
-`WordPress.WP.AlternativeFunctions` and the four `WordPress.PHP.*` rows mapped to Mago core rules
-measure Mago's own rules, not this package's.
+Rows for sniffs that `SniffMap` maps to a Mago core rule instead of one of this package's (the
+generic ones that name a core rule, such as `no-goto`, `lowercase-keyword` or `array-style`, and
+`WordPress.PHP.IniSet` and `WordPress.PHP.DevelopmentFunctions` until they are ported) measure Mago's
+own rules, not this package's. Every other `WordPress.*` row, including `Security.*`, the `DB`
+sniffs, `AlternativeFunctions` and `NoSilencedErrors`, measures this package's rule.
 
 Matching is by span (an expected line inside a report's primary span matches) and `RestrictedClasses`
 files 2 and 3, which depend on test-only sniff groups, are skipped.
 
 Snapshots below are newest first; the top table is the current state.
+
+Mago 1.51.0, 2026-10-11 (WPCS 3.x tests, phpcs 3.13.6, PHPCSExtra): 2,131 of 2,150 expected lines matched
+(99 %, up from 89 %) with 30 extra reports, after the Security, DB, AlternativeFunctions,
+NoSilencedErrors and PregQuoteDelimiter ports into this package, which the earlier rows measured as
+Mago core rules. The 19 misses are not product gaps:
+
+- `WordPress.WP.Capabilities` (11 lines): the `Undetermined` warning for a capability that is not a
+  string literal, which phpcs reports at severity 3 and so hides by default. The rule does not port it.
+- `ValidPostTypeSlug` line 40: `register_post_type( /*comment*/, array() )`, a parse error.
+- `RestrictedClasses` lines 42 and 63: `\My\DBlayer`, a group the test class defines for itself.
+  `RestrictedFunctions` line 94: `myFictionFunction()`, a test-only group as well.
+- `PrefixAllGlobals` lines 1 and 10 of file 1 and line 1 of file 4: the invalid-prefix messages WPCS
+  reports at the top of the file, once per run. This package reports a rejected prefix once per
+  worker, and the harness runs one worker across files.
+- `EnqueuedResourceParameters` file 2: a live-coding parse-error test.
+
+The generic rows (`Generic.*`, `Squiz.*`, `PSR2.*`, `PEAR.*`, `Universal.*`, `Modernize.*`) total
+911 of 1,071 lines (85 %). Several are deliberately partial ports of the codes `WordPress-Core`
+includes (`ControlSignature` only `SpaceAfterCloseBrace`, `SwitchDeclaration` only
+`TerminatingComment`, `DoubleQuoteUsage` only `NotRequired`, `Dirname` only `FileConstant`), so their
+recall against the whole sniff is low by design.
 
 Mago 1.51.0, 2026-10-01: `no-unescaped-output` now checks `<?= ?>` echo tags and accepts the
 WordPress escaping functions (mago#2397), so `WordPress.Security.EscapeOutput` goes from 57 % to 60 %
@@ -34,8 +57,8 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `WordPress.CodeAnalysis.EscapedNotTranslated` | 1 | 4 | 4 | 0 | 0 | 100% |  |
 | `WordPress.DateTime.CurrentTimeTimestamp` | 1 | 10 | 10 | 0 | 0 | 100% |  |
 | `WordPress.DateTime.RestrictedFunctions` | 1 | 4 | 4 | 0 | 0 | 100% |  |
-| `WordPress.DB.DirectDatabaseQuery` | 2 | 70 | 68 | 2 | 4 | 97% | DirectDatabaseQueryUnitTest.1.inc: no setting for phpcs:set customCacheGetFunctions, customCacheSetFunctions, customCacheDeleteFunctions |
-| `WordPress.DB.PreparedSQL` | 3 | 33 | 28 | 5 | 9 | 85% |  |
+| `WordPress.DB.DirectDatabaseQuery` | 2 | 70 | 70 | 0 | 0 | 100% | DirectDatabaseQueryUnitTest.1.inc: 13 phpcs:set directive(s), honoured by region |
+| `WordPress.DB.PreparedSQL` | 3 | 33 | 33 | 0 | 0 | 100% |  |
 | `WordPress.DB.PreparedSQLPlaceholders` | 1 | 106 | 106 | 0 | 0 | 100% | PreparedSQLPlaceholdersUnitTest.inc: 5 phpcs:set directive(s), honoured by region |
 | `WordPress.DB.RestrictedClasses` | 2 | 37 | 35 | 2 | 0 | 95% | RestrictedClassesUnitTest.1.inc: 3 phpcs:set directive(s), honoured by region; RestrictedClassesUnitTest.2.inc skipped: test-only sniff groups; RestrictedClassesUnitTest.3.inc skipped: test-only sniff groups |
 | `WordPress.DB.RestrictedFunctions` | 1 | 42 | 41 | 1 | 0 | 98% |  |
@@ -44,24 +67,24 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `WordPress.NamingConventions.PrefixAllGlobals` | 9 | 99 | 96 | 3 | 5 | 97% | PrefixAllGlobalsUnitTest.1.inc: 17 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.4.inc: 4 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.5.inc: 1 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.6.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.7.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.8.inc: 2 phpcs:set directive(s), honoured by region; PrefixAllGlobalsUnitTest.9.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.NamingConventions.ValidFunctionName` | 2 | 29 | 29 | 0 | 0 | 100% |  |
 | `WordPress.NamingConventions.ValidHookName` | 3 | 55 | 55 | 0 | 0 | 100% | ValidHookNameUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region; ValidHookNameUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region |
-| `WordPress.NamingConventions.ValidPostTypeSlug` | 2 | 29 | 28 | 1 | 1 | 97% |  |
+| `WordPress.NamingConventions.ValidPostTypeSlug` | 2 | 21 | 20 | 1 | 0 | 95% |  |
 | `WordPress.NamingConventions.ValidVariableName` | 1 | 70 | 70 | 0 | 0 | 100% | ValidVariableNameUnitTest.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.PHP.DevelopmentFunctions` | 1 | 16 | 16 | 0 | 1 | 100% | DevelopmentFunctionsUnitTest.inc: 3 phpcs:set directive(s), honoured by region |
 | `WordPress.PHP.DiscouragedPHPFunctions` | 1 | 24 | 24 | 0 | 0 | 100% |  |
 | `WordPress.PHP.DontExtract` | 1 | 4 | 4 | 0 | 0 | 100% |  |
 | `WordPress.PHP.IniSet` | 1 | 28 | 28 | 0 | 18 | 100% |  |
-| `WordPress.PHP.NoSilencedErrors` | 1 | 29 | 29 | 0 | 14 | 100% | NoSilencedErrorsUnitTest.inc: no setting for phpcs:set customAllowedFunctionsList, usePHPFunctionsList, context_length |
-| `WordPress.PHP.PregQuoteDelimiter` | 1 | 5 | 4 | 1 | 2 | 80% |  |
+| `WordPress.PHP.NoSilencedErrors` | 1 | 29 | 29 | 0 | 0 | 100% | NoSilencedErrorsUnitTest.inc: 6 phpcs:set directive(s), honoured by region; NoSilencedErrorsUnitTest.inc: no setting for phpcs:set context_length |
+| `WordPress.PHP.PregQuoteDelimiter` | 1 | 5 | 5 | 0 | 0 | 100% |  |
 | `WordPress.PHP.RestrictedPHPFunctions` | 1 | 4 | 4 | 0 | 0 | 100% |  |
 | `WordPress.PHP.StrictInArray` | 1 | 15 | 15 | 0 | 1 | 100% |  |
 | `WordPress.PHP.TypeCasts` | 1 | 10 | 10 | 0 | 0 | 100% |  |
 | `WordPress.PHP.YodaConditions` | 1 | 19 | 19 | 0 | 0 | 100% |  |
-| `WordPress.Security.EscapeOutput` | 23 | 176 | 106 | 70 | 60 | 60% | EscapeOutputUnitTest.1.inc: 4 phpcs:set directive(s), honoured by region; EscapeOutputUnitTest.1.inc: no setting for phpcs:set customPrintingFunctions |
-| `WordPress.Security.NonceVerification` | 8 | 66 | 38 | 28 | 25 | 58% | NonceVerificationUnitTest.1.inc: 5 phpcs:set directive(s), honoured by region; NonceVerificationUnitTest.1.inc: no setting for phpcs:set customNonceVerificationFunctions |
+| `WordPress.Security.EscapeOutput` | 23 | 176 | 176 | 0 | 0 | 100% | EscapeOutputUnitTest.1.inc: 6 phpcs:set directive(s), honoured by region |
+| `WordPress.Security.NonceVerification` | 8 | 66 | 66 | 0 | 0 | 100% | NonceVerificationUnitTest.1.inc: 13 phpcs:set directive(s), honoured by region |
 | `WordPress.Security.PluginMenuSlug` | 1 | 5 | 5 | 0 | 0 | 100% |  |
 | `WordPress.Security.SafeRedirect` | 1 | 4 | 4 | 0 | 0 | 100% |  |
-| `WordPress.Security.ValidatedSanitizedInput` | 5 | 106 | 36 | 70 | 12 | 34% | ValidatedSanitizedInputUnitTest.1.inc: 5 phpcs:set directive(s), honoured by region |
-| `WordPress.WP.AlternativeFunctions` | 1 | 62 | 20 | 42 | 14 | 32% | AlternativeFunctionsUnitTest.inc: 10 phpcs:set directive(s), honoured by region |
+| `WordPress.Security.ValidatedSanitizedInput` | 5 | 106 | 106 | 0 | 0 | 100% | ValidatedSanitizedInputUnitTest.1.inc: 5 phpcs:set directive(s), honoured by region |
+| `WordPress.WP.AlternativeFunctions` | 1 | 62 | 62 | 0 | 0 | 100% | AlternativeFunctionsUnitTest.inc: 10 phpcs:set directive(s), honoured by region |
 | `WordPress.WP.Capabilities` | 5 | 48 | 37 | 11 | 0 | 77% | CapabilitiesUnitTest.1.inc: 4 phpcs:set directive(s), honoured by region |
 | `WordPress.WP.CapitalPDangit` | 2 | 32 | 32 | 0 | 0 | 100% |  |
 | `WordPress.WP.ClassNameCase` | 1 | 18 | 18 | 0 | 0 | 100% |  |
@@ -78,7 +101,72 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `WordPress.WP.GlobalVariablesOverride` | 8 | 43 | 43 | 0 | 2 | 100% | GlobalVariablesOverrideUnitTest.1.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.3.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.4.inc: 2 phpcs:set directive(s), honoured by region; GlobalVariablesOverrideUnitTest.6.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.WP.I18n` | 3 | 149 | 149 | 0 | 0 | 100% | I18nUnitTest.1.inc: 8 phpcs:set directive(s), honoured by region; I18nUnitTest.2.inc: 2 phpcs:set directive(s), honoured by region |
 | `WordPress.WP.PostsPerPage` | 1 | 26 | 26 | 0 | 0 | 100% | PostsPerPageUnitTest.inc: 5 phpcs:set directive(s), honoured by region |
-| **Total** | **194** | **2158** | **1921** | **237** | **171** | **89%** | |
+| `Generic.CodeAnalysis.AssignmentInCondition` | 6 | 34 | 34 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.EmptyPHPStatement` | 2 | 25 | 19 | 6 | 1 | 76% |  |
+| `Generic.CodeAnalysis.EmptyStatement` | 1 | 14 | 14 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | 3 | 3 | 3 | 0 | 1 | 100% |  |
+| `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | 3 | 14 | 14 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.JumbledIncrementer` | 4 | 10 | 10 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | 1 | 34 | 31 | 3 | 0 | 91% |  |
+| `Generic.CodeAnalysis.UnconditionalIfStatement` | 2 | 5 | 5 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.UnnecessaryFinalModifier` | 2 | 10 | 5 | 5 | 0 | 50% |  |
+| `Generic.CodeAnalysis.UselessOverridingMethod` | 6 | 11 | 11 | 0 | 0 | 100% |  |
+| `Generic.ControlStructures.InlineControlStructure` | 7 | 46 | 46 | 0 | 0 | 100% |  |
+| `Generic.Files.ByteOrderMark` | 5 | 3 | 3 | 0 | 0 | 100% |  |
+| `Generic.Files.OneObjectStructurePerFile` | 1 | 5 | 5 | 0 | 0 | 100% |  |
+| `Generic.NamingConventions.UpperCaseConstantName` | 5 | 13 | 13 | 0 | 0 | 100% |  |
+| `Generic.PHP.BacktickOperator` | 1 | 1 | 1 | 0 | 0 | 100% |  |
+| `Generic.PHP.DisallowAlternativePHPTags` | 3 | 12 | 12 | 0 | 0 | 100% |  |
+| `Generic.PHP.DisallowShortOpenTag` | 5 | 12 | 8 | 4 | 2 | 67% |  |
+| `Generic.PHP.DiscourageGoto` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `Generic.PHP.ForbiddenFunctions` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `Generic.PHP.LowerCaseConstant` | 2 | 38 | 35 | 3 | 12 | 92% |  |
+| `Generic.PHP.LowerCaseKeyword` | 1 | 29 | 27 | 2 | 2 | 93% |  |
+| `Generic.PHP.LowerCaseType` | 1 | 63 | 42 | 21 | 0 | 67% |  |
+| `Generic.Strings.UnnecessaryHeredoc` | 3 | 4 | 4 | 0 | 0 | 100% |  |
+| `Generic.Strings.UnnecessaryStringConcat` | 2 | 7 | 4 | 3 | 4 | 57% | UnnecessaryStringConcatUnitTest.1.inc: no setting for phpcs:set allowMultiline, error |
+| `Generic.VersionControl.GitMergeConflict` | 7 | 64 | 64 | 0 | 0 | 100% |  |
+| `PEAR.NamingConventions.ValidClassName` | 1 | 24 | 24 | 0 | 0 | 100% |  |
+| `PSR2.Classes.PropertyDeclaration` | 1 | 53 | 53 | 0 | 0 | 100% |  |
+| `PSR2.ControlStructures.ElseIfDeclaration` | 1 | 2 | 2 | 0 | 0 | 100% |  |
+| `PSR2.ControlStructures.SwitchDeclaration` | 1 | 37 | 11 | 26 | 0 | 30% |  |
+| `PSR2.Files.ClosingTag` | 7 | 5 | 5 | 0 | 0 | 100% |  |
+| `PSR2.Methods.MethodDeclaration` | 1 | 20 | 20 | 0 | 0 | 100% |  |
+| `Squiz.Classes.SelfMemberReference` | 1 | 17 | 16 | 1 | 0 | 94% |  |
+| `Squiz.ControlStructures.ControlSignature` | 2 | 48 | 14 | 34 | 0 | 29% | ControlSignatureUnitTest.1.inc: no setting for phpcs:set requiredSpacesBeforeColon |
+| `Squiz.Operators.IncrementDecrementUsage` | 1 | 19 | 19 | 0 | 0 | 100% |  |
+| `Squiz.Operators.ValidLogicalOperators` | 1 | 3 | 3 | 0 | 0 | 100% |  |
+| `Squiz.PHP.DisallowMultipleAssignments` | 2 | 9 | 9 | 0 | 0 | 100% |  |
+| `Squiz.PHP.DisallowSizeFunctionsInLoops` | 1 | 12 | 12 | 0 | 0 | 100% |  |
+| `Squiz.PHP.Eval` | 1 | 2 | 2 | 0 | 0 | 100% |  |
+| `Squiz.PHP.NonExecutableCode` | 4 | 57 | 57 | 0 | 1 | 100% |  |
+| `Squiz.Scope.MethodScope` | 1 | 4 | 4 | 0 | 0 | 100% |  |
+| `Squiz.Strings.DoubleQuoteUsage` | 1 | 13 | 7 | 6 | 0 | 54% |  |
+| `Universal.Arrays.DisallowShortArraySyntax` | 1 | 6 | 0 | 6 | 2 | 0% |  |
+| `Universal.CodeAnalysis.ForeachUniqueAssignment` | 1 | 8 | 8 | 0 | 0 | 100% |  |
+| `Universal.CodeAnalysis.NoDoubleNegative` | 1 | 41 | 40 | 1 | 0 | 98% |  |
+| `Universal.CodeAnalysis.NoEchoSprintf` | 5 | 6 | 6 | 0 | 0 | 100% |  |
+| `Universal.CodeAnalysis.StaticInFinalClass` | 1 | 22 | 22 | 0 | 0 | 100% |  |
+| `Universal.ControlStructures.DisallowLonelyIf` | 1 | 19 | 19 | 0 | 0 | 100% |  |
+| `Universal.Files.SeparateFunctionsFromOO` | 8 | 3 | 2 | 1 | 0 | 67% |  |
+| `Universal.Operators.DisallowShortTernary` | 1 | 3 | 3 | 0 | 0 | 100% |  |
+| `Universal.Operators.DisallowStandalonePostIncrementDecrement` | 1 | 17 | 15 | 2 | 0 | 88% |  |
+| `Universal.Operators.StrictComparisons` | 1 | 3 | 3 | 0 | 0 | 100% |  |
+| `Universal.NamingConventions.NoReservedKeywordParameterNames` | 1 | 16 | 16 | 0 | 0 | 100% |  |
+| `Generic.CodeAnalysis.UnusedFunctionParameter` | 3 | 16 | 12 | 4 | 2 | 75% | UnusedFunctionParameterUnitTest.1.inc: no setting for phpcs:set ignoreTypeHints |
+| `Squiz.PHP.CommentedOutCode` | 1 | 12 | 11 | 1 | 0 | 92% |  |
+| `Modernize.FunctionCalls.Dirname` | 5 | 34 | 18 | 16 | 1 | 53% |  |
+| `Universal.UseStatements.NoLeadingBackslash` | 6 | 11 | 11 | 0 | 0 | 100% |  |
+| `Universal.Constants.UppercaseMagicConstants` | 1 | 16 | 16 | 0 | 0 | 100% |  |
+| `Universal.Constants.LowercaseClassResolutionKeyword` | 1 | 2 | 2 | 0 | 0 | 100% |  |
+| `Universal.PHP.LowercasePHPTag` | 1 | 3 | 3 | 0 | 0 | 100% |  |
+| `Universal.Classes.ModifierKeywordOrder` | 1 | 7 | 5 | 2 | 4 | 71% | ModifierKeywordOrderUnitTest.inc: no setting for phpcs:set order |
+| `Universal.Constants.ModifierKeywordOrder` | 1 | 8 | 5 | 3 | 3 | 63% | ModifierKeywordOrderUnitTest.inc: no setting for phpcs:set order |
+| `PSR12.Keywords.ShortFormTypeKeywords` | 1 | 5 | 5 | 0 | 0 | 100% |  |
+| `Universal.Attributes.DisallowAttributeParentheses` | 5 | 5 | 5 | 0 | 0 | 100% |  |
+| `PEAR.Files.IncludingFile` | 1 | 18 | 8 | 10 | 0 | 44% |  |
+| **Total** | **194** | **2150** | **2131** | **19** | **30** | **99%** | |
+| **Generic sniffs (phpcs tests)** | **151** | **1071** | **911** | **160** | **35** | **85%** | |
 
 Only reports carrying the mapped rule codes count (Mago's parser/semantics errors on WPCS's
 deliberately odd test files no longer count as matches or extras), so numbers from this run on
