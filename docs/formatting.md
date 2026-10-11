@@ -90,21 +90,29 @@ It doesn't occur in the benchmark below.
 
 ## How close it gets
 
-On Akismet, Contact Form 7 and Yoast SEO, phpcs-fixable `WordPress-Core` reports drop from
-334,577 (Mago's default formatting) to 7,340 with `mago-wordpress format`. What's left:
+On Akismet, Contact Form 7 and Yoast SEO (1,834 PHP files), phpcs-fixable `WordPress-Core` reports
+drop from 334,577 (Mago's default formatting) to 2,366 with the four steps of `mago-wordpress format`
+(7,340 before `wordpress/array-alignment`). What's left:
 
-| Cause | Share |
-|:---|---:|
-| Alignment: WPCS stops aligning `=>` and `=` past a column limit, Mago never stops | 72 % |
-| Hugged last argument: Mago keeps `foo( $a, array(` on one line | 23 % |
-| Associative arrays with several items on one line, which WPCS wants broken | 2 % |
-| Fixable but not formatting (loose comparisons and similar) | 2 % |
-| Other: `echo` followed by a newline, scope indent, embedded PHP, multi-catch `A\|B` | 2 % |
+| Cause | Reports | Share |
+|:---|---:|---:|
+| Hugged last argument or several arguments per line in a broken call (`PEAR.Functions.FunctionCallSignature`) | 1,669 | 71 % |
+| Assignment `=` alignment: WPCS stops aligning past 40 spaces of padding, Mago never stops (`Generic.Formatting.MultipleStatementAlignment`) | 263 | 11 % |
+| Associative arrays with several items on one line, which WPCS wants broken | 147 | 6 % |
+| Fixable but not formatting (loose comparisons) | 113 | 5 % |
+| Other: `echo` followed by a newline, scope indent, embedded PHP, multi-catch `A\|B` | 174 | 7 % |
 
-The table is from before `wordpress/array-alignment` (step 4). It fixes the `=>` part of the alignment
-share: on the same three plugins, 2,771 `WordPress.Arrays.MultipleStatementAlignment` reports after
-the first three steps become 0. The `=` part (`Generic.Formatting.MultipleStatementAlignment`) and
-the hugged arguments are still open.
+`wordpress/array-alignment` (step 4) removes the `=>` alignment share: on the same plugins phpcs
+reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in 51 files after the first
+three steps, and 0 after it.
+
+How these were measured: a fresh copy of each plugin (Akismet 5.7.2, Contact Form 7 6.1.7, Yoast SEO
+28.5; 1,834 PHP files) with a `mago.toml` that extends the preset, the steps run one by one with
+`mago lint --fix --only <rule>` and `mago format` (repeated until `mago format --check` passes) on
+Mago 1.51.0, then `phpcs --standard=WordPress-Core --extensions=php --report=json` (phpcs 3.13.6,
+WPCS 3.4.1), counting the reports phpcs marks fixable by sniff code. This is a manual run of the
+steps, not the output of `mago-wordpress format`, whose final check can put a file back unformatted
+(see above); the figures are what the steps do, not a measure of that check.
 
 Most of the alignment share is one generated file in Yoast SEO. On bcap_website, a phpcs-clean site
 of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
