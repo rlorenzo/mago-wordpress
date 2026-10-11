@@ -83,6 +83,7 @@ wordpress/ini-set-warning
 wordpress/no-silenced-errors
 wordpress/nonce-verification
 wordpress/nonce-verification-warning
+wordpress/array-alignment
 wordpress/parentheses-spacing
 wordpress/plugin-menu-slug
 wordpress/posts-per-page

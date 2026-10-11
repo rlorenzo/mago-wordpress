@@ -206,6 +206,13 @@ final class RuleFixesTest extends TestCase
             "?>\n<?php if ( \$x ) : ?>\n<?php elseif ( \$y ) : ?>\n<?php else : ?>\n<?php endif; ?>\n<?php",
         ];
 
+        yield 'array-alignment aligns arrows up to column 60 and leaves longer keys at one space' => [
+            'wordpress/array-alignment',
+            '',
+            "\$a = array(\n\t\"one\" => 1,\n\t\"three_long_key\" => 2,\n\t\"x\"  =>   3,\n\t\"a_really_really_really_really_really_really_long_key_here_x\" => 4,\n\t\"yy\" =>\n\t\t5,\n\t\"nested\" => array(\n\t\t\"k\" => 1,\n\t\t\"longer_k\"    => 2,\n\t),\n\t7,\n);\n\$b = array( \"a\"   => 1, \"bb\" => 2 );\n[ \"q\" => \$x,  \"rr\" => \$y ] = \$z;\n",
+            "\$a = array(\n\t\"one\"            => 1,\n\t\"three_long_key\" => 2,\n\t\"x\"              =>   3,\n\t\"a_really_really_really_really_really_really_long_key_here_x\" => 4,\n\t\"yy\"             =>\n\t\t5,\n\t\"nested\"         => array(\n\t\t\"k\"        => 1,\n\t\t\"longer_k\" => 2,\n\t),\n\t7,\n);\n\$b = array( \"a\" => 1, \"bb\" => 2 );\n[ \"q\" => \$x,  \"rr\" => \$y ] = \$z;\n",
+        ];
+
         yield 'property-declaration moves modifiers and fixes the space after the type' => [
             'generic/property-declaration',
             '',

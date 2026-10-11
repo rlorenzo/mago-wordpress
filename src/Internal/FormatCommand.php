@@ -46,8 +46,9 @@ use const STDERR;
 use const STDOUT;
 
 /**
- * `mago-wordpress format [paths] [--check] [--staged]`: the three steps that make WordPress
- * formatting (long arrays, `mago format`, the spaces inside parentheses `mago format` removes), in
+ * `mago-wordpress format [paths] [--check] [--staged]`: the four steps that make WordPress
+ * formatting (long arrays, `mago format`, the spaces inside parentheses `mago format` removes, the
+ * array arrows `mago format` aligns past column 60), in
  * order, as one command. `--check` runs them on a temporary copy of the project and fails with a
  * unified diff if anything would change; `--staged` limits both to the PHP files staged in git.
  *
@@ -60,13 +61,15 @@ final class FormatCommand
         ['lint',   '--fix', '--only', 'array-style'],
         ['format'],
         ['lint',   '--fix', '--only', 'wordpress/parentheses-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/array-alignment'],
     ];
 
     public const USAGE = <<<'USAGE'
         Usage: mago-wordpress format [<paths>...] [--check] [--staged]
 
         Formats PHP files for WordPress: `mago lint --fix --only array-style`, `mago format`,
-        then `mago lint --fix --only wordpress/parentheses-spacing`. Without paths it formats
+        `mago lint --fix --only wordpress/parentheses-spacing`, then
+        `mago lint --fix --only wordpress/array-alignment`. Without paths it formats
         the files your mago.toml lists. --check changes nothing and fails with a diff if any
         file would change; --staged takes the staged PHP files that your mago.toml lists (and re-stages
         them), so a staged file mago is not configured for is left alone.

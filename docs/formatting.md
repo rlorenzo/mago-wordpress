@@ -21,12 +21,13 @@ vendor/bin/mago-wordpress format --staged   # the staged PHP files mago.toml lis
 This is the only supported way to format and to check. `mago format` alone can't produce WordPress
 formatting, and `mago format --check` always fails on code that is.
 
-The command runs three steps in order:
+The command runs four steps in order:
 
 ```sh
 mago lint --fix --only array-style                  # [] to array()
 mago format
 mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format removes
+mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60
 ```
 
 `mago format` can't add the spaces WordPress puts inside parentheses and brackets, and upstream has
@@ -99,6 +100,11 @@ On Akismet, Contact Form 7 and Yoast SEO, phpcs-fixable `WordPress-Core` reports
 | Associative arrays with several items on one line, which WPCS wants broken | 2 % |
 | Fixable but not formatting (loose comparisons and similar) | 2 % |
 | Other: `echo` followed by a newline, scope indent, embedded PHP, multi-catch `A\|B` | 2 % |
+
+The table is from before `wordpress/array-alignment` (step 4). It fixes the `=>` part of the alignment
+share: on the same three plugins, 2,771 `WordPress.Arrays.MultipleStatementAlignment` reports after
+the first three steps become 0. The `=` part (`Generic.Formatting.MultipleStatementAlignment`) and
+the hugged arguments are still open.
 
 Most of the alignment share is one generated file in Yoast SEO. On bcap_website, a phpcs-clean site
 of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
