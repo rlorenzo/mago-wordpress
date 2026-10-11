@@ -55,6 +55,7 @@ no-alias-function = { enabled = false }
 no-assign-in-condition = { enabled = false }
 no-boolean-flag-parameter = { enabled = false }
 no-closing-tag = { enabled = false }
+no-debug-symbols = { enabled = false }
 no-duplicate-match-arm = { enabled = false }
 no-else-clause = { enabled = false }
 no-empty = { enabled = false }
@@ -65,6 +66,7 @@ no-error-control-operator = { enabled = false }
 no-global = { enabled = false }
 no-hash-comment = { enabled = false }
 no-hash-emoji = { enabled = false }
+no-ini-set = { enabled = false }
 no-insecure-comparison = { enabled = false }
 no-isset = { enabled = false }
 no-literal-password = { enabled = false }
@@ -119,7 +121,6 @@ valid-docblock = { enabled = false }
 array-style = { style = "long", level = "error" }
 lowercase-keyword = { level = "error" }
 lowercase-type-hint = { level = "error" }
-no-debug-symbols = { level = "warning" }
 no-goto = { level = "error" }
 no-noop = { level = "warning" }
 no-redundant-final = { level = "warning" }

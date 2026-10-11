@@ -15,6 +15,8 @@
 | `wordpress/discouraged-constants` | Warning | `WordPress.WP.DiscouragedConstants` | usage and (re-)declaration of discouraged WordPress constants such as `STYLESHEETPATH` or `PLUGINDIR` |
 | `wordpress/discouraged-wp-functions` | Warning | `WordPress.WP.DiscouragedFunctions`, `WordPress.PHP.DiscouragedPHPFunctions`, `WordPress.PHP.DevelopmentFunctions` | `query_posts()`, `wp_reset_query()`, serialization, obfuscation, system calls, debug output |
 | `wordpress/dont-extract` | Error | `WordPress.PHP.DontExtract` | `extract()` |
+| `wordpress/ini-set` | Error | `WordPress.PHP.IniSet` | `ini_set()` and `ini_alter()` of an option WordPress sets another way (`memory_limit`, `display_errors`, `error_reporting`, `short_open_tag` turned off, ...; the `<option>_Disallowed` codes); the options WPCS lets through are skipped |
+| `wordpress/ini-set-warning` | Warning | `WordPress.PHP.IniSet.Risky` | the `Risky` part of `wordpress/ini-set`: any other runtime configuration change |
 | `wordpress/no-silenced-errors` | Warning | `WordPress.PHP.NoSilencedErrors` | the `@` operator; under `WordPress-Core` not before the PHP functions WPCS allows (`is_file()`, `fopen()`, ...); `custom-allowed-functions-list` adds names |
 | `wordpress/enqueued-resource-parameters` | Warning | `WordPress.WP.EnqueuedResourceParameters` | missing, `null`, or falsy `$ver` and missing `$in_footer` on enqueue and register calls |
 | `wordpress/enqueued-resources` | Error | `WordPress.WP.EnqueuedResources` | hardcoded `<script src>` and `<link rel="stylesheet">` tags, in PHP strings or inline HTML |
@@ -148,14 +150,14 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-103 of the 104 rules are on by default. `parentheses-spacing` runs only with `--only`; see
+105 of the 106 rules are on by default. `parentheses-spacing` runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
-Some sniffs report some codes as errors and others as warnings. For seven of them the warning
+Some sniffs report some codes as errors and others as warnings. For eight of them the warning
 codes have their own rule, so each half reports at WPCS's level: `nonce-verification-warning`
 (`Recommended`), `valid-hook-name-warning` (`UseUnderscores`), `capabilities-warning` (`Unknown`),
 `prepared-sql-placeholders-warning` (`LikeWithoutWildcards`, `ReplacementsWrongNumber`,
-`UnfinishedPrepare`, `UnnecessaryPrepare`), `generic/including-file-warning` (`UseRequire`,
+`UnfinishedPrepare`, `UnnecessaryPrepare`), `ini-set-warning` (`Risky`), `generic/including-file-warning` (`UseRequire`,
 `UseRequireOnce`), and `generic/property-declaration-warning` and
 `generic/method-declaration-warning` (`Underscore`, which `WordPress-Core` silences and
 `WordPress-Extra` restores; under the `WordPress-Core` standard they report nothing, as does
