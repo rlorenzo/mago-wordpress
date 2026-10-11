@@ -157,7 +157,7 @@ final class PhpcsMigrationTest extends TestCase
             $result['toml'],
         );
         self::assertStringContainsString('missing-docs = { enabled = false }', $result['toml']);
-        self::assertStringContainsString('no-ini-set = { enabled = false }', $result['toml']);
+        self::assertSame(['*'], $result['extra']['exclude-patterns']['WordPress.PHP.IniSet'] ?? null);
         self::assertSame(['*'], $result['extra']['exclude-patterns']['WordPress.Security.NonceVerification'] ?? null);
         self::assertNull($result['extra']['exclude-patterns']['WordPress.Security.EscapeOutput'] ?? null);
     }

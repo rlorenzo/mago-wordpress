@@ -61,8 +61,6 @@ const DIVERGENT = [];
  * level of the codes the rule matches most.
  */
 const MIXED = [
-    // Mago reports every ini_set(); IniSet reports most as Risky (a warning), a few as Disallowed.
-    'no-ini-set' => 'warning',
 ];
 
 /** Options of a generated rule line besides its level. */

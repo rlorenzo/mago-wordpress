@@ -72,15 +72,9 @@ don't set it: this package ports all of the WordPress security and database rule
 | `no-db-schema-change` | `WordPress.DB.DirectDatabaseQuery.SchemaChange`, ported as [`wordpress/direct-database-query`](rules.md) | on |
 | `no-roles-as-capabilities` | `WordPress.WP.Capabilities` (its role-checking part); [`wordpress/capabilities`](rules.md) reports `RoleFound` | on |
 
-Two core PHP rules cover the remaining `WordPress.PHP` sniffs; the Core preset turns them off,
-as their sniffs are Extra-only (`WordPress.PHP.PregQuoteDelimiter` is
-[`wordpress/preg-quote-delimiter`](rules.md); the presets turn off Mago's
-`require-preg-quote-delimiter`):
-
-| Mago rule | Covers |
-|:---|:---|
-| `no-ini-set` | `WordPress.PHP.IniSet` (partial: it reports every `ini_set()`, without WPCS's safe-option allowlist) |
-| `no-debug-symbols` | `WordPress.PHP.DevelopmentFunctions` (partial; `wordpress/discouraged-wp-functions` covers the rest) |
+The remaining `WordPress.PHP` sniffs are ported too: `wordpress/ini-set`, `wordpress/preg-quote-delimiter` and
+`wordpress/discouraged-wp-functions` (`DevelopmentFunctions`). The presets turn off Mago's `no-ini-set`,
+`no-debug-symbols` and `require-preg-quote-delimiter`, which these replace.
 
 ## WordPress-Docs
 

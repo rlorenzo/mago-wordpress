@@ -72,6 +72,8 @@ wordpress/escaped-not-translated
 wordpress/file-name
 wordpress/get-meta-single
 wordpress/global-variables-override
+wordpress/ini-set
+wordpress/ini-set-warning
 wordpress/no-silenced-errors
 wordpress/nonce-verification
 wordpress/nonce-verification-warning

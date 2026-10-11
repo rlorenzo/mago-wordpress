@@ -52,6 +52,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\IniSetRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
@@ -169,6 +170,12 @@ final class WordPressExtension
                 new CronIntervalRule($report, $settings),
                 new DiscouragedWpFunctionsRule($report),
                 new DontExtractRule($report),
+                ...SplitRule::pair(
+                    new IniSetRule($report),
+                    $report,
+                    'Ini set (warnings)',
+                    'ini_set() and ini_alter() changes to options WPCS does not single out (WPCS Risky, a warning); options WordPress sets another way stay with wordpress/ini-set.',
+                ),
                 new WpDateTimeRule($report),
                 new CapitalPDangitRule($report),
                 new WpDeprecatedFunctionsRule($report, $settings),

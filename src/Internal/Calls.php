@@ -265,6 +265,43 @@ final class Calls
     }
 
     /**
+     * Returns an argument as WPCS reads it: a spread (`...$args`) is the argument at its own
+     * position, returned as the whole `...$args` node, and never a literal. Named arguments bind by
+     * parameter name first, as in PHP. Without a spread this is `argument()`.
+     *
+     * @param string|list<string>|null $parameter
+     */
+    public static function argumentWithSpread(
+        SourceFile $file,
+        CallExpression $call,
+        int $index,
+        string|array|null $parameter = null,
+    ): ?Node {
+        if (!self::isUnpacked($call)) {
+            return self::argument($file, $call, $index, $parameter);
+        }
+
+        foreach ($call->arguments as $argument) {
+            if (
+                $argument->name !== null
+                && $parameter !== null
+                && in_array($argument->name, (array) $parameter, strict: true)
+            ) {
+                return Values::unwrap($file, $argument->value);
+            }
+        }
+
+        $position = 0;
+        foreach ($call->arguments as $argument) {
+            if ($argument->name === null && $position++ === $index) {
+                return $argument->unpacked ? $argument->node : Values::unwrap($file, $argument->value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Whether a comment overlaps the span, so a fix that rewrites it would drop or break the comment.
      */
     public static function hasComment(SourceFile $file, Span $span): bool

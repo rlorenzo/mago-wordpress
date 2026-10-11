@@ -738,28 +738,7 @@ final class WpI18nRule extends CallRule
         int $index,
         string|array|null $parameter = null,
     ): ?Node {
-        if (!Calls::isUnpacked($call)) {
-            return parent::argument($context, $call, $index, $parameter);
-        }
-
-        foreach ($call->arguments as $argument) {
-            if (
-                $argument->name !== null
-                && $parameter !== null
-                && in_array($argument->name, (array) $parameter, strict: true)
-            ) {
-                return Values::unwrap($context->file, $argument->value);
-            }
-        }
-
-        $position = 0;
-        foreach ($call->arguments as $argument) {
-            if ($argument->name === null && $position++ === $index) {
-                return $argument->unpacked ? $argument->node : Values::unwrap($context->file, $argument->value);
-            }
-        }
-
-        return null;
+        return Calls::argumentWithSpread($context->file, $call, $index, $parameter);
     }
 
     private function reportNotLiteral(LintContext $context, string $name, string $parameter, Span $span): void
