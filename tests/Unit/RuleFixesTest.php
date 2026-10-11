@@ -213,6 +213,76 @@ final class RuleFixesTest extends TestCase
             "\$a = array(\n\t\"one\"            => 1,\n\t\"three_long_key\" => 2,\n\t\"x\"              =>   3,\n\t\"a_really_really_really_really_really_really_long_key_here_x\" => 4,\n\t\"yy\"             =>\n\t\t5,\n\t\"nested\"         => array(\n\t\t\"k\"        => 1,\n\t\t\"longer_k\" => 2,\n\t),\n\t7,\n);\n\$b = array( \"a\" => 1, \"bb\" => 2 );\n[ \"q\" => \$x,  \"rr\" => \$y ] = \$z;\n",
         ];
 
+        yield 'function-call-signature moves a hugged array argument to its own line' => [
+            'wordpress/function-call-signature',
+            '',
+            "function f() {\n\t\$formatter->append_start_tag( 'label', array(\n\t\t'one' => sprintf( '%s-subject', \$id ),\n\t\t'two' => array(\n\t\t\t'x' => 1,\n\t\t),\n\t) );\n}",
+            "function f() {\n\t\$formatter->append_start_tag(\n\t\t'label',\n\t\tarray(\n\t\t\t'one' => sprintf( '%s-subject', \$id ),\n\t\t\t'two' => array(\n\t\t\t\t'x' => 1,\n\t\t\t),\n\t\t)\n\t);\n}",
+        ];
+
+        yield 'function-call-signature moves a hugged closure and re-indents its body' => [
+            'wordpress/function-call-signature',
+            '',
+            "add_action( 'init', function () use ( \$a ) {\n\tif ( \$a ) {\n\t\treturn 1;\n\t}\n} );",
+            "add_action(\n\t'init',\n\tfunction () use ( \$a ) {\n\t\tif ( \$a ) {\n\t\t\treturn 1;\n\t\t}\n\t}\n);",
+        ];
+
+        yield 'function-call-signature gives each of two closures a line of its own' => [
+            'wordpress/function-call-signature',
+            '',
+            "\$queue->wait( function (): void {\n\techo 1;\n}, function ( \$reason ) use ( \$key ): void {\n\techo 2;\n} );",
+            "\$queue->wait(\n\tfunction (): void {\n\t\techo 1;\n\t},\n\tfunction ( \$reason ) use ( \$key ): void {\n\t\techo 2;\n\t}\n);",
+        ];
+
+        yield 'function-call-signature puts a closing parenthesis and the second argument on their own lines' => [
+            'wordpress/function-call-signature',
+            '',
+            "foo(\n\t'a',\n\t'b' );\nfoo( 'a',\n\t'b',\n\t'c'\n);",
+            "foo(\n\t'a',\n\t'b'\n);\nfoo(\n\t'a',\n\t'b',\n\t'c'\n);",
+        ];
+
+        yield 'function-call-signature keeps a continuation line of the argument where it is' => [
+            'wordpress/function-call-signature',
+            '',
+            "\$x = bar( 'text'\n\t. 'more', 3 );",
+            "\$x = bar(\n\t'text'\n\t. 'more',\n\t3\n);",
+        ];
+
+        yield 'function-call-signature leaves heredocs, comments and single-line calls alone' => [
+            'wordpress/function-call-signature',
+            '',
+            "foo( 'a', <<<EOT\n  keep\n  EOT\n);\nbar( 1, /* c */ 2,\n\t3 );\nbaz( 1, 2 );",
+            "foo(\n\t'a',\n\t<<<EOT\n  keep\n  EOT\n);\nbar( 1, /* c */ 2,\n\t3 );\nbaz( 1, 2 );",
+        ];
+
+        yield 'function-call-signature keeps the lines of an interpolated multi-line string as they are' => [
+            'wordpress/function-call-signature',
+            '',
+            "foo( 'a', function () {\n\treturn \"x\n{\$value}\n\$other\";\n} );",
+            "foo(\n\t'a',\n\tfunction () {\n\t\treturn \"x\n{\$value}\n\$other\";\n\t}\n);",
+        ];
+
+        yield 'function-call-signature keeps a string nested in an interpolation inside a multi-line string' => [
+            'wordpress/function-call-signature',
+            '',
+            "foo( 'a', function () {\n\treturn \"a\n{\$o->m('x\ny')}\nb\";\n} );",
+            "foo(\n\t'a',\n\tfunction () {\n\t\treturn \"a\n{\$o->m('x\ny')}\nb\";\n\t}\n);",
+        ];
+
+        yield 'function-call-signature keeps an interpolated string nested in another interpolated string' => [
+            'wordpress/function-call-signature',
+            '',
+            "foo( 'a', function () {\n\treturn \"a\n{\$o->m(\"x\n\$y\nz\")}\nb\";\n} );",
+            "foo(\n\t'a',\n\tfunction () {\n\t\treturn \"a\n{\$o->m(\"x\n\$y\nz\")}\nb\";\n\t}\n);",
+        ];
+
+        yield 'function-call-signature keeps a string with a literal backtick between interpolations' => [
+            'wordpress/function-call-signature',
+            '',
+            "foo( 'a', function () {\n\treturn \"a\n\$x`\$y\nb\";\n} );",
+            "foo(\n\t'a',\n\tfunction () {\n\t\treturn \"a\n\$x`\$y\nb\";\n\t}\n);",
+        ];
+
         yield 'property-declaration moves modifiers and fixes the space after the type' => [
             'generic/property-declaration',
             '',

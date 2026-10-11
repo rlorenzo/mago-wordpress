@@ -99,11 +99,7 @@ final class Report
      */
     public function issue(LintContext $context, Issue $issue, array $sniffCodes): bool
     {
-        if ($this->excludes !== [] && $this->isExcluded($context->file->path, $sniffCodes)) {
-            return false;
-        }
-
-        if ($this->honorPhpcsComments && $this->isSuppressed($context->file, $issue, $sniffCodes)) {
+        if (!$this->wouldReport($context, $issue, $sniffCodes)) {
             return false;
         }
 
@@ -114,6 +110,21 @@ final class Report
         }
 
         return true;
+    }
+
+    /**
+     * Whether {@see self::issue()} would report the issue: no exclude pattern and no phpcs comment
+     * silences it. For a rule that must know before it reports.
+     *
+     * @param non-empty-list<string> $sniffCodes
+     */
+    public function wouldReport(LintContext $context, Issue $issue, array $sniffCodes): bool
+    {
+        if ($this->excludes !== [] && $this->isExcluded($context->file->path, $sniffCodes)) {
+            return false;
+        }
+
+        return !$this->honorPhpcsComments || !$this->isSuppressed($context->file, $issue, $sniffCodes);
     }
 
     /**

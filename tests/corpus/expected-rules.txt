@@ -84,6 +84,7 @@ wordpress/no-silenced-errors
 wordpress/nonce-verification
 wordpress/nonce-verification-warning
 wordpress/array-alignment
+wordpress/function-call-signature
 wordpress/parentheses-spacing
 wordpress/plugin-menu-slug
 wordpress/posts-per-page
