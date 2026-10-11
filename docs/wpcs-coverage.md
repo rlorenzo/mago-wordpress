@@ -163,17 +163,8 @@ above) are not ported. That is `mago format`'s job (see [Formatting](formatting.
 <details>
 <summary>Remaining WPCS sniffs with no Mago equivalent</summary>
 
-Generic sniffs that enforce a convention rather than catch a bug. Left unported; checked against
-`mago lint` with every core rule on and `mago analyze`, and neither covers them:
-
-- `Universal.Namespaces.DisallowDeclarationWithoutName`
-- `Universal.Namespaces.OneDeclarationPerFile`
-- `Universal.UseStatements.NoUselessAliases`
-
 Low-value style sniffs, mostly formatting concerns `mago format` already makes moot:
 
 - `PSR12.Files.FileHeader`
-- `Universal.UseStatements.DisallowMixedGroupUse`
-- `Universal.UseStatements.LowercaseFunctionConst`
 
 </details>
