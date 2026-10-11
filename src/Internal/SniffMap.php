@@ -157,6 +157,7 @@ final class SniffMap
         'Universal.PHP.LowercasePHPTag' => ['generic/lowercase-php-tag'],
         'Universal.Classes.ModifierKeywordOrder' => ['generic/class-modifier-keyword-order'],
         'Universal.Constants.ModifierKeywordOrder' => ['generic/constant-modifier-keyword-order'],
+        'PSR12.Files.FileHeader' => ['generic/file-header'],
         'PSR12.Keywords.ShortFormTypeKeywords' => ['generic/short-form-type-keywords'],
         'Universal.Attributes.DisallowAttributeParentheses' => ['generic/disallow-attribute-parentheses'],
         'PEAR.Files.IncludingFile' => ['generic/including-file', 'generic/including-file-warning'],

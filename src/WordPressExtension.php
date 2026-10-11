@@ -45,6 +45,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapeOutputRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FileHeaderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
@@ -220,6 +221,7 @@ final class WordPressExtension
                 new UnconditionalIfStatementRule($report),
                 new ElseIfDeclarationRule($report),
                 new ValidClassNameRule($report),
+                new FileHeaderRule($report),
                 new NonExecutableCodeRule($report),
                 new EmptyStatementRule($report),
                 new SelfMemberReferenceRule($report),
