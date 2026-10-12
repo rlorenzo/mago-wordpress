@@ -323,6 +323,22 @@ final class RuleFixesTest extends TestCase
             "\$a = array(\n\t'child' => array(\n\t\t'x' => \"a\n  b\",\n\t\t'y' => 2\n\t),\n);",
         ];
 
+        yield 'statement-alignment aligns operator ends, stops past 40 spaces of padding and covers constants and properties like phpcbf' =>
+            [
+                'wordpress/statement-alignment',
+                '',
+                "function a() {\n\t\$one = 1;\n\t\$three_long = 2;\n\t\$x .= 'a';\n\t\$y_value   = 3;\n\t\$very_long_variable_name_that_pushes_the_padding_far_beyond_the_limit_of_forty = 4;\n\t\$z = 5;\n\n\t\$alone  = 6;\n\t\$count += 1;\n\t\$class = 'a';\n\t// A comment line splits the block.\n\t\$after = 7;\n\t\$long_enough_name_for_padding_exceed_check_aaaaaaaa = 8;\n\t\$s = 9;\n}\n\nclass K {\n\tconst A = 1;\n\tconst LONG_CONSTANT_NAME = 2;\n\tpublic \$p = 3;\n\tpublic \$longer_property = 4;\n}",
+                "function a() {\n\t\$one        = 1;\n\t\$three_long = 2;\n\t\$x         .= 'a';\n\t\$y_value    = 3;\n\t\$very_long_variable_name_that_pushes_the_padding_far_beyond_the_limit_of_forty = 4;\n\t\$z = 5;\n\n\t\$alone  = 6;\n\t\$count += 1;\n\t\$class  = 'a';\n\t// A comment line splits the block.\n\t\$after = 7;\n\t\$long_enough_name_for_padding_exceed_check_aaaaaaaa = 8;\n\t\$s = 9;\n}\n\nclass K {\n\tconst A                  = 1;\n\tconst LONG_CONSTANT_NAME = 2;\n\tpublic \$p                = 3;\n\tpublic \$longer_property  = 4;\n}",
+            ];
+
+        yield 'statement-alignment keeps a comment before the operator and treats blank lines in short arrays like phpcs' =>
+            [
+                'wordpress/statement-alignment',
+                '',
+                "\$a = [\n\t'x' => 1,\n\n\t'y' => 2,\n];\n\$longer = 2;\n\n\$c /* keep */ = 1;\n\$longer2 = 2;",
+                "\$a      = [\n\t'x' => 1,\n\n\t'y' => 2,\n];\n\$longer = 2;\n\n\$c /* keep */       = 1;\n\$longer2 = 2;",
+            ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',

@@ -110,6 +110,7 @@ wordpress/prepared-sql-unquoted-complex-placeholder
 wordpress/restricted-php-functions
 wordpress/safe-redirect
 wordpress/slow-db-query
+wordpress/statement-alignment
 wordpress/strict-in-array
 wordpress/type-casts
 wordpress/valid-function-name

@@ -21,7 +21,7 @@ vendor/bin/mago-wordpress format --staged   # the staged PHP files mago.toml lis
 This is the only supported way to format and to check. `mago format` alone can't produce WordPress
 formatting, and `mago format --check` always fails on code that is.
 
-The command runs seven steps in order:
+The command runs eight steps in order:
 
 ```sh
 mago lint --fix --only array-style                  # [] to array()
@@ -31,6 +31,7 @@ mago lint --fix --only wordpress/language-construct-spacing # `echo\n$x` -> `ech
 mago lint --fix --only wordpress/array-declaration-spacing # `array( 'a' => 1, 'b' => 2 )` -> one item per line
 mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
 mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60
+mago lint --fix --only wordpress/statement-alignment # the `=` mago format aligns past 40 spaces of padding
 ```
 
 `mago format` can't add the spaces WordPress puts inside parentheses and brackets, and upstream has
@@ -41,7 +42,7 @@ again, the command is idempotent only as a whole: running `mago format` on its o
 `mago format` is also not always stable on its own (a comment between `<?php` and `endif;` moves a
 little on each run), so the command repeats it until `mago format --check` passes.
 
-Step 4 puts back the one space after `echo`, `return`, `new`, `use` and the other language constructs that `mago format` replaces by a line break when the argument is long. Step 5 puts the items of a keyed array on separate lines (`mago format` keeps a short one on a line). Steps 6 and 7 undo what `mago format` does and phpcs does not allow. It keeps a closure or array last
+Step 4 puts back the one space after `echo`, `return`, `new`, `use` and the other language constructs that `mago format` replaces by a line break when the argument is long. Step 5 puts the items of a keyed array on separate lines (`mago format` keeps a short one on a line). Steps 6 to 8 undo what `mago format` does and phpcs does not allow. It keeps a closure or array last
 argument on the line of the call's `(`, aligns every `=>` however long the key, and WordPress-Core
 wants `add_action( 'init', function () {` as one argument per line with `)` on its own line, and the
 `=>` aligned only up to column 60. Step 6 moves a hugged argument to a line of its own together with
@@ -126,7 +127,7 @@ WPCS 3.4.1), counting the reports phpcs marks fixable by sniff code. This is a m
 steps, not the output of `mago-wordpress format`, whose final check can put a file back unformatted
 (see above); the figures are what the steps do, not a measure of that check.
 
-On bcap_website (measured before steps 6 and 7), a phpcs-clean site
+On bcap_website (measured before steps 6 to 8), a phpcs-clean site
 of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
 sniff codes and how `print-width` trades off: [formatter results](../bench/results/2026-10-01-formatter.md).
 
