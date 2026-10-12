@@ -70,6 +70,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\IniSetRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LanguageConstructSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercasePhpTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseUseFunctionConstRule;
@@ -235,6 +236,7 @@ final class WordPressExtension
                 new FunctionCommentThrowTagRule($report),
                 new InlineCommentRule($report),
                 new VariableCommentRule($report),
+                new LanguageConstructSpacingRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),

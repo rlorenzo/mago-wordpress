@@ -279,6 +279,20 @@ final class RuleFixesTest extends TestCase
             "function foo() {}//end foo() ?>visible HTML\n",
         ];
 
+        yield 'language-construct-spacing joins the argument to echo, return, new and yield from like phpcbf' => [
+            'wordpress/language-construct-spacing',
+            '',
+            "function a() {\n\techo\n\t\t'long';\n\treturn   \$x;\n\t\$o = new\n\t\tFoo();\n\techo'x';\n\treturn(1);\n\tprint\t\$y;\n\tthrow new\tException( 'x' );\n\treturn;\n\tyield  from foo();\n}",
+            "function a() {\n\techo 'long';\n\treturn \$x;\n\t\$o = new Foo();\n\techo 'x';\n\treturn(1);\n\tprint \$y;\n\tthrow new Exception( 'x' );\n\treturn;\n\tyield from foo();\n}",
+        ];
+
+        yield 'language-construct-spacing also checks the space after yield from and long gaps inside it' => [
+            'wordpress/language-construct-spacing',
+            '',
+            "function a() {\n\tyield from   \$items;\n\tyield from\n\t\t\$more;\n\tyield\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tfrom \$last;\n}",
+            "function a() {\n\tyield from \$items;\n\tyield from \$more;\n\tyield from \$last;\n}",
+        ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',

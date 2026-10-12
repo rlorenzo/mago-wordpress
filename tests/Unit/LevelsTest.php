@@ -40,6 +40,7 @@ final class LevelsTest extends TestCase
         'wordpress/enqueued-resource-parameters' => Level::Warning,
         'wordpress/function-call-signature' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/array-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
+        'wordpress/language-construct-spacing' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap
         'wordpress/prefix-all-globals' => Level::Error,
         'wordpress/prepared-sql-unquoted-complex-placeholder' => Level::Warning, // its one code

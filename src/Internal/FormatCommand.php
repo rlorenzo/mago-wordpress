@@ -63,6 +63,7 @@ final class FormatCommand
         ['lint',   '--fix', '--only', 'array-style'],
         ['format'],
         ['lint',   '--fix', '--only', 'wordpress/parentheses-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/language-construct-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/function-call-signature'],
         ['lint',   '--fix', '--only', 'wordpress/array-alignment'],
     ];
@@ -87,7 +88,8 @@ final class FormatCommand
         Usage: mago-wordpress format [<paths>...] [--check] [--staged]
 
         Formats PHP files for WordPress: `mago lint --fix --only array-style`, `mago format`,
-        `mago lint --fix --only wordpress/parentheses-spacing`, then
+        `mago lint --fix --only wordpress/parentheses-spacing`,
+        `mago lint --fix --only wordpress/language-construct-spacing`, then
         `mago lint --fix --only wordpress/function-call-signature` and
         `mago lint --fix --only wordpress/array-alignment`. Without paths it formats
         the files your mago.toml lists. --check changes nothing and fails with a diff if any

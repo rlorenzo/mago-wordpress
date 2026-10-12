@@ -91,6 +91,7 @@ wordpress/get-meta-single
 wordpress/global-variables-override
 wordpress/ini-set
 wordpress/ini-set-warning
+wordpress/language-construct-spacing
 wordpress/no-silenced-errors
 wordpress/nonce-verification
 wordpress/nonce-verification-warning
