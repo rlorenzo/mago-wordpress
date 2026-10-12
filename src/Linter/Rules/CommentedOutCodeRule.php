@@ -13,6 +13,7 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\TriviaKind;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\PhpcsComments;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function array_pop;
@@ -219,7 +220,7 @@ final class CommentedOutCodeRule implements Rule
     {
         $contents = $context->file->contents;
         $eol = preg_match('/\r\n?|\n/', $contents, $match) === 1 ? $match[0] : "\n";
-        $comments = self::comments($context, $eol);
+        $comments = PhpcsComments::tokens($context->file, $eol);
         $count = count($comments);
         $i = 0;
         while ($i < $count) {
@@ -245,67 +246,6 @@ final class CommentedOutCodeRule implements Rule
 
             $i = $last + 1;
         }
-    }
-
-    /**
-     * The file's comments as phpcs tokenizes them: a block comment is one token per line; a
-     * `phpcs:` instruction is `phpcs`; a docblock is `doc`. `adjacent` is whether only
-     * whitespace separates the token from the one before.
-     *
-     * @return list<array{type: string, text: string, line: int, span: Span, adjacent: bool}>
-     */
-    private static function comments(LintContext $context, string $eol): array
-    {
-        $file = $context->file;
-        $trivia = $file->getTrivia();
-        usort($trivia, static fn($a, $b): int => $a->span->start <=> $b->span->start);
-        $tokens = [];
-        $end = null;
-        foreach ($trivia as $comment) {
-            $start = $comment->span->start;
-            $adjacent = $end !== null && trim(substr($file->contents, $end, $start - $end)) === '';
-            $end = $comment->span->end;
-            $line = substr_count($file->contents, "\n", 0, $start) + 1;
-            $text = $file->getText($comment->span);
-            if ($comment->kind === TriviaKind::DocBlockComment) {
-                $tokens[] = [
-                    'type' => 'doc',
-                    'text' => $text,
-                    'line' => $line,
-                    'span' => $comment->span,
-                    'adjacent' => $adjacent,
-                ];
-                continue;
-            }
-
-            $offset = $start;
-            foreach (explode($eol, $text) as $index => $part) {
-                $tokens[] = [
-                    'type' => self::isPhpcsInstruction($part) ? 'phpcs' : 'comment',
-                    'text' => $part,
-                    'line' => $line + $index,
-                    'span' => new Span($offset, $offset + strlen($part)),
-                    'adjacent' => $index > 0 || $adjacent,
-                ];
-                $offset += strlen($part) + strlen($eol);
-            }
-        }
-
-        return $tokens;
-    }
-
-    /** A comment phpcs turns into a T_PHPCS_* token. */
-    private static function isPhpcsInstruction(string $text): bool
-    {
-        $text = strtolower(rtrim(ltrim($text, " \t/*#"), " */\t\r\n"));
-        $text = str_starts_with($text, '@phpcs:') ? substr($text, 1) : $text;
-        foreach (['phpcs:set', 'phpcs:ignorefile', 'phpcs:disable', 'phpcs:enable', 'phpcs:ignore'] as $prefix) {
-            if (str_starts_with($text, $prefix)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

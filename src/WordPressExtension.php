@@ -61,6 +61,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IniSetRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\InlineCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
@@ -220,6 +221,7 @@ final class WordPressExtension
                 new ClassCommentRule($report),
                 new FileCommentRule($report),
                 new FunctionCommentRule($report),
+                new InlineCommentRule($report),
                 new VariableCommentRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
