@@ -45,6 +45,7 @@ final class LevelsTest extends TestCase
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap
         'wordpress/prefix-all-globals' => Level::Error,
         'wordpress/prepared-sql-unquoted-complex-placeholder' => Level::Warning, // its one code
+        'wordpress/statement-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
         'wordpress/type-casts' => Level::Error,
         'wordpress/valid-post-type-slug' => Level::Error,
         'wordpress/wp-date-time' => Level::Error,

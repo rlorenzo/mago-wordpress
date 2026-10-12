@@ -103,6 +103,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ShortFormTypeKeywordsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\StatementAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
@@ -240,6 +241,7 @@ final class WordPressExtension
                 new VariableCommentRule($report),
                 new LanguageConstructSpacingRule($report),
                 new ParenthesesSpacingRule($report),
+                new StatementAlignmentRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),
                 new DisallowSizeFunctionsInLoopsRule($report),
