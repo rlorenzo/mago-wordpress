@@ -184,6 +184,18 @@ final class Levels
             'SpaceAfter' => 'error',
             'SpaceBefore' => 'error',
         ],
+        'Squiz.Commenting.FileComment' => [
+            '*TagOrder' => 'error',
+            'Duplicate*Tag' => 'error',
+            'Empty*Tag' => 'error',
+            'IncorrectAuthor' => 'error',
+            'IncorrectCopyright' => 'error',
+            'Missing' => 'error',
+            'Missing*Tag' => 'error',
+            'SpacingAfterComment' => 'error',
+            'SpacingAfterOpen' => 'error',
+            'WrongStyle' => 'error',
+        ],
         'Squiz.Commenting.FunctionComment' => [
             'DuplicateReturn' => 'error',
             'EmptyThrows' => 'error',

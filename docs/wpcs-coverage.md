@@ -79,7 +79,7 @@ The remaining `WordPress.PHP` sniffs are ported too: `wordpress/ini-set`, `wordp
 ## WordPress-Docs
 
 The `WordPress` ruleset includes `WordPress-Docs`: eleven `Squiz.Commenting` and `Generic.Commenting`
-sniffs, with the codes WPCS excludes. This package ports `Squiz.Commenting.FunctionComment` (as `generic/function-comment`); the rest are below.
+sniffs, with the codes WPCS excludes. This package ports `Squiz.Commenting.FunctionComment` and `Squiz.Commenting.FileComment` (as `generic/function-comment` and `generic/file-comment`); the rest are below.
 
 Mago covers missing docblocks. `wordpress.mago.toml` turns on Mago's `missing-docs` for functions, methods, classes and properties, the declarations WPCS checks (not
 interfaces, traits, enums or constants). On Akismet and Contact Form 7 it reports as many as
@@ -97,7 +97,6 @@ Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisatio
 | `Squiz.Commenting.FunctionComment` | `Missing`, `WrongStyle`: `missing-docs`; everything else WordPress-Docs keeps: `generic/function-comment`. Malformed types: `valid-docblock` | none |
 | `Squiz.Commenting.ClassComment` | `Missing`: `missing-docs` | `WrongStyle`, `SpacingAfter` |
 | `Squiz.Commenting.VariableComment` | `Missing`: `missing-docs` | `MissingVar`, `EmptyVar`, `DuplicateVar`, `EmptySees`, `WrongStyle` |
-| `Squiz.Commenting.FileComment` | none | every code: a file docblock, its `@package` tag, spacing and style |
 | `Squiz.Commenting.FunctionCommentThrowTag` | partial: `mago analyze` with `check-throws = true` (off by default) reports unhandled exceptions, not a missing `@throws` tag | `Missing`, `WrongNumber` |
 | `Squiz.Commenting.EmptyCatchComment` | not equivalent: `no-empty-catch-clause` (on) reports an empty `catch` even when it holds a comment, which is what WPCS asks for | |
 | `Squiz.Commenting.InlineComment` | `WrongStyle` (`#`): `no-hash-comment`. `Empty`: `no-empty-comment` | `InvalidEndChar` (full stop), `NoSpaceBefore`, `SpacingBefore`, `TabBefore` |

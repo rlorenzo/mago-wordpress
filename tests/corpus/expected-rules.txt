@@ -18,6 +18,7 @@ generic/double-quote-usage
 generic/else-if-declaration
 generic/empty-statement
 generic/for-loop-with-test-function-call
+generic/file-comment
 generic/file-header
 generic/forbidden-functions
 generic/foreach-unique-assignment

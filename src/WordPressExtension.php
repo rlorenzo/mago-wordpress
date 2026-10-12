@@ -46,6 +46,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapeOutputRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FileCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileHeaderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
@@ -214,6 +215,7 @@ final class WordPressExtension
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
                 new FunctionCallSignatureRule($report),
+                new FileCommentRule($report),
                 new FunctionCommentRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),

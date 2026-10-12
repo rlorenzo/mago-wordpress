@@ -119,6 +119,7 @@ final class SniffMap
         'PSR2.Files.ClosingTag' => ['generic/closing-tag'],
         'PSR2.Methods.MethodDeclaration' => ['generic/method-declaration', 'generic/method-declaration-warning'],
         'Squiz.Classes.SelfMemberReference' => ['generic/self-member-reference'],
+        'Squiz.Commenting.FileComment' => ['generic/file-comment'],
         'Squiz.Commenting.FunctionComment' => ['generic/function-comment'],
         'Squiz.ControlStructures.ControlSignature' => ['generic/control-signature'],
         'Squiz.Operators.IncrementDecrementUsage' => ['generic/increment-decrement-usage'],
