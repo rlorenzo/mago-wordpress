@@ -213,6 +213,13 @@ final class RuleFixesTest extends TestCase
             "\$a = array(\n\t\"one\"            => 1,\n\t\"three_long_key\" => 2,\n\t\"x\"              =>   3,\n\t\"a_really_really_really_really_really_really_long_key_here_x\" => 4,\n\t\"yy\"             =>\n\t\t5,\n\t\"nested\"         => array(\n\t\t\"k\"        => 1,\n\t\t\"longer_k\" => 2,\n\t),\n\t7,\n);\n\$b = array( \"a\" => 1, \"bb\" => 2 );\n[ \"q\" => \$x,  \"rr\" => \$y ] = \$z;\n",
         ];
 
+        yield 'function-comment aligns parameter types, continuation lines and drops blank lines like phpcbf' => [
+            'generic/function-comment',
+            '',
+            "/**\n * Doc.\n *\n * @param int \$a First one\n *               continues here.\n * @param string  \$bb Second.\n */\n\n\nfunction f( \$a, \$bb ) {\n}",
+            "/**\n * Doc.\n *\n * @param int    \$a First one\n *                  continues here.\n * @param string \$bb Second.\n */\nfunction f( \$a, \$bb ) {\n}",
+        ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',

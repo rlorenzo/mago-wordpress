@@ -21,6 +21,7 @@ generic/for-loop-with-test-function-call
 generic/file-header
 generic/forbidden-functions
 generic/foreach-unique-assignment
+generic/function-comment
 generic/git-merge-conflict
 generic/including-file
 generic/including-file-warning
