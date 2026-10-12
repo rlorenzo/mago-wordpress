@@ -70,6 +70,7 @@ generic/useless-overriding-method
 generic/valid-class-name
 generic/valid-logical-operators
 wordpress/alternative-functions
+wordpress/array-declaration-spacing
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities
 wordpress/capabilities-warning

@@ -39,6 +39,7 @@ final class LevelsTest extends TestCase
         'wordpress/capabilities' => Level::Error, // Deprecated: error or warning against minimum_wp_version
         'wordpress/enqueued-resource-parameters' => Level::Warning,
         'wordpress/function-call-signature' => Level::Error, // addFixableError throughout, outside SniffMap
+        'wordpress/array-declaration-spacing' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/array-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
         'wordpress/language-construct-spacing' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap

@@ -293,6 +293,36 @@ final class RuleFixesTest extends TestCase
             "function a() {\n\tyield from \$items;\n\tyield from \$more;\n\tyield from \$last;\n}",
         ];
 
+        yield 'array-declaration-spacing breaks keyed arrays one item per line and nests the indentation like phpcbf' =>
+            [
+                'wordpress/array-declaration-spacing',
+                '',
+                "function a() {\n\t\$x = array( \"a\" => 1, \"b\" => 2 );\n\t\$y = array( \"only\" => 1 );\n\t\$z = array( 1, 2, 3 );\n\tfoo( array( \"k\" => 1, \"l\" => array( \"m\" => 1, \"n\" => 2 ) ), 3 );\n\t\$w = array(\n\t\t\"a\" => 1, \"b\" => 2,\n\t\t\"c\" => 3,\n\t);\n}",
+                "function a() {\n\t\$x = array(\n\t\t\"a\" => 1,\n\t\t\"b\" => 2\n\t);\n\t\$y = array( \"only\" => 1 );\n\t\$z = array( 1, 2, 3 );\n\tfoo( array(\n\t\t\"k\" => 1,\n\t\t\"l\" => array(\n\t\t\t\"m\" => 1,\n\t\t\t\"n\" => 2\n\t\t)\n\t), 3 );\n\t\$w = array(\n\t\t\"a\" => 1,\n\t\t\"b\" => 2,\n\t\t\"c\" => 3,\n\t);\n}",
+            ];
+
+        yield 'array-declaration-spacing breaks the items of a multi-line array and keeps block comments with their item' =>
+            [
+                'wordpress/array-declaration-spacing',
+                '',
+                "\$a = array(\n\t\"a\" => 1,\"b\" => 2,\n\t\"c\" => 3,  \"d\" => 4,\n\t\"e\" => 5,\t\"f\" => 6,\n\t\"g\" => 7, // comment\n\t\"h\" => 8\n);\n\$b = array( 1,\n\t2 );\n\$c = [ \"x\" => 1, \"y\" => 2, ];\n\$d = array( \"k\" => 1, /* c */ \"l\" => 2 );",
+                "\$a = array(\n\t\"a\" => 1,\n\t\"b\" => 2,\n\t\"c\" => 3,\n\t\"d\" => 4,\n\t\"e\" => 5,\n\t\"f\" => 6,\n\t\"g\" => 7, // comment\n\t\"h\" => 8\n);\n\$b = array(\n\t1,\n\t2 );\n\$c = [\n\t\"x\" => 1,\n\t\"y\" => 2,\n];\n\$d = array(\n\t\"k\" => 1,\n\t/* c */ \"l\" => 2\n);",
+            ];
+
+        yield 'array-declaration-spacing breaks before a leading block comment' => [
+            'wordpress/array-declaration-spacing',
+            '',
+            "\$a = array( /* note */ 'a' => 1, 'b' => 2 );",
+            "\$a = array(\n\t/* note */ 'a' => 1,\n\t'b' => 2\n);",
+        ];
+
+        yield 'array-declaration-spacing re-indents the lines of a nested array it moves' => [
+            'wordpress/array-declaration-spacing',
+            '',
+            "\$a = array( 'child' => array(\n\t'x' => \"a\n  b\",\n\t'y' => 2\n),\n);",
+            "\$a = array(\n\t'child' => array(\n\t\t'x' => \"a\n  b\",\n\t\t'y' => 2\n\t),\n);",
+        ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',
