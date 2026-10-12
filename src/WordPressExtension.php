@@ -14,6 +14,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\BlockCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
@@ -221,6 +222,7 @@ final class WordPressExtension
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
                 new FunctionCallSignatureRule($report),
+                new BlockCommentRule($report),
                 new ClassCommentRule($report),
                 new DocCommentAlignmentRule($report),
                 new DocCommentRule($report),

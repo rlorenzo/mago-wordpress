@@ -219,8 +219,9 @@ final class CommentedOutCodeRule implements Rule
     public function lint(LintContext $context): void
     {
         $contents = $context->file->contents;
+        $match = [];
         $eol = preg_match('/\r\n?|\n/', $contents, $match) === 1 ? $match[0] : "\n";
-        $comments = PhpcsComments::tokens($context->file, $eol);
+        $comments = PhpcsComments::tokens($context->file);
         $count = count($comments);
         $i = 0;
         while ($i < $count) {

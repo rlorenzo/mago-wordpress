@@ -196,6 +196,7 @@ final class SettingsTest extends TestCase
                 'WordPress.DB.SlowDBQuery' => ['*'],
                 'WordPress.Security.ValidatedSanitizedInput' => ['*'],
                 'Generic.Commenting.DocComment' => ['*'],
+                'Squiz.Commenting.BlockComment' => ['*'],
                 'Squiz.Commenting.ClassComment' => ['*'],
                 'Squiz.Commenting.DocCommentAlignment' => ['*'],
                 'Squiz.Commenting.FileComment' => ['*'],

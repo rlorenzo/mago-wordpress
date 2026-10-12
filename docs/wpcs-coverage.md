@@ -100,7 +100,7 @@ Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisatio
 | `Squiz.Commenting.FunctionCommentThrowTag` | `generic/function-comment-throw-tag` (`Missing`, `WrongNumber`); `mago analyze` with `check-throws = true` (off by default) also reports unhandled exceptions | none |
 | `Squiz.Commenting.EmptyCatchComment` | not equivalent: `no-empty-catch-clause` (on) reports an empty `catch` even when it holds a comment, which is what WPCS asks for | |
 | `Squiz.Commenting.InlineComment` | `generic/inline-comment` (`WrongStyle`, `InvalidEndChar`, the spacing codes, `Empty`, `SpacingAfterAtFunctionEnd`); `no-hash-comment` and `no-empty-comment` cover the same comments in Mago's own rules | none |
-| `Squiz.Commenting.BlockComment` | `Empty`: `no-empty-comment` | `NoCapital`, `WrongEnd`, `NoNewLine`, blank-line checks |
+| `Squiz.Commenting.BlockComment` | `generic/block-comment` (`Empty`, `NoNewLine`, `HasEmptyLine`, `NoCapital`, `CloserSameLine`, the blank line before); `no-empty-comment` covers `Empty` too | none |
 | `Squiz.Commenting.DocCommentAlignment` | `generic/doc-comment-alignment` (`SpaceBeforeStar`, `NoSpaceAfterStar`); `mago format` fixes the stars too | none |
 | `Squiz.Commenting.ClosingDeclarationComment` | none | reports only malformed `//end` comments; WPCS excludes `Missing` |
 | `Generic.Commenting.DocComment` | `Empty`: `no-empty-comment`; `Empty`, `MissingShort`, `ShortNotCapital`, `LongNotCapital` and the spacing codes: `generic/doc-comment` | none |

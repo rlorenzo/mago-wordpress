@@ -120,6 +120,7 @@ final class SniffMap
         'PSR2.Methods.MethodDeclaration' => ['generic/method-declaration', 'generic/method-declaration-warning'],
         'Squiz.Classes.SelfMemberReference' => ['generic/self-member-reference'],
         'Generic.Commenting.DocComment' => ['generic/doc-comment'],
+        'Squiz.Commenting.BlockComment' => ['generic/block-comment'],
         'Squiz.Commenting.ClassComment' => ['generic/class-comment'],
         'Squiz.Commenting.DocCommentAlignment' => ['generic/doc-comment-alignment'],
         'Squiz.Commenting.FileComment' => ['generic/file-comment'],

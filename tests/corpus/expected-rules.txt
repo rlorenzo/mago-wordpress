@@ -1,4 +1,5 @@
 generic/assignment-in-condition
+generic/block-comment
 generic/byte-order-mark
 generic/class-modifier-keyword-order
 generic/closing-tag
