@@ -199,6 +199,7 @@ final class SettingsTest extends TestCase
                 'Squiz.Commenting.ClassComment' => ['*'],
                 'Squiz.Commenting.FileComment' => ['*'],
                 'Squiz.Commenting.FunctionComment' => ['*'],
+                'Squiz.Commenting.FunctionCommentThrowTag' => ['*'],
                 'Squiz.Commenting.InlineComment' => ['*'],
                 'Squiz.Commenting.VariableComment' => ['*'],
             ],
