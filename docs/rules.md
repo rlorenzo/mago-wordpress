@@ -133,6 +133,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/commented-out-code` | Warning | `Squiz.PHP.CommentedOutCode` | a comment whose text is more than 40 % PHP code tokens (WordPress-Extra's `maxPercentage`), usually code commented out instead of deleted |
 | `generic/dirname` | Error | `Modernize.FunctionCalls.Dirname` | `dirname(__FILE__)`, which is `__DIR__` (`FileConstant`; autofix); not the `Nested` code, which WordPress-Extra turns off |
 | `generic/forbidden-functions` | Error | `Generic.PHP.ForbiddenFunctions` | `sizeof()` and `delete()`, the sniff's default list, which WordPress-Extra keeps |
+| `generic/function-comment` | Error | `Squiz.Commenting.FunctionComment` | the docblock checks WordPress-Docs keeps, on functions and methods: `@param` tags missing, extra, misnamed, without a type, name or comment, or a comment without a full stop; `@return` and `@throws` tags without a type or with a bad comment; a duplicate `@return`, `@return void` with a `return` value, an empty `@see`, a blank line before the declaration, and the parameter-type spacing. Fixes the spacing and blank lines as phpcbf does. `Missing` and `WrongStyle` stay with `missing-docs`. Part of the full `WordPress` standard only (WordPress-Core and -Extra skip it) |
 | `generic/file-header` | Error | `PSR12.Files.FileHeader` | header statements out of order or ungrouped: the file docblock, `declare`, namespace, then `use`, `use function`, `use const` (`IncorrectOrder`, `IncorrectGrouping`; the blank-line spacing stays with `mago format`) |
 | `generic/including-file-warning` | Warning | `PEAR.Files.IncludingFile` | an `include`/`include_once` outside any scope, condition or assignment, which should be `require`/`require_once` (`UseRequire`, `UseRequireOnce`; autofix) |
 | `generic/including-file` | Error | `PEAR.Files.IncludingFile` | `require( 'file.php' )`: parentheses around the path (`BracketsNotRequired`; autofix) |
@@ -158,7 +159,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-111 of the 114 rules are on by default. `parentheses-spacing`, `function-call-signature` and `array-alignment` run only with `--only`; see
+112 of the 115 rules are on by default. `parentheses-spacing`, `function-call-signature` and `array-alignment` run only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning

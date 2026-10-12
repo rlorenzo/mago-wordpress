@@ -346,17 +346,22 @@ function assignments(array $tokens, int $at, string $variable): array
  * The message codes an expression can produce, `*` standing for a dynamic part: literals,
  * concatenations, `MessageHelper::stringToErrorcode()` and variables assigned in the same function.
  */
-function code_patterns(array $tokens, array $expr, int $at): array
+function code_patterns(array $tokens, array $expr, int $at, array $seen = []): array
 {
     if (count($expr) === 1 && is_array($expr[0]) && $expr[0][0] === T_VARIABLE) {
+        // A variable that feeds itself (`\$code = 'X' . \$code`) stops at the dynamic part.
+        if (isset($seen[$expr[0][1]])) {
+            return ['*'];
+        }
+        $seen[$expr[0][1]] = true;
         $patterns = [];
         foreach (assignments($tokens, $at, $expr[0][1]) as $value) {
-            $patterns = [...$patterns, ...code_patterns($tokens, $value, $at)];
+            $patterns = [...$patterns, ...code_patterns($tokens, $value, $at, $seen)];
         }
         return $patterns === [] ? ['*'] : array_values(array_unique($patterns));
     }
     if (text($expr[0] ?? '') === 'MessageHelper' && text($expr[2] ?? '') === 'stringToErrorcode') {
-        return code_patterns($tokens, array_slice($expr, 4, -1), $at);
+        return code_patterns($tokens, array_slice($expr, 4, -1), $at, $seen);
     }
     $pattern = '';
     $depth = 0;
@@ -365,7 +370,7 @@ function code_patterns(array $tokens, array $expr, int $at): array
         $text = text($t);
         if ($depth === 0 && $text === '.') {
             $resolved = count($part) === 1 && is_array($part[0]) && $part[0][0] === T_VARIABLE
-                ? code_patterns($tokens, $part, $at) : ['*'];
+                ? code_patterns($tokens, $part, $at, $seen) : ['*'];
             $pattern .= match (true) {
                 count($part) === 1 && is_array($part[0]) && $part[0][0] === T_CONSTANT_ENCAPSED_STRING
                     => substr($part[0][1], 1, -1),

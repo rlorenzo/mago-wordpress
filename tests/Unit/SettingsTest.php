@@ -195,6 +195,7 @@ final class SettingsTest extends TestCase
                 'WordPress.DB.DirectDatabaseQuery' => ['*'],
                 'WordPress.DB.SlowDBQuery' => ['*'],
                 'WordPress.Security.ValidatedSanitizedInput' => ['*'],
+                'Squiz.Commenting.FunctionComment' => ['*'],
             ],
             $extra->excludePatterns,
         );

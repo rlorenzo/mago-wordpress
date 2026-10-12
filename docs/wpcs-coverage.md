@@ -79,7 +79,7 @@ The remaining `WordPress.PHP` sniffs are ported too: `wordpress/ini-set`, `wordp
 ## WordPress-Docs
 
 The `WordPress` ruleset includes `WordPress-Docs`: eleven `Squiz.Commenting` and `Generic.Commenting`
-sniffs, with the codes WPCS excludes. This package ports none of them.
+sniffs, with the codes WPCS excludes. This package ports `Squiz.Commenting.FunctionComment` (as `generic/function-comment`); the rest are below.
 
 Mago covers missing docblocks. `wordpress.mago.toml` turns on Mago's `missing-docs` for functions, methods, classes and properties, the declarations WPCS checks (not
 interfaces, traits, enums or constants). On Akismet and Contact Form 7 it reports as many as
@@ -94,7 +94,7 @@ Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisatio
 
 | Sniff | Mago | Not covered |
 |:---|:---|:---|
-| `Squiz.Commenting.FunctionComment` | `Missing`: `missing-docs`. `ParamNameNoMatch`, `ExtraParamComment`: `mago analyze` (`invalid-param-tag`). Malformed types: `valid-docblock` | `MissingParamTag`, `MissingParamType`, `MissingParamComment`, `ParamCommentFullStop`, `ParamNameNoCaseMatch`, return and `@throws` tag checks, `WrongStyle` (a `//` comment where a docblock should be) |
+| `Squiz.Commenting.FunctionComment` | `Missing`, `WrongStyle`: `missing-docs`; everything else WordPress-Docs keeps: `generic/function-comment`. Malformed types: `valid-docblock` | none |
 | `Squiz.Commenting.ClassComment` | `Missing`: `missing-docs` | `WrongStyle`, `SpacingAfter` |
 | `Squiz.Commenting.VariableComment` | `Missing`: `missing-docs` | `MissingVar`, `EmptyVar`, `DuplicateVar`, `EmptySees`, `WrongStyle` |
 | `Squiz.Commenting.FileComment` | none | every code: a file docblock, its `@package` tag, spacing and style |

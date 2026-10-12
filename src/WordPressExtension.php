@@ -52,6 +52,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCallSignatureRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
@@ -213,6 +214,7 @@ final class WordPressExtension
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
                 new FunctionCallSignatureRule($report),
+                new FunctionCommentRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),
