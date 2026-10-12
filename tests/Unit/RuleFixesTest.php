@@ -236,6 +236,13 @@ final class RuleFixesTest extends TestCase
                 "/**\n * Short one.\n * Long right below.\n *\n * More long.\n *\n * @param int \$a First.\n *\n * @return int\n */\nfunction a( \$a ) {\n}\n\nclass B {\n\t/**\n\t * Short.\n\t *\n\t * Long.\n  *\n\t * @since 1.0\n  *\n\t * @see foo()\n\t */\n\tpublic \$x;\n}",
             ];
 
+        yield 'doc-comment-alignment moves stars one column in and adds the space after them like phpcbf' => [
+            'generic/doc-comment-alignment',
+            '',
+            "/**\n*Misaligned star.\n   * Too far.\n  *\n *@return int\n   */\nfunction a() {\n}\n\nclass B {\n\t/**\n\t*No space.\n\t  * Two spaces in.\n\t*/\n\tpublic \$x;\n}",
+            "/**\n * Misaligned star.\n * Too far.\n *\n * @return int\n */\nfunction a() {\n}\n\nclass B {\n\t/**\n  * No space.\n  * Two spaces in.\n  */\n\tpublic \$x;\n}",
+        ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',

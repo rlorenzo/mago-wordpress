@@ -208,6 +208,11 @@ final class Levels
             'TagNotAllowed' => 'warning',
             'WrongStyle' => 'error',
         ],
+        'Squiz.Commenting.DocCommentAlignment' => [
+            'NoSpaceAfterStar' => 'error',
+            'SpaceAfterStar' => 'error',
+            'SpaceBeforeStar' => 'error',
+        ],
         'Squiz.Commenting.FileComment' => [
             '*TagOrder' => 'error',
             'Duplicate*Tag' => 'error',

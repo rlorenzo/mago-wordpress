@@ -15,6 +15,7 @@ generic/disallow-namespace-without-name
 generic/disallow-size-functions-in-loops
 generic/disallow-standalone-post-increment-decrement
 generic/double-quote-usage
+generic/doc-comment-alignment
 generic/doc-comment
 generic/else-if-declaration
 generic/empty-statement
