@@ -18,11 +18,13 @@ generic/double-quote-usage
 generic/else-if-declaration
 generic/empty-statement
 generic/for-loop-with-test-function-call
+generic/class-comment
 generic/file-comment
 generic/file-header
 generic/forbidden-functions
 generic/foreach-unique-assignment
 generic/function-comment
+generic/variable-comment
 generic/git-merge-conflict
 generic/including-file
 generic/including-file-warning

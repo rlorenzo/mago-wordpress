@@ -16,7 +16,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\DocComment;
-use Rlorenzo\MagoWordPress\Internal\FileCache;
+use Rlorenzo\MagoWordPress\Internal\LeadingComment;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function count;
@@ -92,7 +92,7 @@ final class FunctionCommentRule implements Rule
         $file = $context->file;
         $function = $context->node;
         // `Missing` and `WrongStyle` belong to missing-docs, which reports both for functions.
-        $comment = self::commentBefore($file, $function);
+        $comment = LeadingComment::before($file, $function->span->start);
         if ($comment === null || $comment['kind'] !== TriviaKind::DocBlockComment) {
             return;
         }
@@ -144,73 +144,6 @@ final class FunctionCommentRule implements Rule
         return $function->span;
     }
 
-    /**
-     * The comment directly before the function, its attributes and modifiers: only whitespace
-     * between. NULL when there is none, or when it trails code on its own line (it belongs to
-     * that code, as in the sniff).
-     *
-     * @return null|array{kind: TriviaKind, span: Span}
-     */
-    private static function commentBefore(SourceFile $file, Node $function): ?array
-    {
-        $start = $function->span->start;
-        $end = $start;
-        $text = $file->contents;
-        while (
-            $end > 0
-            && (
-                $text[$end - 1] === ' '
-                || $text[$end - 1] === "\t"
-                || $text[$end - 1] === "\n"
-                || $text[$end - 1] === "\r"
-            )
-        ) {
-            --$end;
-        }
-
-        $found = null;
-        foreach (self::trivia($file) as $trivia) {
-            if ($trivia->span->end === $end) {
-                $found = $trivia;
-
-                break;
-            }
-
-            if ($trivia->span->end > $end) {
-                break;
-            }
-        }
-
-        if ($found === null) {
-            return null;
-        }
-
-        if ($found->kind !== TriviaKind::DocBlockComment) {
-            $lineStart = strrpos(substr($text, 0, $found->span->start), "\n");
-            $before = substr(
-                $text,
-                $lineStart === false ? 0 : $lineStart + 1,
-                $found->span->start - ($lineStart === false ? 0 : $lineStart + 1),
-            );
-            if (trim($before) !== '') {
-                return null;
-            }
-        }
-
-        return ['kind' => $found->kind, 'span' => $found->span];
-    }
-
-    /** @return list<\Mago\Sdk\Syntax\Trivia> */
-    private static function trivia(SourceFile $file): array
-    {
-        return FileCache::remember($file, 'function-comment-trivia', static function () use ($file): array {
-            $trivia = $file->getTrivia();
-            usort($trivia, static fn($a, $b): int => $a->span->start <=> $b->span->start);
-
-            return $trivia;
-        });
-    }
-
     private function spacingAfter(LintContext $context, Span $comment, Node $function): void
     {
         $text = $context->file->contents;
@@ -249,7 +182,7 @@ final class FunctionCommentRule implements Rule
     /**
      * The `@return` checks WordPress-Docs keeps.
      *
-     * @param list<array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>}> $tags
+     * @param list<array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>, spaceBeforeClose: bool}> $tags
      */
     private function returns(LintContext $context, Node $function, array $tags): void
     {
@@ -399,7 +332,7 @@ final class FunctionCommentRule implements Rule
     }
 
     /**
-     * @param list<array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>}> $tags
+     * @param list<array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>, spaceBeforeClose: bool}> $tags
      */
     private function throws(LintContext $context, array $tags): void
     {
@@ -457,7 +390,7 @@ final class FunctionCommentRule implements Rule
     }
 
     /**
-     * @param list<array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>}> $tags
+     * @param list<array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>, spaceBeforeClose: bool}> $tags
      */
     private function params(LintContext $context, Node $function, Span $docblock, array $tags): void
     {
@@ -552,7 +485,7 @@ final class FunctionCommentRule implements Rule
      * One `@param` tag split into type, variable and comment, as the sniff does, reporting the
      * tags that lack a part.
      *
-     * @param array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>} $tag
+     * @param array{name: string, offset: int, content: ?string, contentOffset: int, continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>, spaceBeforeClose: bool} $tag
      *
      * @return array{tag: array{name: string, offset: int, content: ?string, contentOffset: int, ...}, type: string, var: string, comment: string, typeSpace: int, varSpace: int, lines: list<array{comment: string, indent: int, spaceOffset: int, spaceLength: int}>}
      */
@@ -577,7 +510,7 @@ final class FunctionCommentRule implements Rule
 
         $matches = [];
         $pattern = '/((?:(?![$.]|&(?=\$)).)*)(?:((?:\.\.\.)?(?:\$|&)[^\s]+)(?:(\s+)(.*))?)?/';
-        if (preg_match($pattern, $content, $matches) === 1) {
+        if (preg_match($pattern, $tag['spaceBeforeClose'] ? $content . ' ' : $content, $matches) === 1) {
             $length = strlen($matches[1]);
             $param['type'] = trim($matches[1]);
             $param['typeSpace'] = $length - strlen($param['type']);
