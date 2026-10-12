@@ -121,6 +121,7 @@ final class SniffMap
         'Squiz.Classes.SelfMemberReference' => ['generic/self-member-reference'],
         'Generic.Commenting.DocComment' => ['generic/doc-comment'],
         'Squiz.Commenting.ClassComment' => ['generic/class-comment'],
+        'Squiz.Commenting.DocCommentAlignment' => ['generic/doc-comment-alignment'],
         'Squiz.Commenting.FileComment' => ['generic/file-comment'],
         'Squiz.Commenting.FunctionComment' => ['generic/function-comment'],
         'Squiz.Commenting.FunctionCommentThrowTag' => ['generic/function-comment-throw-tag'],

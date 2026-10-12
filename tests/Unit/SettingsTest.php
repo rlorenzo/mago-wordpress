@@ -197,6 +197,7 @@ final class SettingsTest extends TestCase
                 'WordPress.Security.ValidatedSanitizedInput' => ['*'],
                 'Generic.Commenting.DocComment' => ['*'],
                 'Squiz.Commenting.ClassComment' => ['*'],
+                'Squiz.Commenting.DocCommentAlignment' => ['*'],
                 'Squiz.Commenting.FileComment' => ['*'],
                 'Squiz.Commenting.FunctionComment' => ['*'],
                 'Squiz.Commenting.FunctionCommentThrowTag' => ['*'],
