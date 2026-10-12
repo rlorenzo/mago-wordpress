@@ -228,6 +228,14 @@ final class RuleFixesTest extends TestCase
                 "function a() {\n\t\t\$x = 1;\n\t// hash comment\n\t\$y = 2; // trailing\n\t// no space\n\t// many spaces\n\t// Tab\n\t// Fine.\n\t//\n\t// Second block ends without stop\n\n\t// Last comment.\n}\n\n\$f = function () {\n\t\$a = 1;\n\t// Closing comment\n};\n\nif ( \$a ) {\n} // end if\n\n// lonely\n\n// Another.",
             ];
 
+        yield 'doc-comment fixes the blank lines between descriptions, before tags, between tag groups and at the end like phpcbf' =>
+            [
+                'generic/doc-comment',
+                '',
+                "/**\n * Short one.\n * Long right below.\n *\n *\n * More long.\n * @param int \$a First.\n *\n *\n * @return int\n *\n *\n */\nfunction a( \$a ) {\n}\n\nclass B {\n\t/**\n\t * Short.\n\t *\n\t * Long.\n\t * @since 1.0\n\t *\n\t *\n\t * @see foo()\n\t */\n\tpublic \$x;\n}",
+                "/**\n * Short one.\n * Long right below.\n *\n * More long.\n *\n * @param int \$a First.\n *\n * @return int\n */\nfunction a( \$a ) {\n}\n\nclass B {\n\t/**\n\t * Short.\n\t *\n\t * Long.\n  *\n\t * @since 1.0\n  *\n\t * @see foo()\n\t */\n\tpublic \$x;\n}",
+            ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',

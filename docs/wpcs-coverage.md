@@ -79,7 +79,7 @@ The remaining `WordPress.PHP` sniffs are ported too: `wordpress/ini-set`, `wordp
 ## WordPress-Docs
 
 The `WordPress` ruleset includes `WordPress-Docs`: eleven `Squiz.Commenting` and `Generic.Commenting`
-sniffs, with the codes WPCS excludes. This package ports `Squiz.Commenting.FunctionComment`, `FileComment`, `ClassComment`, `VariableComment` and `InlineComment` (as `generic/function-comment`, `generic/file-comment`, `generic/class-comment`, `generic/variable-comment` and `generic/inline-comment`); the rest are below.
+sniffs, with the codes WPCS excludes. This package ports `Squiz.Commenting.FunctionComment`, `FileComment`, `ClassComment`, `VariableComment`, `InlineComment` and `Generic.Commenting.DocComment` (as `generic/function-comment`, `generic/file-comment`, `generic/class-comment`, `generic/variable-comment`, `generic/inline-comment` and `generic/doc-comment`); the rest are below.
 
 Mago covers missing docblocks. `wordpress.mago.toml` turns on Mago's `missing-docs` for functions, methods, classes and properties, the declarations WPCS checks (not
 interfaces, traits, enums or constants). On Akismet and Contact Form 7 it reports as many as
@@ -103,7 +103,7 @@ Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisatio
 | `Squiz.Commenting.BlockComment` | `Empty`: `no-empty-comment` | `NoCapital`, `WrongEnd`, `NoNewLine`, blank-line checks |
 | `Squiz.Commenting.DocCommentAlignment` | `SpaceBeforeStar`: `mago format` | `NoSpaceAfterStar` |
 | `Squiz.Commenting.ClosingDeclarationComment` | none | reports only malformed `//end` comments; WPCS excludes `Missing` |
-| `Generic.Commenting.DocComment` | `Empty`: `no-empty-comment` | `MissingShort`, `ShortNotCapital`, `LongNotCapital`, spacing between the short and long description and tags |
+| `Generic.Commenting.DocComment` | `Empty`: `no-empty-comment`; `Empty`, `MissingShort`, `ShortNotCapital`, `LongNotCapital` and the spacing codes: `generic/doc-comment` | none |
 
 WPCS doesn't check `@since`, which the WordPress documentation standard asks for. `valid-docblock`
 (on) reports docblock syntax errors WPCS doesn't, such as an unclosed `{@see`.
