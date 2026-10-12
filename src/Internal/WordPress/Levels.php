@@ -184,6 +184,12 @@ final class Levels
             'SpaceAfter' => 'error',
             'SpaceBefore' => 'error',
         ],
+        'Squiz.Commenting.ClassComment' => [
+            'Missing' => 'error',
+            'SpacingAfter' => 'error',
+            'TagNotAllowed' => 'warning',
+            'WrongStyle' => 'error',
+        ],
         'Squiz.Commenting.FileComment' => [
             '*TagOrder' => 'error',
             'Duplicate*Tag' => 'error',
@@ -225,6 +231,17 @@ final class Levels
             'ThrowsNoFullStop' => 'error',
             'ThrowsNotCapital' => 'error',
             'TypeHintMissing' => 'error',
+        ],
+        'Squiz.Commenting.VariableComment' => [
+            'DuplicateVar' => 'error',
+            'EmptySees' => 'error',
+            'EmptyVar' => 'error',
+            'IncorrectVarType' => 'error',
+            'Missing' => 'error',
+            'MissingVar' => 'error',
+            'TagNotAllowed' => 'warning',
+            'VarOrder' => 'error',
+            'WrongStyle' => 'error',
         ],
         'Squiz.ControlStructures.ControlSignature' => [
             'NewlineAfterOpenBrace' => 'error',

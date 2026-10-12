@@ -17,6 +17,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ClassCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
@@ -111,6 +112,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ValidHookNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidLogicalOperatorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidPostTypeSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidVariableNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\VariableCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDateTimeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\WpDeprecatedFunctionsRule;
@@ -215,8 +217,10 @@ final class WordPressExtension
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
                 new FunctionCallSignatureRule($report),
+                new ClassCommentRule($report),
                 new FileCommentRule($report),
                 new FunctionCommentRule($report),
+                new VariableCommentRule($report),
                 new ParenthesesSpacingRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),

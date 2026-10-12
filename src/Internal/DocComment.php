@@ -29,6 +29,7 @@ final class DocComment
      *     content: ?string,
      *     contentOffset: int,
      *     continuation: list<array{text: string, indent: int, offset: int, spaceOffset: int, spaceLength: int}>,
+     *     spaceBeforeClose: bool,
      * }>
      */
     public static function tags(string $docblock, int $base): array
@@ -42,6 +43,8 @@ final class DocComment
             $line = rtrim($line, "\r\n");
             [$skip, $space, $body] = DocCommentLine::split($line, $index === 0, $index === $last);
             $bodyStart = $skip + $space;
+            // phpcs keeps the space in front of the closing `*/` in the tag's string.
+            $spaceBeforeClose = $index === $last && $body !== rtrim($body);
             $body = rtrim($body);
             if ($body !== '' && $body[0] === '@') {
                 $parts = preg_split('~\s+~', $body, 2) ?: [$body];
@@ -52,6 +55,7 @@ final class DocComment
                     'content' => $content,
                     'contentOffset' => $base + $lineStart + $bodyStart + strlen($body) - strlen($content ?? ''),
                     'continuation' => [],
+                    'spaceBeforeClose' => $spaceBeforeClose,
                 ];
             } elseif ($body !== '' && $tags !== []) {
                 $tags[count($tags) - 1]['continuation'][] = [

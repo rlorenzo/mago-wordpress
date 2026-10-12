@@ -30,6 +30,8 @@ final class LevelsTest extends TestCase
      * `minimum_wp_version`, dynamic names), with the level each rule takes.
      */
     private const MIXED = [
+        'generic/class-comment' => Level::Error, // TagNotAllowed is a warning, but WordPress-Docs turns it off
+        'generic/variable-comment' => Level::Error, // TagNotAllowed is a warning, but WordPress-Docs turns it off
         'generic/disallow-alternative-php-tags' => Level::Warning, // two Maybe* warnings, one error
         'generic/inline-control-structure' => Level::Error, // NotAllowed; Discouraged only with error=false
         'generic/forbidden-functions' => Level::Error, // the sniff's `error` property, true unless a ruleset changes it
