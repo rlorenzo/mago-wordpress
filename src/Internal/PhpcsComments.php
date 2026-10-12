@@ -8,8 +8,8 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\SourceFile;
 use Mago\Sdk\Syntax\TriviaKind;
 
-use function explode;
 use function ltrim;
+use function preg_split;
 use function rtrim;
 use function str_starts_with;
 use function strlen;
@@ -18,6 +18,8 @@ use function substr;
 use function substr_count;
 use function trim;
 use function usort;
+
+use const PREG_SPLIT_OFFSET_CAPTURE;
 
 /**
  * A file's comments as the phpcs tokenizer makes them, for the sniffs written over comment tokens.
@@ -35,7 +37,7 @@ final class PhpcsComments
      *
      * @return list<array{type: string, text: string, line: int, span: Span, adjacent: bool}>
      */
-    public static function tokens(SourceFile $file, string $eol): array
+    public static function tokens(SourceFile $file): array
     {
         $trivia = $file->getTrivia();
         usort($trivia, static fn($a, $b): int => $a->span->start <=> $b->span->start);
@@ -58,16 +60,16 @@ final class PhpcsComments
                 continue;
             }
 
-            $offset = $start;
-            foreach (explode($eol, $text) as $index => $part) {
+            /** @var list<array{string, int}> $parts */
+            $parts = preg_split('/\r\n|\r|\n/', $text, -1, PREG_SPLIT_OFFSET_CAPTURE) ?: [[$text, 0]];
+            foreach ($parts as $index => [$part, $partOffset]) {
                 $tokens[] = [
                     'type' => self::isInstruction($part) ? 'phpcs' : 'comment',
                     'text' => $part,
                     'line' => $line + $index,
-                    'span' => new Span($offset, $offset + strlen($part)),
+                    'span' => new Span($start + $partOffset, $start + $partOffset + strlen($part)),
                     'adjacent' => $index > 0 || $adjacent,
                 ];
-                $offset += strlen($part) + strlen($eol);
             }
         }
 

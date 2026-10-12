@@ -68,7 +68,7 @@ final class InlineCommentRule implements Rule
         $text = $context->file->contents;
         $match = [];
         $eol = preg_match('/\r\n?|\n/', $text, $match) === 1 ? $match[0] : "\n";
-        $tokens = PhpcsComments::tokens($context->file, $eol);
+        $tokens = PhpcsComments::tokens($context->file);
         $closers = null;
         $count = count($tokens);
         for ($i = 0; $i < $count;) {

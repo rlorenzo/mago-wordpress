@@ -243,6 +243,21 @@ final class RuleFixesTest extends TestCase
             "/**\n * Misaligned star.\n * Too far.\n *\n * @return int\n */\nfunction a() {\n}\n\nclass B {\n\t/**\n  * No space.\n  * Two spaces in.\n  */\n\tpublic \$x;\n}",
         ];
 
+        yield 'block-comment moves text off the opening line, drops empty comments and a blank first line like phpcbf' =>
+            [
+                'generic/block-comment',
+                '',
+                "function a() {\n\t\$x = 1;\n\t/* Starts here\n\t * continues.\n\t */\n\t\$y = 2;\n\n\t/*\n\t */\n\t\$z = 3;\n\n\t/*\n\n\t * Blank line first.\n\t */\n\t\$w = 4;\n\n\t/*\n\t * lower case start.\n\t * Closer shares. */\n\t\$v = 5;\n\n\t/* one line is fine */\n\t\$u = 6;\n}\n\nif ( \$a ) {\n\n\t/*\n\t * Blank line after brace.\n\t */\n\t\$q = 1;\n}",
+                "function a() {\n\t\$x = 1;\n\t/*\n\t Starts here\n\t * continues.\n\t */\n\t\$y = 2;\n\n\t\n\t\$z = 3;\n\n\t/*\n\t * Blank line first.\n\t */\n\t\$w = 4;\n\n\t/*\n\t * lower case start.\n\t * Closer shares. */\n\t\$v = 5;\n\n\t/* one line is fine */\n\t\$u = 6;\n}\n\nif ( \$a ) {\n\n\t/*\n\t * Blank line after brace.\n\t */\n\t\$q = 1;\n}",
+            ];
+
+        yield 'block-comment fixes keep a comment with LF endings intact in a CRLF file' => [
+            'generic/block-comment',
+            '',
+            "function a() {\r\n\t\$x = 1;\r\n\r\n\t/*\n\t */\r\n\t\$z = 3;\r\n}",
+            "function a() {\r\n\t\$x = 1;\r\n\r\n\t\r\n\t\$z = 3;\r\n}",
+        ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',
