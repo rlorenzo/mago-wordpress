@@ -220,6 +220,14 @@ final class RuleFixesTest extends TestCase
             "/**\n * Doc.\n *\n * @param int    \$a First one\n *                  continues here.\n * @param string \$bb Second.\n */\nfunction f( \$a, \$bb ) {\n}",
         ];
 
+        yield 'inline-comment fixes spacing, # comments, blank comments and the blank line before a function end like phpcbf' =>
+            [
+                'generic/inline-comment',
+                '',
+                "function a() {\n\t//\n\t\$x = 1;\n\t#hash comment\n\t\$y = 2; // trailing\n\t//no space\n\t//   many spaces\n\t//\tTab\n\t// Fine.\n\t//\n\t// Second block ends without stop\n\n\t// Last comment.\n\n}\n\n\$f = function () {\n\t\$a = 1;\n\t// Closing comment\n\n\n};\n\nif ( \$a ) {\n} // end if\n\n// lonely\n\n// Another.",
+                "function a() {\n\t\t\$x = 1;\n\t// hash comment\n\t\$y = 2; // trailing\n\t// no space\n\t// many spaces\n\t// Tab\n\t// Fine.\n\t//\n\t// Second block ends without stop\n\n\t// Last comment.\n}\n\n\$f = function () {\n\t\$a = 1;\n\t// Closing comment\n};\n\nif ( \$a ) {\n} // end if\n\n// lonely\n\n// Another.",
+            ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',

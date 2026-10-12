@@ -232,6 +232,18 @@ final class Levels
             'ThrowsNotCapital' => 'error',
             'TypeHintMissing' => 'error',
         ],
+        'Squiz.Commenting.InlineComment' => [
+            'DocBlock' => 'error',
+            'Empty' => 'error',
+            'InvalidEndChar' => 'error',
+            'NoSpaceBefore' => 'error',
+            'NotCapital' => 'error',
+            'SpacingAfter' => 'error',
+            'SpacingAfterAtFunctionEnd' => 'error',
+            'SpacingBefore' => 'error',
+            'TabBefore' => 'error',
+            'WrongStyle' => 'error',
+        ],
         'Squiz.Commenting.VariableComment' => [
             'DuplicateVar' => 'error',
             'EmptySees' => 'error',

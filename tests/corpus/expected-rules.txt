@@ -29,6 +29,7 @@ generic/git-merge-conflict
 generic/including-file
 generic/including-file-warning
 generic/increment-decrement-usage
+generic/inline-comment
 generic/inline-control-structure
 generic/jumbled-incrementer
 generic/lowercase-class-resolution-keyword
