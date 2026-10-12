@@ -39,6 +39,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DocCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DoubleQuoteUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
@@ -219,6 +220,7 @@ final class WordPressExtension
                 new ArrayAlignmentRule($report),
                 new FunctionCallSignatureRule($report),
                 new ClassCommentRule($report),
+                new DocCommentRule($report),
                 new FileCommentRule($report),
                 new FunctionCommentRule($report),
                 new InlineCommentRule($report),
