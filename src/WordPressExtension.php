@@ -21,6 +21,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ClosingDeclarationCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ConstantModifierKeywordOrderRule;
@@ -45,6 +46,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DocCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DoubleQuoteUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EmptyCatchCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
@@ -224,6 +226,8 @@ final class WordPressExtension
                 new FunctionCallSignatureRule($report),
                 new BlockCommentRule($report),
                 new ClassCommentRule($report),
+                new ClosingDeclarationCommentRule($report),
+                new EmptyCatchCommentRule($report),
                 new DocCommentAlignmentRule($report),
                 new DocCommentRule($report),
                 new FileCommentRule($report),

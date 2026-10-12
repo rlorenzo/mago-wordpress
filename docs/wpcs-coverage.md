@@ -98,11 +98,11 @@ Mago mostly doesn't check what a docblock *contains* (tags, types, capitalisatio
 | `Squiz.Commenting.ClassComment` | `Missing`: `missing-docs`; `SpacingAfter`: `generic/class-comment` | none |
 | `Squiz.Commenting.VariableComment` | `Missing`, `WrongStyle`: `missing-docs`; `MissingVar`, `EmptyVar`, `DuplicateVar`, `EmptySees`: `generic/variable-comment` | none |
 | `Squiz.Commenting.FunctionCommentThrowTag` | `generic/function-comment-throw-tag` (`Missing`, `WrongNumber`); `mago analyze` with `check-throws = true` (off by default) also reports unhandled exceptions | none |
-| `Squiz.Commenting.EmptyCatchComment` | not equivalent: `no-empty-catch-clause` (on) reports an empty `catch` even when it holds a comment, which is what WPCS asks for | |
+| `Squiz.Commenting.EmptyCatchComment` | `generic/empty-catch-comment` (`no-empty-catch-clause` is off in the presets: it reports a `catch` that has a comment too) | none |
 | `Squiz.Commenting.InlineComment` | `generic/inline-comment` (`WrongStyle`, `InvalidEndChar`, the spacing codes, `Empty`, `SpacingAfterAtFunctionEnd`); `no-hash-comment` and `no-empty-comment` cover the same comments in Mago's own rules | none |
 | `Squiz.Commenting.BlockComment` | `generic/block-comment` (`Empty`, `NoNewLine`, `HasEmptyLine`, `NoCapital`, `CloserSameLine`, the blank line before); `no-empty-comment` covers `Empty` too | none |
 | `Squiz.Commenting.DocCommentAlignment` | `generic/doc-comment-alignment` (`SpaceBeforeStar`, `NoSpaceAfterStar`); `mago format` fixes the stars too | none |
-| `Squiz.Commenting.ClosingDeclarationComment` | none | reports only malformed `//end` comments; WPCS excludes `Missing` |
+| `Squiz.Commenting.ClosingDeclarationComment` | `generic/closing-declaration-comment` (`Incorrect`, `Misplaced`; WPCS excludes `Missing`) | none |
 | `Generic.Commenting.DocComment` | `Empty`: `no-empty-comment`; `Empty`, `MissingShort`, `ShortNotCapital`, `LongNotCapital` and the spacing codes: `generic/doc-comment` | none |
 
 WPCS doesn't check `@since`, which the WordPress documentation standard asks for. `valid-docblock`

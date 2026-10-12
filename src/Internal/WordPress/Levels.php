@@ -224,10 +224,20 @@ final class Levels
             'TagNotAllowed' => 'warning',
             'WrongStyle' => 'error',
         ],
+        'Squiz.Commenting.ClosingDeclarationComment' => [
+            'Abstract' => 'warning',
+            'Incorrect' => 'error',
+            'Misplaced' => 'error',
+            'Missing' => 'error',
+            'MissingBrace' => 'warning',
+        ],
         'Squiz.Commenting.DocCommentAlignment' => [
             'NoSpaceAfterStar' => 'error',
             'SpaceAfterStar' => 'error',
             'SpaceBeforeStar' => 'error',
+        ],
+        'Squiz.Commenting.EmptyCatchComment' => [
+            'Missing' => 'error',
         ],
         'Squiz.Commenting.FileComment' => [
             '*TagOrder' => 'error',

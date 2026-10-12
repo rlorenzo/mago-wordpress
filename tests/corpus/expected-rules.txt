@@ -2,6 +2,7 @@ generic/assignment-in-condition
 generic/block-comment
 generic/byte-order-mark
 generic/class-modifier-keyword-order
+generic/closing-declaration-comment
 generic/closing-tag
 generic/commented-out-code
 generic/constant-modifier-keyword-order
@@ -19,6 +20,7 @@ generic/double-quote-usage
 generic/doc-comment-alignment
 generic/doc-comment
 generic/else-if-declaration
+generic/empty-catch-comment
 generic/empty-statement
 generic/for-loop-with-test-function-call
 generic/class-comment

@@ -258,6 +258,27 @@ final class RuleFixesTest extends TestCase
             "function a() {\r\n\t\$x = 1;\r\n\r\n\t\r\n\t\$z = 3;\r\n}",
         ];
 
+        yield 'closing-declaration-comment corrects and moves the end comment like phpcbf' => [
+            'generic/closing-declaration-comment',
+            '',
+            "function foo() {\n}//end bar()\n\nfunction baz() {\n}\n//end baz()\n\nclass A {\n\tpublic function m() {\n\t}//oops\n}//end class",
+            "function foo() {\n}//end foo()\n\nfunction baz() {\n}//end baz()\n\nclass A {\n\tpublic function m() {\n\t}//end m()\n}//end class",
+        ];
+
+        yield 'closing-declaration-comment keeps the next line intact in a CRLF file' => [
+            'generic/closing-declaration-comment',
+            '',
+            "function foo() {\r\n}//oops\r\nfunction bar() {\r\n}//end bar()\r\n",
+            "function foo() {\r\n}//end foo()\r\nfunction bar() {\r\n}//end bar()\r\n",
+        ];
+
+        yield 'closing-declaration-comment stops at a closing PHP tag' => [
+            'generic/closing-declaration-comment',
+            '',
+            "function foo() {}//oops ?>visible HTML\n",
+            "function foo() {}//end foo() ?>visible HTML\n",
+        ];
+
         yield 'function-call-signature moves a hugged array argument to its own line' => [
             'wordpress/function-call-signature',
             '',
