@@ -29,6 +29,7 @@
 | `wordpress/nonce-verification-warning` | Warning | `WordPress.Security.NonceVerification.Recommended` | the `Recommended` part of `wordpress/nonce-verification`: `$_GET`/`$_REQUEST` read without a nonce check |
 | `wordpress/array-alignment` | Warning | `WordPress.Arrays.MultipleStatementAlignment` | the `=>` of a multi-line array not aligned to one column up to column 60, or a longer key without a single space before its arrow; one space before each arrow of a single-line array. Off by default; autofix, run after `mago format` (`mago-wordpress format` does) |
 | `wordpress/function-call-signature` | Error | the layout part of `PEAR.Functions.FunctionCallSignature` for a call whose parentheses span lines (`ContentAfterOpenBracket`, `MultipleArguments`, `CloseBracketLine`): `add_action( 'init', function () {` becomes one argument per line with `)` on its own line, and the lines of a moved argument go with it. Off by default; autofix, run after `mago format` (`mago-wordpress format` does); the indentation checks stay with `mago format` |
+| `wordpress/language-construct-spacing` | Error | `Generic.WhiteSpace.LanguageConstructSpacing` | `echo`, `print`, `return`, `include`, `require`, `new`, `yield`, `throw`, `namespace`, `use` or `goto` not followed by exactly one space (`IncorrectSingle`, `Incorrect`, `IncorrectYieldFrom`), such as the line break `mago format` puts after a long `echo`; a `(` or `;` right after is fine. Off by default; autofix, run after `mago format` (`mago-wordpress format` does) |
 | `wordpress/parentheses-spacing` | Error | the single-line spacing part of `PEAR.Functions.FunctionCallSignature`, `Squiz.Functions.FunctionDeclarationArgumentSpacing`, `WordPress.WhiteSpace.ControlStructureSpacing`, `NormalizedArrays.Arrays.ArrayBraceSpacing`, `WordPress.Arrays.ArrayKeySpacingRestrictions` | one space inside call, declaration, control-structure and array parentheses and brackets (`foo( $a )`, `if ( $x )`, `array( 1 )`, `$a[ $i ]` but `$a['key']`) and before an alternative-syntax colon (`if ( $x ) :`); off by default, see [Formatting](formatting.md) |
 | `wordpress/plugin-menu-slug` | Warning | `WordPress.Security.PluginMenuSlug` | `__FILE__` passed as the slug or parent-slug argument of `add_menu_page()` and the other admin menu-registration functions |
 | `wordpress/posts-per-page` | Warning | `WordPress.WP.PostsPerPage` | `posts_per_page`/`numberposts` over `max-posts-per-page` (default 100; `-1` and `nopaging` are not flagged, as in WPCS) in any array literal, `$args['key'] = ...`/`??=` assignment, or `posts_per_page=999`-style query string (it does not follow `$args` variables into `WP_Query`) |
@@ -169,7 +170,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-122 of the 125 rules are on by default. `parentheses-spacing`, `function-call-signature` and `array-alignment` run only with `--only`; see
+122 of the 126 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `function-call-signature` and `array-alignment` run only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning
@@ -203,6 +204,7 @@ where phpcbf's fix would change behaviour or break the file: a misspelling insid
 | Rule | Fix | Applied by |
 |:---|:---|:---|
 | `type-casts` | `(double)`/`(real)` → `(float)` | `--fix` |
+| `language-construct-spacing` | one space after `echo`, `return`, `new`, `use`, ... | `--fix --only wordpress/language-construct-spacing` |
 | `parentheses-spacing` | one space inside parentheses and brackets, none around a literal array key | `--fix --only wordpress/parentheses-spacing` |
 | `function-call-signature` | each argument of a multi-line call on its own line, `)` on its own line | `--fix --only wordpress/function-call-signature` |
 | `array-alignment` | `=>` aligned to one column up to column 60, one space past it | `--fix --only wordpress/array-alignment` |
