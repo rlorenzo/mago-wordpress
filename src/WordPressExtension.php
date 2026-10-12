@@ -56,6 +56,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCallSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentThrowTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
@@ -223,6 +224,7 @@ final class WordPressExtension
                 new DocCommentRule($report),
                 new FileCommentRule($report),
                 new FunctionCommentRule($report),
+                new FunctionCommentThrowTagRule($report),
                 new InlineCommentRule($report),
                 new VariableCommentRule($report),
                 new ParenthesesSpacingRule($report),

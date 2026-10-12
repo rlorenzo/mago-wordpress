@@ -250,6 +250,10 @@ final class Levels
             'ThrowsNotCapital' => 'error',
             'TypeHintMissing' => 'error',
         ],
+        'Squiz.Commenting.FunctionCommentThrowTag' => [
+            'Missing' => 'error',
+            'WrongNumber' => 'error',
+        ],
         'Squiz.Commenting.InlineComment' => [
             'DocBlock' => 'error',
             'Empty' => 'error',

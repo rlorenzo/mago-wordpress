@@ -25,6 +25,7 @@ generic/file-header
 generic/forbidden-functions
 generic/foreach-unique-assignment
 generic/function-comment
+generic/function-comment-throw-tag
 generic/variable-comment
 generic/git-merge-conflict
 generic/including-file

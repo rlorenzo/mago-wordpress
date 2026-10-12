@@ -123,6 +123,7 @@ final class SniffMap
         'Squiz.Commenting.ClassComment' => ['generic/class-comment'],
         'Squiz.Commenting.FileComment' => ['generic/file-comment'],
         'Squiz.Commenting.FunctionComment' => ['generic/function-comment'],
+        'Squiz.Commenting.FunctionCommentThrowTag' => ['generic/function-comment-throw-tag'],
         'Squiz.Commenting.InlineComment' => ['generic/inline-comment'],
         'Squiz.Commenting.VariableComment' => ['generic/variable-comment'],
         'Squiz.ControlStructures.ControlSignature' => ['generic/control-signature'],
