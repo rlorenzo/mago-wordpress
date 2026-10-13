@@ -65,6 +65,7 @@ final class FormatCommand
         ['lint',   '--fix', '--only', 'wordpress/parentheses-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/language-construct-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/array-declaration-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/comma-after-last'],
         ['lint',   '--fix', '--only', 'wordpress/function-call-signature'],
         ['lint',   '--fix', '--only', 'wordpress/array-alignment'],
         ['lint',   '--fix', '--only', 'wordpress/statement-alignment'],
@@ -92,7 +93,8 @@ final class FormatCommand
         Formats PHP files for WordPress: `mago lint --fix --only array-style`, `mago format`,
         `mago lint --fix --only wordpress/parentheses-spacing`,
         `mago lint --fix --only wordpress/language-construct-spacing`,
-        `mago lint --fix --only wordpress/array-declaration-spacing`, then
+        `mago lint --fix --only wordpress/array-declaration-spacing`,
+        `mago lint --fix --only wordpress/comma-after-last`, then
         `mago lint --fix --only wordpress/function-call-signature` and
         `mago lint --fix --only wordpress/array-alignment` and
         `mago lint --fix --only wordpress/statement-alignment`. Without paths it formats
