@@ -175,9 +175,10 @@ final class ValidFunctionNameRule implements Rule
     private function checkName(LintContext $context, Node $identifier, string $name, ?string $className): void
     {
         $shownName = Strings::printable($name);
-        $shownClass = $className === null ? null : Strings::printable($className);
+        $functionSubject = sprintf('Function name "%s"', $shownName);
+        $shownClass = $className === null ? '' : Strings::printable($className);
         [$kind, $qualifiedSubject, $subject] = $className === null
-            ? ['Function', sprintf('Function name "%s"', $shownName), sprintf('Function name "%s"', $shownName)]
+            ? ['Function', $functionSubject, $functionSubject]
             : [
                 'Method',
                 sprintf('Method name "%s::%s"', $shownClass, $shownName),
