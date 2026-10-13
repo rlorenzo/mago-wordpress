@@ -102,3 +102,25 @@ function rethrown_union() {
 		throw $e;
 	}
 }
+
+// @mago-expect lint:generic/function-comment-throw-tag
+/**
+ * A nested named function counts toward the outer function.
+ *
+ * @return void
+ */
+function outer_nested() {
+	function inner_named() {
+		throw new \Exception( 'x' );
+	}
+}
+
+// @mago-expect lint:generic/function-comment-throw-tag
+/**
+ * So does an arrow function.
+ *
+ * @return void
+ */
+function outer_arrow() {
+	$f = fn() => throw new \Exception( 'x' );
+}
