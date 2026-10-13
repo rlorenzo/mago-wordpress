@@ -206,6 +206,14 @@ final class RuleFixesTest extends TestCase
             "?>\n<?php if ( \$x ) : ?>\n<?php elseif ( \$y ) : ?>\n<?php else : ?>\n<?php endif; ?>\n<?php",
         ];
 
+        yield 'comma-after-last adds the comma to a multi-line array and drops it from a single-line one like phpcbf' =>
+            [
+                'wordpress/comma-after-last',
+                '',
+                "\$a = array(\n\t1,\n\t2\n);\n\$b = array(\n\t1,\n\t2 );\n\$c = array( 1, 2, );\n\$d = array(\n\t'x' => <<<EOT\ntext\nEOT\n);\n\$e = array(\n\t'x' => <<<EOT\n\ttext\n\tEOT\n);\n\$f = array(\n\t1,\n\t2 // two\n);\n[ \$q, \$r, ] = \$a;",
+                "\$a = array(\n\t1,\n\t2,\n);\n\$b = array(\n\t1,\n\t2, );\n\$c = array( 1, 2 );\n\$d = array(\n\t'x' => <<<EOT\ntext\nEOT\n,\n);\n\$e = array(\n\t'x' => <<<EOT\n\ttext\n\tEOT,\n);\n\$f = array(\n\t1,\n\t2, // two\n);\n[ \$q, \$r, ] = \$a;",
+            ];
+
         yield 'array-alignment aligns arrows up to column 60 and leaves longer keys at one space' => [
             'wordpress/array-alignment',
             '',

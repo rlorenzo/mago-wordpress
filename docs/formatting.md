@@ -21,7 +21,7 @@ vendor/bin/mago-wordpress format --staged   # the staged PHP files mago.toml lis
 This is the only supported way to format and to check. `mago format` alone can't produce WordPress
 formatting, and `mago format --check` always fails on code that is.
 
-The command runs eight steps in order:
+The command runs nine steps in order:
 
 ```sh
 mago lint --fix --only array-style                  # [] to array()
@@ -29,6 +29,7 @@ mago format
 mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format removes
 mago lint --fix --only wordpress/language-construct-spacing # `echo\n$x` -> `echo $x`
 mago lint --fix --only wordpress/array-declaration-spacing # `array( 'a' => 1, 'b' => 2 )` -> one item per line
+mago lint --fix --only wordpress/comma-after-last    # a comma after the last item of a multi-line array
 mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
 mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60
 mago lint --fix --only wordpress/statement-alignment # the `=` mago format aligns past 40 spaces of padding
@@ -42,10 +43,10 @@ again, the command is idempotent only as a whole: running `mago format` on its o
 `mago format` is also not always stable on its own (a comment between `<?php` and `endif;` moves a
 little on each run), so the command repeats it until `mago format --check` passes.
 
-Step 4 puts back the one space after `echo`, `return`, `new`, `use` and the other language constructs that `mago format` replaces by a line break when the argument is long. Step 5 puts the items of a keyed array on separate lines (`mago format` keeps a short one on a line). Steps 6 to 8 undo what `mago format` does and phpcs does not allow. It keeps a closure or array last
+Step 4 puts back the one space after `echo`, `return`, `new`, `use` and the other language constructs that `mago format` replaces by a line break when the argument is long. Step 5 puts the items of a keyed array on separate lines (`mago format` keeps a short one on a line), and step 6 adds the comma after the last item that WordPress-Core requires of a multi-line array (and removes one from a single-line array). Steps 7 to 9 undo what `mago format` does and phpcs does not allow. It keeps a closure or array last
 argument on the line of the call's `(`, aligns every `=>` however long the key, and WordPress-Core
 wants `add_action( 'init', function () {` as one argument per line with `)` on its own line, and the
-`=>` aligned only up to column 60. Step 6 moves a hugged argument to a line of its own together with
+`=>` aligned only up to column 60. Step 7 moves a hugged argument to a line of its own together with
 the lines it spans, one level deeper (the lines of a multi-line string or heredoc stay as they are),
 and is repeated until no call is left; a call with a comment among its arguments is left alone.
 
@@ -126,8 +127,10 @@ one breaks onto lines has no trailing comma, which phpcs reports. What's left:
 | Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 23 % |
 | Other: operator spacing (40), embedded PHP (30), scope indent (22), inline tabs (7), the rest (4) | 103 | 27 % |
 
-The first two are gaps in the steps. The comma is added by a different sniff in phpcs, so
-`wordpress/array-declaration-spacing` breaks the array and leaves it without one.
+These figures were measured with the eight steps before `wordpress/comma-after-last` existed. phpcs adds
+that comma with a different sniff from the one that breaks the array, so the step now adds it, and the
+91 `CommaAfterLast` reports are the gap it closes. The `FunctionCallSignature.Indent` reports are still a gap in
+the steps.
 
 On the same plugins phpcs reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in
 51 files after the first three steps (`wordpress/array-alignment` takes them to 0), and 1,669
@@ -143,7 +146,7 @@ counting the reports phpcs marks fixable. This is a manual run of the steps, not
 are what the steps do, not a measure of that check. The two measurements after the table above (the
 array-alignment and call-signature counts, and bcap_website) are older.
 
-On bcap_website (measured before steps 6 to 8), a phpcs-clean site
+On bcap_website (measured before steps 7 to 9), a phpcs-clean site
 of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
 sniff codes and how `print-width` trades off: [formatter results](../bench/results/2026-10-01-formatter.md).
 

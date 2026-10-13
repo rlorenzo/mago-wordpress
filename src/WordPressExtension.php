@@ -24,6 +24,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ClassModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingDeclarationCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CommaAfterLastRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ConstantModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
@@ -227,6 +228,7 @@ final class WordPressExtension
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
                 new ArrayDeclarationSpacingRule($report),
+                new CommaAfterLastRule($report),
                 new FunctionCallSignatureRule($report),
                 new BlockCommentRule($report),
                 new ClassCommentRule($report),
