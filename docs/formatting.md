@@ -101,31 +101,47 @@ It doesn't occur in the benchmark below.
 
 ## How close it gets
 
-On Akismet, Contact Form 7 and Yoast SEO (1,834 PHP files), phpcs-fixable `WordPress-Core` reports
-drop from 334,577 (Mago's default formatting) to 692 with the five steps of `mago-wordpress format` that existed then (before the language-construct step)
-(7,340 before `wordpress/array-alignment` and 2,366 before `wordpress/function-call-signature`).
-What's left:
+On Akismet 5.7.2, Contact Form 7 6.1.7 and Yoast SEO 28.5 (1,651 PHP files, `vendor` directories left
+out), phpcs-fixable `WordPress-Core` reports are 23,148 as the plugins ship. Mago's formatting alone
+(`array-style` and `mago format`) raises them to 80,971; the steps of `mago-wordpress format` take them
+to 388:
+
+| After this step | Reports |
+|:---|---:|
+| `array-style` and `mago format` | 80,971 |
+| `wordpress/parentheses-spacing` | 3,595 |
+| `wordpress/language-construct-spacing` | 3,644 |
+| `wordpress/array-declaration-spacing` | 3,741 |
+| `wordpress/function-call-signature` | 2,185 |
+| `wordpress/array-alignment` | 584 |
+| `wordpress/statement-alignment` | 388 |
+
+The count rises a little after the language-construct and array-declaration steps: an array the second
+one breaks onto lines has no trailing comma, which phpcs reports. What's left:
 
 | Cause | Reports | Share |
 |:---|---:|---:|
-| Assignment `=` alignment: WPCS stops aligning past 40 spaces of padding, Mago never stops (`Generic.Formatting.MultipleStatementAlignment`) | 263 | 38 % |
-| Associative arrays with several items on one line, which WPCS wants broken | 147 | 21 % |
-| Fixable but not formatting (loose comparisons) | 113 | 16 % |
-| `Generic.WhiteSpace.LanguageConstructSpacing` | 61 | 9 % |
-| Other: scope indent, operator spacing, embedded PHP, inline tabs | 108 | 16 % |
+| `PEAR.Functions.FunctionCallSignature.Indent`: call arguments indented differently from what phpcs wants | 105 | 27 % |
+| `NormalizedArrays.Arrays.CommaAfterLast`: an array that `wordpress/array-declaration-spacing` broke onto lines has no trailing comma | 91 | 23 % |
+| Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 23 % |
+| Other: operator spacing (40), embedded PHP (30), scope indent (22), inline tabs (7), the rest (4) | 103 | 27 % |
+
+The first two are gaps in the steps. The comma is added by a different sniff in phpcs, so
+`wordpress/array-declaration-spacing` breaks the array and leaves it without one.
 
 On the same plugins phpcs reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in
 51 files after the first three steps (`wordpress/array-alignment` takes them to 0), and 1,669
 `PEAR.Functions.FunctionCallSignature` layout reports (`wordpress/function-call-signature` takes
 them to 0 without adding a report of any other sniff).
 
-How these were measured: a fresh copy of each plugin (Akismet 5.7.2, Contact Form 7 6.1.7, Yoast SEO
-28.5; 1,834 PHP files) with a `mago.toml` that extends the preset, the steps run one by one with
-`mago lint --fix --only <rule>` and `mago format` (repeated until `mago format --check` passes) on
-Mago 1.51.0, then `phpcs --standard=WordPress-Core --extensions=php --report=json` (phpcs 3.13.6,
-WPCS 3.4.1), counting the reports phpcs marks fixable by sniff code. This is a manual run of the
-steps, not the output of `mago-wordpress format`, whose final check can put a file back unformatted
-(see above); the figures are what the steps do, not a measure of that check.
+How these were measured: a fresh copy of each plugin (1,651 PHP files) with a `mago.toml` that
+extends the preset, `mago lint --fix --only <rule>` and `mago format` run in the order of the steps
+above (`wordpress/function-call-signature` repeated until it stops changing files) on Mago 1.51.0,
+then `phpcs --standard=WordPress-Core --extensions=php --report=json` (phpcs 3.13.6, WPCS 3.4.1),
+counting the reports phpcs marks fixable. This is a manual run of the steps, not the output of
+`mago-wordpress format`, whose final check can put a file back unformatted (see above); the figures
+are what the steps do, not a measure of that check. The two measurements after the table above (the
+array-alignment and call-signature counts, and bcap_website) are older.
 
 On bcap_website (measured before steps 6 to 8), a phpcs-clean site
 of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
