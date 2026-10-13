@@ -12,6 +12,7 @@ use function chr;
 use function function_exists;
 use function hexdec;
 use function ltrim;
+use function mb_scrub;
 use function mb_strtolower;
 use function octdec;
 use function preg_match;
@@ -189,6 +190,15 @@ final class Strings
         return function_exists('mb_strtolower')
             ? mb_strtolower($suggested, encoding: 'UTF-8')
             : strtr($suggested, from: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', to: 'abcdefghijklmnopqrstuvwxyz');
+    }
+
+    /**
+     * Source text safe for an issue message: Mago rejects a report holding invalid UTF-8, and a
+     * PHP file's names can be any bytes. Invalid sequences become `?`.
+     */
+    public static function printable(string $text): string
+    {
+        return function_exists('mb_scrub') ? mb_scrub($text, 'UTF-8') : $text;
     }
 
     private static function codepointToUtf8(int $codepoint): string

@@ -63,4 +63,10 @@ final class StringsTest extends TestCase
     {
         self::assertSame($expected, Strings::snakeCase($name));
     }
+
+    public function testPrintableReplacesInvalidUtf8(): void
+    {
+        self::assertSame("caf\u{e9} ?x", Strings::printable("caf\u{e9} \xFFx"));
+        self::assertSame('plain', Strings::printable('plain'));
+    }
 }

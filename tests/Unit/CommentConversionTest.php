@@ -384,6 +384,25 @@ final class CommentConversionTest extends TestCase
     }
 
     /**
+     * Mago rejects a whole report holding invalid UTF-8, and PHP names can be any bytes.
+     */
+    public function testNonUtf8NamesDoNotBreakTheReport(): void
+    {
+        [$status, $output] = $this->lint(
+            'wordpress/valid-function-name,wordpress/valid-variable-name,wordpress/escape-output,wordpress/file-name',
+            [],
+            "function badName\xFF() {}\n\$badVar\xFE = 1;\necho \$a\xFD;\nclass Cl\xFC {}",
+            flags: '--reporting-format json',
+        );
+
+        self::assertStringNotContainsString('not valid UTF-8', $output);
+        self::assertStringContainsString('wordpress/valid-function-name', $output);
+        self::assertStringContainsString('wordpress/valid-variable-name', $output);
+        self::assertStringContainsString('wordpress/escape-output', $output);
+        self::assertSame(1, $status);
+    }
+
+    /**
      * Pragma behaviours the command must avoid relying on (Mago 1.51.0).
      */
     public function testPragmaPitfalls(): void
