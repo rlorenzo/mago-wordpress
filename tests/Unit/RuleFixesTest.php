@@ -258,6 +258,15 @@ final class RuleFixesTest extends TestCase
             "function a() {\r\n\t\$x = 1;\r\n\r\n\t\r\n\t\$z = 3;\r\n}",
         ];
 
+        // phpcbf's own output for a comment that mixes line endings is not usable (it rewrites the comment),
+        // so this one only checks that the blank first line goes with its own line ending.
+        yield 'block-comment drops a blank first line with its own line ending in a CRLF file' => [
+            'generic/block-comment',
+            '',
+            "function a() {\r\n\t\$x = 1;\r\n\r\n\t/*\n\n\t * Blank line first.\n\t */\r\n\t\$w = 4;\r\n}",
+            "function a() {\r\n\t\$x = 1;\r\n\r\n\t/*\n\t * Blank line first.\n\t */\r\n\t\$w = 4;\r\n}",
+        ];
+
         yield 'closing-declaration-comment corrects and moves the end comment like phpcbf' => [
             'generic/closing-declaration-comment',
             '',

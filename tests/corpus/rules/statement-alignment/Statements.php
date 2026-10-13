@@ -18,3 +18,9 @@ class Statement_Alignment_Comment_Fixture {
 	const A /* comment */ = 1;
 	const LONGER_NAME = 2;
 }
+
+class Statement_Alignment_Property_Comment_Fixture {
+	// @mago-expect lint:wordpress/statement-alignment
+	public $p /* comment */ = 1;
+	public $longer_property = 2;
+}
