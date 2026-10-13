@@ -174,12 +174,14 @@ final class ValidFunctionNameRule implements Rule
      */
     private function checkName(LintContext $context, Node $identifier, string $name, ?string $className): void
     {
+        $shownName = Strings::printable($name);
+        $shownClass = $className === null ? null : Strings::printable($className);
         [$kind, $qualifiedSubject, $subject] = $className === null
-            ? ['Function', sprintf('Function name "%s"', $name), sprintf('Function name "%s"', $name)]
+            ? ['Function', sprintf('Function name "%s"', $shownName), sprintf('Function name "%s"', $shownName)]
             : [
                 'Method',
-                sprintf('Method name "%s::%s"', $className, $name),
-                sprintf('Method name "%s" in class %s', $name, $className),
+                sprintf('Method name "%s::%s"', $shownClass, $shownName),
+                sprintf('Method name "%s" in class %s', $shownName, $shownClass),
             ];
 
         if (preg_match('`^__[^_]`', $name) === 1) {
@@ -200,7 +202,7 @@ final class ValidFunctionNameRule implements Rule
                 $context,
                 Issue::new($subject . ' is not in snake case format.', $identifier->span)->withHelp(sprintf(
                     'Rename it to "%s".',
-                    $suggested,
+                    Strings::printable($suggested),
                 )),
                 [self::SNIFF . ".{$kind}NameInvalid"],
             );

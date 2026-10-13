@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\WordPress\TestClasses;
 use Rlorenzo\MagoWordPress\Settings;
 
@@ -173,7 +174,7 @@ final class FileNameRule implements Rule
 
         $expected =
             'class-'
-            . strtolower(str_replace(search: '_', replace: '-', subject: $className))
+            . strtolower(str_replace(search: '_', replace: '-', subject: Strings::printable($className)))
             . $this->extension($fileName);
 
         if ($fileName === $expected) {

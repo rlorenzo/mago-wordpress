@@ -15,6 +15,7 @@ use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\PhpcsToken;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokenStream;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Settings;
 
@@ -1182,7 +1183,7 @@ final class EscapeOutputRule implements Rule
 
         return $this->report->issue(
             $context,
-            Issue::new($message, new Span($token->pos, $token->pos + $length))->withHelp(
+            Issue::new(Strings::printable($message), new Span($token->pos, $token->pos + $length))->withHelp(
                 'Escape the value for its context, e.g. esc_html(), esc_attr(), esc_url() or wp_kses_post().',
             ),
             [self::SNIFF . '.' . $code],

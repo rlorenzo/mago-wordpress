@@ -271,9 +271,9 @@ final class ValidVariableNameRule implements Rule
         $this->report->issue(
             $context,
             Issue::new(
-                sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, $name),
+                sprintf('%s "%s%s" is not in valid snake_case format.', $what, $sigil, Strings::printable($name)),
                 $node->span,
-            )->withHelp(sprintf('Rename it to "%s%s".', $sigil, $suggested)),
+            )->withHelp(sprintf('Rename it to "%s%s".', $sigil, Strings::printable($suggested))),
             [self::SNIFF . '.' . $code],
         );
     }
