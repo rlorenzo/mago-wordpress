@@ -107,7 +107,7 @@ It doesn't occur in the benchmark below.
 On Akismet 5.7.2, Contact Form 7 6.1.7 and Yoast SEO 28.5 (1,651 PHP files, `vendor` directories left
 out), phpcs-fixable `WordPress-Core` reports are 23,148 as the plugins ship. Mago's formatting alone
 (`array-style` and `mago format`) raises them to 80,971; the steps of `mago-wordpress format` take them
-to 152:
+to 145:
 
 | After this step | Reports |
 |:---|---:|
@@ -120,20 +120,23 @@ to 152:
 | `wordpress/function-call-signature` | 1,949 |
 | `wordpress/array-alignment` | 348 |
 | `wordpress/statement-alignment` | 152 |
+| `generic/disallow-inline-tabs` | 145 |
 
 The count rises a little after the array-declaration step: an array it breaks onto lines has no trailing
 comma, which phpcs reports, and the comma step then adds it. What's left:
 
 | Cause | Reports | Share |
 |:---|---:|---:|
-| Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 59 % |
-| Embedded PHP tag placement (`Squiz.PHP.EmbeddedPhp`) | 30 | 20 % |
-| Scope indent (`Generic.WhiteSpace.ScopeIndent`) | 22 | 14 % |
-| Inline tabs (7), a brace after a function declaration (3), `require_once` (1) | 11 | 7 % |
+| Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 61 % |
+| Embedded PHP tag placement (`Squiz.PHP.EmbeddedPhp`) | 30 | 21 % |
+| Scope indent (`Generic.WhiteSpace.ScopeIndent`) | 22 | 15 % |
+| A brace after a function declaration (3), `require_once` (1) | 4 | 3 % |
 
-The loose comparisons change behaviour, so no step touches them; `mago lint --fix --unsafe --only generic/strict-comparisons` rewrites them to `===` and `!==` once you have reviewed the risk. Most of the rest are in the plugins as
-they ship: 20 of the 30 embedded-PHP reports, the 7 inline tabs, the `require_once`, and scope-indent reports
-(27 in the original files). Fixing them means moving PHP tags and template markup, which the steps leave alone.
+The loose comparisons change behaviour, so no step touches them; `mago lint --fix --unsafe --only generic/strict-comparisons`
+rewrites them to `===` and `!==` once you have reviewed the risk. Most of the rest are in the plugins as
+they ship: 20 of the 30 embedded-PHP reports, the `require_once`, and scope-indent reports (27 in the
+original files). Fixing them means moving PHP tags and template markup, which changes the whitespace of the
+HTML a template prints, so the steps leave them alone.
 
 On the same plugins phpcs reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in
 51 files after the first three steps (`wordpress/array-alignment` takes them to 0), and 1,669
