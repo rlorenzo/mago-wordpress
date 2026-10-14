@@ -70,6 +70,7 @@ final class FormatCommand
         ['lint',   '--fix', '--only', 'wordpress/function-call-signature'],
         ['lint',   '--fix', '--only', 'wordpress/array-alignment'],
         ['lint',   '--fix', '--only', 'wordpress/statement-alignment'],
+        ['lint',   '--fix', '--only', 'generic/disallow-inline-tabs'],
     ];
 
     /**
@@ -97,9 +98,10 @@ final class FormatCommand
         `mago lint --fix --only wordpress/operator-spacing`,
         `mago lint --fix --only wordpress/array-declaration-spacing`,
         `mago lint --fix --only wordpress/comma-after-last`, then
-        `mago lint --fix --only wordpress/function-call-signature` and
-        `mago lint --fix --only wordpress/array-alignment` and
-        `mago lint --fix --only wordpress/statement-alignment`. Without paths it formats
+        `mago lint --fix --only wordpress/function-call-signature`,
+        `mago lint --fix --only wordpress/array-alignment`,
+        `mago lint --fix --only wordpress/statement-alignment` and
+        `mago lint --fix --only generic/disallow-inline-tabs`. Without paths it formats
         the files your mago.toml lists. --check changes nothing and fails with a diff if any
         file would change; --staged takes the staged PHP files that your mago.toml lists (and re-stages
         them), so a staged file mago is not configured for is left alone.
