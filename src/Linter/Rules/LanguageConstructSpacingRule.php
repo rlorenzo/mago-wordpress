@@ -13,6 +13,7 @@ use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\ConstructSpacing;
+use Rlorenzo\MagoWordPress\Internal\JoinedStatement;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -25,7 +26,9 @@ use function strlen;
  * `namespace`, `use` and `goto` are followed by exactly one space, unless a `(` or `;` follows
  * directly. `mago format` breaks the line after `echo` or `return` when the argument is long, so
  * this runs after it, as `mago lint --fix --only wordpress/language-construct-spacing` (a step of
- * `mago-wordpress format`); it is off by default. The fix joins the argument to the keyword.
+ * `mago-wordpress format`); it is off by default. The fix joins the argument to the keyword and, for
+ * `echo`, `print`, `return` and `throw`, takes the extra indent level off the rest of the statement, as
+ * phpcbf's later passes would.
  */
 final class LanguageConstructSpacingRule implements Rule
 {
@@ -88,20 +91,25 @@ final class LanguageConstructSpacingRule implements Rule
 
             $found = ConstructSpacing::after($text, $at + $length, $tokens->content($index));
             if ($found !== null) {
-                $this->add($context, $at, $found);
+                $joined = $found[1] === 'IncorrectSingle'
+                    ? JoinedStatement::dedent($tokens, $text, $code, $at, $found[2]->end)
+                    : [];
+                $this->add($context, $at, $found, $joined);
             }
         }
     }
 
     /**
      * @param array{string, string, Span, string} $found message, sniff code, replaced span, replacement
+     * @param list<TextEdit> $more
      */
-    private function add(LintContext $context, int $at, array $found): void
+    private function add(LintContext $context, int $at, array $found, array $more = []): void
     {
-        $this->report->issue(
-            $context,
-            Issue::new($found[0], new Span($at, $at + 1))->withEdit(TextEdit::replace($found[2], $found[3])),
-            [self::SNIFF . '.' . $found[1]],
-        );
+        $issue = Issue::new($found[0], new Span($at, $at + 1))->withEdit(TextEdit::replace($found[2], $found[3]));
+        foreach ($more as $edit) {
+            $issue = $issue->withEdit($edit);
+        }
+
+        $this->report->issue($context, $issue, [self::SNIFF . '.' . $found[1]]);
     }
 }
