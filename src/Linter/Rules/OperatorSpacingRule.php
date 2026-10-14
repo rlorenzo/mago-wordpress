@@ -21,7 +21,6 @@ use function str_contains;
 use function str_ends_with;
 use function strlen;
 use function strrpos;
-use function strspn;
 use function substr;
 
 /**
@@ -78,12 +77,7 @@ final class OperatorSpacingRule implements Rule
             return false;
         }
 
-        $before = $open - 1;
-        while ($before >= 0 && $tokens->code($before) === 'T_WHITESPACE') {
-            --$before;
-        }
-
-        return $before >= 0 && $tokens->code($before) === 'T_CATCH';
+        return $tokens->code($open - 1) === 'T_CATCH';
     }
 
     private function check(LintContext $context, string $text, int $at): void
