@@ -21,7 +21,7 @@ vendor/bin/mago-wordpress format --staged   # the staged PHP files mago.toml lis
 This is the only supported way to format and to check. `mago format` alone can't produce WordPress
 formatting, and `mago format --check` always fails on code that is.
 
-The command runs ten steps in order:
+The command runs eleven steps in order:
 
 ```sh
 mago lint --fix --only array-style                  # [] to array()
@@ -34,6 +34,7 @@ mago lint --fix --only wordpress/comma-after-last    # a comma after the last it
 mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
 mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60
 mago lint --fix --only wordpress/statement-alignment # the `=` mago format aligns past 40 spaces of padding
+mago lint --fix --only generic/disallow-inline-tabs  # a tab used for alignment in the middle of a line -> spaces
 ```
 
 `mago format` can't add the spaces WordPress puts inside parentheses and brackets, and upstream has
@@ -49,7 +50,7 @@ argument on the line of the call's `(`, aligns every `=>` however long the key, 
 wants `add_action( 'init', function () {` as one argument per line with `)` on its own line, and the
 `=>` aligned only up to column 60. Step 8 moves a hugged argument to a line of its own together with
 the lines it spans, one level deeper (the lines of a multi-line string or heredoc stay as they are),
-and is repeated until no call is left; a call with a comment among its arguments is left alone.
+and is repeated until no call is left; a call with a comment among its arguments is left alone. Step 11 turns a tab used for alignment in the middle of a line into spaces, which `mago format` leaves.
 
 Formatting must not create findings. After the steps, the command lints each file they changed,
 formatted and as it was, and puts back the original of any file that gained a finding, with
