@@ -9,7 +9,8 @@
  *
  * Sniffs that share one rule (SniffMap) are compared together: the rule's lines against the union of
  * its sniffs' lines. Only sniffs that SniffMap maps to a rule are compared, so the formatting sniffs
- * `mago format` covers and the `missing-docs` rule (WordPress-Docs) stay out. Prints the rules whose
+ * `mago format` covers and the `missing-docs` rule (WordPress-Docs) stay out, and so do the message
+ * codes of a partly ported sniff that no rule reports. Prints the rules whose
  * (file, line) sets differ and the totals; exit status 1 if any differ.
  */
 
@@ -28,6 +29,17 @@ $phpcs = json_decode((string) file_get_contents($argv[1]), true);
 $mago = json_decode((string) file_get_contents($argv[2]), true);
 $root = rtrim((string) realpath($argv[3]), '/') . '/';
 
+/**
+ * Sniffs a rule ports only in part: the message codes it reports (the rest is layout `mago format`
+ * produces). Other codes of these sniffs are left out of the comparison.
+ *
+ * @var array<string, list<string>>
+ */
+$partial = [
+    'Squiz.ControlStructures.ControlSignature' => ['SpaceAfterCloseBrace'],
+    'PSR2.ControlStructures.SwitchDeclaration' => ['TerminatingComment'],
+];
+
 /** @var array<string, list<string>> $groups rule codes joined by "+" => the sniffs they port */
 $groups = [];
 foreach (SniffMap::RULES as $sniff => $codes) {
@@ -35,13 +47,20 @@ foreach (SniffMap::RULES as $sniff => $codes) {
 }
 
 $expected = [];
+$sources = [];
 foreach ($phpcs['files'] as $path => $file) {
     $relative = str_replace($root, '', $path);
     foreach ($file['messages'] as $message) {
-        $sniff = implode('.', array_slice(explode('.', $message['source']), 0, 3));
+        $parts = explode('.', $message['source']);
+        $sniff = implode('.', array_slice($parts, 0, 3));
+        if (isset($partial[$sniff]) && !in_array($parts[3] ?? '', $partial[$sniff], true)) {
+            continue;
+        }
+
         foreach ($groups as $group => $sniffs) {
             if (in_array($sniff, $sniffs, true)) {
                 $expected[$group]["{$relative}:{$message['line']}"] = true;
+                $sources[$group]["{$relative}:{$message['line']}"][$message['source']] = true;
             }
         }
     }
@@ -76,6 +95,18 @@ foreach (array_unique([...array_keys($expected), ...array_keys($actual)]) as $gr
 
     $differences += count($missing) + count($extra);
     printf("%s: %d phpcs lines, %d here, %d only phpcs, %d only here\n", $group, count($want), count($have), count($missing), count($extra));
+    $codes = [];
+    foreach ($missing as $key) {
+        foreach (array_keys($sources[$group][$key]) as $source) {
+            $codes[$source] = ($codes[$source] ?? 0) + 1;
+        }
+    }
+
+    arsort($codes);
+    foreach (array_slice($codes, 0, 6, true) as $source => $count) {
+        echo "  only phpcs, by code: {$count} {$source}\n";
+    }
+
     foreach (array_slice($missing, 0, 5) as $key) {
         echo "  only phpcs: {$key}\n";
     }
