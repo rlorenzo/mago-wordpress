@@ -95,8 +95,7 @@ final class DisallowInlineTabsRule implements Rule
     private static function isAnnotation(PhpToken $token): bool
     {
         return (
-            $token->id === T_COMMENT
-            && preg_match('~^(?://|\#|/\*+)\s*@?phpcs:(?:ignore|ignoreFile|disable|enable|set)\b~i', $token->text) === 1
+            preg_match('~^(?://|\#|/\*+)\s*@?phpcs:(?:ignore|ignoreFile|disable|enable|set)\b~i', $token->text) === 1
         );
     }
 
@@ -113,7 +112,7 @@ final class DisallowInlineTabsRule implements Rule
         }
     }
 
-    /** A comment or heredoc opener: each of its lines, after the indentation of the lines that start a line. */
+    /** A comment, heredoc opener or `yield from`: each of its lines, after the indentation of the lines that start a line. */
     private function lines(LintContext $context, string $text, PhpToken $token): void
     {
         $offset = $token->pos;

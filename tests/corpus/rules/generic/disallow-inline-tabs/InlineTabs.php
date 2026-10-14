@@ -22,3 +22,6 @@ $x	= 1;
 <?php
 
 $annotated = 1; // phpcs:ignore Some.Sniff.Code	-- a tab here is not reported, as phpcs reads this comment as an annotation
+
+/** phpcs:ignore Some.Sniff.Code	-- an annotation in a doc comment is not reported either */
+$documented = 1;
