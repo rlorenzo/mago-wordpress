@@ -106,28 +106,33 @@ It doesn't occur in the benchmark below.
 On Akismet 5.7.2, Contact Form 7 6.1.7 and Yoast SEO 28.5 (1,651 PHP files, `vendor` directories left
 out), phpcs-fixable `WordPress-Core` reports are 23,148 as the plugins ship. Mago's formatting alone
 (`array-style` and `mago format`) raises them to 80,971; the steps of `mago-wordpress format` take them
-to 192:
+to 152:
 
 | After this step | Reports |
 |:---|---:|
 | `array-style` and `mago format` | 80,971 |
 | `wordpress/parentheses-spacing` | 3,595 |
 | `wordpress/language-construct-spacing` | 3,534 |
-| `wordpress/array-declaration-spacing` | 3,631 |
-| `wordpress/comma-after-last` | 3,540 |
-| `wordpress/function-call-signature` | 1,989 |
-| `wordpress/array-alignment` | 388 |
-| `wordpress/statement-alignment` | 192 |
+| `wordpress/operator-spacing` | 3,494 |
+| `wordpress/array-declaration-spacing` | 3,591 |
+| `wordpress/comma-after-last` | 3,500 |
+| `wordpress/function-call-signature` | 1,949 |
+| `wordpress/array-alignment` | 348 |
+| `wordpress/statement-alignment` | 152 |
 
 The count rises a little after the array-declaration step: an array it breaks onto lines has no trailing
 comma, which phpcs reports, and the comma step then adds it. What's left:
 
 | Cause | Reports | Share |
 |:---|---:|---:|
-| Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 46 % |
-| Other: operator spacing (40), embedded PHP (30), scope indent (22), inline tabs (7), the rest (4) | 103 | 54 % |
+| Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 59 % |
+| Embedded PHP tag placement (`Squiz.PHP.EmbeddedPhp`) | 30 | 20 % |
+| Scope indent (`Generic.WhiteSpace.ScopeIndent`) | 22 | 14 % |
+| Inline tabs (7), a brace after a function declaration (3), `require_once` (1) | 11 | 7 % |
 
-The loose comparisons change behaviour, so no step touches them; the rest is a mix of small causes.
+The loose comparisons change behaviour, so no step touches them. Most of the rest are in the plugins as
+they ship: 20 of the 30 embedded-PHP reports, the 7 inline tabs, the `require_once`, and scope-indent reports
+(27 in the original files). Fixing them means moving PHP tags and template markup, which the steps leave alone.
 
 On the same plugins phpcs reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in
 51 files after the first three steps (`wordpress/array-alignment` takes them to 0), and 1,669
