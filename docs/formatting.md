@@ -130,7 +130,7 @@ comma, which phpcs reports, and the comma step then adds it. What's left:
 | Scope indent (`Generic.WhiteSpace.ScopeIndent`) | 22 | 14 % |
 | Inline tabs (7), a brace after a function declaration (3), `require_once` (1) | 11 | 7 % |
 
-The loose comparisons change behaviour, so no step touches them. Most of the rest are in the plugins as
+The loose comparisons change behaviour, so no step touches them; `mago lint --fix --unsafe --only generic/strict-comparisons` rewrites them to `===` and `!==` once you have reviewed the risk. Most of the rest are in the plugins as
 they ship: 20 of the 30 embedded-PHP reports, the 7 inline tabs, the `require_once`, and scope-indent reports
 (27 in the original files). Fixing them means moving PHP tags and template markup, which the steps leave alone.
 

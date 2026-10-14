@@ -9,13 +9,17 @@ use Mago\Sdk\Linter\Rule;
 use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
+use Mago\Sdk\Reporting\Safety;
+use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 /**
  * Ports `Universal.Operators.StrictComparisons`: a loose `==`, `!=` or `<>` comparison.
  * WordPress-Core sets the sniff to a warning and marks it `phpcs-only`, so phpcbf never
- * rewrites the operator; no fix is offered either, as `===` changes what the code does.
+ * rewrites the operator. `===` changes what the code does, so the fix to `===` or `!==` is marked
+ * unsafe: `mago lint --fix` leaves it, `mago lint --fix --unsafe --only generic/strict-comparisons`
+ * applies it.
  */
 final class StrictComparisonsRule implements Rule
 {
@@ -57,7 +61,9 @@ final class StrictComparisonsRule implements Rule
                 "Loose comparisons are not allowed. Expected: \"{$expected}\"; Found: \"{$operator}\"",
                 $context->node->span,
                 'loose comparison',
-            )->withHelp("Use `{$expected}` once both sides are known to have the same type."),
+            )->withHelp(
+                "Use `{$expected}` once both sides are known to have the same type.",
+            )->withEdit(TextEdit::replace($context->node->span, $expected)->withSafety(Safety::Unsafe)),
             [self::SNIFF . '.' . $code],
         );
     }

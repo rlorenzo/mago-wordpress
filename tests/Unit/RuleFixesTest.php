@@ -214,6 +214,13 @@ final class RuleFixesTest extends TestCase
                 "try {\n} catch ( A | B \$e ) {\n}\ntry {\n} catch ( A | B | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  | B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t| C \$e ) {\n}\n\$x = 1|2;",
             ];
 
+        yield 'strict-comparisons rewrites loose operators only with --unsafe' => [
+            'generic/strict-comparisons',
+            '--unsafe',
+            "if ( \$a == 1 && \$b != 2 && \$c <> 3 && \$d === 4 ) {\n}",
+            "if ( \$a === 1 && \$b !== 2 && \$c !== 3 && \$d === 4 ) {\n}",
+        ];
+
         yield 'parentheses-spacing adds the space before an alternative-syntax colon' => [
             'wordpress/parentheses-spacing',
             '',
@@ -608,5 +615,12 @@ final class RuleFixesTest extends TestCase
         $this->lint($rule, ['text-domains' => $textDomains], $code, "--fix {$flags}");
 
         self::assertSame("<?php\n\n{$expected}\n", file_get_contents("{$this->directory}/fixture.php"));
+    }
+
+    public function testStrictComparisonsFixIsLeftWithoutUnsafe(): void
+    {
+        $this->lint('generic/strict-comparisons', [], 'if ( $a == 1 ) {' . "\n}", '--fix');
+
+        self::assertSame("<?php\n\nif ( \$a == 1 ) {\n}\n", file_get_contents("{$this->directory}/fixture.php"));
     }
 }
