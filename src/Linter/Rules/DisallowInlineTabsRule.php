@@ -24,6 +24,7 @@ use function str_contains;
 use function str_repeat;
 use function str_split;
 use function strlen;
+use function strpos;
 use function strrpos;
 use function substr;
 
@@ -108,7 +109,7 @@ final class DisallowInlineTabsRule implements Rule
 
         $first = explode("\n", $token->text, 2)[0];
         if (str_contains($first, "\t")) {
-            $this->fix($context, $text, $token->pos, $first, $token->pos);
+            $this->fix($context, $text, $token->pos, $first);
         }
     }
 
@@ -124,22 +125,22 @@ final class DisallowInlineTabsRule implements Rule
                 : strlen($line) - strlen(ltrim($line, " \t"));
             $rest = substr($line, $indent);
             if (str_contains($rest, "\t")) {
-                $this->fix($context, $text, $lineStart + $indent, $rest, $lineStart);
+                $this->fix($context, $text, $lineStart + $indent, $rest);
             }
         }
     }
 
     /**
-     * @param int $at offset of $segment in the file
-     * @param int $reportAt where the issue is reported
+     * @param int $at offset of $segment in the file; the issue is reported at its first tab
      */
-    private function fix(LintContext $context, string $text, int $at, string $segment, int $reportAt): void
+    private function fix(LintContext $context, string $text, int $at, string $segment): void
     {
+        $tab = $at + (int) strpos($segment, "\t");
         $this->report->issue(
             $context,
             Issue::new(
                 'Spaces must be used for mid-line alignment; tabs are not allowed',
-                new Span($reportAt, $reportAt + 1),
+                new Span($tab, $tab + 1),
             )->withEdit(TextEdit::replace(new Span($at, $at + strlen($segment)), self::expand($text, $at, $segment))),
             [self::SNIFF . '.NonIndentTabsUsed'],
         );
