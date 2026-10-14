@@ -29,6 +29,7 @@
 | `wordpress/nonce-verification-warning` | Warning | `WordPress.Security.NonceVerification.Recommended` | the `Recommended` part of `wordpress/nonce-verification`: `$_GET`/`$_REQUEST` read without a nonce check |
 | `wordpress/array-alignment` | Warning | `WordPress.Arrays.MultipleStatementAlignment` | the `=>` of a multi-line array not aligned to one column up to column 60, or a longer key without a single space before its arrow; one space before each arrow of a single-line array. Off by default; autofix, run after `mago format` (`mago-wordpress format` does) |
 | `wordpress/function-call-signature` | Error | the layout part of `PEAR.Functions.FunctionCallSignature` for a call whose parentheses span lines (`ContentAfterOpenBracket`, `MultipleArguments`, `CloseBracketLine`): `add_action( 'init', function () {` becomes one argument per line with `)` on its own line, and the lines of a moved argument go with it. Off by default; autofix, run after `mago format` (`mago-wordpress format` does); the indentation checks stay with `mago format` |
+| `wordpress/operator-spacing` | Error | `WordPress.WhiteSpace.OperatorSpacing` | no space, or more than one, around the `\|` between the types of a multi-catch (`NoSpaceBefore`, `NoSpaceAfter`, `SpacingBefore`, `SpacingAfter`); a line break is fine. Only that operator: `mago format` keeps the spaces around the others, and a `\|` in a union type or an expression is not checked. Off by default; autofix, run after `mago format` (`mago-wordpress format` does) |
 | `wordpress/comma-after-last` | Error | `NormalizedArrays.Arrays.CommaAfterLast` | a multi-line array without a comma after its last item (`MissingMultiLine`, `MissingMultiLineCloserSameLine`), or a single-line array with one (`FoundSingleLine`). Off by default; autofix, run after `wordpress/array-declaration-spacing`, which breaks arrays onto lines but adds no comma (`mago-wordpress format` does) |
 | `wordpress/array-declaration-spacing` | Error | `WordPress.Arrays.ArrayDeclarationSpacing` | an array with several items and explicit keys on one line (`AssociativeArrayFound`), or an item of a multi-line array that shares a line with the one before (`ArrayItemNoNewLine`). Off by default; autofix puts each item on its own line, one tab in from the line the array starts on, as phpcbf does with the indentation sniffs. Run after `mago format` (`mago-wordpress format` does) |
 | `wordpress/language-construct-spacing` | Error | `Generic.WhiteSpace.LanguageConstructSpacing` | `echo`, `print`, `return`, `include`, `require`, `new`, `yield`, `throw`, `namespace`, `use` or `goto` not followed by exactly one space (`IncorrectSingle`, `Incorrect`, `IncorrectYieldFrom`), such as the line break `mago format` puts after a long `echo`; a `(` or `;` right after is fine. Off by default; autofix, run after `mago format` (`mago-wordpress format` does) |
@@ -173,7 +174,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-122 of the 129 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
+122 of the 130 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning
@@ -208,6 +209,7 @@ where phpcbf's fix would change behaviour or break the file: a misspelling insid
 |:---|:---|:---|
 | `type-casts` | `(double)`/`(real)` → `(float)` | `--fix` |
 | `array-declaration-spacing` | one item per line in keyed and multi-line arrays | `--fix --only wordpress/array-declaration-spacing` |
+| `operator-spacing` | one space on each side of the `\|` between the types of a multi-catch | `--fix --only wordpress/operator-spacing` |
 | `comma-after-last` | a comma after the last item of a multi-line array, none in a single-line one | `--fix --only wordpress/comma-after-last` |
 | `language-construct-spacing` | one space after `echo`, `return`, `new`, `use`, ... | `--fix --only wordpress/language-construct-spacing` |
 | `parentheses-spacing` | one space inside parentheses and brackets, none around a literal array key | `--fix --only wordpress/parentheses-spacing` |

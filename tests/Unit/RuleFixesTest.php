@@ -206,6 +206,14 @@ final class RuleFixesTest extends TestCase
             "function a() {\n\techo wp_kses(\n\t\tsprintf(\n\t\t\t'a',\n\t\t\t\$b\n\t\t),\n\t\t\$c\n\t);\n\treturn foo(\n\t\t<<<EOT\n\t\t\ttext\n\t\t\tEOT,\n\t\t\$d\n\t);\n}",
         ];
 
+        yield 'operator-spacing puts one space around the | of a multi-catch like phpcbf and leaves other operators alone' =>
+            [
+                'wordpress/operator-spacing',
+                '',
+                "try {\n} catch ( A|B \$e ) {\n}\ntry {\n} catch ( A |B  | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  |B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t|C \$e ) {\n}\n\$x = 1|2;",
+                "try {\n} catch ( A | B \$e ) {\n}\ntry {\n} catch ( A | B | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  | B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t| C \$e ) {\n}\n\$x = 1|2;",
+            ];
+
         yield 'parentheses-spacing adds the space before an alternative-syntax colon' => [
             'wordpress/parentheses-spacing',
             '',
