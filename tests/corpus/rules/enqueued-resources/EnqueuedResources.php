@@ -111,3 +111,18 @@ echo '<script data-query="a > b" src="app.js"></script>';
 // quoted_greater_than_before_rel
 // @mago-expect lint:wordpress/enqueued-resources
 echo '<link title="a > b" rel="stylesheet" href="app.css">';
+
+// multi_line_link_is_reported_at_the_rel_line_so_an_ignore_there_covers_it
+$enqueued_resources_multi = 'z';
+?>
+<link
+	href="/css/app.css"
+	rel="stylesheet"><?php // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet ?>
+<?php
+
+// multi_line_script_tag_in_inline_html_is_not_seen_as_phpcs_reads_a_line_at_a_time
+$enqueued_resources_script = 'w';
+?>
+<script
+	src="/js/app.js"></script>
+<?php

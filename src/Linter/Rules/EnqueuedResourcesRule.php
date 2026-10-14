@@ -90,7 +90,12 @@ final class EnqueuedResourcesRule implements Rule
     private function scanText(LintContext $context, string $lower, Span $span): void
     {
         foreach (self::tagOccurrences($lower, '<script') as [$start, $end, $tag]) {
-            if (self::attributeValueOffset($tag, 'src') === null) {
+            $source = self::attributeValueOffset($tag, 'src');
+            // phpcs matches inline HTML a line at a time, so a `<script` whose `src=` is on a later line is not seen.
+            if (
+                $source === null
+                || $context->node->kind === NodeKind::Inline && str_contains(substr($tag, 0, $source), "\n")
+            ) {
                 continue;
             }
 
@@ -111,6 +116,9 @@ final class EnqueuedResourcesRule implements Rule
             if (!self::tagHasStylesheetRel($tag)) {
                 continue;
             }
+
+            // phpcs reports at the `rel` attribute, which can be on a later line than the tag's `<link`.
+            $start += self::attributeValueOffset($tag, 'rel') ?? 0;
 
             $this->report->issue(
                 $context,
