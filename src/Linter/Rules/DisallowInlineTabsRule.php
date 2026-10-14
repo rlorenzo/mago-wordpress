@@ -167,7 +167,8 @@ final class DisallowInlineTabsRule implements Rule
     /** The display column (0-based) of $offset, with tabs going to the next multiple of the tab width. */
     private static function column(string $text, int $offset): int
     {
-        $newline = strrpos(substr($text, 0, $offset), "\n");
+        // A negative offset searches backwards from that far from the end, without copying the text before $offset.
+        $newline = $offset === 0 ? false : strrpos($text, "\n", $offset - 1 - strlen($text));
         $start = $newline === false ? 0 : $newline + 1;
         $column = 0;
         for ($i = $start; $i < $offset; ++$i) {
