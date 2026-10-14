@@ -32,3 +32,12 @@ $obj->{$name}++;
 // phpcs_ignore_silences_it
 // phpcs:ignore Universal.Operators.DisallowStandalonePostIncrementDecrement.PostIncrementFound
 $i++;
+
+// A statement that is the unbraced body of a control structure is not reported, as in the sniff.
+while ( $j < 3 ) $j++;
+if ( $a ) $b++;
+foreach ( $x as $y ) $c--;
+if ( $a ) {
+	// @mago-expect lint:generic/disallow-standalone-post-increment-decrement
+	$d++;
+} else $e++;

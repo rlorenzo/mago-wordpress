@@ -30,6 +30,13 @@ namespace {
     // @mago-expect lint:wordpress/global-variables-override
     $query_string = 'p=1';
 
+    // array_key_variable_is_flagged_like_an_assignment
+    // @mago-expect lint:wordpress/global-variables-override
+    $keyed = array( $plugin => time() );
+
+    // destructuring_keys_are_not_flagged
+    [ $post => $value ] = $source;
+
     // mixed_case_global_is_flagged
     // @mago-expect lint:wordpress/global-variables-override
     $is_IE = false;

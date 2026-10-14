@@ -68,7 +68,7 @@ final class ArrayShape
     }
 
     /** Whether the array is the target of a destructuring assignment or `foreach` (a short list). */
-    private static function isList(SourceFile $file, Node $array): bool
+    public static function isList(SourceFile $file, Node $array): bool
     {
         $child = $array;
         $parent = $file->getParent($child);

@@ -107,6 +107,7 @@ final class DisallowStandalonePostIncrementDecrementRule implements Rule
             || $operator === null
             || !self::isSimple($file->getText($operand))
             || self::inParentheses($file, $operator)
+            || self::isUnbracedBody($file, $operand)
         ) {
             return;
         }
@@ -146,6 +147,25 @@ final class DisallowStandalonePostIncrementDecrementRule implements Rule
         $index = $tokens->indexAt($operator->span->start);
 
         return $index !== null && $tokens->nested($index) !== [];
+    }
+
+    /**
+     * Whether the statement is the body of an `if`, `while`, `for`, `foreach`, `else` or `do` without
+     * braces: the sniff's statement then starts at the keyword, whose tokens it does not accept.
+     */
+    private static function isUnbracedBody(SourceFile $file, Node $operand): bool
+    {
+        $tokens = PhpcsTokens::of($file);
+        $index = $tokens->indexAt($operand->span->start);
+        $previous = $index === null ? null : $tokens->code($index - 1);
+        if ($previous === 'T_ELSE' || $previous === 'T_DO') {
+            return true;
+        }
+
+        $opener = $previous === ')' ? $tokens->closer($index - 1) : null;
+
+        return $opener !== null
+        && in_array($tokens->code($opener - 1), ['T_IF', 'T_ELSEIF', 'T_WHILE', 'T_FOR', 'T_FOREACH'], strict: true);
     }
 
     /** Whether the operand holds only the tokens the sniff allows, as in `$a->b[$c]` or `X::$y`. */

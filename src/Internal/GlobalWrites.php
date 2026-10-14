@@ -91,21 +91,21 @@ final class GlobalWrites
     public static function targets(SourceFile $file, Node $program): array
     {
         $targets = [];
-        $nodes = NodeIndex::ofKinds(
-            $file,
-            $program,
-            [
-                NodeKind::Assignment,
-                NodeKind::ForeachValueTarget,
-                NodeKind::ForeachKeyValueTarget,
-            ],
-        );
+        $nodes = NodeIndex::ofKinds($file, $program, [
+            NodeKind::Assignment,
+            NodeKind::ForeachValueTarget,
+            NodeKind::ForeachKeyValueTarget,
+            NodeKind::KeyValueArrayElement,
+        ]);
         foreach ($nodes as $node) {
             $bindings = match ($node->kind) {
                 // `$x = ...` and `foreach ($a as $x)`: the first child binds.
                 NodeKind::Assignment, NodeKind::ForeachValueTarget => [$file->getChildren($node)[0] ?? $node],
                 // `foreach ($a as $k => $v)`: both the key and the value bind.
                 NodeKind::ForeachKeyValueTarget => $file->getChildren($node),
+                // `array( $x => 1 )`: phpcs counts a variable before `=>` as assigned, as `=>` is one of its
+                // assignment tokens.
+                NodeKind::KeyValueArrayElement => self::arrayKey($file, $node),
                 default => [],
             };
 
@@ -115,6 +115,31 @@ final class GlobalWrites
         }
 
         return $targets;
+    }
+
+    /**
+     * The key of an array element when it is a variable or an element of one.
+     *
+     * @return list<Node>
+     */
+    private static function arrayKey(SourceFile $file, Node $element): array
+    {
+        $key = $file->getChildren($element)[0] ?? null;
+        $kind = $key === null ? null : Values::unwrap($file, $key)->kind;
+        if ($key === null || !in_array($kind, [NodeKind::Variable, NodeKind::ArrayAccess], strict: true)) {
+            return [];
+        }
+
+        // The keys of a destructuring pattern select offsets; phpcs leaves them alone.
+        $array = $file->getParent($element);
+        while (
+            $array !== null
+            && !in_array($array->kind, [NodeKind::Array, NodeKind::LegacyArray, NodeKind::List], strict: true)
+        ) {
+            $array = $file->getParent($array);
+        }
+
+        return $array !== null && ArrayShape::isList($file, $array) ? [] : [$key];
     }
 
     /**
