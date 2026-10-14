@@ -127,3 +127,4 @@ wordpress/wp-deprecated-parameters
 wordpress/wp-i18n
 wordpress/yoda-conditions
 wordpress/comma-after-last
+wordpress/operator-spacing

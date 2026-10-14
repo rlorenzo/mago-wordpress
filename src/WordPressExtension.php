@@ -88,6 +88,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoUselessAliasesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneNamespaceDeclarationPerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneObjectStructurePerFileRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\OperatorSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
@@ -243,6 +244,7 @@ final class WordPressExtension
                 new VariableCommentRule($report),
                 new LanguageConstructSpacingRule($report),
                 new ParenthesesSpacingRule($report),
+                new OperatorSpacingRule($report),
                 new StatementAlignmentRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),

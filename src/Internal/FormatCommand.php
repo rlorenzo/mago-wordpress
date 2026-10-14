@@ -64,6 +64,7 @@ final class FormatCommand
         ['format'],
         ['lint',   '--fix', '--only', 'wordpress/parentheses-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/language-construct-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/operator-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/array-declaration-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/comma-after-last'],
         ['lint',   '--fix', '--only', 'wordpress/function-call-signature'],
@@ -93,6 +94,7 @@ final class FormatCommand
         Formats PHP files for WordPress: `mago lint --fix --only array-style`, `mago format`,
         `mago lint --fix --only wordpress/parentheses-spacing`,
         `mago lint --fix --only wordpress/language-construct-spacing`,
+        `mago lint --fix --only wordpress/operator-spacing`,
         `mago lint --fix --only wordpress/array-declaration-spacing`,
         `mago lint --fix --only wordpress/comma-after-last`, then
         `mago lint --fix --only wordpress/function-call-signature` and
