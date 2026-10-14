@@ -199,6 +199,13 @@ final class RuleFixesTest extends TestCase
             "\$s = \"\$a[0] {\$b[\$i]}\" . bar() . baz(\n\t1\n);",
         ];
 
+        yield 'language-construct-spacing takes the extra level off the statement it joins to echo and return' => [
+            'wordpress/language-construct-spacing',
+            '',
+            "function a() {\n\techo\n\t\twp_kses(\n\t\t\tsprintf(\n\t\t\t\t'a',\n\t\t\t\t\$b\n\t\t\t),\n\t\t\t\$c\n\t\t);\n\treturn\n\t\tfoo(\n\t\t\t<<<EOT\n\t\t\ttext\n\t\t\tEOT,\n\t\t\t\$d\n\t\t);\n}",
+            "function a() {\n\techo wp_kses(\n\t\tsprintf(\n\t\t\t'a',\n\t\t\t\$b\n\t\t),\n\t\t\$c\n\t);\n\treturn foo(\n\t\t<<<EOT\n\t\t\ttext\n\t\t\tEOT,\n\t\t\$d\n\t);\n}",
+        ];
+
         yield 'parentheses-spacing adds the space before an alternative-syntax colon' => [
             'wordpress/parentheses-spacing',
             '',
