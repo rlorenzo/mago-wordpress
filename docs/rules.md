@@ -110,6 +110,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/disallow-multiple-assignments` | Error | `Squiz.PHP.DisallowMultipleAssignments` | an assignment that is not first in its statement: `$a = $b = 1`, `if ( $a = f() )`, `f( $a = 1 )` |
 | `generic/disallow-namespace-without-name` | Error | `Universal.Namespaces.DisallowDeclarationWithoutName` | `namespace { ... }`, which declares the global namespace |
 | `generic/disallow-size-functions-in-loops` | Error | `Squiz.PHP.DisallowSizeFunctionsInLoops` | `count()`, `sizeof()` or `strlen()` in a `while`/do-`while` condition or a `for` loop's test part |
+| `generic/disallow-inline-tabs` | Error | `Universal.WhiteSpace.DisallowInlineTabs` | a tab that is not indentation, in code between tokens or in a comment (strings, inline HTML and `phpcs:ignore`-style annotations are left alone); the fix puts the spaces that reach the same column, with a tab width of 4. Reported once per run of whitespace and per comment line, where phpcs reports once per token |
 | `generic/disallow-standalone-post-increment-decrement` | Warning | `Universal.Operators.DisallowStandalonePostIncrementDecrement` | `$i++;` or `$i--;` as a statement of its own (WordPress-Core makes it a warning); the fix moves the operator to the front |
 | `generic/double-quote-usage` | Error | `Squiz.Strings.DoubleQuoteUsage` | only `NotRequired` (the code WordPress-Core includes): a double-quoted string that needs no double quotes; the fix single-quotes it as phpcbf does |
 | `generic/else-if-declaration` | Warning | `PSR2.ControlStructures.ElseIfDeclaration` | `else if` instead of `elseif` (fixed) |
@@ -174,7 +175,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-122 of the 130 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
+123 of the 131 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning

@@ -158,6 +158,7 @@ final class SniffMap
         'Squiz.PHP.CommentedOutCode' => ['generic/commented-out-code'],
         'Modernize.FunctionCalls.Dirname' => ['generic/dirname'],
         'Universal.UseStatements.NoLeadingBackslash' => ['generic/no-leading-backslash'],
+        'Universal.WhiteSpace.DisallowInlineTabs' => ['generic/disallow-inline-tabs'],
         'Universal.Namespaces.OneDeclarationPerFile' => ['generic/one-namespace-declaration-per-file'],
         'Universal.Namespaces.DisallowDeclarationWithoutName' => ['generic/disallow-namespace-without-name'],
         'Universal.UseStatements.NoUselessAliases' => ['generic/no-useless-aliases'],

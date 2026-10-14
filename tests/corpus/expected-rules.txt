@@ -13,6 +13,7 @@ generic/disallow-attribute-parentheses
 generic/disallow-lonely-if
 generic/disallow-mixed-group-use
 generic/disallow-multiple-assignments
+generic/disallow-inline-tabs
 generic/disallow-namespace-without-name
 generic/disallow-size-functions-in-loops
 generic/disallow-standalone-post-increment-decrement

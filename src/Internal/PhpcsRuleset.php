@@ -178,6 +178,7 @@ final class PhpcsRuleset
         'PSR2.Methods.MethodDeclaration',
         'PSR2.ControlStructures.ElseIfDeclaration',
         'Universal.Operators.StrictComparisons',
+        'Universal.WhiteSpace.DisallowInlineTabs',
         'Generic.ControlStructures.InlineControlStructure',
         'Universal.Operators.DisallowStandalonePostIncrementDecrement',
         'Squiz.ControlStructures.ControlSignature',

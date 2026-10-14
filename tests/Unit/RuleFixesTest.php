@@ -221,6 +221,13 @@ final class RuleFixesTest extends TestCase
             "if ( \$a === 1 && \$b !== 2 && \$c !== 3 && \$d === 4 ) {\n}",
         ];
 
+        yield 'disallow-inline-tabs puts spaces for mid-line tabs in code and comments like phpcbf' => [
+            'generic/disallow-inline-tabs',
+            '',
+            "/**\n * Doc.\n *\n * @param\tstring \$a\tThe value.\n *\t[text]\t\t# Single\n */\nfunction f() {\n\t\$a\t= 1;\n\t\$bb\t\t= 2; /* one\ttwo */\n\t\$c = array(\n\t\t\"k\"\t=> 1,\n\t);\n\t/*\n\t * multi\tline\n\t\tindented\tmore\n\t */\n\t\$d = 1; //\tcomment\n\treturn\t\$a;\n}",
+            "/**\n * Doc.\n *\n * @param   string \$a   The value.\n *  [text]      # Single\n */\nfunction f() {\n\t\$a  = 1;\n\t\$bb     = 2; /* one two */\n\t\$c = array(\n\t\t\"k\" => 1,\n\t);\n\t/*\n\t * multi    line\n\t\tindented    more\n\t */\n\t\$d = 1; //  comment\n\treturn  \$a;\n}",
+        ];
+
         yield 'parentheses-spacing adds the space before an alternative-syntax colon' => [
             'wordpress/parentheses-spacing',
             '',
