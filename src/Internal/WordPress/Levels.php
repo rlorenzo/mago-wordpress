@@ -426,6 +426,9 @@ final class Levels
         'Universal.UseStatements.NoUselessAliases' => [
             'Found' => 'error',
         ],
+        'Universal.WhiteSpace.DisallowInlineTabs' => [
+            'NonIndentTabsUsed' => 'error',
+        ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',
         ],

@@ -35,6 +35,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirnameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAttributeParenthesesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowInlineTabsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMixedGroupUseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
@@ -303,6 +304,7 @@ final class WordPressExtension
                 new DirnameRule($report),
                 new NoSilencedErrorsRule($report, $settings),
                 new StrictComparisonsRule($report),
+                new DisallowInlineTabsRule($report),
                 new InlineControlStructureRule($report),
                 new ValidLogicalOperatorsRule($report),
                 new DisallowStandalonePostIncrementDecrementRule($report),
