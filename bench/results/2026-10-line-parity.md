@@ -12,6 +12,28 @@ reports. Measured 2026-10-14 against `WordPress-Extra` (WPCS 3.4.1, phpcs 3.13.6
 | Akismet 5.7.2, Contact Form 7 6.1.7, Yoast SEO 28.5 | 1,651 | 9,322 | 0 |
 | WordPress 6.8.3 (`wp-admin`, `wp-includes`, the root files) | 1,065 | 25,489 | 16 |
 
+Seven more plugins, from wordpress.org on 2026-10-14 (`vendor` directories left out):
+
+| Plugin | Files | Lines compared | Differences |
+|:---|---:|---:|---:|
+| All-in-One WP Migration | 147 | 676 | 0 |
+| LiteSpeed Cache | 212 | 1,544 | 25 |
+| WP Mail SMTP | 319 | 3,639 | 1 |
+| WPForms Lite | 964 | 12,907 | 23 |
+| Elementor | 1,462 | 17,003 | 0 |
+| WooCommerce | 3,027 | 9,783 | 9 |
+| Google Site Kit | 1,879 | 23,261 | 5 |
+
+All 63 differences on these plugins are of two kinds, and none is a bug in a rule of this package:
+`array-style`, `no-shorthand-ternary`, `no-redundant-final` and `no-redundant-string-concat` are Mago's own
+rules, which do not read `phpcs:ignore` or `phpcs:ignoreFile`, so the code the plugins exempt from the
+sniffs is reported here (`mago-wordpress convert-comments` turns those comments into Mago pragmas). The
+rest is upstream behaviour in `prefer-while-loop` (`for (;;)`, 4 lines), `no-redundant-string-concat` (1 line
+phpcs reports and Mago misses) and `no-shorthand-ternary` (a multi-line `?:` reported on the line before phpcs's).
+The first run found one difference in a rule of this package, `wordpress/enqueued-resources` on Elementor:
+phpcs reports a `<link>` at the line of its `rel` attribute, not of `<link`, and matches inline HTML a line at
+a time, so a `<script` whose `src=` is on a later line is not seen. Both are fixed; Elementor is at 0.
+
 Core is the harder test: it has code from every era of PHP, and phpcs reports 234,000 messages on it.
 A first run showed 857 differences, 836 of them message codes of the two partly ported sniffs. That left
 two rules with a real difference of their own, both fixed:
