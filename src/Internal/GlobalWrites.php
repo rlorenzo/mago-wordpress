@@ -126,7 +126,14 @@ final class GlobalWrites
     {
         $key = $file->getChildren($element)[0] ?? null;
         $kind = $key === null ? null : Values::unwrap($file, $key)->kind;
-        if ($key === null || !in_array($kind, [NodeKind::Variable, NodeKind::ArrayAccess], strict: true)) {
+        if (
+            $key === null
+            || !in_array(
+                $kind,
+                [NodeKind::Variable, NodeKind::StaticPropertyAccess, NodeKind::ArrayAccess],
+                strict: true,
+            )
+        ) {
             return [];
         }
 
