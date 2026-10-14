@@ -46,11 +46,6 @@ final class GlobalVariablesOverrideRule implements Rule
      */
     private const OVERRIDE_ALLOWED = ['content_width', 'wp_cockneyreplace'];
 
-    /**
-     * Globals WordPress core sets that WPCS's generated list lacks.
-     */
-    private const EXTRA_GLOBALS = ['query_string'];
-
     /** @var null|array<string, true> */
     private static ?array $globals = null;
 
@@ -94,8 +89,15 @@ final class GlobalVariablesOverrideRule implements Rule
                 $base = Values::unwrap($file, $parts[0] ?? $base);
             }
 
-            $variable = $file->getChildren($base)[0] ?? $base;
-            if ($base->kind !== NodeKind::Variable || $variable->kind !== NodeKind::DirectVariable) {
+            // phpcs only skips a property after `->`; `Foo::$post = 1` is a write to `$post` for it.
+            $variable = $base->kind === NodeKind::StaticPropertyAccess
+                ? self::staticVariable($file, $base)
+                : $file->getChildren($base)[0] ?? $base;
+            if (
+                $variable === null
+                || $base->kind !== NodeKind::Variable && $base->kind !== NodeKind::StaticPropertyAccess
+                || $variable->kind !== NodeKind::DirectVariable
+            ) {
                 continue;
             }
 
@@ -108,6 +110,18 @@ final class GlobalVariablesOverrideRule implements Rule
                 $this->checkGlobalsKey($context, $file, $target, $key);
             }
         }
+    }
+
+    /** The `$name` of `Foo::$name`. */
+    private static function staticVariable(SourceFile $file, Node $access): ?Node
+    {
+        foreach ($file->getChildren($access) as $child) {
+            if ($child->kind === NodeKind::Variable) {
+                return $file->getChildren($child)[0] ?? null;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -226,7 +240,7 @@ final class GlobalVariablesOverrideRule implements Rule
             return null;
         }
 
-        self::$globals ??= array_fill_keys([...Lists::WP_GLOBAL_VARIABLES, ...self::EXTRA_GLOBALS], value: true);
+        self::$globals ??= array_fill_keys(Lists::WP_GLOBAL_VARIABLES, value: true);
 
         return self::$globals[$bare] ?? false ? $bare : null;
     }

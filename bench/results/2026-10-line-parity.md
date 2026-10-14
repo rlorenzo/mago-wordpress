@@ -10,7 +10,7 @@ reports. Measured 2026-10-14 against `WordPress-Extra` (WPCS 3.4.1, phpcs 3.13.6
 | Code | Files | Lines compared | Differences |
 |:---|---:|---:|---:|
 | Akismet 5.7.2, Contact Form 7 6.1.7, Yoast SEO 28.5 | 1,651 | 9,322 | 0 |
-| WordPress 6.8.3 (`wp-admin`, `wp-includes`, the root files) | 1,065 | 25,489 | 16 |
+| WordPress 6.8.3 (`wp-admin`, `wp-includes`, the root files) | 1,065 | 25,489 | 13 |
 
 Core is the harder test: it has code from every era of PHP, and phpcs reports 234,000 messages on it.
 A first run showed 857 differences, 836 of them message codes of the two partly ported sniffs. That left
@@ -23,17 +23,17 @@ two rules with a real difference of their own, both fixed:
   `if`, `while`, `for`, `foreach`, `else` or `do` (`while ( $j < 3 ) $j++;`) is not reported by phpcs, as its
   statement starts at the keyword. The rule reported it.
 
-The 16 left are known and are not bugs in the ported rules:
+The 13 left are in two rules of Mago itself, not in a rule of this package:
 
-- 3 in `wordpress/global-variables-override`: `$query_string`. WordPress sets it, but WPCS's list omits
-  it; the rule reports it on purpose (`EXTRA_GLOBALS`).
 - 11 in `no-redundant-string-concat` (Mago's rule): it reports `'?' . '>'`, which the sniff allows so the
   closing tag is not written out, and misses 2 concatenations of strings with different quotes.
 - 2 in `prefer-while-loop` (Mago's rule): it reports `for (;;)`; the sniff only reports a `for` with a
   condition and no other part.
 
-Static properties as an array key (`array( Foo::$post => 1 )`) are reported by phpcs and not here; no
-file in these codebases has one.
+`wordpress/global-variables-override` also reports `Foo::$post = 1` and `array( Foo::$post => 1 )`, as phpcs
+does (it only skips a property after `->`), and no longer reports `$query_string`, which WPCS's list omits.
+Two deliberate differences remain that none of the compared code exercises: `$GLOBALS['$wp_query']` (a different
+key from `'wp_query'`, which phpcs reports) and `fn() => $post = ...` (a function scope here, global for phpcs).
 
 ```sh
 phpcs --standard=<ruleset> --extensions=php --report=json -q <dir> > phpcs.json

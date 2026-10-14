@@ -26,9 +26,19 @@ namespace {
         $pagenow = 'index.php';
     }
 
-    // query_string_global_is_flagged
-    // @mago-expect lint:wordpress/global-variables-override
+    // query_string_is_not_in_wpcs_list_so_it_is_not_flagged
     $query_string = 'p=1';
+
+    // static_property_with_a_global_name_is_flagged_like_phpcs_does
+    // @mago-expect lint:wordpress/global-variables-override
+    Registry::$post = 1;
+
+    // static_property_array_key_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $static_keyed = array( Registry::$post => 1 );
+
+    // property_after_object_operator_is_not_flagged
+    $this->post = 1;
 
     // array_key_variable_is_flagged_like_an_assignment
     // @mago-expect lint:wordpress/global-variables-override
