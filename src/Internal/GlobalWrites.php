@@ -118,7 +118,7 @@ final class GlobalWrites
     }
 
     /**
-     * The key of an array element when it is a variable or an element of one.
+     * The key of an array element when it is a variable, a static property or an element of one.
      *
      * @return list<Node>
      */

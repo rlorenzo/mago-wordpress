@@ -37,6 +37,13 @@ namespace {
     // @mago-expect lint:wordpress/global-variables-override
     $static_keyed = array( Registry::$post => 1 );
 
+    // static_property_of_a_class_held_in_a_variable_is_flagged
+    // @mago-expect lint:wordpress/global-variables-override
+    $class::$post = 2;
+
+    // a_global_name_as_the_class_variable_is_not_a_write_to_it
+    $post::$other = 1;
+
     // property_after_object_operator_is_not_flagged
     $this->post = 1;
 

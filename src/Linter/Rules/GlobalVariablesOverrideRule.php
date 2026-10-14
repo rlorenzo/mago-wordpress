@@ -112,16 +112,17 @@ final class GlobalVariablesOverrideRule implements Rule
         }
     }
 
-    /** The `$name` of `Foo::$name`. */
+    /** The `$name` of `Foo::$name` or `$class::$name`: the last variable, as the class can be one too. */
     private static function staticVariable(SourceFile $file, Node $access): ?Node
     {
+        $variable = null;
         foreach ($file->getChildren($access) as $child) {
             if ($child->kind === NodeKind::Variable) {
-                return $file->getChildren($child)[0] ?? null;
+                $variable = $child;
             }
         }
 
-        return null;
+        return $variable === null ? null : $file->getChildren($variable)[0] ?? null;
     }
 
     /**
