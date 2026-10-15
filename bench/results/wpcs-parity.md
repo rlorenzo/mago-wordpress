@@ -17,6 +17,13 @@ files 2 and 3, which depend on test-only sniff groups, are skipped.
 
 Snapshots below are newest first; the top table is the current state.
 
+Mago 1.51.0, 2026-10-15: `UnnecessaryStringConcat`, `DisallowShortArraySyntax`, `DisallowShortTernary`,
+`UnnecessaryFinalModifier` and `ForLoopShouldBeWhileLoop` now run through this package's `generic/*` rules instead
+of Mago's `no-redundant-string-concat`, `array-style`, `no-shorthand-ternary`, `no-redundant-final` and
+`prefer-while-loop`. The generic rows total 975 of 1,138 lines (86 %, up from 84 %) with 29 extra reports (35 before);
+`UnnecessaryFinalModifier` goes from 5 to 10 of 10, `DisallowShortArraySyntax` from 0 to 6 of 6 (the harness
+did not set the core rule to `long`) and `UnnecessaryStringConcat` from 4 to 7 of 7. The WordPress rows are unchanged.
+
 Mago 1.51.0, 2026-10-11, after #44, #46 and #48: the WordPress total is unchanged at 2,131 of 2,150
 lines (99 %), and the extras fall from 30 to 11 because `WordPress.PHP.IniSet` (28 of 28) and
 `WordPress.PHP.DevelopmentFunctions` (16 of 16) now run through this package's rules with no extras.
@@ -112,12 +119,12 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `Generic.CodeAnalysis.AssignmentInCondition` | 6 | 34 | 34 | 0 | 0 | 100% |  |
 | `Generic.CodeAnalysis.EmptyPHPStatement` | 2 | 25 | 19 | 6 | 1 | 76% |  |
 | `Generic.CodeAnalysis.EmptyStatement` | 1 | 14 | 14 | 0 | 0 | 100% |  |
-| `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | 3 | 3 | 3 | 0 | 1 | 100% |  |
+| `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | 3 | 3 | 3 | 0 | 0 | 100% |  |
 | `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | 3 | 14 | 14 | 0 | 0 | 100% |  |
 | `Generic.CodeAnalysis.JumbledIncrementer` | 4 | 10 | 10 | 0 | 0 | 100% |  |
 | `Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence` | 1 | 34 | 31 | 3 | 0 | 91% |  |
 | `Generic.CodeAnalysis.UnconditionalIfStatement` | 2 | 5 | 5 | 0 | 0 | 100% |  |
-| `Generic.CodeAnalysis.UnnecessaryFinalModifier` | 2 | 10 | 5 | 5 | 0 | 50% |  |
+| `Generic.CodeAnalysis.UnnecessaryFinalModifier` | 2 | 10 | 10 | 0 | 0 | 100% |  |
 | `Generic.CodeAnalysis.UselessOverridingMethod` | 6 | 11 | 11 | 0 | 0 | 100% |  |
 | `Generic.ControlStructures.InlineControlStructure` | 7 | 46 | 46 | 0 | 0 | 100% |  |
 | `Generic.Files.ByteOrderMark` | 5 | 3 | 3 | 0 | 0 | 100% |  |
@@ -132,7 +139,7 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `Generic.PHP.LowerCaseKeyword` | 1 | 29 | 27 | 2 | 2 | 93% |  |
 | `Generic.PHP.LowerCaseType` | 1 | 63 | 42 | 21 | 0 | 67% |  |
 | `Generic.Strings.UnnecessaryHeredoc` | 3 | 4 | 4 | 0 | 0 | 100% |  |
-| `Generic.Strings.UnnecessaryStringConcat` | 2 | 7 | 4 | 3 | 4 | 57% | UnnecessaryStringConcatUnitTest.1.inc: no setting for phpcs:set allowMultiline, error |
+| `Generic.Strings.UnnecessaryStringConcat` | 2 | 7 | 7 | 0 | 1 | 100% | UnnecessaryStringConcatUnitTest.1.inc: no setting for phpcs:set allowMultiline, error (the extra line is that region) |
 | `Generic.VersionControl.GitMergeConflict` | 7 | 64 | 64 | 0 | 0 | 100% |  |
 | `PEAR.NamingConventions.ValidClassName` | 1 | 24 | 24 | 0 | 0 | 100% |  |
 | `PSR2.Classes.PropertyDeclaration` | 1 | 53 | 53 | 0 | 0 | 100% |  |
@@ -150,7 +157,7 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `Squiz.PHP.NonExecutableCode` | 4 | 57 | 57 | 0 | 1 | 100% |  |
 | `Squiz.Scope.MethodScope` | 1 | 4 | 4 | 0 | 0 | 100% |  |
 | `Squiz.Strings.DoubleQuoteUsage` | 1 | 13 | 7 | 6 | 0 | 54% |  |
-| `Universal.Arrays.DisallowShortArraySyntax` | 1 | 6 | 0 | 6 | 2 | 0% |  |
+| `Universal.Arrays.DisallowShortArraySyntax` | 1 | 6 | 6 | 0 | 0 | 100% |  |
 | `Universal.CodeAnalysis.ForeachUniqueAssignment` | 1 | 8 | 8 | 0 | 0 | 100% |  |
 | `Universal.CodeAnalysis.NoDoubleNegative` | 1 | 41 | 40 | 1 | 0 | 98% |  |
 | `Universal.CodeAnalysis.NoEchoSprintf` | 5 | 6 | 6 | 0 | 0 | 100% |  |
@@ -180,7 +187,7 @@ has no group setting (DevelopmentFunctions), and PrefixAllGlobals's documented c
 | `Universal.Attributes.DisallowAttributeParentheses` | 5 | 5 | 5 | 0 | 0 | 100% |  |
 | `PEAR.Files.IncludingFile` | 1 | 18 | 8 | 10 | 0 | 44% |  |
 | **Total** | **194** | **2150** | **2131** | **19** | **11** | **99%** | |
-| **Generic sniffs (phpcs tests)** | **179** | **1138** | **961** | **177** | **35** | **84%** | |
+| **Generic sniffs (phpcs tests)** | **194** | **1138** | **975** | **163** | **29** | **86%** |
 
 Only reports carrying the mapped rule codes count (Mago's parser/semantics errors on WPCS's
 deliberately odd test files no longer count as matches or extras), so numbers from this run on
