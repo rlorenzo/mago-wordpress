@@ -62,3 +62,15 @@ phpcs --standard=<ruleset> --extensions=php --report=json -q <dir> > phpcs.json
 mago lint --ignore-baseline --minimum-fail-level note --reporting-format json > mago.json
 php -d memory_limit=4G bench/line-parity.php phpcs.json mago.json <dir>
 ```
+
+## Update, 2026-10-15
+
+The four sniffs that caused the plugin differences above (`Universal.Arrays.DisallowShortArraySyntax`,
+`Universal.Operators.DisallowShortTernary`, `Generic.CodeAnalysis.UnnecessaryFinalModifier` and
+`Generic.Strings.UnnecessaryStringConcat`) and `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` are now ported as `generic/*` rules, so
+they read `phpcs:ignore` and report where phpcs does. On WordPress 6.8.3 (`wp-admin` and `wp-includes`, WPCS's
+Mago-core equivalents replaced), phpcs and this package report the same 1,243 lines for the first four and the same 249
+lines for the five generic sniffs that are still covered by a Mago core rule (`no-noop`, `no-goto`, `no-eval`, `lowercase-keyword`,
+`lowercase-type-hint`, `no-short-opening-tag`, `no-shell-execute-string`) plus this one. Two defects in the string-concat port were
+found on core and fixed: a lone `"` of inline HTML between PHP tags read as the start of a string (5 missed lines), and a multi-line string
+on the left of the dot, which phpcs compares by its last line (1 extra line).
