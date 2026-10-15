@@ -164,6 +164,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/switch-declaration` | Error | `PSR2.ControlStructures.SwitchDeclaration` | only `TerminatingComment`: a non-empty `case` that falls through to the next one without a comment (a body ending in `return`, `break`, `throw`, ... on every path is not a fall-through). The sniff's other codes are `mago format`'s job |
 | `generic/unconditional-if-statement` | Warning | `Generic.CodeAnalysis.UnconditionalIfStatement` | an `if` or `elseif` whose condition is the literal `true` or `false`; replaces Mago's `constant-condition` |
 | `generic/unnecessary-heredoc` | Warning | `Generic.Strings.UnnecessaryHeredoc` | a heredoc with nothing interpolated and no escape a nowdoc would lose; the fix turns it into a nowdoc as phpcbf does |
+| `generic/unnecessary-string-concat` | Error | `Generic.Strings.UnnecessaryStringConcat` | two string literals joined with `.` (`'a' . 'b'`); not a `'<' . '?'` or `'?' . '>'` split, strings that open with different quotes, or a comment between them. `allowMultiline` has no setting here |
 | `generic/unused-function-parameter` | Warning | `Generic.CodeAnalysis.UnusedFunctionParameter` | parameters the body never uses after the last used one (`Found`, `FoundAfterLastUsed`); like WordPress-Extra, not earlier ones and not methods of a class that extends or implements |
 | `generic/upper-case-constant-name` | Error | `Generic.NamingConventions.UpperCaseConstantName` | a `const` or `define()` constant whose name is not all uppercase |
 | `generic/uppercase-magic-constants` | Error | `Universal.Constants.UppercaseMagicConstants` | `__line__`, `__Dir__` and the other magic constants not in uppercase (autofix) |
@@ -175,7 +176,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-123 of the 131 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
+124 of the 132 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning

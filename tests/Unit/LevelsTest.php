@@ -36,6 +36,7 @@ final class LevelsTest extends TestCase
         'generic/disallow-alternative-php-tags' => Level::Warning, // two Maybe* warnings, one error
         'generic/inline-control-structure' => Level::Error, // NotAllowed; Discouraged only with error=false
         'generic/forbidden-functions' => Level::Error, // the sniff's `error` property, true unless a ruleset changes it
+        'generic/unnecessary-string-concat' => Level::Error, // the sniff's `error` property, true unless a ruleset changes it
         'wordpress/capabilities' => Level::Error, // Deprecated: error or warning against minimum_wp_version
         'wordpress/enqueued-resource-parameters' => Level::Warning,
         'wordpress/function-call-signature' => Level::Error, // addFixableError throughout, outside SniffMap

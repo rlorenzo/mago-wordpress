@@ -114,6 +114,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryStringConcatRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UpperCaseConstantNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UppercaseMagicConstantsRule;
@@ -315,6 +316,7 @@ final class WordPressExtension
                 new NoEchoSprintfRule($report),
                 new SwitchDeclarationRule($report),
                 new UnnecessaryHeredocRule($report),
+                new UnnecessaryStringConcatRule($report),
                 new NoDoubleNegativeRule($report),
                 new CommentedOutCodeRule($report),
                 new UnusedFunctionParameterRule($report),
