@@ -117,6 +117,7 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/double-quote-usage` | Error | `Squiz.Strings.DoubleQuoteUsage` | only `NotRequired` (the code WordPress-Core includes): a double-quoted string that needs no double quotes; the fix single-quotes it as phpcbf does |
 | `generic/else-if-declaration` | Warning | `PSR2.ControlStructures.ElseIfDeclaration` | `else if` instead of `elseif` (fixed) |
 | `generic/empty-statement` | Error | `Generic.CodeAnalysis.EmptyStatement` | an `if`, `elseif`, `else`, loop, `try`, `catch`, `finally`, `switch` or `match` whose body is empty or only comments |
+| `generic/for-loop-should-be-while-loop` | Warning | `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | a `for` with a test and no initializer or update, `for ( ; $it->valid(); )`; not `for ( ; ; )`. Replaces Mago's `prefer-while-loop`, which the presets turn off |
 | `generic/for-loop-with-test-function-call` | Warning | `Generic.CodeAnalysis.ForLoopWithTestFunctionCall` | any function or method call in a `for` loop's test part |
 | `generic/foreach-unique-assignment` | Error | `Universal.CodeAnalysis.ForeachUniqueAssignment` | `foreach ($a as $k => $k)`, or a key reused as a destructuring target (the key wins, so the value is lost); no fix, since phpcbf's changes which value the variable gets |
 | `generic/git-merge-conflict` | Error | `Generic.VersionControl.GitMergeConflict` | merge conflict markers at the start of a line, including in inline HTML, comments and heredocs, where the file still parses |
@@ -179,7 +180,7 @@ The generic rules honour phpcs comments and `exclude-patterns` under their own s
 example, `"Generic": ["*"]` turns off every `Generic.*` rule. The `WordPress-Core`-only ruleset of the
 phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` includes.
 
-127 of the 135 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
+128 of the 136 rules are on by default. `parentheses-spacing`, `language-construct-spacing`, `operator-spacing`, `array-declaration-spacing`, `comma-after-last`, `function-call-signature`, `array-alignment` and `statement-alignment` run only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
 Some sniffs report some codes as errors and others as warnings. For eight of them the warning

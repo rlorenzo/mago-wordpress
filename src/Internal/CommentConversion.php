@@ -38,6 +38,7 @@ final class CommentConversion
         'require-preg-quote-delimiter' => 'wordpress/preg-quote-delimiter',
         'array-style' => 'generic/disallow-short-array-syntax',
         'no-shorthand-ternary' => 'generic/disallow-short-ternary',
+        'prefer-while-loop' => 'generic/for-loop-should-be-while-loop',
         'no-redundant-final' => 'generic/unnecessary-final-modifier',
         'no-redundant-string-concat' => 'generic/unnecessary-string-concat',
     ];
