@@ -17,6 +17,7 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function str_contains;
 use function strlen;
+use function strrpos;
 use function substr;
 
 use const T_CONSTANT_ENCAPSED_STRING;
@@ -34,6 +35,9 @@ use const T_WHITESPACE;
 final class UnnecessaryStringConcatRule implements Rule
 {
     private const CODE = 'Generic.Strings.UnnecessaryStringConcat.Found';
+
+    /** The id of a `"` token, which is also what inline HTML consisting of one quote is not. */
+    private const QUOTE = 34;
 
     public function __construct(
         private readonly Report $report,
@@ -62,7 +66,8 @@ final class UnnecessaryStringConcatRule implements Rule
         $left = null;
         $dot = 0;
         $previous = '';
-        foreach (self::units($text) as [$unit, $offset]) {
+        $previousEnd = '';
+        foreach (self::units($text) as [$unit, $offset, $end]) {
             if ($left !== null && self::isString($unit) && $left[0] === $unit[0] && !self::isTagSplit($left, $unit)) {
                 $this->report->issue(
                     $context,
@@ -77,11 +82,12 @@ final class UnnecessaryStringConcatRule implements Rule
 
             $left = null;
             if ($unit === '.' && self::isString($previous)) {
-                $left = $previous;
+                $left = $previousEnd;
                 $dot = $offset;
             }
 
             $previous = $unit;
+            $previousEnd = $end;
         }
     }
 
@@ -105,17 +111,19 @@ final class UnnecessaryStringConcatRule implements Rule
      * The file's tokens without whitespace, as phpcs sees them: a double-quoted string with
      * interpolation is one unit, as phpcs's `T_DOUBLE_QUOTED_STRING`. A token that is not a string
      * literal or a dot is kept, marked with a leading NUL, so that it separates the two sides of a dot.
-     * Each is `[text, offset]`.
+     * Each is `[text, offset, end]`: `end` is what phpcs compares when the string is the one before the
+     * dot. It splits a multi-line string literal into a token a line, so that is the last line of one.
      *
-     * @return Generator<array{string, int}>
+     * @return Generator<array{string, int, string}>
      */
     private static function units(string $text): Generator
     {
         $open = null;
         foreach (PhpToken::tokenize($text) as $token) {
             if ($open !== null) {
-                if ($token->text === '"') {
-                    yield [substr($text, $open, $token->pos + 1 - $open), $open];
+                if ($token->id === self::QUOTE) {
+                    $string = substr($text, $open, $token->pos + 1 - $open);
+                    yield [$string, $open, $string];
                     $open = null;
                 }
 
@@ -126,15 +134,24 @@ final class UnnecessaryStringConcatRule implements Rule
                 continue;
             }
 
-            if ($token->text === '"') {
+            if ($token->id === self::QUOTE) {
                 $open = $token->pos;
 
                 continue;
             }
 
+            if ($token->id !== T_CONSTANT_ENCAPSED_STRING) {
+                $other = $token->text === '.' ? '.' : "\0";
+                yield [$other, $token->pos, $other];
+
+                continue;
+            }
+
+            $newline = strrpos($token->text, "\n");
             yield [
-                $token->id === T_CONSTANT_ENCAPSED_STRING || $token->text === '.' ? $token->text : "\0",
+                $token->text,
                 $token->pos,
+                $newline === false ? $token->text : substr($token->text, $newline + 1),
             ];
         }
     }

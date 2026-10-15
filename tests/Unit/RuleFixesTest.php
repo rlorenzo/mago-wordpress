@@ -228,6 +228,13 @@ final class RuleFixesTest extends TestCase
             "/**\n * Doc.\n *\n * @param   string \$a   The value.\n *  [text]      # Single\n */\nfunction f() {\n\t\$a  = 1;\n\t\$bb     = 2; /* one two */\n\t\$c = array(\n\t\t\"k\" => 1,\n\t);\n\t/*\n\t * multi    line\n\t\tindented    more\n\t */\n\t\$d = 1; //  comment\n\treturn  \$a;\n}",
         ];
 
+        yield 'disallow-short-array-syntax writes array() like phpcbf and leaves short lists alone' => [
+            'generic/disallow-short-array-syntax',
+            '',
+            "\$var = [];\n\$foo = [\$var[1],\$var[2]];\n\$foo = [\n\t1,\n\t[2],\n\t3\n];\n[\$a, [\$b]] = \$array;\n['key' => \$a, ['key'] => \$b] = \$array;",
+            "\$var = array();\n\$foo = array(\$var[1],\$var[2]);\n\$foo = array(\n\t1,\n\tarray(2),\n\t3\n);\n[\$a, [\$b]] = \$array;\n['key' => \$a, array('key') => \$b] = \$array;",
+        ];
+
         yield 'parentheses-spacing adds the space before an alternative-syntax colon' => [
             'wordpress/parentheses-spacing',
             '',

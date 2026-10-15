@@ -36,6 +36,10 @@ final class CommentConversion
         'no-direct-db-query' => 'wordpress/direct-database-query',
         'no-db-schema-change' => 'wordpress/direct-database-query',
         'require-preg-quote-delimiter' => 'wordpress/preg-quote-delimiter',
+        'array-style' => 'generic/disallow-short-array-syntax',
+        'no-shorthand-ternary' => 'generic/disallow-short-ternary',
+        'no-redundant-final' => 'generic/unnecessary-final-modifier',
+        'no-redundant-string-concat' => 'generic/unnecessary-string-concat',
     ];
 
     public const KINDS = ['converted', 'kept as plain comment', 'dropped', 'region', 'not convertible'];

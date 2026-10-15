@@ -60,7 +60,7 @@ use const STDOUT;
 final class FormatCommand
 {
     private const STEPS = [
-        ['lint',   '--fix', '--only', 'array-style'],
+        ['lint',   '--fix', '--only', 'generic/disallow-short-array-syntax'],
         ['format'],
         ['lint',   '--fix', '--only', 'wordpress/parentheses-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/language-construct-spacing'],
@@ -92,7 +92,7 @@ final class FormatCommand
     public const USAGE = <<<'USAGE'
         Usage: mago-wordpress format [<paths>...] [--check] [--staged]
 
-        Formats PHP files for WordPress: `mago lint --fix --only array-style`, `mago format`,
+        Formats PHP files for WordPress: `mago lint --fix --only generic/disallow-short-array-syntax`, `mago format`,
         `mago lint --fix --only wordpress/parentheses-spacing`,
         `mago lint --fix --only wordpress/language-construct-spacing`,
         `mago lint --fix --only wordpress/operator-spacing`,

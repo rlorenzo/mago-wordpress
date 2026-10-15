@@ -40,6 +40,8 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowLonelyIfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMixedGroupUseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowNamespaceWithoutNameRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortArraySyntaxRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortTernaryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
@@ -113,6 +115,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryFinalModifierRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryStringConcatRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
@@ -306,6 +309,9 @@ final class WordPressExtension
                 new NoSilencedErrorsRule($report, $settings),
                 new StrictComparisonsRule($report),
                 new DisallowInlineTabsRule($report),
+                new DisallowShortArraySyntaxRule($report),
+                new DisallowShortTernaryRule($report),
+                new UnnecessaryFinalModifierRule($report),
                 new InlineControlStructureRule($report),
                 new ValidLogicalOperatorsRule($report),
                 new DisallowStandalonePostIncrementDecrementRule($report),

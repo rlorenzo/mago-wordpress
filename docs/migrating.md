@@ -89,8 +89,9 @@ Mago core rule, which has no message codes):
   Mago has no file-level pragma. Exclude such a file in `mago.toml` instead.
 - An existing `@mago-expect` or `@mago-ignore` naming a Mago core rule this package replaces
   (`no-unescaped-output`, `validated-sanitized-input`, `nonce-verification`, `use-wp-functions`,
-  `prepared-sql`, `no-direct-db-query`, `no-db-schema-change`, `require-preg-quote-delimiter`) is
-  retargeted to the `wordpress/*` rule and recounted.
+  `prepared-sql`, `no-direct-db-query`, `no-db-schema-change`, `require-preg-quote-delimiter`,
+  `array-style`, `no-shorthand-ternary`, `no-redundant-final`, `no-redundant-string-concat`) is
+  retargeted to the `wordpress/*` or `generic/*` rule and recounted.
 
 `--write` then lints again with phpcs comments ignored and compares with the first run that honoured
 them. When every file has the same issues and no pragma is unfulfilled, it says to set
