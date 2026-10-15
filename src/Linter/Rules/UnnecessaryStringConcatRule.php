@@ -107,12 +107,20 @@ final class UnnecessaryStringConcatRule implements Rule
         return ($first === "'" || $first === '"' || $first === 'b' || $first === 'B') && strlen($unit) >= 2;
     }
 
+    /** What phpcs compares when a string is the one before the dot: it splits a multi-line string into a token a line. */
+    private static function lastLine(string $string): string
+    {
+        $newline = strrpos($string, "\n");
+
+        return $newline === false ? $string : substr($string, $newline + 1);
+    }
+
     /**
      * The file's tokens without whitespace, as phpcs sees them: a double-quoted string with
      * interpolation is one unit, as phpcs's `T_DOUBLE_QUOTED_STRING`. A token that is not a string
      * literal or a dot is kept, marked with a leading NUL, so that it separates the two sides of a dot.
      * Each is `[text, offset, end]`: `end` is what phpcs compares when the string is the one before the
-     * dot. It splits a multi-line string literal into a token a line, so that is the last line of one.
+     * dot, which is the last line of a multi-line string, interpolated or not.
      *
      * @return Generator<array{string, int, string}>
      */
@@ -123,7 +131,7 @@ final class UnnecessaryStringConcatRule implements Rule
             if ($open !== null) {
                 if ($token->id === self::QUOTE) {
                     $string = substr($text, $open, $token->pos + 1 - $open);
-                    yield [$string, $open, $string];
+                    yield [$string, $open, self::lastLine($string)];
                     $open = null;
                 }
 
@@ -147,12 +155,7 @@ final class UnnecessaryStringConcatRule implements Rule
                 continue;
             }
 
-            $newline = strrpos($token->text, "\n");
-            yield [
-                $token->text,
-                $token->pos,
-                $newline === false ? $token->text : substr($token->text, $newline + 1),
-            ];
+            yield [$token->text, $token->pos, self::lastLine($token->text)];
         }
     }
 }

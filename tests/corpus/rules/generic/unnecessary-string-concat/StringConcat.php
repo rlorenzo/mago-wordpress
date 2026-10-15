@@ -39,3 +39,10 @@ $multiline = "<input class='x'
 // @mago-expect lint:generic/unnecessary-string-concat
 $ends_with_quote = "<input
 " . "<span>";
+
+// The same holds for an interpolated string: only its last line is compared.
+$interpolated = "first $a
+last line" . "next";
+// @mago-expect lint:generic/unnecessary-string-concat
+$interpolated_quote = "first $a
+" . "next";
