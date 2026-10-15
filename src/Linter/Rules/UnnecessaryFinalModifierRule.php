@@ -56,11 +56,18 @@ final class UnnecessaryFinalModifierRule implements Rule
             }
 
             $declaration = $file->getChildren($member)[0] ?? null;
-            if ($declaration?->kind === NodeKind::Property) {
-                $declaration = $file->getChildren($declaration)[0] ?? null;
+            if ($declaration === null) {
+                continue;
             }
 
-            foreach ($declaration === null ? [] : $file->getChildren($declaration) as $modifier) {
+            if ($declaration->kind === NodeKind::Property) {
+                $declaration = $file->getChildren($declaration)[0] ?? null;
+                if ($declaration === null) {
+                    continue;
+                }
+            }
+
+            foreach ($file->getChildren($declaration) as $modifier) {
                 if ($modifier->kind !== NodeKind::Modifier || strtolower($file->getText($modifier)) !== 'final') {
                     continue;
                 }
