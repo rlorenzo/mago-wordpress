@@ -130,7 +130,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.PHP.LowerCaseConstant` | `lowercase-keyword` | 92% |
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
-| `Generic.Strings.UnnecessaryStringConcat` | `no-redundant-string-concat` | 57% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 | `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
 | `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` | - |

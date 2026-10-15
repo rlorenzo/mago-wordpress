@@ -107,7 +107,7 @@ final class SniffMap
         'Generic.PHP.LowerCaseKeyword' => ['lowercase-keyword'],
         'Generic.PHP.LowerCaseType' => ['lowercase-type-hint'],
         'Generic.Strings.UnnecessaryHeredoc' => ['generic/unnecessary-heredoc'],
-        'Generic.Strings.UnnecessaryStringConcat' => ['no-redundant-string-concat'],
+        'Generic.Strings.UnnecessaryStringConcat' => ['generic/unnecessary-string-concat'],
         'Generic.VersionControl.GitMergeConflict' => ['generic/git-merge-conflict'],
         'PEAR.NamingConventions.ValidClassName' => ['generic/valid-class-name'],
         'PSR2.Classes.PropertyDeclaration' => [
