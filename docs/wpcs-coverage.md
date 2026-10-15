@@ -123,7 +123,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 |:---|:---|---:|
 | `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` | 76% |
 | `Generic.CodeAnalysis.ForLoopShouldBeWhileLoop` | `prefer-while-loop` | 100% |
-| `Generic.CodeAnalysis.UnnecessaryFinalModifier` | `no-redundant-final` | 50% |
 | `Generic.PHP.BacktickOperator` | `no-shell-execute-string` | 100% |
 | `Generic.PHP.DisallowShortOpenTag` | `no-short-opening-tag` | 67% |
 | `Generic.PHP.DiscourageGoto` | `no-goto` | 100% |
@@ -131,8 +130,6 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 | `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
 | `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
-| `Universal.Arrays.DisallowShortArraySyntax` | `array-style` (set to `long` by the shipped config) | - |
-| `Universal.Operators.DisallowShortTernary` | `no-shorthand-ternary` | - |
 
 `mago analyze` covers these. They are analyzer issue codes, not lint rules, so the migration tool
 doesn't map them:

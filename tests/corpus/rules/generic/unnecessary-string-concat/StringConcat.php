@@ -26,3 +26,16 @@ $tag = '<' . '?php ';
 $comment_after = 'My' . /* comment */ 'string';
 $comment_before = 'My' /* comment */ . 'string';
 $sum = 1 + 1;
+
+?>
+<option value="<?php echo $a; ?>"<?php echo $a; ?>><?php echo "b"; ?></option>
+<?php
+// @mago-expect lint:generic/unnecessary-string-concat
+$after_html = 'after' . 'inline html quote';
+
+// phpcs sees a multi-line string as one token a line, so one that ends the left side starts with its last line.
+$multiline = "<input class='x'
+	value='y' />" . "<span>";
+// @mago-expect lint:generic/unnecessary-string-concat
+$ends_with_quote = "<input
+" . "<span>";

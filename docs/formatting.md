@@ -6,7 +6,7 @@ The `extends` in [Install](../README.md#install) also sets Mago's formatter to t
 a broken concatenation kept broken (one operand per line; joined, `'a' . 'b'` on one line is what
 `Generic.Strings.UnnecessaryStringConcat` reports), no line limit (`print-width = 1000`), `exit;` rather than `exit();`, a final `?>` kept, and no blank
 line added after `<?php`. Trailing commas in multi-line lists stay on: WordPress-Core requires one
-after the last item of a multi-line array. It also sets `array-style` to `long`. Override any of
+after the last item of a multi-line array. Override any of
 these under `[formatter]` in your own `mago.toml`.
 
 ## Format and check
@@ -24,7 +24,7 @@ formatting, and `mago format --check` always fails on code that is.
 The command runs eleven steps in order:
 
 ```sh
-mago lint --fix --only array-style                  # [] to array()
+mago lint --fix --only generic/disallow-short-array-syntax  # [] to array()
 mago format
 mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format removes
 mago lint --fix --only wordpress/language-construct-spacing # `echo\n$x` -> `echo $x`
@@ -106,12 +106,12 @@ It doesn't occur in the benchmark below.
 
 On Akismet 5.7.2, Contact Form 7 6.1.7 and Yoast SEO 28.5 (1,651 PHP files, `vendor` directories left
 out), phpcs-fixable `WordPress-Core` reports are 23,148 as the plugins ship. Mago's formatting alone
-(`array-style` and `mago format`) raises them to 80,971; the steps of `mago-wordpress format` take them
+(`generic/disallow-short-array-syntax` and `mago format`) raises them to 80,971; the steps of `mago-wordpress format` take them
 to 145:
 
 | After this step | Reports |
 |:---|---:|
-| `array-style` and `mago format` | 80,971 |
+| `generic/disallow-short-array-syntax` and `mago format` | 80,971 |
 | `wordpress/parentheses-spacing` | 3,595 |
 | `wordpress/language-construct-spacing` | 3,534 |
 | `wordpress/operator-spacing` | 3,494 |
