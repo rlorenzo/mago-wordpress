@@ -133,3 +133,4 @@ generic/unnecessary-string-concat
 generic/disallow-short-array-syntax
 generic/disallow-short-ternary
 generic/unnecessary-final-modifier
+generic/for-loop-should-be-while-loop

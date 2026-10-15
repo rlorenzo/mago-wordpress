@@ -85,7 +85,7 @@ final class SniffMap
         'Generic.CodeAnalysis.AssignmentInCondition' => ['generic/assignment-in-condition'],
         'Generic.CodeAnalysis.EmptyPHPStatement' => ['no-noop'],
         'Generic.CodeAnalysis.EmptyStatement' => ['generic/empty-statement'],
-        'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => ['prefer-while-loop'],
+        'Generic.CodeAnalysis.ForLoopShouldBeWhileLoop' => ['generic/for-loop-should-be-while-loop'],
         'Generic.CodeAnalysis.ForLoopWithTestFunctionCall' => ['generic/for-loop-with-test-function-call'],
         'Generic.CodeAnalysis.JumbledIncrementer' => ['generic/jumbled-incrementer'],
         'Generic.CodeAnalysis.RequireExplicitBooleanOperatorPrecedence' => [

@@ -62,6 +62,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\FileHeaderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FileNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopShouldBeWhileLoopRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCallSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentRule;
@@ -311,6 +312,7 @@ final class WordPressExtension
                 new DisallowInlineTabsRule($report),
                 new DisallowShortArraySyntaxRule($report),
                 new DisallowShortTernaryRule($report),
+                new ForLoopShouldBeWhileLoopRule($report),
                 new UnnecessaryFinalModifierRule($report),
                 new InlineControlStructureRule($report),
                 new ValidLogicalOperatorsRule($report),

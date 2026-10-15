@@ -104,6 +104,7 @@ prefer-arrow-function = { enabled = false }
 prefer-early-continue = { enabled = false }
 prefer-first-class-callable = { enabled = false }
 prefer-static-closure = { enabled = false }
+prefer-while-loop = { enabled = false }
 readable-literal = { enabled = false }
 require-preg-quote-delimiter = { enabled = false }
 sensitive-parameter = { enabled = false }
@@ -126,7 +127,6 @@ lowercase-type-hint = { level = "error" }
 no-goto = { level = "error" }
 no-noop = { level = "warning" }
 no-short-opening-tag = { level = "error" }
-prefer-while-loop = { level = "warning" }
 # END generated
 
 # The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
