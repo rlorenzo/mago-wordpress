@@ -41,6 +41,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMixedGroupUseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowMultipleAssignmentsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowNamespaceWithoutNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortArraySyntaxRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortOpenTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortTernaryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrementRule;
@@ -52,6 +53,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DoubleQuoteUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyCatchCommentRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EmptyPhpStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
@@ -78,7 +80,9 @@ use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LanguageConstructSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseConstantRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercasePhpTagRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseTypeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseUseFunctionConstRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
@@ -258,6 +262,10 @@ final class WordPressExtension
                 new RequireExplicitBooleanOperatorPrecedenceRule($report),
                 new ForeachUniqueAssignmentRule($report),
                 new UselessOverridingMethodRule($report),
+                new DisallowShortOpenTagRule($report),
+                new EmptyPhpStatementRule($report),
+                new LowercaseTypeRule($report),
+                new LowercaseConstantRule($report),
                 new SeparateFunctionsFromOORule($report),
                 new StaticInFinalClassRule($report),
                 new UnconditionalIfStatementRule($report),

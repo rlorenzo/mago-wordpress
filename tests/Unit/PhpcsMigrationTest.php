@@ -182,14 +182,8 @@ final class PhpcsMigrationTest extends TestCase
      */
     public static function sharedRuleRulesets(): iterable
     {
-        $only = '<rule ref="WordPress-Extra"><exclude name="Generic.PHP.LowerCaseConstant"/></rule>';
-        yield 'one of the two sniffs excluded' => [$only, null];
-        $both =
-            '<rule ref="WordPress-Extra"><exclude name="Generic.PHP.LowerCaseConstant"/>'
-            . '<exclude name="Generic.PHP.LowerCaseKeyword"/></rule>';
-        yield 'both excluded' => [$both, 'lowercase-keyword = { enabled = false }'];
-        $levels = '<rule ref="WordPress-Extra"/><rule ref="Generic.PHP.LowerCaseConstant"><type>warning</type></rule>';
-        yield 'level on one' => [$levels, null];
+        $keyword = '<rule ref="WordPress-Extra"><exclude name="Generic.PHP.LowerCaseKeyword"/></rule>';
+        yield 'keyword sniff excluded' => [$keyword, 'lowercase-keyword = { enabled = false }'];
     }
 
     #[DataProvider('sharedRuleRulesets')]

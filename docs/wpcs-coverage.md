@@ -121,13 +121,10 @@ The Mago rules weren't written to mirror the sniffs, so most are close cousins r
 
 | WPCS sniff | Mago rule | Recall |
 |:---|:---|---:|
-| `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` | 76% |
+| `Generic.CodeAnalysis.EmptyPHPStatement` | `no-noop` for the superfluous `;`; `generic/empty-php-statement` ports the rest | 100% |
 | `Generic.PHP.BacktickOperator` | `no-shell-execute-string` | 100% |
-| `Generic.PHP.DisallowShortOpenTag` | `no-short-opening-tag` | 67% |
 | `Generic.PHP.DiscourageGoto` | `no-goto` | 100% |
-| `Generic.PHP.LowerCaseConstant` | `lowercase-keyword` | 92% |
-| `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% |
-| `Generic.PHP.LowerCaseType` | `lowercase-type-hint` | 67% |
+| `Generic.PHP.LowerCaseKeyword` | `lowercase-keyword` | 93% (the two misses are invalid PHP: repeated visibility modifiers and a parse error) |
 | `Squiz.PHP.Eval` | `no-eval` | 100% |
 
 `mago analyze` covers these. They are analyzer issue codes, not lint rules, so the migration tool

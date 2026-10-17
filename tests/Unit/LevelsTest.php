@@ -33,6 +33,7 @@ final class LevelsTest extends TestCase
         'generic/closing-declaration-comment' => Level::Error, // Abstract and MissingBrace are warnings, for parse errors the rule does not report
         'generic/class-comment' => Level::Error, // TagNotAllowed is a warning, but WordPress-Docs turns it off
         'generic/variable-comment' => Level::Error, // TagNotAllowed is a warning, but WordPress-Docs turns it off
+        'generic/disallow-short-open-tag' => Level::Error, // Found and EchoFound are errors; PossibleFound, a warning, is not ported
         'generic/disallow-alternative-php-tags' => Level::Warning, // two Maybe* warnings, one error
         'generic/inline-control-structure' => Level::Error, // NotAllowed; Discouraged only with error=false
         'generic/forbidden-functions' => Level::Error, // the sniff's `error` property, true unless a ruleset changes it

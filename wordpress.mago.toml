@@ -51,6 +51,7 @@ invalid-open-tag = { enabled = false }
 kan-defect = { enabled = false }
 literal-named-argument = { enabled = false }
 loop-does-not-iterate = { enabled = false }
+lowercase-type-hint = { enabled = false }
 no-alias-function = { enabled = false }
 no-assign-in-condition = { enabled = false }
 no-boolean-flag-parameter = { enabled = false }
@@ -94,6 +95,7 @@ no-redundant-write-visibility = { enabled = false }
 no-redundant-yield-from = { enabled = false }
 no-request-variable = { enabled = false }
 no-self-assignment = { enabled = false }
+no-short-opening-tag = { enabled = false }
 no-shorthand-ternary = { enabled = false }
 no-sprintf-concat = { enabled = false }
 no-trailing-space = { enabled = false }
@@ -123,10 +125,8 @@ trait-name = { enabled = false }
 use-compound-assignment = { enabled = false }
 valid-docblock = { enabled = false }
 lowercase-keyword = { level = "error" }
-lowercase-type-hint = { level = "error" }
 no-goto = { level = "error" }
 no-noop = { level = "warning" }
-no-short-opening-tag = { level = "error" }
 # END generated
 
 # The closest `mago fmt` gets to WordPress-Core. It cannot add the spaces WordPress puts inside
