@@ -411,6 +411,8 @@ final class PhpcsMigrationTest extends TestCase
         self::assertStringContainsString('--minimum-fail-level warning', $output);
         self::assertStringContainsString('--reporting-format short', $output);
         self::assertStringContainsString('phpcs:ignore', $output);
+        self::assertStringContainsString('mago-wordpress convert-comments', $output);
+        self::assertStringContainsString('phpcs:ignoreFile', $output);
     }
 
     public function testWriteMergesComposerAndRefusesToOverwriteMagoToml(): void

@@ -56,8 +56,9 @@ one level for all of them, as listed in [Rules](rules.md). For example, `TypeCas
 is an error here and a warning in WPCS.
 
 It ends with how to replace a phpcs hook: `mago lint --minimum-fail-level warning` to fail on
-warnings, `--reporting-format short` for `phpcs --report=emacs`-style lines, and that `phpcs:ignore`
-comments are honoured by this package's rules only.
+warnings, `--reporting-format short` for `phpcs --report=emacs`-style lines. It then says what to do
+with existing `phpcs:ignore` comments: run `mago-wordpress convert-comments` (below), and exclude
+`phpcs:ignoreFile` files in the config.
 
 Inline `// phpcs:set` comments are not read.
 
