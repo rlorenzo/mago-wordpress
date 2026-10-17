@@ -101,7 +101,16 @@ final class PhpcsMigration
         If a hook or CI script ran phpcs:
         - `mago lint` exits non-zero only on errors; pass `--minimum-fail-level warning` to fail on warnings as phpcs did.
         - `mago lint --reporting-format short` prints `file:line:col: level[code]: message`, like `phpcs --report=emacs`.
-        - `// phpcs:ignore` and `phpcs:disable` comments are honoured by this package's rules only; Mago's own rules need `@mago-expect lint:<code>`.
+
+        TXT;
+
+    /** Where existing suppression comments go once phpcs is gone. */
+    private const COMMENT_NOTES = <<<'TXT'
+
+        Existing `// phpcs:ignore` and `phpcs:disable` comments:
+        - This package's rules honour them, but Mago's own rules do not, and a stale one never reports.
+        - `vendor/bin/mago-wordpress convert-comments` lists what it would turn into `@mago-expect` pragmas; add `--write` to apply it.
+        - `phpcs:ignoreFile` has no Mago equivalent: exclude the file in `mago.toml` or with `exclude-patterns`.
 
         TXT;
 
@@ -228,7 +237,7 @@ final class PhpcsMigration
             $text .= "- {$line}\n";
         }
 
-        return $text . self::HOOK_NOTES;
+        return $text . self::HOOK_NOTES . self::COMMENT_NOTES;
     }
 
     /**
