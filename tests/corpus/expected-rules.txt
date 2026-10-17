@@ -22,6 +22,7 @@ generic/doc-comment-alignment
 generic/doc-comment
 generic/else-if-declaration
 generic/empty-catch-comment
+generic/empty-php-statement
 generic/empty-statement
 generic/for-loop-with-test-function-call
 generic/class-comment
@@ -38,7 +39,9 @@ generic/including-file-warning
 generic/increment-decrement-usage
 generic/inline-comment
 generic/inline-control-structure
+generic/lowercase-type
 generic/jumbled-incrementer
+generic/lowercase-constant
 generic/lowercase-class-resolution-keyword
 generic/lowercase-php-tag
 generic/lowercase-use-function-const
@@ -131,6 +134,7 @@ wordpress/comma-after-last
 wordpress/operator-spacing
 generic/unnecessary-string-concat
 generic/disallow-short-array-syntax
+generic/disallow-short-open-tag
 generic/disallow-short-ternary
 generic/unnecessary-final-modifier
 generic/for-loop-should-be-while-loop
