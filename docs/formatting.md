@@ -16,8 +16,8 @@ The layout sniffs of WordPress-Core (indentation, spacing, array and call layout
 applies the fixes phpcbf would. Each is listed in [Rules](rules.md). Mago's formatter is the other
 way to get the same layout: it rewrites a file in one pass, but on its own it produces code those
 rules then report (it removes the spaces inside parentheses, for one). `mago-wordpress format` is
-the formatter followed by the fixes that put WordPress's layout back, and checks that nothing it did
-adds a finding. Use `mago lint` to check, `mago-wordpress format` to rewrite.
+the formatter followed by the fixes that put WordPress's layout back, and puts a file back as it was if
+formatting would raise the number of findings of any rule. Use `mago lint` to check, `mago-wordpress format` to rewrite.
 
 ## Format and check
 
@@ -65,7 +65,7 @@ the lines it spans, one level deeper (the lines of a multi-line string or heredo
 and is repeated until no call is left; a call with a comment among its arguments is left alone. Step 11 turns a tab used for alignment in the middle of a line into spaces, which `mago format` leaves.
 
 Formatting must not create findings. After the steps, the command lints each file they changed,
-formatted and as it was, and puts back the original of any file that gained a finding, with
+formatted and as it was, and puts back the original of any file whose findings of some rule went up in number, with
 `<file>: left unformatted: formatting adds <rule> findings`. Two cases are common: PHP tags in
 templates (`generic/embedded-php`, and a `generic/multi-line-function-declaration` where the
 declaration spans a tag), and a `/* translators: */` comment inside a multi-line call that
