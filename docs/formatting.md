@@ -9,6 +9,16 @@ line added after `<?php`. Trailing commas in multi-line lists stay on: WordPress
 after the last item of a multi-line array. Override any of
 these under `[formatter]` in your own `mago.toml`.
 
+## Lint and format
+
+The layout sniffs of WordPress-Core (indentation, spacing, array and call layout, braces, embedded PHP,
+...) are lint rules: `mago lint` reports them as phpcs does, at the same lines, and `mago lint --fix`
+applies the fixes phpcbf would. Each is listed in [Rules](rules.md). Mago's formatter is the other
+way to get the same layout: it rewrites a file in one pass, but on its own it produces code those
+rules then report (it removes the spaces inside parentheses, for one). `mago-wordpress format` is
+the formatter followed by the fixes that put WordPress's layout back, and checks that nothing it did
+adds a finding. Use `mago lint` to check, `mago-wordpress format` to rewrite.
+
 ## Format and check
 
 ```sh
@@ -30,8 +40,8 @@ mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format re
 mago lint --fix --only wordpress/language-construct-spacing # `echo\n$x` -> `echo $x`
 mago lint --fix --only wordpress/operator-spacing     # `catch ( A|B $e )` -> `catch ( A | B $e )`
 mago lint --fix --only wordpress/array-declaration-spacing # `array( 'a' => 1, 'b' => 2 )` -> one item per line
-mago lint --fix --only wordpress/array-brace-spacing # a line break after the opener and before the closer of a multi-line array
-mago lint --fix --only wordpress/array-key-spacing-restrictions # `$a[$i]` -> `$a[ $i ]`, `$a[ 'k' ]` -> `$a['k']`
+mago lint --fix --only wordpress/array-brace-spacing # no line break after `array(` / before `)` of an array
+mago lint --fix --only wordpress/array-key-spacing-restrictions # `$a[ $i ]` but `$a['key']`
 mago lint --fix --only wordpress/comma-after-last    # a comma after the last item of a multi-line array
 mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
 mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60
@@ -56,10 +66,13 @@ and is repeated until no call is left; a call with a comment among its arguments
 
 Formatting must not create findings. After the steps, the command lints each file they changed,
 formatted and as it was, and puts back the original of any file that gained a finding, with
-`<file>: left unformatted: formatting adds <rule> findings`. The known case: a `/* translators: */`
-comment inside a multi-line call that `mago format` moves so it is no longer on the line before its
-`__()` (`WordPress.WP.I18n.MissingTranslatorsComment`). Format such a file by hand, or leave it;
-`--check` does not count it as unformatted.
+`<file>: left unformatted: formatting adds <rule> findings`. Two cases are common: PHP tags in
+templates (`generic/embedded-php`, and a `generic/multi-line-function-declaration` where the
+declaration spans a tag), and a `/* translators: */` comment inside a multi-line call that
+`mago format` moves so it is no longer on the line before its `__()`
+(`WordPress.WP.I18n.MissingTranslatorsComment`). Such a file keeps its layout until you format it by
+hand; `mago lint` still reports whatever phpcs reports in it, and `--check` does not count it as
+unformatted.
 
 `--check` copies the files into a temporary directory with your top-level files (`mago.toml`,
 `composer.json`, the baseline) and a link to `vendor/`, runs the same steps there, and prints a
@@ -106,57 +119,28 @@ It doesn't occur in the benchmark below.
 
 ## How close it gets
 
-On Akismet 5.7.2, Contact Form 7 6.1.7 and Yoast SEO 28.5 (1,651 PHP files, `vendor` directories left
-out), phpcs-fixable `WordPress-Core` reports are 23,148 as the plugins ship. Mago's formatting alone
-(`generic/disallow-short-array-syntax` and `mago format`) raises them to 80,971; the steps of `mago-wordpress format` take them
-to 145:
+Measured on 2026-10-19 with Mago 1.57.0 and phpcs 3.13.6 / WPCS 3.4.1: a fresh copy of each plugin, then
+`mago-wordpress format`, then `phpcs --standard=WordPress-Core` counting the reports it marks fixable.
 
-| After this step | Reports |
-|:---|---:|
-| `generic/disallow-short-array-syntax` and `mago format` | 80,971 |
-| `wordpress/parentheses-spacing` | 3,595 |
-| `wordpress/language-construct-spacing` | 3,534 |
-| `wordpress/operator-spacing` | 3,494 |
-| `wordpress/array-declaration-spacing` | 3,591 |
-| `wordpress/comma-after-last` | 3,500 |
-| `wordpress/function-call-signature` | 1,949 |
-| `wordpress/array-alignment` | 348 |
-| `wordpress/statement-alignment` | 152 |
-| `generic/disallow-inline-tabs` | 145 |
+| Plugin | PHP files | Fixable as shipped | After `mago-wordpress format` | Files left unformatted |
+|:---|---:|---:|---:|---:|
+| Akismet 5.7.2 | 29 | 88 | 88 | 5 |
+| Contact Form 7 6.1.7 | 111 | 3,682 | 218 | see below |
+| Classic Editor | 1 | 704 | 704 | 1 |
 
-The count rises a little after the array-declaration step: an array it breaks onto lines has no trailing
-comma, which phpcs reports, and the comma step then adds it. What's left:
+Akismet's 88 are all `Universal.Operators.StrictComparisons`: they change behaviour, so no step touches
+them (`mago lint --fix --unsafe --only generic/strict-comparisons` rewrites them once you have reviewed
+the risk). Its five unformatted files are templates and one file with a translators comment (see
+above). Classic Editor is one template-style file, so the check above leaves it as it is, and
+its 704 reports stay (632 `ScopeIndent`). In Contact Form 7 the 218 left are mostly
+`FunctionCallSignature` (100), `MultipleStatementAlignment` (58), `ScopeIndent` (30) and
+`EmbeddedPhp` (20), in files the check left unformatted. Where `mago format` is stopped by the check,
+`mago lint` still tells you what to fix by hand; `mago lint --fix` applies the safe fixes one rule at
+a time.
 
-| Cause | Reports | Share |
-|:---|---:|---:|
-| Fixable but not formatting (loose comparisons, `Universal.Operators.StrictComparisons`) | 89 | 61 % |
-| Embedded PHP tag placement (`Squiz.PHP.EmbeddedPhp`) | 30 | 21 % |
-| Scope indent (`Generic.WhiteSpace.ScopeIndent`) | 22 | 15 % |
-| A brace after a function declaration (3), `require_once` (1) | 4 | 3 % |
-
-The loose comparisons change behaviour, so no step touches them; `mago lint --fix --unsafe --only generic/strict-comparisons`
-rewrites them to `===` and `!==` once you have reviewed the risk. Most of the rest are in the plugins as
-they ship: 20 of the 30 embedded-PHP reports, the `require_once`, and scope-indent reports (27 in the
-original files). Fixing them means moving PHP tags and template markup, which changes the whitespace of the
-HTML a template prints, so the steps leave them alone.
-
-On the same plugins phpcs reports 4,991 `WordPress.Arrays.MultipleStatementAlignment` warnings in
-51 files after the first three steps (`wordpress/array-alignment` takes them to 0), and 1,669
-`PEAR.Functions.FunctionCallSignature` layout reports (`wordpress/function-call-signature` takes
-them to 0 without adding a report of any other sniff).
-
-How these were measured: a fresh copy of each plugin (1,651 PHP files) with a `mago.toml` that
-extends the preset, `mago lint --fix --only <rule>` and `mago format` run in the order of the steps
-above (`wordpress/function-call-signature` repeated until it stops changing files) on Mago 1.51.0,
-then `phpcs --standard=WordPress-Core --extensions=php --report=json` (phpcs 3.13.6, WPCS 3.4.1),
-counting the reports phpcs marks fixable. This is a manual run of the steps, not the output of
-`mago-wordpress format`, whose final check can put a file back unformatted (see above); the figures
-are what the steps do, not a measure of that check. The two measurements after the table above (the
-array-alignment and call-signature counts, and bcap_website) are older.
-
-On bcap_website (measured before steps 8 to 10), a phpcs-clean site
-of 107 files, the command changes 81 files, +579/-733 lines ignoring whitespace. Per-plugin numbers,
-sniff codes and how `print-width` trades off: [formatter results](../bench/results/2026-10-01-formatter.md).
+Earlier measurements (2026-10-01, Mago 1.51.0, Akismet, Contact Form 7 and Yoast SEO, 145 fixable
+reports left after the steps) predate the layout rules and the check on them, and are in the
+[formatter results](../bench/results/2026-10-01-formatter.md).
 
 ## Existing phpcs-clean code
 
