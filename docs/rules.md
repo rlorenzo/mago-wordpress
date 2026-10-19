@@ -38,7 +38,7 @@
 | `wordpress/cast-structure-spacing` | Error | `WordPress.WhiteSpace.CastStructureSpacing` | a type cast not preceded by whitespace (`NoSpaceBeforeOpenParenthesis`). Autofix |
 | `generic/space-after-cast` | Error | `Generic.Formatting.SpaceAfterCast` | a type cast not followed by exactly one space (`NoSpace`, `TooMuchSpace`, `CommentFound`). Autofix |
 | `generic/cast-spacing` | Error | `Squiz.WhiteSpace.CastSpacing` | whitespace inside a type cast, `( int )` (`ContainsWhiteSpace`). Autofix |
-| `generic/here-nowdoc-identifier-spacing` | Error | `Generic.WhiteSpace.HereNowdocIdentifierSpacing` | a space between `<<<` and a heredoc or nowdoc identifier (`SpaceFound`). Autofix |
+| `generic/here-nowdoc-identifier-spacing` | Error | `Generic.WhiteSpace.HereNowdocIdentifierSpacing` | whitespace (spaces or tabs) between `<<<` and a heredoc or nowdoc identifier (`SpaceFound`). Autofix |
 | `generic/nullable-type-declaration` | Error | `PSR12.Functions.NullableTypeDeclaration` | a space or comment between the `?` of a nullable type and the type (`WhitespaceFound`, `UnexpectedCharactersFound`). Autofix for the space |
 | `generic/scope-keyword-spacing` | Error | `Squiz.WhiteSpace.ScopeKeywordSpacing` | `public`, `static`, `final` and the other modifiers not followed by exactly one space (`Incorrect`). Autofix |
 | `generic/spread-operator-spacing-after` | Error | `Generic.WhiteSpace.SpreadOperatorSpacingAfter` | whitespace or a comment between `...` and its operand (`TooMuchSpace`, `CommentFound`). Autofix |

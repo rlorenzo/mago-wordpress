@@ -30,7 +30,7 @@ final class HereNowdocIdentifierSpacingRule implements Rule
         return new RuleDefinition(
             code: 'generic/here-nowdoc-identifier-spacing',
             name: 'Heredoc and nowdoc identifier spacing',
-            description: 'Reports a space between <<< and a heredoc or nowdoc identifier.',
+            description: 'Reports whitespace (spaces or tabs) between <<< and a heredoc or nowdoc identifier.',
             defaultLevel: Level::Error,
             defaultEnabled: true,
             targets: [NodeKind::Program],
