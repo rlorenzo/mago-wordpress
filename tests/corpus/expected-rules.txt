@@ -1,6 +1,7 @@
 generic/assignment-in-condition
 generic/block-comment
 generic/byte-order-mark
+generic/cast-spacing
 generic/class-modifier-keyword-order
 generic/closing-declaration-comment
 generic/closing-tag
@@ -34,9 +35,13 @@ generic/forbidden-functions
 generic/foreach-unique-assignment
 generic/function-comment
 generic/function-comment-throw-tag
+generic/here-nowdoc-identifier-spacing
 generic/line-endings
+generic/nullable-type-declaration
 generic/precision-alignment
 generic/scope-indent
+generic/scope-keyword-spacing
+generic/spread-operator-spacing-after
 generic/superfluous-whitespace
 generic/variable-comment
 generic/git-merge-conflict
@@ -81,6 +86,7 @@ generic/valid-class-name
 generic/valid-logical-operators
 wordpress/alternative-functions
 wordpress/array-declaration-spacing
+wordpress/array-indentation
 wordpress/assignment-in-ternary-condition
 wordpress/capabilities
 wordpress/capabilities-warning

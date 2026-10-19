@@ -179,6 +179,9 @@ final class Levels
             'SpacesUsed' => 'error',
             'SpacesUsedHeredocCloser' => 'error',
         ],
+        'Generic.WhiteSpace.HereNowdocIdentifierSpacing' => [
+            'SpaceFound' => 'error',
+        ],
         'Generic.WhiteSpace.IncrementDecrementSpacing' => [
             'SpaceAfter*' => 'error',
         ],
@@ -192,6 +195,12 @@ final class Levels
             '*' => 'error',
             'Incorrect' => 'error',
             'IncorrectExact' => 'error',
+        ],
+        'Generic.WhiteSpace.SpreadOperatorSpacingAfter' => [
+            'CommentFound' => 'error',
+            'NoSpace' => 'error',
+            'TooLittleSpace' => 'error',
+            'TooMuchSpace' => 'error',
         ],
         'Modernize.FunctionCalls.Dirname' => [
             'FileConstant' => 'error',
@@ -238,6 +247,10 @@ final class Levels
             'IncorrectOrder' => 'error',
             'SpacingAfterBlock' => 'error',
             'SpacingInsideBlock' => 'error',
+        ],
+        'PSR12.Functions.NullableTypeDeclaration' => [
+            'UnexpectedCharactersFound' => 'error',
+            'WhitespaceFound' => 'error',
         ],
         'PSR12.Functions.ReturnTypeDeclaration' => [
             'SpaceBeforeColon' => 'error',
@@ -517,6 +530,12 @@ final class Levels
             'ContainsVar' => 'error',
             'NotRequired' => 'error',
         ],
+        'Squiz.WhiteSpace.CastSpacing' => [
+            'ContainsWhiteSpace' => 'error',
+        ],
+        'Squiz.WhiteSpace.ScopeKeywordSpacing' => [
+            'Incorrect' => 'error',
+        ],
         'Squiz.WhiteSpace.SemicolonSpacing' => [
             'Incorrect' => 'error',
         ],
@@ -618,6 +637,11 @@ final class Levels
             'Found' => 'warning',
         ],
         'WordPress.Arrays.ArrayDeclarationSpacing' => [],
+        'WordPress.Arrays.ArrayIndentation' => [
+            '*' => 'error',
+            'CloseBraceNotAligned' => 'error',
+            'MultiLineArrayItemNotAligned' => 'error',
+        ],
         'WordPress.Arrays.ArrayKeySpacingRestrictions' => [
             'NoSpacesAroundArrayKeys' => 'error',
             'SpacesAroundArrayKeys' => 'error',

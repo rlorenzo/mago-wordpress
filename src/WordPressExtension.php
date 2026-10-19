@@ -15,6 +15,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ArbitraryParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayBraceSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayDeclarationSpacingRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ArrayIndentationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayKeySpacingRestrictionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
@@ -22,6 +23,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\BlockCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CastSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CastStructureSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassDeclarationRule;
@@ -89,6 +91,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\FunctionDeclarationArgumentSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\HereNowdocIdentifierSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
@@ -114,6 +117,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\NonExecutableCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoReservedKeywordParameterNamesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoUselessAliasesRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NullableTypeDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneNamespaceDeclarationPerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneObjectStructurePerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OpeningBraceSameLineRule;
@@ -134,12 +138,14 @@ use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ReturnTypeDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ScopeIndentRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ScopeKeywordSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SemicolonSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ShortFormTypeKeywordsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SpaceAfterCastRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SpreadOperatorSpacingAfterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StatementAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
@@ -224,6 +230,11 @@ final class WordPressExtension
                 new MultiLineFunctionDeclarationRule($report),
                 new FunctionDeclarationArgumentSpacingRule($report),
                 new FunctionCallSignatureRule($report),
+                new CastSpacingRule($report),
+                new HereNowdocIdentifierSpacingRule($report),
+                new NullableTypeDeclarationRule($report),
+                new ScopeKeywordSpacingRule($report),
+                new SpreadOperatorSpacingAfterRule($report),
                 new DisallowMultipleAssignmentsRule($report),
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
@@ -372,6 +383,7 @@ final class WordPressExtension
                 new DisallowInlineTabsRule($report),
                 new DisallowSpaceIndentRule($report),
                 new PrecisionAlignmentRule($report),
+                new ArrayIndentationRule($report),
                 new ScopeIndentRule($report),
                 new SuperfluousWhitespaceRule($report),
                 new LineEndingsRule($report),
