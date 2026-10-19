@@ -40,7 +40,7 @@ mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format re
 mago lint --fix --only wordpress/language-construct-spacing # `echo\n$x` -> `echo $x`
 mago lint --fix --only wordpress/operator-spacing     # `catch ( A|B $e )` -> `catch ( A | B $e )`
 mago lint --fix --only wordpress/array-declaration-spacing # `array( 'a' => 1, 'b' => 2 )` -> one item per line
-mago lint --fix --only wordpress/array-brace-spacing # no line break after `array(` / before `)` of an array
+mago lint --fix --only wordpress/array-brace-spacing # a line break after `array(` and before `)` of a multi-line array
 mago lint --fix --only wordpress/array-key-spacing-restrictions # `$a[ $i ]` but `$a['key']`
 mago lint --fix --only wordpress/comma-after-last    # a comma after the last item of a multi-line array
 mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
@@ -57,12 +57,7 @@ again, the command is idempotent only as a whole: running `mago format` on its o
 `mago format` is also not always stable on its own (a comment between `<?php` and `endif;` moves a
 little on each run), so the command repeats it until `mago format --check` passes.
 
-Step 4 puts back the one space after `echo`, `return`, `new`, `use` and the other language constructs that `mago format` replaces by a line break when the argument is long. Step 5 puts the spaces back around the `|` of a multi-catch (`mago format` writes `A|B`). Step 6 puts the items of a keyed array on separate lines (`mago format` keeps a short one on a line), and step 7 adds the comma after the last item that WordPress-Core requires of a multi-line array (and removes one from a single-line array). Steps 8 to 10 undo what `mago format` does and phpcs does not allow. It keeps a closure or array last
-argument on the line of the call's `(`, aligns every `=>` however long the key, and WordPress-Core
-wants `add_action( 'init', function () {` as one argument per line with `)` on its own line, and the
-`=>` aligned only up to column 60. Step 8 moves a hugged argument to a line of its own together with
-the lines it spans, one level deeper (the lines of a multi-line string or heredoc stay as they are),
-and is repeated until no call is left; a call with a comment among its arguments is left alone. Step 11 turns a tab used for alignment in the middle of a line into spaces, which `mago format` leaves.
+`language-construct-spacing` puts back the one space after `echo`, `return`, `new`, `use` and the other language constructs that `mago format` replaces by a line break when the argument is long. `operator-spacing` puts the spaces back around the `|` of a multi-catch (`mago format` writes `A|B`). `array-declaration-spacing` puts the items of a keyed array on separate lines (`mago format` keeps a short one on a line), `array-brace-spacing` and `array-key-spacing-restrictions` fix the spacing inside the brackets, and `comma-after-last` adds the comma after the last item that WordPress-Core requires of a multi-line array (and removes one from a single-line array). `function-call-signature`, `array-alignment` and `statement-alignment` undo what `mago format` does and phpcs does not allow. It keeps a closure or array last argument on the line of the call's `(`, aligns every `=>` however long the key, and WordPress-Core wants `add_action( 'init', function () {` as one argument per line with `)` on its own line, and the `=>` aligned only up to column 60. `function-call-signature` moves a hugged argument to a line of its own together with the lines it spans, one level deeper (the lines of a multi-line string or heredoc stay as they are), and is repeated until no call is left; a call with a comment among its arguments is left alone. `disallow-inline-tabs` turns a tab used for alignment in the middle of a line into spaces, which `mago format` leaves.
 
 Formatting must not create findings. After the steps, the command lints each file they changed,
 formatted and as it was, and puts back the original of any file whose findings of some rule went up in number, with
