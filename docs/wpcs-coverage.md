@@ -144,5 +144,11 @@ Enable these, and any core rule the presets turn off, in `mago.toml`:
 
 ## Not ported
 
-Some formatting sniffs (alignment, braces, quote style, keyword and tag casing not listed
-above or in [Rules](rules.md)) are not ported. `Generic.WhiteSpace.ScopeIndent` (`generic/scope-indent`) and `WordPress.Arrays.ArrayIndentation` (`wordpress/array-indentation`) are ported but skip a file of more than 100,000 tokens or 300 KB. The rest is `mago format`'s job (see [Formatting](formatting.md)).
+Every sniff in the `WordPress` standard is covered by a rule above, by Mago's core rules or by
+`mago analyze`, except the properties and message codes noted per rule. `Generic.WhiteSpace.ScopeIndent`
+(`generic/scope-indent`) and `WordPress.Arrays.ArrayIndentation` (`wordpress/array-indentation`) skip a file of more
+than 100,000 tokens or 300 KB, and fix in one pass where phpcbf repeats. The WordPress-Core codes set
+to severity 0 are not reported, and sniff properties that WordPress does not set (`phpcs:set` toggles,
+`blank_line_check`) are not modelled. `Generic.Classes.DuplicateClassName` needs every file of a run
+and stays with `mago analyze`; Mago reports the parse errors `Generic.PHP.Syntax` does.
+For layout, [Formatting](formatting.md) explains `mago-wordpress format`.
