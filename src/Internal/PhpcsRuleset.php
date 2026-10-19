@@ -134,6 +134,7 @@ final class PhpcsRuleset
      */
     private const CORE_SNIFFS = [
         'WordPress.Arrays.ArrayDeclarationSpacing',
+        'WordPress.Arrays.ArrayIndentation',
         'WordPress.Arrays.ArrayKeySpacingRestrictions',
         'WordPress.Arrays.MultipleStatementAlignment',
         'NormalizedArrays.Arrays.ArrayBraceSpacing',
@@ -198,6 +199,10 @@ final class PhpcsRuleset
         'Generic.WhiteSpace.DisallowSpaceIndent',
         'Universal.WhiteSpace.PrecisionAlignment',
         'Generic.WhiteSpace.ScopeIndent',
+        'Generic.WhiteSpace.SpreadOperatorSpacingAfter',
+        'Squiz.WhiteSpace.CastSpacing',
+        'Squiz.WhiteSpace.ScopeKeywordSpacing',
+        'PSR12.Functions.NullableTypeDeclaration',
         'Squiz.WhiteSpace.SuperfluousWhitespace',
         'Generic.Files.LineEndings',
         'PSR2.Files.EndFileNewline',
@@ -247,6 +252,7 @@ final class PhpcsRuleset
 
     private const EXTRA_SNIFFS = [
         'WordPress.CodeAnalysis.EscapedNotTranslated',
+        'Generic.WhiteSpace.HereNowdocIdentifierSpacing',
         'WordPress.NamingConventions.PrefixAllGlobals',
         'WordPress.NamingConventions.ValidPostTypeSlug',
         'WordPress.PHP.DevelopmentFunctions',

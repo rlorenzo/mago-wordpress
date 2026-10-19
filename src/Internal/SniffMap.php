@@ -23,6 +23,7 @@ final class SniffMap
      */
     public const RULES = [
         'WordPress.Arrays.ArrayDeclarationSpacing' => ['wordpress/array-declaration-spacing'],
+        'WordPress.Arrays.ArrayIndentation' => ['wordpress/array-indentation'],
         'WordPress.Arrays.ArrayKeySpacingRestrictions' => ['wordpress/array-key-spacing-restrictions'],
         'WordPress.Arrays.MultipleStatementAlignment' => ['wordpress/array-alignment'],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => ['wordpress/assignment-in-ternary-condition'],
@@ -118,6 +119,7 @@ final class SniffMap
         'Generic.Strings.UnnecessaryStringConcat' => ['generic/unnecessary-string-concat'],
         'Generic.VersionControl.GitMergeConflict' => ['generic/git-merge-conflict'],
         'Generic.WhiteSpace.ArbitraryParenthesesSpacing' => ['generic/arbitrary-parentheses-spacing'],
+        'Generic.WhiteSpace.HereNowdocIdentifierSpacing' => ['generic/here-nowdoc-identifier-spacing'],
         'Generic.WhiteSpace.IncrementDecrementSpacing' => ['generic/increment-decrement-spacing'],
         'Generic.WhiteSpace.LanguageConstructSpacing' => ['wordpress/language-construct-spacing'],
         'NormalizedArrays.Arrays.ArrayBraceSpacing' => ['wordpress/array-brace-spacing'],
@@ -178,6 +180,9 @@ final class SniffMap
         'Universal.WhiteSpace.DisallowInlineTabs' => ['generic/disallow-inline-tabs'],
         'Generic.WhiteSpace.DisallowSpaceIndent' => ['generic/disallow-space-indent'],
         'Universal.WhiteSpace.PrecisionAlignment' => ['generic/precision-alignment'],
+        'Generic.WhiteSpace.SpreadOperatorSpacingAfter' => ['generic/spread-operator-spacing-after'],
+        'Squiz.WhiteSpace.CastSpacing' => ['generic/cast-spacing'],
+        'Squiz.WhiteSpace.ScopeKeywordSpacing' => ['generic/scope-keyword-spacing'],
         'Generic.WhiteSpace.ScopeIndent' => ['generic/scope-indent'],
         'Squiz.WhiteSpace.SuperfluousWhitespace' => ['generic/superfluous-whitespace'],
         'Generic.Files.LineEndings' => ['generic/line-endings'],
@@ -208,6 +213,7 @@ final class SniffMap
             'generic/opening-function-brace-kernighan-ritchie',
         ],
         'Squiz.Functions.FunctionDeclarationArgumentSpacing' => ['generic/function-declaration-argument-spacing'],
+        'PSR12.Functions.NullableTypeDeclaration' => ['generic/nullable-type-declaration'],
         'PSR12.Functions.ReturnTypeDeclaration' => ['generic/return-type-declaration'],
         'PSR2.Methods.FunctionClosingBrace' => ['generic/function-closing-brace'],
         'Squiz.Functions.MultiLineFunctionDeclaration' => ['generic/multi-line-function-declaration'],

@@ -149,4 +149,4 @@ Enable these, and any core rule the presets turn off, in `mago.toml`:
 ## Not ported
 
 Some formatting sniffs (alignment, braces, quote style, keyword and tag casing not listed
-above or in [Rules](rules.md)) are not ported. `Generic.WhiteSpace.ScopeIndent` is ported (`generic/scope-indent`) but skips a file of more than 100,000 tokens or 300 KB, and `WordPress.Arrays.ArrayIndentation` is not ported yet. That is `mago format`'s job (see [Formatting](formatting.md)).
+above or in [Rules](rules.md)) are not ported. `Generic.WhiteSpace.ScopeIndent` (`generic/scope-indent`) and `WordPress.Arrays.ArrayIndentation` (`wordpress/array-indentation`) are ported but skip a file of more than 100,000 tokens or 300 KB. The rest is `mago format`'s job (see [Formatting](formatting.md)).
