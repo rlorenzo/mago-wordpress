@@ -42,10 +42,14 @@ final class LevelsTest extends TestCase
         'wordpress/capabilities' => Level::Error, // Deprecated: error or warning against minimum_wp_version
         'wordpress/enqueued-resource-parameters' => Level::Warning,
         'wordpress/array-declaration-spacing' => Level::Error, // addFixableError throughout, outside SniffMap
+        'wordpress/object-operator-spacing' => Level::Error, // addFixableError throughout, inherited from the Squiz sniff
         'wordpress/operator-spacing' => Level::Error, // addFixableError throughout, inherited from the Squiz sniff
         'generic/arbitrary-parentheses-spacing' => Level::Error, // FoundEmpty is a warning
         'wordpress/array-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
-        'wordpress/array-brace-spacing' => Level::Error, // SpacesFixer::checkAndFix() reports errors; Levels has no codes for it
+        'generic/anon-class-keyword-spacing' => Level::Error, // PHPCSExtra reports through SpacesFixer::checkAndFix() (check() here), as errors; Levels has no codes for it
+        'generic/type-separator-spacing' => Level::Error, // PHPCSExtra reports through SpacesFixer::checkAndFix() (check() here), as errors; Levels has no codes for it
+        'generic/use-statement-keyword-spacing' => Level::Error, // PHPCSExtra reports through SpacesFixer::checkAndFix() (check() here), as errors; Levels has no codes for it
+        'wordpress/array-brace-spacing' => Level::Error, // PHPCSExtra reports through SpacesFixer::checkAndFix() (check() here), as errors; Levels has no codes for it
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap
         'wordpress/prefix-all-globals' => Level::Error,
         'wordpress/prepared-sql-unquoted-complex-placeholder' => Level::Warning, // its one code

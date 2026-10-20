@@ -214,6 +214,11 @@ final class PhpcsRuleset
         'Universal.NamingConventions.NoReservedKeywordParameterNames',
         'Modernize.FunctionCalls.Dirname',
         'Universal.UseStatements.NoLeadingBackslash',
+        'WordPress.WhiteSpace.ObjectOperatorSpacing',
+        'Universal.Operators.TypeSeparatorSpacing',
+        'Universal.UseStatements.KeywordSpacing',
+        'Universal.WhiteSpace.AnonClassKeywordSpacing',
+        'Universal.Classes.RequireAnonClassParentheses',
         'Universal.Namespaces.OneDeclarationPerFile',
         'Universal.Namespaces.DisallowDeclarationWithoutName',
         'Universal.UseStatements.NoUselessAliases',
@@ -301,6 +306,8 @@ final class PhpcsRuleset
         'Generic.CodeAnalysis.UnusedFunctionParameter',
         'Squiz.PHP.CommentedOutCode',
         'Universal.Attributes.DisallowAttributeParentheses',
+        'Universal.Attributes.BracketSpacing',
+        'PSR2.Namespaces.NamespaceDeclaration',
     ];
 
     /** phpcs hides reports below this severity by default. */

@@ -173,3 +173,10 @@ generic/disallow-namespace-curly-brace-syntax
 generic/embedded-php
 generic/opening-brace-same-line
 generic/trait-use-declaration
+wordpress/object-operator-spacing
+generic/type-separator-spacing
+generic/attribute-bracket-spacing
+generic/use-statement-keyword-spacing
+generic/anon-class-keyword-spacing
+generic/require-anon-class-parentheses
+generic/namespace-declaration

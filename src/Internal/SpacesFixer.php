@@ -59,8 +59,9 @@ final class SpacesFixer
         } elseif ($aEnd !== $bStart) {
             $run = strspn($text, " \t", $aEnd);
             if ($run > 0) {
-                $found = $run;
-                $phrase = $run . ($run === 1 ? ' space' : ' spaces');
+                // phpcs measures the whitespace token after tab replacement.
+                $found = strlen(Spacing::expand($text, substr($text, $aEnd, $run), $aEnd));
+                $phrase = $found . ($found === 1 ? ' space' : ' spaces');
             } else {
                 $found = 'non-whitespace tokens';
                 $phrase = 'non-whitespace tokens';
