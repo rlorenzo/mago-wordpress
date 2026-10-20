@@ -51,13 +51,13 @@ fi
 first=$(ls "$out"/*.out | head -1)
 echo "# Bake-off $(basename "$out"): top 10 WordPress.org plugins + WordPress core"
 echo
-echo "\`bench/bakeoff.sh\` (phpcs WordPress-Extra vs mago + mago-wordpress), mean of 3 runs after a warm-up."
+echo "\`bench/bakeoff.sh\` (phpcs WordPress vs mago + mago-wordpress), mean of 3 runs after a warm-up."
 [[ -f "$out/versions.txt" ]] || { echo "error: $out/versions.txt is missing; run the benchmarks first" >&2; exit 1; }
 echo "Versions: $(grep -m1 "^mago " "$first"), $(cat "$out/versions.txt")."
 echo
 echo "## Results"
 echo
-echo "| Codebase | PHP files | phpcs \`WordPress-Extra\` | \`mago lint\` + extension | Speed-up |"
+echo "| Codebase | PHP files | phpcs \`WordPress\` | \`mago lint\` + extension | Speed-up |"
 echo "|:---|---:|---:|---:|---:|"
 tf=0; tp=0; tm=0
 for entry in "${codebases[@]}"; do
