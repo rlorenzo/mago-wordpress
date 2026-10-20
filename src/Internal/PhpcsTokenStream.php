@@ -275,7 +275,12 @@ final class PhpcsTokenStream
 
                     break;
                 case 'T_INLINE_THEN':
-                    if ((self::BEFORE_NULLABLE[$prevCode] ?? null) !== null) {
+                    if (
+                        (self::BEFORE_NULLABLE[$prevCode] ?? null) !== null
+                        || $prev !== null
+                        && $prevCode === 'T_CLOSE_SQUARE_BRACKET'
+                        && $tokens[$tokens[$prev]->opener ?? 0]->code === 'T_ATTRIBUTE'
+                    ) {
                         $tokens[$i]->code = 'T_NULLABLE';
                         break;
                     }
@@ -284,7 +289,11 @@ final class PhpcsTokenStream
 
                     break;
                 case 'T_COLON':
-                    if ($ternaries !== [] && $ternaries[count($ternaries) - 1] === count($stack)) {
+                    if (
+                        $ternaries !== []
+                        && $ternaries[count($ternaries) - 1] === count($stack)
+                        && !self::isReturnTypeColon($tokens, $i)
+                    ) {
                         array_pop($ternaries);
                         $tokens[$i]->code = 'T_INLINE_ELSE';
                     }
@@ -341,6 +350,40 @@ final class PhpcsTokenStream
         }
 
         return self::scopes($tokens);
+    }
+
+    /**
+     * Whether the `:` follows the parameters of a function, closure, arrow function or `use` clause.
+     *
+     * @param list<PhpcsToken> $tokens
+     */
+    private static function isReturnTypeColon(array $tokens, int $colon): bool
+    {
+        $close = self::previous($tokens, $colon);
+        if ($close === null || $tokens[$close]->code !== 'T_CLOSE_PARENTHESIS') {
+            return false;
+        }
+
+        $open = $tokens[$close]->opener;
+        if ($open === null) {
+            return false;
+        }
+
+        $before = self::previous($tokens, $open);
+        if ($before !== null && $tokens[$before]->code === 'T_STRING') {
+            $before = self::previous($tokens, $before);
+            if ($before !== null && $tokens[$before]->code === 'T_BITWISE_AND') {
+                $before = self::previous($tokens, $before);
+            }
+
+            return $before !== null && $tokens[$before]->code === 'T_FUNCTION';
+        }
+
+        if ($before !== null && $tokens[$before]->code === 'T_BITWISE_AND') {
+            $before = self::previous($tokens, $before);
+        }
+
+        return $before !== null && in_array($tokens[$before]->code, ['T_FUNCTION', 'T_FN', 'T_USE'], strict: true);
     }
 
     /**

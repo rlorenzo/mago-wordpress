@@ -92,6 +92,12 @@ final class Levels
         'Generic.Files.OneObjectStructurePerFile' => [
             'MultipleFound' => 'error',
         ],
+        'Generic.Formatting.SpaceAfterCast' => [
+            'CommentFound' => 'error',
+            'NoSpace' => 'error',
+            'TooLittleSpace' => 'error',
+            'TooMuchSpace' => 'error',
+        ],
         'Generic.NamingConventions.UpperCaseConstantName' => [
             'ClassConstantNotUpperCase' => 'error',
             'ConstantNotUpperCase' => 'error',
@@ -140,9 +146,23 @@ final class Levels
             'DelimiterFound' => 'error',
             'OpenerFound' => 'error',
         ],
+        'Generic.WhiteSpace.ArbitraryParenthesesSpacing' => [
+            'FoundEmpty' => 'warning',
+            'SpaceAfterOpen' => 'error',
+            'SpaceBeforeClose' => 'error',
+        ],
         'Generic.WhiteSpace.DisallowSpaceIndent' => [
             'SpacesUsed' => 'error',
             'SpacesUsedHeredocCloser' => 'error',
+        ],
+        'Generic.WhiteSpace.IncrementDecrementSpacing' => [
+            'SpaceAfter*' => 'error',
+        ],
+        'Generic.WhiteSpace.LanguageConstructSpacing' => [
+            'Incorrect' => 'error',
+            'IncorrectSingle' => 'error',
+            'IncorrectYieldFrom' => 'error',
+            'IncorrectYieldFromWithComment' => 'error',
         ],
         'Generic.WhiteSpace.ScopeIndent' => [
             '*' => 'error',
@@ -359,9 +379,15 @@ final class Levels
         'Squiz.Scope.MethodScope' => [
             'Missing' => 'error',
         ],
+        'Squiz.Strings.ConcatenationSpacing' => [
+            'PaddingFound' => 'error',
+        ],
         'Squiz.Strings.DoubleQuoteUsage' => [
             'ContainsVar' => 'error',
             'NotRequired' => 'error',
+        ],
+        'Squiz.WhiteSpace.SemicolonSpacing' => [
+            'Incorrect' => 'error',
         ],
         'Squiz.WhiteSpace.SuperfluousWhitespace' => [
             'EmptyLines' => 'error',
@@ -447,6 +473,9 @@ final class Levels
         ],
         'Universal.UseStatements.NoUselessAliases' => [
             'Found' => 'error',
+        ],
+        'Universal.WhiteSpace.CommaSpacing' => [
+            'CommaAfterComment' => 'error',
         ],
         'Universal.WhiteSpace.DisallowInlineTabs' => [
             'NonIndentTabsUsed' => 'error',
@@ -701,6 +730,27 @@ final class Levels
         'WordPress.WP.PostsPerPage' => [
             'posts_per_page_*' => 'warning',
         ],
+        'WordPress.WhiteSpace.CastStructureSpacing' => [
+            'NoSpaceBeforeOpenParenthesis' => 'error',
+        ],
+        'WordPress.WhiteSpace.ControlStructureSpacing' => [
+            'BlankLineAfterEnd' => 'error',
+            'BlankLineAfterStart' => 'error',
+            'BlankLineBeforeEnd' => 'error',
+            'ExtraSpaceAfterCloseParenthesis' => 'error',
+            'ExtraSpaceAfterOpenParenthesis' => 'error',
+            'ExtraSpaceBeforeCloseParenthesis' => 'error',
+            'ExtraSpaceBeforeOpenParenthesis' => 'error',
+            'NoSpaceAfterCloseParenthesis' => 'error',
+            'NoSpaceAfterOpenParenthesis' => 'error',
+            'NoSpaceAfterStructureOpen' => 'error',
+            'NoSpaceBeforeCloseParenthesis' => 'error',
+            'NoSpaceBeforeOpenParenthesis' => 'error',
+            'NoSpaceBetweenStructureColon' => 'error',
+            'OpenBraceNotSameLine' => 'error',
+            'SpaceBetweenStructureColon' => 'error',
+        ],
+        'WordPress.WhiteSpace.OperatorSpacing' => [],
     ];
 
     private function __construct() {}

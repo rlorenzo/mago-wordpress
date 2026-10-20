@@ -72,8 +72,8 @@ final class LanguageConstructSpacingRule implements Rule
         $tokens = PhpcsTokens::of($context->file);
         $text = $context->file->contents;
         foreach ($tokens->codes as $index => $code) {
-            if (!in_array($code, self::CONSTRUCTS, strict: true)) {
-                continue;
+            if (!in_array($code, self::CONSTRUCTS, strict: true) || $tokens->hasObjectOperatorBefore($index)) {
+                continue; // `Foo::NEW` and `$o->new` are names, not constructs
             }
 
             if ($code === 'T_NAMESPACE' && $tokens->code($index + 1) === 'T_NS_SEPARATOR') {
