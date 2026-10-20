@@ -201,7 +201,7 @@ use const STDERR;
  */
 final class WordPressExtension
 {
-    private const VERSION = '1.4.0';
+    private const VERSION = '1.6.1';
 
     private function __construct() {}
 
