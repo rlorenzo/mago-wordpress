@@ -18,6 +18,7 @@ use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\DocComment;
 use Rlorenzo\MagoWordPress\Internal\LeadingComment;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function count;
 use function explode;
@@ -168,7 +169,7 @@ final class FunctionCommentRule implements Rule
             return;
         }
 
-        $lineStart = strrpos(substr($text, 0, $function->span->start), needle: "\n");
+        $lineStart = Strings::lastNewlineBefore($text, $function->span->start);
         $declaration = $lineStart === false ? 0 : $lineStart + 1;
         $this->add(
             $context,

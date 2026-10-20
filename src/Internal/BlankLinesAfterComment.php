@@ -39,7 +39,7 @@ final class BlankLinesAfterComment
             return null;
         }
 
-        $lineStart = strrpos(substr($text, 0, $next), "\n");
+        $lineStart = Strings::lastNewlineBefore($text, $next);
         $from = $end + (str_starts_with(substr($text, $end, 2), $eol) ? strlen($eol) : 0);
         $to = $lineStart === false ? 0 : $lineStart + 1;
 

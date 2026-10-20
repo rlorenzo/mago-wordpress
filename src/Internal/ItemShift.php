@@ -55,7 +55,7 @@ final class ItemShift
     /** What the new item indent adds to the indent of the line the item starts on. */
     private static function delta(string $text, int $start, string $indent): string
     {
-        $newline = strrpos(substr($text, 0, $start), "\n");
+        $newline = Strings::lastNewlineBefore($text, $start);
         $lineStart = $newline === false ? 0 : $newline + 1;
         $lead = substr($text, $lineStart, $start - $lineStart);
         if (trim($lead) !== '') {
