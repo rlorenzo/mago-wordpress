@@ -9,6 +9,8 @@ use Mago\Sdk\Syntax\SourceFile;
 use Mago\Sdk\Syntax\Trivia;
 use Mago\Sdk\Syntax\TriviaKind;
 
+use function strlen;
+use function strpbrk;
 use function strrpos;
 use function substr;
 use function trim;
@@ -33,29 +35,18 @@ final class LeadingComment
     {
         $text = $file->contents;
         $end = $start;
-        while ($end > 0 && trim($text[$end - 1]) === '') {
+        while ($end > 0 && strpbrk($text[$end - 1], " \t\n\r\v\0") !== false) {
             --$end;
         }
 
-        $found = null;
-        foreach (self::trivia($file) as $trivia) {
-            if ($trivia->span->end === $end) {
-                $found = $trivia;
-
-                break;
-            }
-
-            if ($trivia->span->end > $end) {
-                break;
-            }
-        }
+        $found = self::trivia($file)[$end] ?? null;
 
         if ($found === null) {
             return null;
         }
 
         if ($found->kind !== TriviaKind::DocBlockComment) {
-            $lineStart = strrpos(substr($text, 0, $found->span->start), "\n");
+            $lineStart = Strings::lastNewlineBefore($text, $found->span->start);
             $from = $lineStart === false ? 0 : $lineStart + 1;
             if (trim(substr($text, $from, $found->span->start - $from)) !== '') {
                 return null;
@@ -65,14 +56,22 @@ final class LeadingComment
         return ['kind' => $found->kind, 'span' => $found->span];
     }
 
-    /** @return list<Trivia> */
+    /**
+     * The file's comments by the offset they end at.
+     *
+     * @return array<int, Trivia>
+     */
     private static function trivia(SourceFile $file): array
     {
         return FileCache::remember($file, 'leading-comment-trivia', static function () use ($file): array {
             $trivia = $file->getTrivia();
             usort($trivia, static fn($a, $b): int => $a->span->start <=> $b->span->start);
+            $byEnd = [];
+            foreach ($trivia as $piece) {
+                $byEnd[$piece->span->end] ??= $piece;
+            }
 
-            return $trivia;
+            return $byEnd;
         });
     }
 }
