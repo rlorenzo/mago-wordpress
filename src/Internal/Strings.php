@@ -23,6 +23,7 @@ use function preg_replace_callback;
 use function str_ends_with;
 use function str_starts_with;
 use function strlen;
+use function strrpos;
 use function strtolower;
 use function strtr;
 use function substr;
@@ -225,5 +226,11 @@ final class Strings
             . chr(0x80 | (($codepoint >> 6) & 0x3F))
             . chr(0x80 | ($codepoint & 0x3F))
         );
+    }
+
+    /** The offset of the last "\n" before $offset, as `strrpos(substr($text, 0, $offset), "\n")` finds it, without copying the text. */
+    public static function lastNewlineBefore(string $text, int $offset): int|false
+    {
+        return $offset === 0 ? false : strrpos($text, "\n", $offset - strlen($text) - 1);
     }
 }

@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function array_slice;
 use function count;
@@ -153,7 +154,7 @@ final class DisallowLonelyIfRule implements Rule
         $condition = rtrim($between($ifKeyword->span->end, $innerOpen->span->start));
 
         // The inner `if` line goes whole when it has a line of its own.
-        $newlineBefore = strrpos(substr($contents, offset: 0, length: $inner->span->start), needle: "\n");
+        $newlineBefore = Strings::lastNewlineBefore($contents, $inner->span->start);
         $lineStart = $newlineBefore === false ? 0 : $newlineBefore + 1;
         $from = $lineStart > $block->span->start ? $lineStart : $inner->span->start;
         $to = $innerOpen->span->start + 1;

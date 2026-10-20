@@ -67,7 +67,7 @@ final class DocBlockScan
     /** @param array{code: string, text: string, offset: int, line: int} $token The column (1-based, a tab counting as one) of a token. */
     public static function column(array $token, string $source): int
     {
-        $lineStart = strrpos(substr($source, 0, $token['offset']), "\n");
+        $lineStart = Strings::lastNewlineBefore($source, $token['offset']);
 
         return $token['offset'] - ($lineStart === false ? -1 : $lineStart);
     }
@@ -79,7 +79,7 @@ final class DocBlockScan
      */
     public static function visualColumn(array $token, string $source): int
     {
-        $lineStart = strrpos(substr($source, 0, $token['offset']), "\n");
+        $lineStart = Strings::lastNewlineBefore($source, $token['offset']);
         $prefix = substr(
             $source,
             $lineStart === false ? 0 : $lineStart + 1,

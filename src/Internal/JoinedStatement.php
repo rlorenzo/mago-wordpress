@@ -80,7 +80,7 @@ final class JoinedStatement
     /** The whitespace at the start of the line that holds $offset. */
     private static function indentOf(string $text, int $offset): string
     {
-        $newline = strrpos(substr($text, 0, $offset), "\n");
+        $newline = Strings::lastNewlineBefore($text, $offset);
         $start = $newline === false ? 0 : $newline + 1;
         $line = substr($text, $start, $offset - $start);
 

@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Strings;
 
 use function array_filter;
 use function count;
@@ -173,7 +174,7 @@ final class InlineControlStructureRule implements Rule
     /** The keyword line's indentation, or null when the line opens with inline HTML or an open tag. */
     private static function indent(string $contents, int $offset): ?string
     {
-        $lineStart = strrpos(substr($contents, offset: 0, length: $offset), needle: "\n");
+        $lineStart = Strings::lastNewlineBefore($contents, $offset);
         $lineStart = $lineStart === false ? 0 : $lineStart + 1;
         $before = substr($contents, $lineStart, $offset - $lineStart);
         $indent = substr($before, offset: 0, length: strspn($before, characters: " \t"));

@@ -26,7 +26,7 @@ final class ScopeColon
             return false;
         }
 
-        $lineStart = strrpos(substr($text, 0, $colon), "\n");
+        $lineStart = Strings::lastNewlineBefore($text, $colon);
         $line = substr(
             $text,
             $lineStart === false ? 0 : $lineStart + 1,
