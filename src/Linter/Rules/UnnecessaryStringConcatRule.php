@@ -28,7 +28,7 @@ use const T_WHITESPACE;
  * Like the sniff it only compares the two tokens next to the dot (a comment between them, or a
  * dot next to a variable or a number, is not reported), skips two strings that open with different
  * characters (`'a' . "b"`) and a `'<' . '?'` or `'?' . '>'` split, which is how a PHP string holds a
- * tag. The sniff's `allowMultiline` and `error` properties have no setting here: use the rule's level.
+ * tag. `allowMultiline` is on, as WordPress-Extra sets it: two strings on different lines are not reported. The `error` property has no setting here: use the rule's level.
  *
  * @mago-expect lint:cyclomatic-complexity
  */
@@ -64,11 +64,20 @@ final class UnnecessaryStringConcatRule implements Rule
 
         // The string before the last dot, if that dot follows a string literal.
         $left = null;
+        $leftEnd = 0;
         $dot = 0;
         $previous = '';
         $previousEnd = '';
+        $previousPos = 0;
         foreach (self::units($text) as [$unit, $offset, $end]) {
-            if ($left !== null && self::isString($unit) && $left[0] === $unit[0] && !self::isTagSplit($left, $unit)) {
+            if (
+                $left !== null
+                && self::isString($unit)
+                && $left[0] === $unit[0]
+                && !self::isTagSplit($left, $unit)
+                // WordPress-Extra sets `allowMultiline`: strings on different lines are not joined needlessly.
+                && !str_contains(substr($text, $leftEnd, $offset - $leftEnd), "\n")
+            ) {
                 $this->report->issue(
                     $context,
                     Issue::new(
@@ -83,11 +92,13 @@ final class UnnecessaryStringConcatRule implements Rule
             $left = null;
             if ($unit === '.' && self::isString($previous)) {
                 $left = $previousEnd;
+                $leftEnd = $previousPos + strlen($previous);
                 $dot = $offset;
             }
 
             $previous = $unit;
             $previousEnd = $end;
+            $previousPos = $offset;
         }
     }
 
