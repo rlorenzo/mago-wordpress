@@ -14,7 +14,7 @@ $four = 'a' . 'b' . 'c';
 $five = $a . 'one' . 'two';
 // @mago-expect lint:generic/unnecessary-string-concat
 echo $data['my' . 'index'];
-// @mago-expect lint:generic/unnecessary-string-concat
+// WordPress-Extra allows the concatenation to span lines.
 $six = 'a'
 	. 'b';
 
