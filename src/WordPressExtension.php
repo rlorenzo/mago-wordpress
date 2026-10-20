@@ -253,6 +253,8 @@ final class WordPressExtension
                 new NullableTypeDeclarationRule($report),
                 new ScopeKeywordSpacingRule($report),
                 new SpreadOperatorSpacingAfterRule($report),
+                // Reads the shared token stream too, so it runs before DisallowMultipleAssignmentsRule frees it.
+                new EscapeOutputRule($report, $settings),
                 new DisallowMultipleAssignmentsRule($report),
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
@@ -266,7 +268,6 @@ final class WordPressExtension
                 ),
                 new PreparedSqlUnquotedComplexPlaceholderRule($report),
                 new SafeRedirectRule($report),
-                new EscapeOutputRule($report, $settings),
                 ...SplitRule::pair(
                     new ValidHookNameRule($report, $settings),
                     $report,
