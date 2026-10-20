@@ -15,7 +15,6 @@ use function str_starts_with;
 use function strlen;
 use function strtolower;
 use function substr;
-use function substr_count;
 use function trim;
 use function usort;
 
@@ -39,6 +38,12 @@ final class PhpcsComments
      */
     public static function tokens(SourceFile $file): array
     {
+        return FileCache::remember($file, 'phpcs-comments', static fn(): array => self::build($file));
+    }
+
+    /** @return list<array{type: string, text: string, line: int, span: Span, adjacent: bool}> */
+    private static function build(SourceFile $file): array
+    {
         $trivia = $file->getTrivia();
         usort($trivia, static fn($a, $b): int => $a->span->start <=> $b->span->start);
         $tokens = [];
@@ -47,7 +52,7 @@ final class PhpcsComments
             $start = $comment->span->start;
             $adjacent = $end !== null && trim(substr($file->contents, $end, $start - $end)) === '';
             $end = $comment->span->end;
-            $line = substr_count($file->contents, "\n", 0, $start) + 1;
+            $line = LineIndex::of($file, $start);
             $text = $file->getText($comment->span);
             if ($comment->kind === TriviaKind::DocBlockComment) {
                 $tokens[] = [
