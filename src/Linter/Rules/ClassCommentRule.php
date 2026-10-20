@@ -13,6 +13,7 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\TriviaKind;
 use Rlorenzo\MagoWordPress\Internal\LeadingComment;
+use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\PhpText;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -67,7 +68,7 @@ final class ClassCommentRule implements Rule
             }
         }
 
-        if (PhpText::line($text, self::tokenAbove($text, $keyword) - 1) === (PhpText::line($text, $keyword) - 1)) {
+        if (LineIndex::of($file, self::tokenAbove($text, $keyword) - 1) === (LineIndex::of($file, $keyword) - 1)) {
             return;
         }
 

@@ -13,6 +13,7 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\DocComment;
 use Rlorenzo\MagoWordPress\Internal\FileCommentTags;
+use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\PhpText;
 use Rlorenzo\MagoWordPress\Internal\Report;
@@ -113,7 +114,7 @@ final class FileCommentRule implements Rule
             return;
         }
 
-        $line = static fn(int $offset): int => PhpText::line($text, $offset);
+        $line = static fn(int $offset): int => LineIndex::of($context->file, $offset);
         if ($line($start) > ($line($open->start) + 1)) {
             $this->add($context, 'There must be no blank lines before the file comment', $open, 'SpacingAfterOpen');
         }
