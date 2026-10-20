@@ -133,6 +133,12 @@ final class PhpcsRuleset
      * SlowDBQuery, ValidatedSanitizedInput).
      */
     private const CORE_SNIFFS = [
+        'WordPress.Arrays.ArrayDeclarationSpacing',
+        'WordPress.Arrays.ArrayKeySpacingRestrictions',
+        'WordPress.Arrays.MultipleStatementAlignment',
+        'NormalizedArrays.Arrays.ArrayBraceSpacing',
+        'NormalizedArrays.Arrays.CommaAfterLast',
+        'Generic.Formatting.MultipleStatementAlignment',
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition',
         'WordPress.DateTime.CurrentTimeTimestamp',
         'WordPress.DateTime.RestrictedFunctions',

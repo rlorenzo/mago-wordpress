@@ -17,6 +17,7 @@ use Mago\Sdk\Syntax\SourceFile;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function max;
+use function ord;
 use function str_contains;
 use function str_repeat;
 use function strlen;
@@ -32,7 +33,7 @@ use function trim;
  * and a longer key gets a single space before its arrow. Single-line arrays get one space before
  * each arrow. `mago format` aligns every arrow however long the key, so this is meant to run after
  * it, as `mago lint --fix --only wordpress/array-alignment` (the third step of
- * `mago-wordpress format`); it is off by default.
+ * `mago-wordpress format`).
  *
  * Columns are counted with a tab width of 4, as the `WordPress` ruleset sets. An item whose key and
  * arrow are on different lines, or with a comment between them, is left out, as `ignoreNewlines`
@@ -58,9 +59,9 @@ final class ArrayAlignmentRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/array-alignment',
             name: 'Array alignment',
-            description: 'Aligns the double arrows of a multi-line array up to column 60, as WordPress-Core does. Off by default; run after `mago format`.',
+            description: 'Aligns the double arrows of a multi-line array up to column 60, as WordPress-Core does. `mago-wordpress format` runs its fix after `mago format`.',
             defaultLevel: Level::Warning,
-            defaultEnabled: false,
+            defaultEnabled: true,
             targets: [NodeKind::LegacyArray, NodeKind::Array],
         );
     }
@@ -231,7 +232,10 @@ final class ArrayAlignmentRule implements Rule
         $start = $newline === false ? 0 : $newline + 1;
         $width = 0;
         for ($i = $start; $i < $offset; ++$i) {
-            $width += $file->contents[$i] === "\t" ? self::TAB_WIDTH - ($width % self::TAB_WIDTH) : 1;
+            // Characters, not bytes, as phpcs counts (a UTF-8 continuation byte is no column).
+            $width += $file->contents[$i] === "\t"
+                ? self::TAB_WIDTH - ($width % self::TAB_WIDTH)
+                : (int) ((ord($file->contents[$i]) & 0xC0) !== 0x80);
         }
 
         return $width;

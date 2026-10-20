@@ -33,7 +33,7 @@ use function substr;
  * an array with explicit keys and several items puts each item on a line of its own, and so does
  * every multi-line array. `mago format` keeps a short keyed array on one line, so this runs after
  * it, as `mago lint --fix --only wordpress/array-declaration-spacing` (a step of
- * `mago-wordpress format`); it is off by default. The fix breaks the array the way phpcbf does over
+ * `mago-wordpress format`). The fix breaks the array the way phpcbf does over
  * its passes, with the indentation the full ruleset gives: items one tab in from the line the array
  * starts on, the closing bracket on that indentation.
  */
@@ -50,9 +50,9 @@ final class ArrayDeclarationSpacingRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/array-declaration-spacing',
             name: 'Array declaration spacing',
-            description: 'Puts each item of a multi-item array with explicit keys, and of any multi-line array, on its own line. Off by default; run after `mago format`.',
+            description: 'Puts each item of a multi-item array with explicit keys, and of any multi-line array, on its own line. `mago-wordpress format` runs its fix after `mago format`.',
             defaultLevel: Level::Error,
-            defaultEnabled: false,
+            defaultEnabled: true,
             targets: [NodeKind::Program],
         );
     }

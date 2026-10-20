@@ -18,7 +18,7 @@ use function substr;
 use function trim;
 
 /**
- * The first equals sign of a constant, `static` or property declaration, and the numbers the
+ * The equals signs of a constant, `static` or property declaration, and the numbers the
  * alignment sniff reads off an assignment: where the variable ends, how long the operator is and
  * how much space comes before it.
  *
@@ -27,31 +27,6 @@ use function trim;
 final class AssignmentItems
 {
     private function __construct() {}
-
-    /**
-     * @return null|array{int, Span} the end of the name or variable and the `=`
-     */
-    public static function first(SourceFile $file, Node $declaration): ?array
-    {
-        $text = $file->contents;
-        foreach ($file->getDescendants($declaration, NodeKind::LocalIdentifier) as $name) {
-            if ($declaration->kind === NodeKind::Constant || $declaration->kind === NodeKind::ClassLikeConstant) {
-                return self::equals($text, $name->span->end);
-            }
-        }
-
-        foreach ($file->getDescendants($declaration, NodeKind::DirectVariable) as $variable) {
-            $item = $file->getParent($variable);
-            if (
-                $item !== null
-                && in_array($item->kind, [NodeKind::PropertyConcreteItem, NodeKind::StaticConcreteItem], strict: true)
-            ) {
-                return self::equals($text, $variable->span->end);
-            }
-        }
-
-        return null;
-    }
 
     /**
      * @param Span $operator
@@ -78,6 +53,46 @@ final class AssignmentItems
     }
 
     /**
+     * Every item with a default of a constant, `static` or property declaration, in source order.
+     *
+     * @return list<array{int, Span}> the end of each name or variable and its `=`
+     */
+    public static function all(SourceFile $file, Node $declaration): array
+    {
+        $text = $file->contents;
+        $found = [];
+        $names = $declaration->kind === NodeKind::Constant || $declaration->kind === NodeKind::ClassLikeConstant;
+        foreach ($file->getDescendants(
+            $declaration,
+            $names ? NodeKind::LocalIdentifier : NodeKind::DirectVariable,
+        ) as $name) {
+            $item = $file->getParent($name);
+            if (
+                $item === null
+                || !in_array(
+                    $item->kind,
+                    [
+                        NodeKind::ConstantItem,
+                        NodeKind::ClassLikeConstantItem,
+                        NodeKind::PropertyConcreteItem,
+                        NodeKind::StaticConcreteItem,
+                    ],
+                    strict: true,
+                )
+            ) {
+                continue;
+            }
+
+            $equals = self::equals($text, $name->span->end);
+            if ($equals !== null) {
+                $found[] = $equals;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
      * @return null|array{int, Span}
      */
     private static function equals(string $text, int $from): ?array
@@ -93,7 +108,7 @@ final class AssignmentItems
 
     private static function lineStart(string $text, int $offset): int
     {
-        $newline = $offset === 0 ? false : strrpos(substr($text, 0, $offset), "\n");
+        $newline = $offset === 0 ? false : strrpos($text, "\n", $offset - strlen($text) - 1);
 
         return $newline === false ? 0 : $newline + 1;
     }

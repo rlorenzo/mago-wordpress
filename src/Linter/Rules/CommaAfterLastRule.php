@@ -29,8 +29,7 @@ use function substr;
  * `MissingMultiLineCloserSameLine` when the closing bracket is on that item's line), and a
  * single-line array must not have one (`FoundSingleLine`). `wordpress/array-declaration-spacing`
  * breaks an array onto lines but leaves the last item without a comma, so this runs after it, as
- * `mago lint --fix --only wordpress/comma-after-last` (a step of `mago-wordpress format`); it is off
- * by default.
+ * `mago lint --fix --only wordpress/comma-after-last` (a step of `mago-wordpress format`).
  *
  * A missing comma is reported at the last character of the last item, which is the sniff's last token
  * unless that token spans lines (a multi-line string), and a forbidden one at the comma; the line of the closing bracket is compared with that
@@ -51,9 +50,9 @@ final class CommaAfterLastRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/comma-after-last',
             name: 'Comma after last array item',
-            description: 'Requires a comma after the last item of a multi-line array and forbids one in a single-line array. Off by default; run after `wordpress/array-declaration-spacing`.',
+            description: 'Requires a comma after the last item of a multi-line array and forbids one in a single-line array. `mago-wordpress format` runs its fix after `wordpress/array-declaration-spacing`.',
             defaultLevel: Level::Error,
-            defaultEnabled: false,
+            defaultEnabled: true,
             targets: [NodeKind::Program],
         );
     }

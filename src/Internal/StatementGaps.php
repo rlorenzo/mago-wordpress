@@ -32,12 +32,13 @@ final class StatementGaps
         $last = null;
         for ($i = $index; $tokens->code($i) !== null && $tokens->pos($i) < $statement->span->end; ++$i) {
             $line = LineIndex::of($file, $tokens->pos($i));
-            if ($last !== null && ($line - $last) > 1 && $arrayEnd === null) {
-                return true;
-            }
-
+            // The array's own closing token ends it before the blank-line test, as in the sniff.
             if ($i === $arrayEnd) {
                 $arrayEnd = null;
+            }
+
+            if ($last !== null && ($line - $last) > 1 && $arrayEnd === null) {
+                return true;
             }
 
             $arrayEnd ??= self::arrayEnd($tokens, $i);

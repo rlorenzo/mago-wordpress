@@ -152,3 +152,5 @@ generic/disallow-short-open-tag
 generic/disallow-short-ternary
 generic/unnecessary-final-modifier
 generic/for-loop-should-be-while-loop
+wordpress/array-brace-spacing
+wordpress/array-key-spacing-restrictions

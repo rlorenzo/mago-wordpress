@@ -9,6 +9,8 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
+use function array_filter;
+use function array_map;
 use function in_array;
 
 /**
@@ -21,26 +23,31 @@ final class AssignmentStatement
     private function __construct() {}
 
     /**
-     * @return null|array{varEnd: int, length: int, found: int, gap: Span, operator: Span}
+     * @return list<array{varEnd: int, length: int, found: int, gap: Span, operator: Span}> one per
+     *         equals sign the sniff sees: a declaration with several defaults has one per item
      */
-    public static function of(SourceFile $file, Node $child): ?array
+    public static function of(SourceFile $file, Node $child): array
     {
         $node = $file->getChildren($child)[0] ?? null;
         if (!in_array($child->kind, [NodeKind::Statement, NodeKind::ClassLikeMember], strict: true) || $node === null) {
-            return null;
+            return [];
         }
 
         $found = match ($node->kind) {
-            NodeKind::ExpressionStatement => self::expression($file, $node),
+            NodeKind::ExpressionStatement => array_filter([self::expression($file, $node)]),
             NodeKind::Constant,
             NodeKind::Static,
             NodeKind::ClassLikeConstant,
             NodeKind::Property,
-                => AssignmentItems::first($file, $node),
-            default => null,
+                => AssignmentItems::all($file, $node),
+            default => [],
         };
 
-        return $found === null ? null : AssignmentItems::describe($file->contents, $found[0], $found[1]);
+        return array_map(static fn(array $item): array => AssignmentItems::describe(
+            $file->contents,
+            $item[0],
+            $item[1],
+        ), $found);
     }
 
     /**

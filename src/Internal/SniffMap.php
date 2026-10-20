@@ -22,6 +22,9 @@ final class SniffMap
      * @var array<string, non-empty-list<string>>
      */
     public const RULES = [
+        'WordPress.Arrays.ArrayDeclarationSpacing' => ['wordpress/array-declaration-spacing'],
+        'WordPress.Arrays.ArrayKeySpacingRestrictions' => ['wordpress/array-key-spacing-restrictions'],
+        'WordPress.Arrays.MultipleStatementAlignment' => ['wordpress/array-alignment'],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => ['wordpress/assignment-in-ternary-condition'],
         'WordPress.CodeAnalysis.EscapedNotTranslated' => ['wordpress/escaped-not-translated'],
         'WordPress.DateTime.CurrentTimeTimestamp' => ['wordpress/wp-date-time'],
@@ -102,6 +105,7 @@ final class SniffMap
         'Generic.Files.OneObjectStructurePerFile' => ['generic/one-object-structure-per-file'],
         'Generic.Formatting.SpaceAfterCast' => ['generic/space-after-cast'],
         'Generic.NamingConventions.UpperCaseConstantName' => ['generic/upper-case-constant-name'],
+        'Generic.Formatting.MultipleStatementAlignment' => ['wordpress/statement-alignment'],
         'Generic.PHP.BacktickOperator' => ['no-shell-execute-string'],
         'Generic.PHP.DisallowAlternativePHPTags' => ['generic/disallow-alternative-php-tags'],
         'Generic.PHP.DisallowShortOpenTag' => ['generic/disallow-short-open-tag'],
@@ -116,6 +120,8 @@ final class SniffMap
         'Generic.WhiteSpace.ArbitraryParenthesesSpacing' => ['generic/arbitrary-parentheses-spacing'],
         'Generic.WhiteSpace.IncrementDecrementSpacing' => ['generic/increment-decrement-spacing'],
         'Generic.WhiteSpace.LanguageConstructSpacing' => ['wordpress/language-construct-spacing'],
+        'NormalizedArrays.Arrays.ArrayBraceSpacing' => ['wordpress/array-brace-spacing'],
+        'NormalizedArrays.Arrays.CommaAfterLast' => ['wordpress/comma-after-last'],
         'PEAR.NamingConventions.ValidClassName' => ['generic/valid-class-name'],
         'PSR2.Classes.PropertyDeclaration' => [
             'generic/property-declaration',

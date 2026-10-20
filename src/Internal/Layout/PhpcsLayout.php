@@ -363,6 +363,9 @@ final class PhpcsLayout
     /** Files with more tokens than this are skipped: the model costs about 600 bytes a token (a worker has 128M). */
     public const MAX_TOKENS = 100000;
 
+    /** The tokenizer's own lists exhaust a worker on a dense file before the token count is known, so a big file is skipped by size. */
+    public const MAX_BYTES = 300000;
+
     public static function of(SourceFile $file): ?self
     {
         return FileCache::remember($file, 'phpcs-layout', static fn(): ?self => self::build($file->contents));
@@ -375,6 +378,10 @@ final class PhpcsLayout
 
     public static function build(string $source): ?self
     {
+        if (strlen($source) > self::MAX_BYTES) {
+            return null;
+        }
+
         $eol = preg_match('/\R/', $source, $match) === 1 ? $match[0] : "\n";
         [$codes, $texts] = LayoutTokenizer::tokenize($source, $eol);
         if (count($codes) > self::MAX_TOKENS) {
