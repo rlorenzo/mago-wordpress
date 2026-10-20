@@ -122,6 +122,7 @@ final class SniffMap
         'Generic.WhiteSpace.LanguageConstructSpacing' => ['wordpress/language-construct-spacing'],
         'NormalizedArrays.Arrays.ArrayBraceSpacing' => ['wordpress/array-brace-spacing'],
         'NormalizedArrays.Arrays.CommaAfterLast' => ['wordpress/comma-after-last'],
+        'PEAR.Functions.FunctionCallSignature' => ['wordpress/function-call-signature'],
         'PEAR.NamingConventions.ValidClassName' => ['generic/valid-class-name'],
         'PSR2.Classes.PropertyDeclaration' => [
             'generic/property-declaration',
@@ -195,6 +196,14 @@ final class SniffMap
         'PSR12.Keywords.ShortFormTypeKeywords' => ['generic/short-form-type-keywords'],
         'Universal.Attributes.DisallowAttributeParentheses' => ['generic/disallow-attribute-parentheses'],
         'PEAR.Files.IncludingFile' => ['generic/including-file', 'generic/including-file-warning'],
+        'Generic.Functions.FunctionCallArgumentSpacing' => ['generic/function-call-argument-spacing'],
+        'Generic.Functions.OpeningFunctionBraceKernighanRitchie' => [
+            'generic/opening-function-brace-kernighan-ritchie',
+        ],
+        'Squiz.Functions.FunctionDeclarationArgumentSpacing' => ['generic/function-declaration-argument-spacing'],
+        'PSR12.Functions.ReturnTypeDeclaration' => ['generic/return-type-declaration'],
+        'PSR2.Methods.FunctionClosingBrace' => ['generic/function-closing-brace'],
+        'Squiz.Functions.MultiLineFunctionDeclaration' => ['generic/multi-line-function-declaration'],
     ];
 
     /** A rule this package registers (`wordpress/*`, `generic/*`), not one of Mago's core rules. */

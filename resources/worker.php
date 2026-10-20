@@ -23,6 +23,22 @@ use Rlorenzo\MagoWordPress\WordPressExtension;
 // @mago-expect lint:no-ini-set
 ini_set('display_errors', value: 'stderr');
 
+// The layout rules hold a token model of the file being linted, and a dense file of a few hundred KB
+// outgrows PHP's default 128M. The worker is a process of its own, so give it room unless the
+// caller set a bigger limit (or none).
+$setting = (string) ini_get('memory_limit');
+$limit = (int) $setting
+* match (strtoupper(substr($setting, offset: -1))) {
+    'G' => 1024 ** 3,
+    'M' => 1024 ** 2,
+    'K' => 1024,
+    default => 1,
+};
+if ($limit !== -1 && $limit < (512 * 1024 * 1024)) {
+    // @mago-expect lint:no-ini-set
+    ini_set('memory_limit', value: '512M');
+}
+
 (static function (): void {
     $cwd = getcwd();
     $cwd = $cwd === false ? '.' : $cwd;

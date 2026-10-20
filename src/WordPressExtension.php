@@ -75,9 +75,12 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ForbiddenFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForeachUniqueAssignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopShouldBeWhileLoopRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ForLoopWithTestFunctionCallRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCallArgumentSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCallSignatureRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionClosingBraceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentThrowTagRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionDeclarationArgumentSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
@@ -97,6 +100,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseTypeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseUseFunctionConstRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\MultiLineFunctionDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoLeadingBackslashRule;
@@ -107,6 +111,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoUselessAliasesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneNamespaceDeclarationPerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneObjectStructurePerFileRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\OpeningFunctionBraceKernighanRitchieRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OperatorSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
@@ -120,6 +125,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRul
 use Rlorenzo\MagoWordPress\Linter\Rules\PropertyDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ReturnTypeDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ScopeIndentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
@@ -203,6 +209,14 @@ final class WordPressExtension
                 new ControlStructureSpacingRule($report),
                 new ArbitraryParenthesesSpacingRule($report),
                 new OperatorSpacingRule($report),
+                // These read the phpcs tokens too; generic/disallow-multiple-assignments, the last reader, frees them.
+                new FunctionCallArgumentSpacingRule($report),
+                new FunctionClosingBraceRule($report),
+                new ReturnTypeDeclarationRule($report),
+                new OpeningFunctionBraceKernighanRitchieRule($report),
+                new MultiLineFunctionDeclarationRule($report),
+                new FunctionDeclarationArgumentSpacingRule($report),
+                new FunctionCallSignatureRule($report),
                 new DisallowMultipleAssignmentsRule($report),
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
@@ -267,7 +281,6 @@ final class WordPressExtension
                 new ArrayDeclarationSpacingRule($report),
                 new ArrayBraceSpacingRule($report),
                 new CommaAfterLastRule($report),
-                new FunctionCallSignatureRule($report),
                 new BlockCommentRule($report),
                 new ClassCommentRule($report),
                 new ClosingDeclarationCommentRule($report),

@@ -40,7 +40,6 @@ final class LevelsTest extends TestCase
         'generic/unnecessary-string-concat' => Level::Error, // the sniff's `error` property, true unless a ruleset changes it
         'wordpress/capabilities' => Level::Error, // Deprecated: error or warning against minimum_wp_version
         'wordpress/enqueued-resource-parameters' => Level::Warning,
-        'wordpress/function-call-signature' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/array-declaration-spacing' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/operator-spacing' => Level::Error, // addFixableError throughout, inherited from the Squiz sniff
         'generic/arbitrary-parentheses-spacing' => Level::Error, // FoundEmpty is a warning

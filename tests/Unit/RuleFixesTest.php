@@ -500,8 +500,8 @@ final class RuleFixesTest extends TestCase
         yield 'function-call-signature leaves heredocs, comments and single-line calls alone' => [
             'wordpress/function-call-signature',
             '',
-            "foo( 'a', <<<EOT\n  keep\n  EOT\n);\nbar( 1, /* c */ 2,\n\t3 );\nbaz( 1, 2 );",
-            "foo(\n\t'a',\n\t<<<EOT\n  keep\n  EOT\n);\nbar( 1, /* c */ 2,\n\t3 );\nbaz( 1, 2 );",
+            "foo( 'a', <<<EOT\n  keep\n  EOT\n);\nbar( 1, /* c */ 2,\n\t3\n);\nbaz( 1, 2 );",
+            "foo(\n\t'a',\n\t<<<EOT\n  keep\n  EOT\n);\nbar( 1, /* c */ 2,\n\t3\n);\nbaz( 1, 2 );",
         ];
 
         yield 'function-call-signature keeps the lines of an interpolated multi-line string as they are' => [
