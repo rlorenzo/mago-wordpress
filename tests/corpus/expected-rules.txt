@@ -160,3 +160,10 @@ generic/return-type-declaration
 generic/opening-function-brace-kernighan-ritchie
 generic/multi-line-function-declaration
 generic/function-declaration-argument-spacing
+generic/class-declaration
+generic/class-instantiation
+generic/disallow-multiple-statements
+generic/disallow-namespace-curly-brace-syntax
+generic/embedded-php
+generic/opening-brace-same-line
+generic/trait-use-declaration

@@ -58,7 +58,14 @@ final class WorkerTest extends TestCase
     public function testFindingDenseFileLintsAtTheDefaultMemoryLimit(): void
     {
         $function = <<<'PHP'
-            function wpx_f($a){ global $wpdb; if ( $a == $_GET["k"] ) { echo $a . $wpdb->get_var( "SELECT * FROM t WHERE id = $a" ); } $r = in_array( $a, array( 1, 2 ) ); return mt_rand(); }
+            function wpx_f($a){
+            global $wpdb;
+            if ( $a == $_GET["k"] ) {
+            echo $a . $wpdb->get_var( "SELECT * FROM t WHERE id = $a" );
+            }
+            $r = in_array( $a, array(1,2) );
+            return mt_rand();
+            }
 
             PHP;
         // 2,000 copies of one function make ~380 KB.

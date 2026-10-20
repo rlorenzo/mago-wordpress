@@ -195,6 +195,13 @@ final class SniffMap
         'PSR12.Files.FileHeader' => ['generic/file-header'],
         'PSR12.Keywords.ShortFormTypeKeywords' => ['generic/short-form-type-keywords'],
         'Universal.Attributes.DisallowAttributeParentheses' => ['generic/disallow-attribute-parentheses'],
+        'Generic.Classes.OpeningBraceSameLine' => ['generic/opening-brace-same-line'],
+        'Generic.Formatting.DisallowMultipleStatements' => ['generic/disallow-multiple-statements'],
+        'PSR2.Classes.ClassDeclaration' => ['generic/class-declaration'],
+        'PSR12.Classes.ClassInstantiation' => ['generic/class-instantiation'],
+        'PSR12.Traits.UseDeclaration' => ['generic/trait-use-declaration'],
+        'Squiz.PHP.EmbeddedPhp' => ['generic/embedded-php'],
+        'Universal.Namespaces.DisallowCurlyBraceSyntax' => ['generic/disallow-namespace-curly-brace-syntax'],
         'PEAR.Files.IncludingFile' => ['generic/including-file', 'generic/including-file-warning'],
         'Generic.Functions.FunctionCallArgumentSpacing' => ['generic/function-call-argument-spacing'],
         'Generic.Functions.OpeningFunctionBraceKernighanRitchie' => [

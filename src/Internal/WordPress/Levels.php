@@ -23,6 +23,12 @@ final class Levels
      * @var array<string, array<string, 'error'|'warning'|'error|warning'>>
      */
     public const SNIFFS = [
+        'Generic.Classes.OpeningBraceSameLine' => [
+            'BraceOnNewLine' => 'error',
+            'ContentAfterBrace' => 'error',
+            'MissingBrace' => 'warning',
+            'SpaceBeforeBrace' => 'error',
+        ],
         'Generic.CodeAnalysis.AssignmentInCondition' => [
             'Found' => 'warning',
             'FoundInWhileCondition' => 'warning',
@@ -91,6 +97,9 @@ final class Levels
         ],
         'Generic.Files.OneObjectStructurePerFile' => [
             'MultipleFound' => 'error',
+        ],
+        'Generic.Formatting.DisallowMultipleStatements' => [
+            'SameLine' => 'error',
         ],
         'Generic.Formatting.MultipleStatementAlignment' => [
             '*Warning' => 'warning',
@@ -220,6 +229,9 @@ final class Levels
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
         ],
+        'PSR12.Classes.ClassInstantiation' => [
+            'MissingParentheses' => 'error',
+        ],
         'PSR12.Files.FileHeader' => [
             'HeaderPosition' => 'error',
             'IncorrectGrouping' => 'error',
@@ -233,6 +245,45 @@ final class Levels
         ],
         'PSR12.Keywords.ShortFormTypeKeywords' => [
             'LongFound' => 'error',
+        ],
+        'PSR12.Traits.UseDeclaration' => [
+            'BlankLineAfterLastUse' => 'error',
+            'ConflictSameLine' => 'error',
+            'MultipleImport' => 'error',
+            'NoBlankLineAfterUse' => 'error',
+            'NotGrouped' => 'error',
+            'OpenBraceNewLine' => 'error',
+            'SpaceAfterAs' => 'error',
+            'SpaceAfterComma' => 'error',
+            'SpaceAfterInsteadof' => 'error',
+            'SpaceAfterOpeningBrace' => 'error',
+            'SpaceAfterUse' => 'error',
+            'SpaceBeforeAs' => 'error',
+            'SpaceBeforeClosingBrace' => 'error',
+            'SpaceBeforeComma' => 'error',
+            'SpaceBeforeInsteadof' => 'error',
+            'SpaceBeforeOpeningBrace' => 'error',
+            'SpaceBeforeSemicolon' => 'error',
+            'SpacingBeforeImport' => 'error',
+            'UseAfterBrace' => 'error',
+        ],
+        'PSR2.Classes.ClassDeclaration' => [
+            '*Line' => 'error',
+            'CloseBraceAfterBody' => 'error',
+            'CloseBraceSameLine' => 'error',
+            'ExtendsInterfaceSameLine' => 'error',
+            'FirstExtendsInterfaceSameLine' => 'error',
+            'FirstInterfaceSameLine' => 'error',
+            'InterfaceSameLine' => 'error',
+            'InterfaceWrongIndent' => 'error',
+            'NewlineBeforeKeyword' => 'error',
+            'NoSpaceBeforeName' => 'error',
+            'SpaceAfterKeyword' => 'error',
+            'SpaceAfterName' => 'error',
+            'SpaceBefore*' => 'error',
+            'SpaceBeforeComma' => 'error',
+            'SpaceBeforeKeyword' => 'error',
+            'SpaceBeforeName' => 'error',
         ],
         'PSR2.Classes.PropertyDeclaration' => [
             'AbstractAfterVisibility' => 'error',
@@ -433,6 +484,22 @@ final class Levels
         'Squiz.PHP.DisallowSizeFunctionsInLoops' => [
             'Found' => 'error',
         ],
+        'Squiz.PHP.EmbeddedPhp' => [
+            'ContentAfterEnd' => 'error',
+            'ContentAfterOpen' => 'error',
+            'ContentBeforeEnd' => 'error',
+            'ContentBeforeOpen' => 'error',
+            'Empty' => 'error',
+            'Indent' => 'error',
+            'MultipleStatements' => 'error',
+            'NoSemicolon' => 'error',
+            'OpenTagIndent' => 'error',
+            'ShortOpenEchoNoSemicolon' => 'error',
+            'SpacingAfter' => 'error',
+            'SpacingAfterOpen' => 'error',
+            'SpacingBefore' => 'error',
+            'SpacingBeforeClose' => 'error',
+        ],
         'Squiz.PHP.Eval' => [
             'Discouraged' => 'error',
         ],
@@ -500,6 +567,9 @@ final class Levels
         ],
         'Universal.Files.SeparateFunctionsFromOO' => [
             'Mixed' => 'error',
+        ],
+        'Universal.Namespaces.DisallowCurlyBraceSyntax' => [
+            'Forbidden' => 'error',
         ],
         'Universal.Namespaces.DisallowDeclarationWithoutName' => [
             'Forbidden' => 'error',
