@@ -11,6 +11,7 @@ use Rlorenzo\MagoWordPress\Internal\LeveledRule;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\SplitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\AnonClassKeywordSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArbitraryParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayBraceSpacingRule;
@@ -19,6 +20,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ArrayIndentationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayKeySpacingRestrictionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\AttributeBracketSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\BlockCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
@@ -109,6 +111,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseUseFunctionConstRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MethodScopeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\MultiLineFunctionDeclarationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\NamespaceDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoDoubleNegativeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoEchoSprintfRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoLeadingBackslashRule;
@@ -118,6 +121,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\NoReservedKeywordParameterNamesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoSilencedErrorsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NoUselessAliasesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\NullableTypeDeclarationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ObjectOperatorSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneNamespaceDeclarationPerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OneObjectStructurePerFileRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\OpeningBraceSameLineRule;
@@ -133,6 +137,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlUnquotedComplexPlaceholderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PropertyDeclarationRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\RequireAnonClassParenthesesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ReturnTypeDeclarationRule;
@@ -154,6 +159,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\SuperfluousWhitespaceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TraitUseDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\TypeSeparatorSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryFinalModifierRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnnecessaryHeredocRule;
@@ -162,6 +168,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\UnusedFunctionParameterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UpperCaseConstantNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UppercaseMagicConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UselessOverridingMethodRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\UseStatementKeywordSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidatedSanitizedInputRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidClassNameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ValidFunctionNameRule;
@@ -230,6 +237,13 @@ final class WordPressExtension
                 new MultiLineFunctionDeclarationRule($report),
                 new FunctionDeclarationArgumentSpacingRule($report),
                 new FunctionCallSignatureRule($report),
+                new AnonClassKeywordSpacingRule($report),
+                new AttributeBracketSpacingRule($report),
+                new NamespaceDeclarationRule($report),
+                new ObjectOperatorSpacingRule($report),
+                new RequireAnonClassParenthesesRule($report),
+                new TypeSeparatorSpacingRule($report),
+                new UseStatementKeywordSpacingRule($report),
                 new CastSpacingRule($report),
                 new HereNowdocIdentifierSpacingRule($report),
                 new NullableTypeDeclarationRule($report),

@@ -339,6 +339,9 @@ final class Levels
             'StaticBeforeVisibility' => 'error',
             'Underscore' => 'warning',
         ],
+        'PSR2.Namespaces.NamespaceDeclaration' => [
+            'BlankLineAfter' => 'error',
+        ],
         'Squiz.Classes.SelfMemberReference' => [
             'IncorrectCase' => 'error',
             'NotUsed' => 'error',
@@ -548,11 +551,18 @@ final class Levels
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
+        'Universal.Attributes.BracketSpacing' => [
+            'BlankLineAtEnd' => 'error',
+            'BlankLineAtStart' => 'error',
+        ],
         'Universal.Attributes.DisallowAttributeParentheses' => [
             'Found' => 'error',
         ],
         'Universal.Classes.ModifierKeywordOrder' => [
             'Incorrect' => 'error',
+        ],
+        'Universal.Classes.RequireAnonClassParentheses' => [
+            'Missing' => 'error',
         ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
@@ -609,6 +619,7 @@ final class Levels
         'Universal.Operators.StrictComparisons' => [
             '*' => 'warning',
         ],
+        'Universal.Operators.TypeSeparatorSpacing' => [],
         'Universal.PHP.LowercasePHPTag' => [
             '' => 'error',
             'Mixedcase' => 'error',
@@ -617,6 +628,7 @@ final class Levels
         'Universal.UseStatements.DisallowMixedGroupUse' => [
             'Found' => 'error',
         ],
+        'Universal.UseStatements.KeywordSpacing' => [],
         'Universal.UseStatements.LowercaseFunctionConst' => [
             'NotLowercase' => 'error',
         ],
@@ -627,6 +639,7 @@ final class Levels
         'Universal.UseStatements.NoUselessAliases' => [
             'Found' => 'error',
         ],
+        'Universal.WhiteSpace.AnonClassKeywordSpacing' => [],
         'Universal.WhiteSpace.CommaSpacing' => [
             'CommaAfterComment' => 'error',
         ],
@@ -920,6 +933,7 @@ final class Levels
             'OpenBraceNotSameLine' => 'error',
             'SpaceBetweenStructureColon' => 'error',
         ],
+        'WordPress.WhiteSpace.ObjectOperatorSpacing' => [],
         'WordPress.WhiteSpace.OperatorSpacing' => [],
     ];
 
