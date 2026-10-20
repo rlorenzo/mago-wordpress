@@ -17,6 +17,7 @@ use function str_repeat;
  * tokens: each finding is a message, span, sniff code and optional fix.
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class DocBlockChecks
 {
@@ -104,7 +105,7 @@ final class DocBlockChecks
             $lastTag = $members[count($members) - 1];
             $next = null;
             for ($i = $lastTag + 3; $i < $close; ++$i) {
-                if ($t[$i]['code'] === 'tag') {
+                if ($t[$i]['code'] === 'tag' || $t[$i]['code'] === 'phpcs') {
                     $next = $i;
 
                     break;

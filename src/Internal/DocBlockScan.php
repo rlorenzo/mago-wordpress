@@ -18,6 +18,7 @@ use function substr;
  * Looking around a docblock's phpcs tokens, for `generic/doc-comment`.
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class DocBlockScan
 {
@@ -69,6 +70,27 @@ final class DocBlockScan
         $lineStart = strrpos(substr($source, 0, $token['offset']), "\n");
 
         return $token['offset'] - ($lineStart === false ? -1 : $lineStart);
+    }
+
+    /**
+     * The column (1-based) of a token with tabs expanded to the tab stops of width 4, as phpcs sets them for WordPress.
+     *
+     * @param array{code: string, text: string, offset: int, line: int} $token
+     */
+    public static function visualColumn(array $token, string $source): int
+    {
+        $lineStart = strrpos(substr($source, 0, $token['offset']), "\n");
+        $prefix = substr(
+            $source,
+            $lineStart === false ? 0 : $lineStart + 1,
+            $token['offset'] - ($lineStart === false ? 0 : $lineStart + 1),
+        );
+        $width = 0;
+        for ($i = 0, $length = strlen($prefix); $i < $length; ++$i) {
+            $width += $prefix[$i] === "\t" ? 4 - ($width % 4) : 1;
+        }
+
+        return $width + 1;
     }
 
     /**

@@ -27,10 +27,8 @@ final class BlockCommentRun
     public static function from(array $tokens, int $first): array
     {
         $run = [$first];
-        if (str_ends_with($tokens[$first]['text'], '*/')) {
-            return $run;
-        }
-
+        // The sniff does not stop at a first line that already ends in `*/`: a comment on the next
+        // line joins the run.
         $line = $tokens[$first]['line'];
         for ($i = $first + 1; $i < count($tokens); ++$i) {
             $token = $tokens[$i];

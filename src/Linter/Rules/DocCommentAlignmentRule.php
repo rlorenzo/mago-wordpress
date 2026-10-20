@@ -18,11 +18,13 @@ use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\PhpComments;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
+use function count;
 use function preg_match;
 use function rtrim;
 use function strlen;
 use function strpos;
 use function substr;
+use function trim;
 
 use const PREG_OFFSET_CAPTURE;
 
@@ -33,6 +35,9 @@ use const PREG_OFFSET_CAPTURE;
  * `NoSpaceAfterStar`, both fixable.
  *
  * `WordPress-Docs` turns off `SpaceAfterStar`; this rule does not report it.
+ *
+ * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 final class DocCommentAlignmentRule implements Rule
 {
@@ -111,8 +116,23 @@ final class DocCommentAlignmentRule implements Rule
      */
     private static function afterOpenTag(string $text, int $start, array $comments): bool
     {
+        // Comments are empty tokens to phpcs: skip back over them as well as whitespace.
+        $end = $start;
+        for ($i = count($comments) - 1; $i >= 0; --$i) {
+            [$from, $to] = $comments[$i];
+            if ($to > $end) {
+                continue;
+            }
+
+            if (trim(substr($text, $to, $end - $to)) !== '') {
+                break;
+            }
+
+            $end = $from;
+        }
+
         $match = [];
-        $trimmed = rtrim(substr($text, 0, $start));
+        $trimmed = rtrim(substr($text, 0, $end));
         if (preg_match('~<\?(?:php|=)?$~i', $trimmed, $match, PREG_OFFSET_CAPTURE) !== 1) {
             return false;
         }

@@ -22,8 +22,10 @@ use function strlen;
 use const T_ATTRIBUTE;
 use const T_CLASS;
 use const T_COMMENT;
+use const T_CONST;
 use const T_DOC_COMMENT;
 use const T_DOUBLE_COLON;
+use const T_FUNCTION;
 use const T_NAME_FULLY_QUALIFIED;
 use const T_NAME_QUALIFIED;
 use const T_NAME_RELATIVE;
@@ -93,7 +95,7 @@ final class ClassInstantiationRule implements Rule
         $tokens = PhpToken::tokenize($contents);
         $count = count($tokens);
         foreach ($tokens as $index => $token) {
-            if ($token->id !== T_NEW) {
+            if ($token->id !== T_NEW || $this->isIdentifier($tokens, $index)) {
                 continue;
             }
 
@@ -123,6 +125,25 @@ final class ClassInstantiationRule implements Rule
                 [self::SNIFF . '.MissingParentheses'],
             );
         }
+    }
+
+    /**
+     * `Foo::NEW`, `const NEW` and `function new()` lex as T_NEW but are identifiers.
+     *
+     * @param list<PhpToken> $tokens
+     */
+    private function isIdentifier(array $tokens, int $new): bool
+    {
+        for ($i = $new - 1; $i >= 0; $i--) {
+            $id = $tokens[$i]->id;
+            if ($id === T_WHITESPACE || $id === T_COMMENT || $id === T_DOC_COMMENT) {
+                continue;
+            }
+
+            return $id === T_DOUBLE_COLON || $id === T_CONST || $id === T_FUNCTION;
+        }
+
+        return false;
     }
 
     /**

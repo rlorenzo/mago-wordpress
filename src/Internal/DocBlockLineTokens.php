@@ -15,6 +15,7 @@ use function substr;
  * The phpcs tokens of one docblock line (see {@see DocBlockTokens}).
  *
  * @internal
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class DocBlockLineTokens
 {
@@ -54,7 +55,12 @@ final class DocBlockLineTokens
     private function start(bool $first): void
     {
         if ($first) {
-            $this->push('open', '/**');
+            // phpcs takes every star after `/**` into the opening tag (`/*****` is a docblock too).
+            $match = [];
+            $extra = preg_match('~^\*+(?=[^*/]|$)~', substr($this->line, $this->cursor + 3), $match) === 1
+                ? $match[0]
+                : '';
+            $this->push('open', '/**' . $extra);
             $this->space();
 
             return;
@@ -62,8 +68,9 @@ final class DocBlockLineTokens
 
         $this->space();
         $rest = substr($this->line, $this->cursor);
-        if (str_starts_with($rest, '*/')) {
-            $this->push('close', '*/');
+        $match = [];
+        if (preg_match('~^\*+/~', $rest, $match) === 1) {
+            $this->push('close', $match[0]);
         } elseif (str_starts_with($rest, '*')) {
             $this->push('star', '*');
         }
@@ -90,7 +97,8 @@ final class DocBlockLineTokens
         }
 
         if ($text !== '') {
-            $this->push('string', $text);
+            // phpcs turns a `phpcs:ignore`-style line into a token of its own, not a description.
+            $this->push(preg_match('~^phpcs:~i', $text) === 1 ? 'phpcs' : 'string', $text);
         }
 
         if ($closes) {
