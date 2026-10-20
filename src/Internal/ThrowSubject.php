@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rlorenzo\MagoWordPress\Internal;
 
 use function in_array;
+use function strtolower;
 
 /**
  * What a single `throw` throws, read from the phpcs tokens the way
@@ -25,7 +26,10 @@ final class ThrowSubject
     {
         $next = $position + 1;
         $code = $tokens->code($next);
-        if ($code === 'T_NEW' || $code === 'T_NS_SEPARATOR' || $code === 'T_STRING') {
+        // phpcs has T_SELF and T_PARENT tokens, which this branch does not take: `throw self::make()`.
+        $named =
+            $code === 'T_STRING' && !in_array(strtolower($tokens->content($next)), ['self', 'parent'], strict: true);
+        if ($code === 'T_NEW' || $code === 'T_NS_SEPARATOR' || $named) {
             $name = self::className($tokens, $position, $next, $end);
 
             return [$name === null ? [] : [$name], 0];

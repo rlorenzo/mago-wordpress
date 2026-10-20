@@ -18,6 +18,7 @@ use function function_exists;
 use function iconv_strlen;
 use function implode;
 use function in_array;
+use function is_array;
 use function key;
 use function ltrim;
 use function max;
@@ -472,7 +473,7 @@ final class PhpcsLayout
     }
 
     /**
-     * @param array<string, true>|string|null $ignore token names that are not stop points
+     * @param array<string, true>|string|null $ignore token names (the keys of a map) that are not stop points
      */
     public function findStartOfStatement(int $start, array|string|null $ignore = null): int
     {
@@ -493,7 +494,7 @@ final class PhpcsLayout
             'T_MATCH_ARROW' => true,
             'T_SEMICOLON' => true,
         ];
-        foreach ($ignore === null ? [] : (array) $ignore as $code) {
+        foreach ($ignore === null ? [] : (is_array($ignore) ? array_keys($ignore) : [$ignore]) as $code) {
             $code = (string) $code;
             unset($startTokens[$code], $endTokens[$code]);
         }

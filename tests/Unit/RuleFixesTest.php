@@ -339,7 +339,7 @@ final class RuleFixesTest extends TestCase
             'generic/doc-comment-alignment',
             '',
             "/**\n*Misaligned star.\n   * Too far.\n  *\n *@return int\n   */\nfunction a() {\n}\n\nclass B {\n\t/**\n\t*No space.\n\t  * Two spaces in.\n\t*/\n\tpublic \$x;\n}",
-            "/**\n * Misaligned star.\n * Too far.\n *\n * @return int\n */\nfunction a() {\n}\n\nclass B {\n\t/**\n  * No space.\n  * Two spaces in.\n  */\n\tpublic \$x;\n}",
+            "/**\n * Misaligned star.\n * Too far.\n *\n * @return int\n */\nfunction a() {\n}\n\nclass B {\n\t/**\n     * No space.\n     * Two spaces in.\n     */\n\tpublic \$x;\n}",
         ];
 
         yield 'block-comment moves text off the opening line, drops empty comments and a blank first line like phpcbf' =>

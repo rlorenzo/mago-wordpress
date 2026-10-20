@@ -6,11 +6,15 @@ namespace Rlorenzo\MagoWordPress\Internal;
 
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\Node;
+use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 
 use function array_filter;
 use function array_key_last;
+use function array_push;
+use function array_slice;
 use function array_values;
+use function end;
 
 /**
  * The blocks of adjacent assignments in a file, as `Generic.Formatting.MultipleStatementAlignment`
@@ -40,6 +44,10 @@ final class AssignmentBlocks
         'T_MATCH' => true,
     ];
 
+    private const CONTROLS = ['If' => true, 'Foreach' => true, 'For' => true, 'While' => true];
+
+    private const BODIES = ['IfBody' => true, 'ForeachBody' => true, 'ForBody' => true, 'WhileBody' => true];
+
     private function __construct() {}
 
     /**
@@ -54,13 +62,14 @@ final class AssignmentBlocks
             $block = [];
             $last = null;
             $lastOperatorLine = null;
-            foreach ($file->getChildren($container) as $child) {
-                $items = array_values(array_filter(
-                    AssignmentStatement::of($file, $child),
-                    fn(array $item): bool => !self::inGroupingParentheses($file, $item['operator']->start),
-                ));
-                $lines = [LineIndex::of($file, $child->span->start), LineIndex::of($file, $child->span->end - 1)];
-                if ($items === [] || $last !== null && ($lines[0] - $last) > 1) {
+            foreach (self::entries($file, $file->getChildren($container)) as [$node, $first, $end, $flush]) {
+                $items = $node === null
+                    ? []
+                    : array_values(array_filter(
+                        AssignmentStatement::of($file, $node),
+                        fn(array $item): bool => !self::inGroupingParentheses($file, $item['operator']->start),
+                    ));
+                if ($flush || $node !== null && $items === [] || $last !== null && ($first - $last) > 1) {
                     if ($block !== []) {
                         $blocks[] = $block;
                     }
@@ -86,12 +95,12 @@ final class AssignmentBlocks
                     $block[] = $assignment;
                 }
 
-                if ($items !== [] && $block !== [] && StatementGaps::splits($file, $child)) {
+                if ($node !== null && $items !== [] && $block !== [] && StatementGaps::splits($file, $node)) {
                     $blocks[] = $block;
                     $block = [];
                 }
 
-                $last = $lines[1];
+                $last = $end;
             }
 
             if ($block !== []) {
@@ -100,6 +109,107 @@ final class AssignmentBlocks
         }
 
         return $blocks;
+    }
+
+    /**
+     * The statements of a container as the sniff walks them, as [statement or null, first line, last
+     * line, ends the block]. phpcs gives a control structure without braces no scope, so the
+     * statements in its bodies are in the same block as the ones around it, with the header and
+     * `else` tokens between them (null statements) only subject to the blank-line test.
+     *
+     * @param list<Node> $children
+     *
+     * @return list<array{?Node, int, int, bool}>
+     */
+    private static function entries(SourceFile $file, array $children): array
+    {
+        $entries = [];
+        foreach ($children as $child) {
+            array_push($entries, ...self::expand($file, $child));
+        }
+
+        return $entries;
+    }
+
+    /** @return list<array{?Node, int, int, bool}> */
+    private static function expand(SourceFile $file, Node $statement): array
+    {
+        $whole = [[
+            $statement,
+            LineIndex::of($file, $statement->span->start),
+            LineIndex::of($file, $statement->span->end - 1),
+            false,
+        ]];
+        $control = $statement->kind === NodeKind::Statement ? $file->getChildren($statement)[0] ?? null : null;
+        if ($control === null || !isset(self::CONTROLS[$control->kind->value])) {
+            return $whole;
+        }
+
+        $parts = $file->getChildren($control);
+        $bodyNode = end($parts);
+        if ($bodyNode === false || !isset(self::BODIES[$bodyNode->kind->value])) {
+            return $whole; // the colon syntax
+        }
+
+        $body = $file->getChildren($bodyNode)[0] ?? null;
+        if ($control->kind === NodeKind::If) {
+            $clauses = $body !== null && $body->kind === NodeKind::IfStatementBody ? $file->getChildren($body) : [];
+            if ($clauses === []) {
+                return $whole;
+            }
+
+            // The header and statement, then each `elseif` and `else` clause with its statement.
+            $sequence = [[$control, array_slice($parts, 0, -1), $clauses[0]]];
+            foreach (array_slice($clauses, 1) as $clause) {
+                $inner = $file->getChildren($clause);
+                $sequence[] = [$clause, array_slice($inner, 0, -1), $inner[array_key_last($inner)]];
+            }
+        } else {
+            if ($body === null || $body->kind !== NodeKind::Statement) {
+                return $whole;
+            }
+
+            $sequence = [[$control, array_slice($parts, 0, -1), $body]];
+        }
+
+        $entries = [];
+        foreach ($sequence as [$owner, $header, $bodyStatement]) {
+            $headerEnd = $header === [] ? $owner->span->start : end($header)->span->end - 1;
+            $entries[] = [
+                null,
+                LineIndex::of($file, $owner->span->start),
+                LineIndex::of($file, $headerEnd),
+                $control->kind === NodeKind::For || self::assigns($file, $header),
+            ];
+            $inner = $file->getChildren($bodyStatement)[0] ?? null;
+            if ($bodyStatement->kind !== NodeKind::Statement || $inner === null || $inner->kind === NodeKind::Block) {
+                // A body with braces is a scope of its own: the block ends.
+                $entries[] = [
+                    null,
+                    LineIndex::of($file, $bodyStatement->span->start),
+                    LineIndex::of($file, $control->span->end - 1),
+                    true,
+                ];
+
+                return $entries;
+            }
+
+            array_push($entries, ...self::expand($file, $bodyStatement));
+        }
+
+        return $entries;
+    }
+
+    /** @param list<Node> $header */
+    private static function assigns(SourceFile $file, array $header): bool
+    {
+        foreach ($header as $node) {
+            if ($file->getFirstDescendant($node, NodeKind::Assignment) !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

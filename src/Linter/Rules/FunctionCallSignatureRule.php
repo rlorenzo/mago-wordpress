@@ -655,7 +655,7 @@ final class FunctionCallSignatureRule implements Rule
             if ($newline === false) {
                 // Whitespace without a line break starts a line only as the call's first token.
                 return (
-                    $i === $start && $token->line !== $lastLine
+                    ($i === $start || self::afterOpenTagLine($tokens[$i - 1])) && $token->line !== $lastLine
                         ? [[
                             $token->line,
                             'indent',
@@ -717,12 +717,18 @@ final class FunctionCallSignatureRule implements Rule
                     [$token->pos + $offset, 0, $length],
                 ];
             }
-        } elseif (str_contains($text, "\n") && isset(self::STRINGS[$code])) {
-            // Lines inside a string: not indentation.
+        } elseif (str_contains($text, "\n") && (isset(self::STRINGS[$code]) || $code === 'T_INLINE_HTML')) {
+            // Lines inside a string or inline HTML: not indentation.
             $events[] = [FunctionTokens::endLine($token), 'skip', null, [$token->pos, 0, 0]];
         }
 
         return $events;
+    }
+
+    /** An open tag that ends with its line break: the whitespace after it starts a line. */
+    private static function afterOpenTagLine(PhpcsToken $token): bool
+    {
+        return $token->code === 'T_OPEN_TAG' && str_ends_with($token->text, "\n");
     }
 
     /** The text between two arguments' tokens, or NULL when it holds a comment. */

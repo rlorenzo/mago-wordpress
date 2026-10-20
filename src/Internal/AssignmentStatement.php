@@ -20,6 +20,14 @@ use function in_array;
  */
 final class AssignmentStatement
 {
+    private const THROUGH = [
+        NodeKind::ExpressionStatement,
+        NodeKind::Return,
+        NodeKind::Expression,
+        NodeKind::UnaryPrefix,
+        NodeKind::Binary,
+    ];
+
     private function __construct() {}
 
     /**
@@ -34,7 +42,7 @@ final class AssignmentStatement
         }
 
         $found = match ($node->kind) {
-            NodeKind::ExpressionStatement => array_filter([self::expression($file, $node)]),
+            NodeKind::ExpressionStatement, NodeKind::Return => array_filter([self::expression($file, $node)]),
             NodeKind::Constant,
             NodeKind::Static,
             NodeKind::ClassLikeConstant,
@@ -50,13 +58,34 @@ final class AssignmentStatement
         ), $found);
     }
 
+    /** The first assignment of a statement reached through `@`, `!`, binary operators and `return`. */
+    private static function find(SourceFile $file, Node $node): ?Node
+    {
+        if ($node->kind === NodeKind::Assignment) {
+            return $node;
+        }
+
+        if (!in_array($node->kind, self::THROUGH, strict: true)) {
+            return null;
+        }
+
+        foreach ($file->getChildren($node) as $child) {
+            $found = self::find($file, $child);
+            if ($found !== null) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @return null|array{int, Span} the end of the assigned-to expression and the operator
      */
     private static function expression(SourceFile $file, Node $statement): ?array
     {
-        $assignment = $file->getChildren($file->getChildren($statement)[0] ?? $statement)[0] ?? null;
-        if ($assignment === null || $assignment->kind !== NodeKind::Assignment) {
+        $assignment = self::find($file, $statement);
+        if ($assignment === null) {
             return null;
         }
 

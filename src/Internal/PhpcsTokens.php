@@ -829,6 +829,9 @@ final class PhpcsTokens
         $gap = false;
         /** @var list<string> $squares */
         $squares = [];
+        /** @var list<bool> $curlies whether each open `{` is a dynamic name (`$o->{$n}`) */
+        $curlies = [];
+        $dynamicClose = -1;
         $count = count($raw);
         for ($index = 0; $index < $count; $index++) {
             // Free PHP's tokens as they are converted, so both lists are not held at once.
@@ -887,8 +890,22 @@ final class PhpcsTokens
                 }
             } elseif ($code === '[') {
                 $previous = $codes === [] ? '' : $codes[count($codes) - 1];
-                $code = (self::ACCESS_BEFORE[$previous] ?? null) !== null ? '[' : 'T_OPEN_SHORT_ARRAY';
+                $code =
+                    (self::ACCESS_BEFORE[$previous] ?? null) !== null || $dynamicClose === (count($codes) - 1)
+                        ? '['
+                        : 'T_OPEN_SHORT_ARRAY';
                 $squares[] = $code;
+            } elseif ($code === '{') {
+                $previous = $codes === [] ? '' : $codes[count($codes) - 1];
+                $curlies[] = in_array(
+                    $previous,
+                    ['T_OBJECT_OPERATOR', 'T_NULLSAFE_OBJECT_OPERATOR', 'T_DOUBLE_COLON', '$'],
+                    strict: true,
+                );
+            } elseif ($code === '}') {
+                if (array_pop($curlies) === true) {
+                    $dynamicClose = count($codes);
+                }
             } elseif ($code === 'T_ATTRIBUTE') {
                 $squares[] = $code;
             } elseif ($code === ']') {

@@ -31,7 +31,7 @@ final class DocBlockAlignment
     public static function findings(array $t, string $source): array
     {
         $findings = [];
-        $required = DocBlockScan::column($t[0], $source) + 1;
+        $required = DocBlockScan::visualColumn($t[0], $source) + 1;
         $count = count($t);
         for ($i = 1; $i < $count; ++$i) {
             $token = $t[$i];
@@ -43,7 +43,7 @@ final class DocBlockAlignment
                 continue;
             }
 
-            $column = DocBlockScan::column($token, $source);
+            $column = DocBlockScan::visualColumn($token, $source);
             if ($column !== $required) {
                 $findings[] = [
                     sprintf(
