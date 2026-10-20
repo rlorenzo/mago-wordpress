@@ -166,7 +166,7 @@ foreach (['WordPress-Core' => 'wordpress-core', 'WordPress-Extra' => 'wordpress-
         TOML . $disabled($off) . <<<TOML
 
         [extension-hosts.wordpress]
-        command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php", "--standard={$standard}"]
+        command = ["php", "-d", "opcache.enable_cli=1", "vendor/rlorenzo/mago-wordpress/resources/worker.php", "--standard={$standard}"]
 
         TOML;
 }

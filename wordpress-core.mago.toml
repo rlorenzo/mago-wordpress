@@ -15,4 +15,4 @@ extends = "wordpress.mago.toml"
 missing-docs = { enabled = false }
 
 [extension-hosts.wordpress]
-command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php", "--standard=WordPress-Core"]
+command = ["php", "-d", "opcache.enable_cli=1", "vendor/rlorenzo/mago-wordpress/resources/worker.php", "--standard=WordPress-Core"]
