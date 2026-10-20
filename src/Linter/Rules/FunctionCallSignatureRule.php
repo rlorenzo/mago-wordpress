@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
 use Rlorenzo\MagoWordPress\Internal\FileCache;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\FunctionTokens;
 use Rlorenzo\MagoWordPress\Internal\PhpcsToken;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokenStream;
@@ -830,11 +831,7 @@ final class FunctionCallSignatureRule implements Rule
     /** @return list<PhpToken> */
     private static function tokens(SourceFile $file): array
     {
-        return FileCache::remember(
-            $file,
-            'call-signature-tokens',
-            static fn(): array => PhpToken::tokenize($file->contents),
-        );
+        return FileTokens::raw($file);
     }
 
     /** @param list<PhpToken> $tokens */
