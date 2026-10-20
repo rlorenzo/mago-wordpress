@@ -1,42 +1,49 @@
 # Benchmarks
 
-`bench/run.sh <project> <text-domain> <prefix>` times phpcs (`WordPress-Extra`, WPCS 3.4.1,
-`--parallel=8`) against `mago lint` running only this extension's rules. Each figure is the mean of
-three runs after a warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.51.0).
+`bench/run.sh <project> <text-domain> <prefix>` times phpcs (`WordPress`, WPCS 3.4.1,
+`--parallel=8`) against `mago lint` running this extension's default rules. Each figure is the mean of
+three runs after a warm-up, on the same machine (Apple M4 MacBook Air, PHP 8.4.24, Mago 1.57.0). Both
+tools run on PHP with `opcache.enable_cli=1`.
 
-The comparison isn't apples to apples. `WordPress-Extra` also runs WPCS's formatting and generic
-sniffs, while the mago side runs this extension's rules only.
+The rule sets match closely. The extension ports 183 of the 186 sniffs in the `WordPress` standard.
+The three left out are `Generic.PHP.Syntax` (which runs `php -l`), `Generic.Classes.DuplicateClassName`
+and `WordPress.Utils.I18nTextDomainFixer`. Mago also parses each file itself, which phpcs does not.
 
 The bake-off covers the top 10 plugins on WordPress.org by active installs, plus WordPress core
 (`src/` from [wordpress-develop](https://github.com/WordPress/wordpress-develop), text domain
 `default`, prefix `wp`). WPCS ships a narrower `WordPress-Core` ruleset for core, but the table runs
-the same `WordPress-Extra` comparison throughout, for consistency. `classic-editor`, next in
+the same `WordPress` comparison throughout, for consistency. `classic-editor`, next in
 active-install rank, was skipped (1 PHP file after excludes) in favour of `wp-mail-smtp`, the next
 plugin down the list.
 
-| Codebase | Version | Active installs | PHP files | phpcs `WordPress-Extra` | `mago lint` + this extension | Speed-up |
+| Codebase | Version | Active installs | PHP files | phpcs `WordPress` | `mago lint` + this extension | Speed-up |
 |:---|:---|---:|---:|---:|---:|---:|
-| WooCommerce | 11.1.2 | 7,000,000+ | 3,528 | 33.40 s | 3.32 s | 10.1× |
-| WordPress core | trunk | n/a¹ | 1,868 | 25.89 s | 3.78 s | 6.8× |
-| Elementor | 4.3.2 | 10,000,000+ | 1,460 | 13.02 s | 1.35 s | 9.6× |
-| Google Site Kit | 1.188.0 | 5,000,000+ | 1,869 | 15.92 s | 1.33 s | 12.0× |
-| Yoast SEO | 28.5 | 10,000,000+ | 1,511 | 12.32 s | 1.25 s | 9.9× |
-| WPForms Lite | 2.0.2.1 | 5,000,000+ | 963 | 11.11 s | 1.68 s | 6.6× |
-| LiteSpeed Cache | 7.9.1 | 7,000,000+ | 212 | 2.53 s | 0.62 s | 4.1× |
-| WP Mail SMTP | 4.9.0 | 4,000,000+ | 185 | 2.35 s | 0.56 s | 4.2× |
-| All-in-One WP Migration | 7.111 | 5,000,000+ | 147 | 1.67 s | 0.35 s | 4.8× |
-| Contact Form 7 | 6.1.7 | 10,000,000+ | 111 | 1.40 s | 0.34 s | 4.1× |
-| Akismet | 5.7.2 | 5,000,000+ | 29 | 0.52 s | 0.26 s | 2.0× |
-| **Total** | | | **11,883** | **120.13 s** | **14.84 s** | **8.1×** |
+| WooCommerce | 11.1.2 | 7,000,000+ | 3,528 | 25.68 s | 12.56 s | 2.0× |
+| WordPress core | trunk | n/a¹ | 1,868 | 18.20 s | 14.27 s | 1.3× |
+| Elementor | 4.3.2 | 10,000,000+ | 1,460 | 10.66 s | 5.18 s | 2.1× |
+| Google Site Kit | 1.188.0 | 5,000,000+ | 1,869 | 12.62 s | 5.57 s | 2.3× |
+| Yoast SEO | 28.5 | 10,000,000+ | 1,511 | 9.90 s | 3.86 s | 2.6× |
+| WPForms Lite | 2.0.2.1 | 5,000,000+ | 963 | 8.03 s | 5.39 s | 1.5× |
+| LiteSpeed Cache | 7.9.1 | 7,000,000+ | 212 | 1.96 s | 2.11 s | 0.9× |
+| WP Mail SMTP | 4.9.0 | 4,000,000+ | 185 | 1.73 s | 1.67 s | 1.0× |
+| All-in-One WP Migration | 7.111 | 5,000,000+ | 147 | 1.27 s | 0.73 s | 1.7× |
+| Contact Form 7 | 6.1.7 | 10,000,000+ | 111 | 0.91 s | 0.91 s | 1.0× |
+| Akismet | 5.7.2 | 5,000,000+ | 29 | 0.47 s | 0.61 s | 0.8× |
+| **Total** | | | **11,883** | **91.43 s** | **52.86 s** | **1.7×** |
 
 ¹ WordPress.org publishes active-install counts for plugins only; core has no equivalent figure.
 
-Measured 2026-10-01 on the plugins' release zips (vendor and tests excluded) and a wordpress-develop
-checkout, with `mago` at 1.51.0, this package at 1.2.0 and the rules that are on by default. phpcs
-suppression comments are honoured. Load average was 5–9 from background services, so expect some
-noise. The mago column includes starting the PHP worker. mago never lost a single-codebase comparison.
+Measured 2026-10-20 on the plugins' release zips (vendor and tests excluded) and a wordpress-develop
+checkout, with `mago` at 1.57.0, this package at 1.6.0 plus the speed-ups in this release and the rules
+that are on by default. phpcs suppression comments are honoured. Load average was 4–8 from background
+services, so expect some noise. The mago column includes starting the PHP worker.
+
+The speed-up is 2–2.6× on the large plugins and about even on the small ones, where starting the worker
+processes is a large share of the time. mago is slower than phpcs on LiteSpeed Cache and Akismet. The
+extension has about four times as many rules as the 46 that the first bake-off (2026-10-01, 8.1×)
+measured, so those figures are not comparable with these.
 
 Full output, per-codebase mago issue counts by rule and exact reproduction commands are in
-[`bench/results/2026-10-01-bakeoff.md`](../bench/results/2026-10-01-bakeoff.md). Every rule PR
+[`bench/results/2026-10-20-bakeoff.md`](../bench/results/2026-10-20-bakeoff.md). Every rule PR
 re-runs the bake-off (`bench/bakeoff.sh`) and commits the per-rule counts next to it; the newest
 `*-bakeoff.md` in [`bench/results/`](../bench/results/) has the current counts.
