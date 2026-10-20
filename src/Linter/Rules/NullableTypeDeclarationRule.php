@@ -30,7 +30,7 @@ final class NullableTypeDeclarationRule implements Rule
         'T_STRING' => true,
         'T_NS_SEPARATOR' => true,
         'T_CALLABLE' => true,
-        'T_ARRAY' => true, // phpcs makes the `array` type a T_STRING
+        'T_ARRAY' => true, // the `array` type, which this token stream names T_ARRAY (the sniff's list has T_STRING too)
         'T_SELF' => true,
         'T_PARENT' => true,
         'T_STATIC' => true,

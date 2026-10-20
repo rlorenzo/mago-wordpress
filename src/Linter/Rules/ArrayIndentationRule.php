@@ -147,7 +147,7 @@ final class ArrayIndentationRule implements Rule
             );
         }
 
-        $items = self::items($layout, $stackPtr, $opener, $closer);
+        $items = self::items($layout, $opener, $closer);
         if ($items === []) {
             return null;
         }
@@ -429,7 +429,7 @@ final class ArrayIndentationRule implements Rule
      *
      * @return list<array{int, int}>
      */
-    private static function items(PhpcsLayout $layout, int $stackPtr, int $opener, int $closer): array
+    private static function items(PhpcsLayout $layout, int $opener, int $closer): array
     {
         $tokens = $layout->tokens;
         $next = $layout->findNext(PhpcsLayout::EMPTY, $opener + 1, null, true);
