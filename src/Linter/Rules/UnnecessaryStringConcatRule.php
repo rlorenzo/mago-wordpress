@@ -17,6 +17,7 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function str_contains;
 use function strlen;
+use function strpos;
 use function strrpos;
 use function substr;
 
@@ -76,7 +77,7 @@ final class UnnecessaryStringConcatRule implements Rule
                 && $left[0] === $unit[0]
                 && !self::isTagSplit($left, $unit)
                 // WordPress-Extra sets `allowMultiline`: strings on different lines are not joined needlessly.
-                && !str_contains(substr($text, $leftEnd, $offset - $leftEnd), "\n")
+                && !self::breaksBetween($text, $leftEnd, $offset)
             ) {
                 $this->report->issue(
                     $context,
@@ -100,6 +101,14 @@ final class UnnecessaryStringConcatRule implements Rule
             $previousEnd = $end;
             $previousPos = $offset;
         }
+    }
+
+    /** Whether a line break lies in $text from $from up to $to. */
+    private static function breaksBetween(string $text, int $from, int $to): bool
+    {
+        $newline = strpos($text, "\n", $from);
+
+        return $newline !== false && $newline < $to;
     }
 
     /** A `<` `?` or `?` `>` split by the dot: the closing or the opening tag, written in a string. */
