@@ -15,10 +15,10 @@ minutes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/benchmarks-dark.svg">
-  <img alt="Bar chart: phpcs WordPress vs mago + mago-wordpress lint time on the top 10 WordPress.org plugins by active installs and WordPress core, from WooCommerce (25.68 s vs 12.56 s) down to Akismet (0.47 s vs 0.61 s)" src="docs/benchmarks-light.svg" width="800">
+  <img alt="Bar chart: phpcs WordPress vs mago + mago-wordpress lint time on the top 10 WordPress.org plugins by active installs and WordPress core, from WooCommerce (26.33 s vs 12.64 s) down to Akismet (0.70 s vs 0.57 s)" src="docs/benchmarks-light.svg" width="800">
 </picture>
 
-1.7× faster overall on the top 10 WordPress.org plugins plus WordPress core: 2–2.6× on the large plugins, about even on the small ones. Method and numbers:
+1.8× faster overall on the top 10 WordPress.org plugins plus WordPress core: about 2–2.7× on the large plugins, about even on the small ones. Method and numbers:
 [Benchmarks](docs/benchmarks.md).
 
 ## Install
