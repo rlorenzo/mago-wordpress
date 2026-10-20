@@ -20,3 +20,7 @@ $c = 3; $d = 4;
 function f() { $x = 1; return $x; }
 
 $g = 6; $h = 7; // phpcs:ignore Generic.Formatting.DisallowMultipleStatements.SameLine
+
+// A `;` or `)` ending an interpolated string is part of the string, not a statement end.
+$a = "SELECT {$b};";
+$c = "({$d})";
