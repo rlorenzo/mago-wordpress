@@ -66,6 +66,8 @@ final class FormatCommand
         ['lint',   '--fix', '--only', 'wordpress/language-construct-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/operator-spacing'],
         ['lint',   '--fix', '--only', 'wordpress/array-declaration-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/array-brace-spacing'],
+        ['lint',   '--fix', '--only', 'wordpress/array-key-spacing-restrictions'],
         ['lint',   '--fix', '--only', 'wordpress/comma-after-last'],
         ['lint',   '--fix', '--only', 'wordpress/function-call-signature'],
         ['lint',   '--fix', '--only', 'wordpress/array-alignment'],
@@ -97,6 +99,8 @@ final class FormatCommand
         `mago lint --fix --only wordpress/language-construct-spacing`,
         `mago lint --fix --only wordpress/operator-spacing`,
         `mago lint --fix --only wordpress/array-declaration-spacing`,
+        `mago lint --fix --only wordpress/array-brace-spacing`,
+        `mago lint --fix --only wordpress/array-key-spacing-restrictions`,
         `mago lint --fix --only wordpress/comma-after-last`, then
         `mago lint --fix --only wordpress/function-call-signature`,
         `mago lint --fix --only wordpress/array-alignment`,

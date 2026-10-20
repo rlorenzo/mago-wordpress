@@ -401,6 +401,21 @@ final class RuleFixesTest extends TestCase
             "function a() {\n\tyield from \$items;\n\tyield from \$more;\n\tyield from \$last;\n}",
         ];
 
+        yield 'array-brace-spacing puts a space inside a single-line array and a line break inside a multi-line one' =>
+            [
+                'wordpress/array-brace-spacing',
+                '',
+                "\$a = array(\$b, \$c);\n\$d = [  1 ];\n\$e = array (  );\n\$f = array(1,\n\t2);",
+                "\$a = array( \$b, \$c );\n\$d = [ 1 ];\n\$e = array();\n\$f = array(\n1,\n\t2\n);",
+            ];
+
+        yield 'array-key-spacing-restrictions spaces a variable key and unspaces a literal one' => [
+            'wordpress/array-key-spacing-restrictions',
+            '',
+            "\$a = \$x[\$i] + \$x[ 'k' ] + \$x[  \$j  ] + \$x[ -1 ];\n\$x[ ] = 1;",
+            "\$a = \$x[ \$i ] + \$x['k'] + \$x[ \$j ] + \$x[-1];\n\$x[] = 1;",
+        ];
+
         yield 'array-declaration-spacing breaks keyed arrays one item per line and nests the indentation like phpcbf' =>
             [
                 'wordpress/array-declaration-spacing',

@@ -27,8 +27,7 @@ use function str_repeat;
  * 40, a warning): the equals signs of adjacent assignments, constants and properties line up, the
  * ends of the operators aligned, unless that takes more than 40 spaces of padding, where the block
  * ends and a new one starts. `mago format` aligns them however far apart, so this runs after it, as
- * `mago lint --fix --only wordpress/statement-alignment` (a step of `mago-wordpress format`); it is
- * off by default.
+ * `mago lint --fix --only wordpress/statement-alignment` (a step of `mago-wordpress format`).
  */
 final class StatementAlignmentRule implements Rule
 {
@@ -43,9 +42,9 @@ final class StatementAlignmentRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/statement-alignment',
             name: 'Statement alignment',
-            description: 'Aligns the equals signs of adjacent assignments with at most 40 spaces of padding, as WordPress-Core does. Off by default; run after `mago format`.',
+            description: 'Aligns the equals signs of adjacent assignments with at most 40 spaces of padding, as WordPress-Core does. `mago-wordpress format` runs its fix after `mago format`.',
             defaultLevel: Level::Warning,
-            defaultEnabled: false,
+            defaultEnabled: true,
             targets: [NodeKind::Program],
         );
     }

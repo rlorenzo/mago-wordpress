@@ -13,7 +13,9 @@ use Rlorenzo\MagoWordPress\Internal\SplitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArbitraryParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayAlignmentRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ArrayBraceSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayDeclarationSpacingRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ArrayKeySpacingRestrictionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInTernaryConditionRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\BlockCommentRule;
@@ -263,6 +265,7 @@ final class WordPressExtension
                 new TypeCastsRule($report),
                 new ArrayAlignmentRule($report),
                 new ArrayDeclarationSpacingRule($report),
+                new ArrayBraceSpacingRule($report),
                 new CommaAfterLastRule($report),
                 new FunctionCallSignatureRule($report),
                 new BlockCommentRule($report),
@@ -278,7 +281,6 @@ final class WordPressExtension
                 new VariableCommentRule($report),
                 new LanguageConstructSpacingRule($report),
                 new ParenthesesSpacingRule($report),
-                new StatementAlignmentRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),
                 new DisallowSizeFunctionsInLoopsRule($report),
@@ -367,6 +369,9 @@ final class WordPressExtension
                 new UnusedFunctionParameterRule($report),
                 new NoReservedKeywordParameterNamesRule($report),
                 new AlternativeFunctionsRule($report, $settings),
+                // The rules that read PhpcsTokens come last, so the tokens are built after the others have run.
+                new ArrayKeySpacingRestrictionsRule($report),
+                new StatementAlignmentRule($report),
                 new PreparedSqlRule($report),
                 new DirectDatabaseQueryRule($report, $settings),
                 new PregQuoteDelimiterRule($report),

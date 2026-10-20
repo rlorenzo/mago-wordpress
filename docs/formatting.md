@@ -21,7 +21,7 @@ vendor/bin/mago-wordpress format --staged   # the staged PHP files mago.toml lis
 This is the only supported way to format and to check. `mago format` alone can't produce WordPress
 formatting, and `mago format --check` always fails on code that is.
 
-The command runs eleven steps in order:
+The command runs thirteen steps in order:
 
 ```sh
 mago lint --fix --only generic/disallow-short-array-syntax  # [] to array()
@@ -30,6 +30,8 @@ mago lint --fix --only wordpress/parentheses-spacing # the spaces mago format re
 mago lint --fix --only wordpress/language-construct-spacing # `echo\n$x` -> `echo $x`
 mago lint --fix --only wordpress/operator-spacing     # `catch ( A|B $e )` -> `catch ( A | B $e )`
 mago lint --fix --only wordpress/array-declaration-spacing # `array( 'a' => 1, 'b' => 2 )` -> one item per line
+mago lint --fix --only wordpress/array-brace-spacing # a line break after the opener and before the closer of a multi-line array
+mago lint --fix --only wordpress/array-key-spacing-restrictions # `$a[$i]` -> `$a[ $i ]`, `$a[ 'k' ]` -> `$a['k']`
 mago lint --fix --only wordpress/comma-after-last    # a comma after the last item of a multi-line array
 mago lint --fix --only wordpress/function-call-signature # `foo( 'a', array(` -> one argument per line
 mago lint --fix --only wordpress/array-alignment     # the arrows mago format aligns past column 60

@@ -44,12 +44,12 @@ final class LevelsTest extends TestCase
         'wordpress/array-declaration-spacing' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/operator-spacing' => Level::Error, // addFixableError throughout, inherited from the Squiz sniff
         'generic/arbitrary-parentheses-spacing' => Level::Error, // FoundEmpty is a warning
-        'wordpress/comma-after-last' => Level::Error, // addFixableError throughout, outside SniffMap
         'wordpress/array-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
+        'wordpress/array-brace-spacing' => Level::Error, // SpacesFixer::checkAndFix() reports errors; Levels has no codes for it
         'wordpress/parentheses-spacing' => Level::Error, // formatting sniffs (all errors) outside SniffMap
         'wordpress/prefix-all-globals' => Level::Error,
         'wordpress/prepared-sql-unquoted-complex-placeholder' => Level::Warning, // its one code
-        'wordpress/statement-alignment' => Level::Warning, // addFixableWarning throughout, outside SniffMap
+        'wordpress/statement-alignment' => Level::Warning, // addFixableWarning throughout; Levels also lists the error-level properties check
         'wordpress/type-casts' => Level::Error,
         'wordpress/valid-post-type-slug' => Level::Error,
         'wordpress/wp-date-time' => Level::Error,

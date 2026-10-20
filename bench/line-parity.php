@@ -107,11 +107,11 @@ foreach (array_unique([...array_keys($expected), ...array_keys($actual)]) as $gr
         echo "  only phpcs, by code: {$count} {$source}\n";
     }
 
-    foreach (array_slice($missing, 0, 5) as $key) {
+    foreach (array_slice($missing, 0, getenv("PARITY_ALL") ? null : 5) as $key) {
         echo "  only phpcs: {$key}\n";
     }
 
-    foreach (array_slice($extra, 0, 5) as $key) {
+    foreach (array_slice($extra, 0, getenv("PARITY_ALL") ? null : 5) as $key) {
         echo "  only here:  {$key}\n";
     }
 }

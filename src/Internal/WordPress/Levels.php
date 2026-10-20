@@ -92,6 +92,11 @@ final class Levels
         'Generic.Files.OneObjectStructurePerFile' => [
             'MultipleFound' => 'error',
         ],
+        'Generic.Formatting.MultipleStatementAlignment' => [
+            '*Warning' => 'warning',
+            'Incorrect' => 'error',
+            'NotSame' => 'error',
+        ],
         'Generic.Formatting.SpaceAfterCast' => [
             'CommentFound' => 'error',
             'NoSpace' => 'error',
@@ -172,6 +177,14 @@ final class Levels
         'Modernize.FunctionCalls.Dirname' => [
             'FileConstant' => 'error',
             'Nested' => 'error',
+        ],
+        'NormalizedArrays.Arrays.ArrayBraceSpacing' => [],
+        'NormalizedArrays.Arrays.CommaAfterLast' => [
+            '*CloserSameLine' => 'error',
+            'Found*' => 'error',
+            'Missing*' => 'error',
+            'MultiLine' => 'error',
+            'SingleLine' => 'error',
         ],
         'PEAR.Files.IncludingFile' => [
             'BracketsNotRequired' => 'error',
@@ -482,6 +495,18 @@ final class Levels
         ],
         'Universal.WhiteSpace.PrecisionAlignment' => [
             'Found' => 'warning',
+        ],
+        'WordPress.Arrays.ArrayDeclarationSpacing' => [],
+        'WordPress.Arrays.ArrayKeySpacingRestrictions' => [
+            'NoSpacesAroundArrayKeys' => 'error',
+            'SpacesAroundArrayKeys' => 'error',
+        ],
+        'WordPress.Arrays.MultipleStatementAlignment' => [
+            '*NoSpaceBeforeDoubleArrow' => 'warning',
+            '*SpaceBeforeDoubleArrow' => 'warning',
+            'DoubleArrowNotAligned' => 'warning',
+            'InvalidPropertyPassed' => 'error',
+            'SpaceBeforeDoubleArrow' => 'warning',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',
