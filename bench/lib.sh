@@ -38,3 +38,6 @@ foreach (json_decode(stream_get_contents(STDIN), true)["extensions"][0]["linter-
     if ($r["default-enabled"]) { echo $r["code"], ","; }
 }' | sed 's/,$//')
 [[ -n $codes ]] || { echo "could not list the extension rules" >&2; exit 1; }
+# Mago's own missing-docs rule covers the WordPress-Docs sniffs the extension leaves to it; the presets
+# enable it, so the timed run does too.
+codes="$codes,missing-docs"
