@@ -173,6 +173,11 @@ generic/disallow-namespace-curly-brace-syntax
 generic/embedded-php
 generic/opening-brace-same-line
 generic/trait-use-declaration
+generic/constructor-destructor-return
+generic/constructor-destructor-return-warning
+generic/deprecated-functions
+generic/duplicate-array-key
+generic/function-duplicate-argument
 wordpress/object-operator-spacing
 generic/type-separator-spacing
 generic/attribute-bracket-spacing

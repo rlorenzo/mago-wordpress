@@ -209,6 +209,11 @@ Mago doesn't cover. They are ported as `generic/*` rules and matched against php
 | `generic/separate-functions-from-oo` | Error | `Universal.Files.SeparateFunctionsFromOO` | a file that declares both functions and classes, interfaces, traits or enums (once per file) |
 | `generic/short-form-type-keywords` | Error | `PSR12.Keywords.ShortFormTypeKeywords` | the casts `(boolean)` and `(integer)` instead of `(bool)` and `(int)` (autofix) |
 | `generic/static-in-final-class` | Error | `Universal.CodeAnalysis.StaticInFinalClass` | `static` return types, `static::`, `new static` and `instanceof static` in a final class, anonymous class or enum, where `self` means the same (fixed) |
+| `generic/constructor-destructor-return` | Error | `Universal.CodeAnalysis.ConstructorDestructorReturn` | a return type on `__construct()`, `__destruct()` or a PHP 4-style constructor (`ReturnTypeFound`; autofix removes it). A `return` with a value is `constructor-destructor-return-warning` (`ReturnValueFound`) |
+| `generic/constructor-destructor-return-warning` | Warning | `Universal.CodeAnalysis.ConstructorDestructorReturn.ReturnValueFound` | the `ReturnValueFound` part of `generic/constructor-destructor-return` |
+| `generic/deprecated-functions` | Error | `Generic.PHP.DeprecatedFunctions` | calls to the internal functions PHP 8.4 deprecates (`strftime()`, `utf8_encode()`, `lcg_value()`, ...). phpcs reads the list from the PHP it runs on; this rule carries PHP 8.4's. |
+| `generic/duplicate-array-key` | Error | `Universal.Arrays.DuplicateArrayKey` | a literal array key (`'a'`, `1`, `null`, `1 + 1`, `'a' . 'b'`) that repeats an earlier one, for PHP below 8.0 and from 8.0 (`Found`, `FoundForPHPlt80`, `FoundForPHPgte80`); a variable, constant or call key is skipped |
+| `generic/function-duplicate-argument` | Error | `Squiz.Functions.FunctionDuplicateArgument` | a parameter name used twice in one function or closure declaration |
 | `generic/strict-comparisons` | Warning | `Universal.Operators.StrictComparisons` | a loose `==`, `!=` or `<>` comparison. WordPress-Core marks the sniff `phpcs-only` (phpcbf leaves it) and `===` can change behaviour, so the fix to `===` / `!==` is unsafe: `mago lint --fix` skips it, `mago lint --fix --unsafe --only generic/strict-comparisons` applies it, after which review the diff and run your tests |
 | `generic/switch-declaration` | Error | `PSR2.ControlStructures.SwitchDeclaration` | only `TerminatingComment`: a non-empty `case` that falls through to the next one without a comment (a body ending in `return`, `break`, `throw`, ... on every path is not a fall-through). The sniff's other codes are `mago format`'s job |
 | `generic/unconditional-if-statement` | Warning | `Generic.CodeAnalysis.UnconditionalIfStatement` | an `if` or `elseif` whose condition is the literal `true` or `false`; replaces Mago's `constant-condition` |
@@ -229,12 +234,12 @@ phpcs.xml fallback leaves out the generic rules that only `WordPress-Extra` incl
 Every rule is on by default except `parentheses-spacing`, which the spacing rules above supersede and which runs only with `--only`; see
 [Formatting](formatting.md). Levels are in the tables above and follow WPCS. Each rule takes the level phpcs
 gives its sniff's message codes (`src/Internal/WordPress/Levels.php`, generated from the WPCS source).
-Some sniffs report some codes as errors and others as warnings. For eight of them the warning
+Some sniffs report some codes as errors and others as warnings. For nine of them the warning
 codes have their own rule, so each half reports at WPCS's level: `nonce-verification-warning`
 (`Recommended`), `valid-hook-name-warning` (`UseUnderscores`), `capabilities-warning` (`Unknown`),
 `prepared-sql-placeholders-warning` (`LikeWithoutWildcards`, `ReplacementsWrongNumber`,
 `UnfinishedPrepare`, `UnnecessaryPrepare`), `ini-set-warning` (`Risky`), `generic/including-file-warning` (`UseRequire`,
-`UseRequireOnce`), and `generic/property-declaration-warning` and
+`UseRequireOnce`), `generic/constructor-destructor-return-warning` (`ReturnValueFound`), and `generic/property-declaration-warning` and
 `generic/method-declaration-warning` (`Underscore`, which `WordPress-Core` silences and
 `WordPress-Extra` restores; under the `WordPress-Core` standard they report nothing, as does
 `generic/self-member-reference`'s `NotUsed`). Each pair analyses a file once and shares the result.

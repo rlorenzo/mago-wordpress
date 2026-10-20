@@ -108,6 +108,7 @@ final class SniffMap
         'Generic.NamingConventions.UpperCaseConstantName' => ['generic/upper-case-constant-name'],
         'Generic.Formatting.MultipleStatementAlignment' => ['wordpress/statement-alignment'],
         'Generic.PHP.BacktickOperator' => ['no-shell-execute-string'],
+        'Generic.PHP.DeprecatedFunctions' => ['generic/deprecated-functions'],
         'Generic.PHP.DisallowAlternativePHPTags' => ['generic/disallow-alternative-php-tags'],
         'Generic.PHP.DisallowShortOpenTag' => ['generic/disallow-short-open-tag'],
         'Generic.PHP.DiscourageGoto' => ['no-goto'],
@@ -158,6 +159,11 @@ final class SniffMap
         'Squiz.Strings.DoubleQuoteUsage' => ['generic/double-quote-usage'],
         'Squiz.WhiteSpace.SemicolonSpacing' => ['generic/semicolon-spacing'],
         'Universal.Arrays.DisallowShortArraySyntax' => ['generic/disallow-short-array-syntax'],
+        'Universal.Arrays.DuplicateArrayKey' => ['generic/duplicate-array-key'],
+        'Universal.CodeAnalysis.ConstructorDestructorReturn' => [
+            'generic/constructor-destructor-return',
+            'generic/constructor-destructor-return-warning',
+        ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => ['generic/foreach-unique-assignment'],
         'Universal.CodeAnalysis.NoDoubleNegative' => ['generic/no-double-negative'],
         'Universal.CodeAnalysis.NoEchoSprintf' => ['generic/no-echo-sprintf'],
@@ -219,6 +225,7 @@ final class SniffMap
         'Generic.Functions.OpeningFunctionBraceKernighanRitchie' => [
             'generic/opening-function-brace-kernighan-ritchie',
         ],
+        'Squiz.Functions.FunctionDuplicateArgument' => ['generic/function-duplicate-argument'],
         'Squiz.Functions.FunctionDeclarationArgumentSpacing' => ['generic/function-declaration-argument-spacing'],
         'PSR12.Functions.NullableTypeDeclaration' => ['generic/nullable-type-declaration'],
         'PSR12.Functions.ReturnTypeDeclaration' => ['generic/return-type-declaration'],

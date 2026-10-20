@@ -683,6 +683,29 @@ final class RuleFixesTest extends TestCase
             "__( 'Literal %%s; %1\$s of %2\$s' );",
             ['default'],
         ];
+
+        yield 'constructor and destructor return types are removed, comments kept' => [
+            'generic/constructor-destructor-return',
+            '',
+            "interface I {\n    public function __construct(): /*comment*/ void;\n\n    public function __destruct(): void;\n}\n"
+                . "class A {\n    public function __Construct()\n    :    static|self\n    {\n    }\n\n    public function __destruct():string {\n    }\n}",
+            "interface I {\n    public function __construct()/*comment*/;\n\n    public function __destruct();\n}\n"
+                . "class A {\n    public function __Construct()\n    {\n    }\n\n    public function __destruct() {\n    }\n}",
+        ];
+    }
+
+    public function testDuplicateParameterIsReportedAtTheSecondOne(): void
+    {
+        [, $output] = $this->lint(
+            'generic/function-duplicate-argument',
+            [],
+            "function twice(\$a, \$b, \$a) {}\n\$f = function (\$x, &\$x) {};",
+            '--reporting-format emacs',
+        );
+
+        self::assertStringContainsString('fixture.php:3:24', $output);
+        self::assertStringContainsString('fixture.php:4:21', $output);
+        self::assertStringContainsString('Variable "$a" appears more than once in function declaration', $output);
     }
 
     /**

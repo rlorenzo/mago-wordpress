@@ -39,11 +39,13 @@ use Rlorenzo\MagoWordPress\Linter\Rules\CommaSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ConcatenationSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ConstantModifierKeywordOrderRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ConstructorDestructorReturnRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlStructureSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DeprecatedFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirectDatabaseQueryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DirnameRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowAlternativePhpTagsRule;
@@ -67,6 +69,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DocCommentAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DocCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DontExtractRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DoubleQuoteUsageRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DuplicateArrayKeyRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmbeddedPhpRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyCatchCommentRule;
@@ -90,6 +93,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\FunctionClosingBraceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionCommentThrowTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\FunctionDeclarationArgumentSpacingRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\FunctionDuplicateArgumentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
@@ -338,6 +342,8 @@ final class WordPressExtension
                 new LowercaseConstantRule($report),
                 new SeparateFunctionsFromOORule($report),
                 new StaticInFinalClassRule($report),
+                new DeprecatedFunctionsRule($report),
+                new DuplicateArrayKeyRule($report),
                 new UnconditionalIfStatementRule($report),
                 new ClassDeclarationRule($report),
                 new ClassInstantiationRule($report),
@@ -423,6 +429,13 @@ final class WordPressExtension
                 new NoReservedKeywordParameterNamesRule($report),
                 new AlternativeFunctionsRule($report, $settings),
                 // The rules that read PhpcsTokens come last, so the tokens are built after the others have run.
+                new FunctionDuplicateArgumentRule($report),
+                ...SplitRule::pair(
+                    new ConstructorDestructorReturnRule($report),
+                    $report,
+                    'Constructor/destructor return (warnings)',
+                    'A `return` with a value in a constructor or destructor (WPCS ReturnValueFound, a warning); a return type stays with generic/constructor-destructor-return.',
+                ),
                 new ArrayKeySpacingRestrictionsRule($report),
                 new StatementAlignmentRule($report),
                 new PreparedSqlRule($report),

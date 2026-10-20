@@ -306,6 +306,10 @@ final class PhpcsRuleset
         'Generic.CodeAnalysis.UnusedFunctionParameter',
         'Squiz.PHP.CommentedOutCode',
         'Universal.Attributes.DisallowAttributeParentheses',
+        'Generic.PHP.DeprecatedFunctions',
+        'Squiz.Functions.FunctionDuplicateArgument',
+        'Universal.Arrays.DuplicateArrayKey',
+        'Universal.CodeAnalysis.ConstructorDestructorReturn',
         'Universal.Attributes.BracketSpacing',
         'PSR2.Namespaces.NamespaceDeclaration',
     ];
