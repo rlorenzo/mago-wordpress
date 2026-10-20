@@ -206,13 +206,68 @@ final class RuleFixesTest extends TestCase
             "function a() {\n\techo wp_kses(\n\t\tsprintf(\n\t\t\t'a',\n\t\t\t\$b\n\t\t),\n\t\t\$c\n\t);\n\treturn foo(\n\t\t<<<EOT\n\t\t\ttext\n\t\t\tEOT,\n\t\t\$d\n\t);\n}",
         ];
 
-        yield 'operator-spacing puts one space around the | of a multi-catch like phpcbf and leaves other operators alone' =>
-            [
-                'wordpress/operator-spacing',
-                '',
-                "try {\n} catch ( A|B \$e ) {\n}\ntry {\n} catch ( A |B  | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  |B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t|C \$e ) {\n}\n\$x = 1|2;",
-                "try {\n} catch ( A | B \$e ) {\n}\ntry {\n} catch ( A | B | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  | B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t| C \$e ) {\n}\n\$x = 1|2;",
-            ];
+        yield 'operator-spacing puts one space around operators like phpcbf' => [
+            'wordpress/operator-spacing',
+            '',
+            "try {\n} catch ( A|B \$e ) {\n}\ntry {\n} catch ( A |B  | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  |B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t|C \$e ) {\n}\n\$x = 1|2;",
+            "try {\n} catch ( A | B \$e ) {\n}\ntry {\n} catch ( A | B | C \$e ) {\n}\ntry {\n} catch ( A /*c*/  | B \$e ) {\n}\ntry {\n} catch ( A\n\t| B\n\t| C \$e ) {\n}\n\$x = 1 | 2;",
+        ];
+
+        yield 'comma-spacing fixes the spaces around commas like phpcbf' => [
+            'generic/comma-spacing',
+            '',
+            "\$a = array(1 ,2,  3);",
+            "\$a = array(1, 2, 3);",
+        ];
+
+        yield 'concatenation-spacing puts a single space around the dot like phpcbf' => [
+            'generic/concatenation-spacing',
+            '',
+            "\$a = 'x'.'y' .  'z';",
+            "\$a = 'x' . 'y' . 'z';",
+        ];
+
+        yield 'cast-structure-spacing adds the space before a cast like phpcbf' => [
+            'wordpress/cast-structure-spacing',
+            '',
+            "\$a =(int)\$b;",
+            "\$a = (int)\$b;",
+        ];
+
+        yield 'space-after-cast puts one space after a cast like phpcbf' => [
+            'generic/space-after-cast',
+            '',
+            "\$a = (int)   \$b;\n\$c = (string)\$d;",
+            "\$a = (int) \$b;\n\$c = (string) \$d;",
+        ];
+
+        yield 'increment-decrement-spacing removes the space around ++ and -- like phpcbf' => [
+            'generic/increment-decrement-spacing',
+            '',
+            "\$i ++;\n-- \$j;",
+            "\$i++;\n--\$j;",
+        ];
+
+        yield 'semicolon-spacing moves the semicolon against the statement like phpcbf' => [
+            'generic/semicolon-spacing',
+            '',
+            'foo() ;',
+            'foo();',
+        ];
+
+        yield 'arbitrary-parentheses-spacing puts one space inside plain parentheses like phpcbf' => [
+            'generic/arbitrary-parentheses-spacing',
+            '',
+            "\$x = (  \$a + \$b  ) * (\$c);",
+            "\$x = ( \$a + \$b ) * ( \$c );",
+        ];
+
+        yield 'control-structure-spacing fixes the spaces around a control structure like phpcbf' => [
+            'wordpress/control-structure-spacing',
+            '',
+            "if(\$a){\n\tfoo();\n}\nwhile( \$x )\n{\n\tfoo();\n}\nif ( \$a ):\n\tfoo();\nelse:\n\tbar();\nendif;",
+            "if ( \$a ) {\n\tfoo();\n}\nwhile ( \$x ) {\n\tfoo();\n}\nif ( \$a ) :\n\tfoo();\nelse :\n\tbar();\nendif;",
+        ];
 
         yield 'strict-comparisons rewrites loose operators only with --unsafe' => [
             'generic/strict-comparisons',

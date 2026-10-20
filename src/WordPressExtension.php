@@ -11,6 +11,7 @@ use Rlorenzo\MagoWordPress\Internal\LeveledRule;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\SplitRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AlternativeFunctionsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ArbitraryParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ArrayDeclarationSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\AssignmentInConditionRule;
@@ -19,15 +20,19 @@ use Rlorenzo\MagoWordPress\Linter\Rules\BlockCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ByteOrderMarkRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapabilitiesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CapitalPDangitRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CastStructureSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClassNameCaseRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingDeclarationCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ClosingTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommaAfterLastRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\CommaSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CommentedOutCodeRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ConcatenationSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ConstantModifierKeywordOrderRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ControlSignatureRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ControlStructureSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\CronIntervalRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedClassesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DbRestrictedFunctionsRule;
@@ -75,6 +80,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\GetMetaSingleRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GitMergeConflictRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\GlobalVariablesOverrideRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncludingFileRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IncrementDecrementUsageRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\IniSetRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineCommentRule;
@@ -115,9 +121,11 @@ use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ScopeIndentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SemicolonSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ShortFormTypeKeywordsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SlowDbQueryRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SpaceAfterCastRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StatementAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
@@ -183,6 +191,16 @@ final class WordPressExtension
                 // file (released after the second), and peak memory is that stream plus what earlier
                 // rules have cached and reported.
                 new AssignmentInConditionRule($report),
+                // These read the shared token stream too; DisallowMultipleAssignmentsRule frees it.
+                new CommaSpacingRule($report),
+                new SemicolonSpacingRule($report),
+                new IncrementDecrementSpacingRule($report),
+                new ConcatenationSpacingRule($report),
+                new SpaceAfterCastRule($report),
+                new CastStructureSpacingRule($report),
+                new ControlStructureSpacingRule($report),
+                new ArbitraryParenthesesSpacingRule($report),
+                new OperatorSpacingRule($report),
                 new DisallowMultipleAssignmentsRule($report),
                 new GlobalVariablesOverrideRule($report, $settings),
                 new EnqueuedResourceParametersRule($report),
@@ -260,7 +278,6 @@ final class WordPressExtension
                 new VariableCommentRule($report),
                 new LanguageConstructSpacingRule($report),
                 new ParenthesesSpacingRule($report),
-                new OperatorSpacingRule($report),
                 new StatementAlignmentRule($report),
                 new JumbledIncrementerRule($report),
                 new ForLoopWithTestFunctionCallRule($report),

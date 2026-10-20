@@ -138,6 +138,14 @@ wordpress/wp-i18n
 wordpress/yoda-conditions
 wordpress/comma-after-last
 wordpress/operator-spacing
+wordpress/control-structure-spacing
+wordpress/cast-structure-spacing
+generic/arbitrary-parentheses-spacing
+generic/space-after-cast
+generic/concatenation-spacing
+generic/comma-spacing
+generic/semicolon-spacing
+generic/increment-decrement-spacing
 generic/unnecessary-string-concat
 generic/disallow-short-array-syntax
 generic/disallow-short-open-tag
