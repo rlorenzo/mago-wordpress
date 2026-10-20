@@ -12,6 +12,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
 use Rlorenzo\MagoWordPress\Internal\Spacing;
 
+use function rtrim;
 use function str_contains;
 use function str_replace;
 
@@ -52,7 +53,7 @@ final class HereNowdocIdentifierSpacingRule implements Rule
                 $context,
                 $token,
                 'There should be no space between the <<< and the heredoc/nowdoc identifier string. Found: '
-                . $token->text,
+                    . rtrim($token->text, "\r\n"),
                 ['Generic.WhiteSpace.HereNowdocIdentifierSpacing.SpaceFound'],
                 [Spacing::replace($token, str_replace([' ', "\t"], '', $token->text))],
             );
