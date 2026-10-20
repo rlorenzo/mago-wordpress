@@ -222,21 +222,39 @@ final class ArrayAlignmentRule implements Rule
         );
     }
 
-    /** The display width of the line's text up to $offset, tabs counted to the next multiple of 4. */
+    /**
+     * The display width of the line's text up to $offset, tabs counted to the next multiple of 4.
+     *
+     * Items on one very long line ask for increasing offsets, so the last answer is kept and the
+     * next one continues from it instead of rescanning the line.
+     */
     private static function width(SourceFile $file, int $offset): int
     {
-        // A negative offset searches backwards from that many bytes before the end: no copy of the text before it.
-        $newline = $offset === 0
-            ? false
-            : strrpos($file->contents, needle: "\n", offset: $offset - strlen($file->contents) - 1);
-        $start = $newline === false ? 0 : $newline + 1;
-        $width = 0;
-        for ($i = $start; $i < $offset; ++$i) {
+        static $memo = null;
+
+        if (
+            $memo !== null
+            && $memo[0] === $file
+            && $memo[1] <= $offset
+            && !str_contains(substr($file->contents, $memo[1], $offset - $memo[1]), "\n")
+        ) {
+            [, $i, $width] = $memo;
+        } else {
+            // A negative offset searches backwards from that many bytes before the end: no copy of the text before it.
+            $newline = $offset === 0
+                ? false
+                : strrpos($file->contents, needle: "\n", offset: $offset - strlen($file->contents) - 1);
+            $i = $newline === false ? 0 : $newline + 1;
+            $width = 0;
+        }
+
+        for (; $i < $offset; ++$i) {
             // Characters, not bytes, as phpcs counts (a UTF-8 continuation byte is no column).
             $width += $file->contents[$i] === "\t"
                 ? self::TAB_WIDTH - ($width % self::TAB_WIDTH)
                 : (int) ((ord($file->contents[$i]) & 0xC0) !== 0x80);
         }
+        $memo = [$file, $offset, $width];
 
         return $width;
     }
