@@ -50,6 +50,13 @@ final class ArrayAlignmentRule implements Rule
 
     private const TAB_WIDTH = 4;
 
+    /**
+     * The last answer of width(): the file, the offset and the width there.
+     *
+     * @var array{SourceFile, int, int}|null
+     */
+    private static ?array $widthMemo = null;
+
     public function __construct(
         private readonly Report $report,
     ) {}
@@ -230,8 +237,7 @@ final class ArrayAlignmentRule implements Rule
      */
     private static function width(SourceFile $file, int $offset): int
     {
-        static $memo = null;
-
+        $memo = self::$widthMemo;
         if (
             $memo !== null
             && $memo[0] === $file
@@ -254,7 +260,7 @@ final class ArrayAlignmentRule implements Rule
                 ? self::TAB_WIDTH - ($width % self::TAB_WIDTH)
                 : (int) ((ord($file->contents[$i]) & 0xC0) !== 0x80);
         }
-        $memo = [$file, $offset, $width];
+        self::$widthMemo = [$file, $offset, $width];
 
         return $width;
     }
