@@ -374,7 +374,7 @@ final class CommentConversionTest extends TestCase
         exec(
             'cd '
             . escapeshellarg($this->directory)
-            . ' && php '
+            . ' && php -d memory_limit=2G '
             . escapeshellarg("{$root}/bin/mago-wordpress")
             . ' convert-comments --write . 2>&1',
             $output,

@@ -11,19 +11,23 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
-use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
 use Rlorenzo\MagoWordPress\Internal\FileCache;
+use Rlorenzo\MagoWordPress\Internal\FunctionTokens;
+use Rlorenzo\MagoWordPress\Internal\PhpcsToken;
+use Rlorenzo\MagoWordPress\Internal\PhpcsTokenStream;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function array_pop;
+use function array_slice;
 use function count;
 use function intdiv;
 use function max;
 use function preg_match;
 use function str_contains;
+use function str_ends_with;
 use function str_repeat;
 use function strlen;
 use function strpos;
@@ -41,19 +45,19 @@ use const T_INLINE_HTML;
 use const T_START_HEREDOC;
 
 /**
- * The layout part of `PEAR.Functions.FunctionCallSignature` for a call whose parentheses span
- * lines, as WordPress-Core sets it (`allowMultipleArguments` false): the first argument goes on the
- * line after `(` (`ContentAfterOpenBracket`), each argument on its own line (`MultipleArguments`)
- * and `)` on a line by itself (`CloseBracketLine`). `mago format` keeps a closure or array last
- * argument on the line of `(`, as in `add_action( 'init', function () {`.
+ * Ports `PEAR.Functions.FunctionCallSignature` as WordPress-Core sets it (one space inside the
+ * parentheses of a single-line call, `allowMultipleArguments` false): the space before `(` and after
+ * `)` before a `;`, the spaces inside a single-line call, and for a call whose parentheses span lines
+ * the indentation of the call and of each line (`OpeningIndent`, `Indent`, `EmptyLine`), the first
+ * argument on the line after `(` (`ContentAfterOpenBracket`, `FirstArgumentPosition`), each argument
+ * on its own line (`MultipleArguments`) and `)` on a line by itself (`CloseBracketLine`).
  *
- * Off by default; it is meant to run after `mago format`, as
- * `mago lint --fix --only wordpress/function-call-signature` (a step of `mago-wordpress format`).
- * An argument that moves to a line of its own takes the lines it spans with it, one indent level
- * deeper, as phpcbf's later passes do; lines inside a multi-line string or heredoc stay as they are.
- * Only the outermost call that needs fixing is changed in one run, so the edits never overlap; the
- * format command repeats the step. A call with a comment among its arguments, or with `?>` in it,
- * is left alone. The indentation checks of the sniff stay with `mago format`.
+ * `mago format` keeps a closure or array last argument on the line of `(`, as in
+ * `add_action( 'init', function () {`; the fix for the three layout codes moves it, together with
+ * the lines it spans, one indent level deeper, as phpcbf's later passes do (lines inside a multi-line
+ * string or heredoc stay as they are). Only the outermost call that needs fixing is changed in one run,
+ * so the edits never overlap; `mago-wordpress format` repeats the step. A call with a comment among its
+ * arguments, or with `?>` in it, is reported but not moved.
  *
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
@@ -65,6 +69,54 @@ final class FunctionCallSignatureRule implements Rule
 
     private const TAB_WIDTH = 4;
 
+    private const INDENT = 4;
+
+    /** `requiredSpacesAfterOpen` and `requiredSpacesBeforeClose`. */
+    private const SPACES = 1;
+
+    private const NAMES = [
+        'T_STRING' => true,
+        'T_EVAL' => true,
+        'T_EXIT' => true,
+        'T_INCLUDE' => true,
+        'T_INCLUDE_ONCE' => true,
+        'T_REQUIRE' => true,
+        'T_REQUIRE_ONCE' => true,
+        'T_ISSET' => true,
+        'T_UNSET' => true,
+        'T_EMPTY' => true,
+        'T_STATIC' => true,
+        'T_VARIABLE' => true,
+        'T_CLOSE_CURLY_BRACKET' => true,
+        'T_CLOSE_SQUARE_BRACKET' => true,
+        'T_CLOSE_PARENTHESIS' => true,
+    ];
+
+    /** Tokens before a `{` whose `}` then ends a dynamic name (`$o->{$name}()`), not a block. */
+    private const DYNAMIC = [
+        'T_OBJECT_OPERATOR' => true,
+        'T_NULLSAFE_OBJECT_OPERATOR' => true,
+        'T_DOUBLE_COLON' => true,
+        'T_DOLLAR' => true,
+    ];
+
+    /** Tokens whose lines are not indentation at all. */
+    private const SKIPPED = [
+        'T_START_HEREDOC' => true,
+        'T_END_HEREDOC' => true,
+        'T_HEREDOC' => true,
+        'T_START_NOWDOC' => true,
+        'T_END_NOWDOC' => true,
+        'T_NOWDOC' => true,
+        'T_INLINE_HTML' => true,
+    ];
+
+    private const STRINGS = [
+        'T_CONSTANT_ENCAPSED_STRING' => true,
+        'T_DOUBLE_QUOTED_STRING' => true,
+        'T_BACKTICK' => true,
+    ];
+
     public function __construct(
         private readonly Report $report,
     ) {}
@@ -74,152 +126,603 @@ final class FunctionCallSignatureRule implements Rule
         return new RuleDefinition(
             code: 'wordpress/function-call-signature',
             name: 'Function call signature',
-            description: 'Puts the arguments of a multi-line call on lines of their own, with `)` on a line by itself, as WordPress-Core does. Off by default; run after `mago format`.',
+            description: 'Checks the layout of a function call: the spaces inside its parentheses, and for a multi-line call each argument on its own line, indented, with `)` on a line by itself.',
             defaultLevel: Level::Error,
-            defaultEnabled: false,
-            targets: [NodeKind::ArgumentList],
+            defaultEnabled: true,
+            targets: [NodeKind::Program],
         );
     }
 
     public function lint(LintContext $context): void
     {
-        $file = $context->file;
-        $plan = self::plan($file, $context->node);
-        if ($plan === null) {
-            return;
-        }
-
-        for (
-            $ancestor = $file->getParent($context->node);
-            $ancestor !== null;
-            $ancestor = $file->getParent($ancestor)
-        ) {
-            $outer = $ancestor->kind === NodeKind::ArgumentList ? self::plan($file, $ancestor) : null;
-            if ($outer !== null && $this->reported($context, $outer)) {
-                // The outer call is fixed first; this one is looked at again in the next run.
-                return;
-            }
-        }
-
-        foreach ($plan as [$code, $message, $span, $edits]) {
-            $issue = Issue::new($message, $span);
-            foreach ($edits as [$editSpan, $text]) {
-                $issue = $issue->withEdit(TextEdit::replace($editSpan, $text));
+        $tokens = AssignmentInConditionRule::tokens($context);
+        // The end of the call whose findings carry edits: calls inside it are fixed in a later run.
+        $fixing = -1;
+        foreach ($tokens as $index => $token) {
+            if (!isset(self::NAMES[$token->code])) {
+                continue;
             }
 
-            $this->report->issue($context, $issue, [self::SNIFF . '.' . $code]);
+            $open = PhpcsTokenStream::next($tokens, $index);
+            if ($open === null || $tokens[$open]->code !== 'T_OPEN_PARENTHESIS' || $tokens[$open]->closer === null) {
+                continue;
+            }
+
+            if (!self::isCall($tokens, $index)) {
+                continue;
+            }
+
+            $close = $tokens[$open]->closer;
+            $findings = $this->call($context, $tokens, $index, $open, $close, $tokens[$open]->pos < $fixing);
+            foreach ($findings as [$code, $message, $at, $edits]) {
+                $issue = FunctionTokens::withEdits(Issue::new($message, new Span($at, $at + 1)), $edits);
+                if ($this->report->issue($context, $issue, [self::SNIFF . '.' . $code]) && $edits !== []) {
+                    $fixing = max($fixing, $tokens[$close]->pos);
+                }
+            }
         }
     }
 
-    /**
-     * Whether any of the findings would be reported, as an excluded or suppressed one is never fixed
-     * and so must not hold back the calls inside it.
-     *
-     * @param list<array{string, string, Span, list<array{Span, string}>}> $plan
-     */
-    private function reported(LintContext $context, array $plan): bool
+    /** @param list<PhpcsToken> $tokens */
+    private static function isCall(array $tokens, int $name): bool
     {
-        foreach ($plan as [$code, $message, $span]) {
-            if ($this->report->wouldReport($context, Issue::new($message, $span), [self::SNIFF . '.' . $code])) {
-                return true;
-            }
+        $before = $name;
+        do {
+            $before = PhpcsTokenStream::previous($tokens, $before);
+        } while ($before !== null && $tokens[$before]->code === 'T_BITWISE_AND');
+
+        if ($before !== null && $tokens[$before]->code === 'T_FUNCTION') {
+            return false;
         }
 
-        return false;
+        if ($tokens[$name]->code !== 'T_CLOSE_CURLY_BRACKET') {
+            return true;
+        }
+
+        // A `}` that closes a block is not a call; one that closes `$o->{$name}` is.
+        $opener = $tokens[$name]->opener;
+        $prior = $opener === null ? null : PhpcsTokenStream::previous($tokens, $opener);
+
+        return $prior !== null && isset(self::DYNAMIC[$tokens[$prior]->code]);
     }
 
     /**
-     * What is wrong with the call's layout, each finding with the edits that fix it alone (so a
-     * finding a project excludes leaves the others fixable), or NULL when nothing is.
+     * Everything the sniff reports for one call, as [code, message, offset, edits].
      *
-     * @mago-expect lint:halstead
+     * @param list<PhpcsToken> $tokens
      *
-     * @return null|list<array{string, string, Span, list<array{Span, string}>}>
+     * @return list<array{string, string, int, list<TextEdit>}>
+     * @mago-expect lint:excessive-parameter-list
      */
-    private static function plan(SourceFile $file, Node $list): ?array
+    private function call(LintContext $context, array $tokens, int $name, int $open, int $close, bool $nested): array
     {
-        $text = $file->contents;
-        $open = $list->span->start;
-        $close = $list->span->end - 1;
-        if (
-            $text[$open] !== '('
-            || $text[$close] !== ')'
-            || !str_contains(substr($text, $open, $close - $open), "\n")
-        ) {
-            return null;
-        }
-
-        $arguments = $file->getChildren($list);
-        if ($arguments === [] || str_contains(substr($text, $open, $close - $open), '?>')) {
-            return null;
-        }
-
-        $lineStart = self::lineStart($text, $open);
-        $indent = substr($text, $lineStart, self::leading($text, $lineStart));
-        $unit = str_contains($indent, "\t") || $indent === '' && str_contains($text, "\n\t") ? "\t" : '    ';
-        $inner = "\n" . $indent . $unit;
-
-        $newWidth = self::columns($indent) + self::TAB_WIDTH;
         $found = [];
-
-        $head = self::gap($text, $open + 1, $arguments[0]->span->start);
-        if ($head === null) {
-            return null;
+        $nameToken = $tokens[$name];
+        if (($name + 1) !== $open) {
+            $found[] = [
+                'SpaceBeforeOpenBracket',
+                'Space before opening parenthesis of function call prohibited',
+                $nameToken->pos,
+                [TextEdit::delete(new Span($nameToken->pos + strlen($nameToken->text), $tokens[$open]->pos))],
+            ];
         }
 
-        if (!str_contains($head, "\n")) {
+        $next = FunctionTokens::nextNonWhitespace($tokens, $close);
+        if ($next !== null && $tokens[$next]->code === 'T_SEMICOLON' && $next !== ($close + 1)) {
+            $found[] = [
+                'SpaceAfterCloseBracket',
+                'Space after closing parenthesis of function call prohibited',
+                $tokens[$close]->pos,
+                [TextEdit::delete(new Span($tokens[$close]->pos + 1, $tokens[$next]->pos))],
+            ];
+        }
+
+        if ($tokens[$open]->line === $tokens[$close]->line) {
+            return [...$found, ...self::singleLine($tokens, $context->file->contents, $name, $open, $close)];
+        }
+
+        return [...$found, ...self::multiLine($context->file, $tokens, $name, $open, $close, $nested)];
+    }
+
+    /**
+     * @param list<PhpcsToken> $tokens
+     *
+     * @return list<array{string, string, int, list<TextEdit>}>
+     */
+    private static function singleLine(array $tokens, string $source, int $name, int $open, int $close): array
+    {
+        if ($close === ($open + 1)) {
+            return [];
+        }
+
+        $found = [];
+        // A call with no arguments or comments keeps no space inside.
+        $required = FunctionTokens::nextNonWhitespace($tokens, $open, $close) !== null ? self::SPACES : 0;
+        $after = $tokens[$open + 1];
+        $spaceAfter = $after->code === 'T_WHITESPACE' ? FunctionTokens::width($after, $source) : 0;
+        if ($required === 0 && $after->code === 'T_WHITESPACE') {
+            $found[] = [
+                'SpaceAfterOpenBracket',
+                'Space after opening parenthesis of function call prohibited',
+                $tokens[$name]->pos,
+                [TextEdit::delete(new Span($after->pos, $after->pos + strlen($after->text)))],
+            ];
+        } elseif ($required > 0 && $spaceAfter !== $required) {
+            $found[] = [
+                'SpaceAfterOpenBracket',
+                "Expected {$required} spaces after opening parenthesis; {$spaceAfter} found",
+                $tokens[$name]->pos,
+                [self::pad($after, $tokens[$open]->pos + 1, $required)],
+            ];
+        }
+
+        $prev = FunctionTokens::previousNonWhitespace($tokens, $close, $open);
+        if ($prev !== null && ($tokens[$prev]->code === 'T_END_HEREDOC' || $tokens[$prev]->code === 'T_END_NOWDOC')) {
+            // A heredoc needs a line break after it.
+            return $found;
+        }
+
+        $before = $tokens[$close - 1];
+        $spaceBefore = $before->code === 'T_WHITESPACE' ? FunctionTokens::width($before, $source) : 0;
+        if ($spaceBefore !== $required) {
+            $found[] = [
+                'SpaceBeforeCloseBracket',
+                "Expected {$required} spaces before closing parenthesis; {$spaceBefore} found",
+                $tokens[$close]->pos,
+                [self::pad($before, $tokens[$close]->pos, $required)],
+            ];
+        }
+
+        return $found;
+    }
+
+    /** Replaces the whitespace token with $count spaces, or inserts them at $at when there is none. */
+    private static function pad(PhpcsToken $token, int $at, int $count): TextEdit
+    {
+        $padding = str_repeat(' ', max(0, $count));
+        if ($token->code !== 'T_WHITESPACE') {
+            return TextEdit::insert($at, $padding);
+        }
+
+        return TextEdit::replace(new Span($token->pos, $token->pos + strlen($token->text)), $padding);
+    }
+
+    /**
+     * @param list<PhpcsToken> $tokens
+     *
+     * @return list<array{string, string, int, list<TextEdit>}>
+     * @mago-expect lint:excessive-parameter-list
+     */
+    private static function multiLine(
+        SourceFile $file,
+        array $tokens,
+        int $name,
+        int $open,
+        int $close,
+        bool $nested,
+    ): array {
+        $source = $file->contents;
+        $found = [];
+        $nameToken = $tokens[$name];
+        $lineStart = self::lineStart($source, $nameToken->pos);
+        // A line that starts inside a multi-line string is indented like the line the string starts on.
+        for (
+            $before = $name - 1;
+            $before >= 0 && FunctionTokens::endLine($tokens[$before]) === $nameToken->line;
+            $before--
+        ) {
+            // Back to the first token of the line.
+        }
+
+        $string = $tokens[$before + 1];
+        if ($string->code === 'T_CONSTANT_ENCAPSED_STRING' && $string->line < $nameToken->line) {
+            $lineStart = self::lineStart($source, $string->pos);
+        }
+
+        $leading = self::leading($source, $lineStart);
+        $indentText = substr($source, $lineStart, $leading);
+        $foundIndent = self::columns($indentText);
+        $functionIndent = intdiv($foundIndent, self::TAB_WIDTH) * self::TAB_WIDTH;
+        if ($foundIndent !== $functionIndent) {
+            $found[] = [
+                'OpeningIndent',
+                "Opening statement of multi-line function call not indented correctly; expected {$functionIndent} spaces but found {$foundIndent}",
+                $lineStart + $leading,
+                [
+                    TextEdit::replace(
+                        new Span($lineStart, $lineStart + $leading),
+                        self::indentOf($functionIndent, $indentText !== '' ? $indentText : null, $source),
+                    ),
+                ],
+            ];
+        }
+
+        $fixes = $nested ? [] : self::fixes($file, $tokens, $open, $close);
+        $first = PhpcsTokenStream::next($tokens, $open);
+        if ($first !== null && $tokens[$first]->line === $tokens[$open]->line) {
             $found[] = [
                 'ContentAfterOpenBracket',
                 'Opening parenthesis of a multi-line function call must be the last content on the line',
-                new Span($open, $open + 1),
-                [
-                    [new Span($open + 1, $arguments[0]->span->start), $inner],
-                    ...self::reindent($file, $arguments[0], $newWidth),
-                ],
+                $nameToken->pos,
+                $fixes['ContentAfterOpenBracket'] ?? [],
+            ];
+        }
+
+        $prev = FunctionTokens::previousNonWhitespace($tokens, $close);
+        if ($prev !== null && FunctionTokens::endLine($tokens[$prev]) === $tokens[$close]->line) {
+            $found[] = [
+                'CloseBracketLine',
+                'Closing parenthesis of a multi-line function call must be on a line by itself',
+                $tokens[$close]->pos,
+                $fixes['CloseBracketLine'] ?? [],
+            ];
+        }
+
+        $firstCode = FunctionTokens::nextNonWhitespace($tokens, $open);
+        if ($firstCode !== null && $tokens[$firstCode]->line > ($tokens[$open]->line + 1)) {
+            $space = $tokens[$firstCode - 1];
+            $found[] = [
+                'FirstArgumentPosition',
+                'The first argument in a multi-line function call must be on the line after the opening parenthesis',
+                $tokens[$firstCode]->pos,
+                $space->code === 'T_WHITESPACE' && ($firstCode - 1) > $open
+                    ? [
+                        TextEdit::replace(
+                            new Span($space->pos, $space->pos + strlen($space->text)),
+                            FunctionTokens::collapseBlankLines($space->text),
+                        ),
+                    ]
+                    : [],
+            ];
+        }
+
+        $lines = self::lines($tokens, $source, $open, $close, $foundIndent, $fixes);
+        $edited = false;
+        foreach ($found as [, , , $edits]) {
+            $edited = $edited || $edits !== [];
+        }
+
+        foreach ($lines as [$code, $message, $at, $edits]) {
+            // An indentation fix would overlap the moves of the other fixes; those come first.
+            $found[] = [$code, $message, $at, $code === 'Indent' && ($edited || $nested) ? [] : $edits];
+        }
+
+        return $found;
+    }
+
+    /**
+     * The edits that put a call's arguments on lines of their own, with the lines each argument spans
+     * moved along with it; keyed by the finding they fix (`MultipleArguments:<offset of the argument>`).
+     * Empty when a comment sits among the arguments.
+     *
+     * @param list<PhpcsToken> $tokens
+     *
+     * @return array<string, list<TextEdit>>
+     */
+    private static function fixes(SourceFile $file, array $tokens, int $open, int $close): array
+    {
+        $text = $file->contents;
+        $openAt = $tokens[$open]->pos;
+        $closeAt = $tokens[$close]->pos;
+        $arguments = self::arguments($tokens, $open, $close);
+        if ($arguments === [] || str_contains(substr($text, $openAt, $closeAt - $openAt), '?>')) {
+            return [];
+        }
+
+        $lineStart = self::lineStart($text, $openAt);
+        $indent = substr($text, $lineStart, self::leading($text, $lineStart));
+        $unit = str_contains($indent, "\t") || $indent === '' && str_contains($text, "\n\t") ? "\t" : '    ';
+        $inner = "\n" . $indent . $unit;
+        $newWidth = self::columns($indent) + self::TAB_WIDTH;
+        $fixes = [];
+
+        $head = self::gap($text, $openAt + 1, $arguments[0][0]);
+        if ($head === null) {
+            return [];
+        }
+
+        if (!str_contains($head, "\n")) {
+            $fixes['ContentAfterOpenBracket'] = [
+                TextEdit::replace(new Span($openAt + 1, $arguments[0][0]), $inner),
+                ...self::reindent($file, $arguments[0][0], $arguments[0][1], $newWidth),
             ];
         }
 
         for ($i = 1, $count = count($arguments); $i < $count; ++$i) {
-            $from = $arguments[$i - 1]->span->end;
-            $to = $arguments[$i]->span->start;
+            $from = $arguments[$i - 1][1];
+            $to = $arguments[$i][0];
             $between = self::gap($text, $from, $to);
             if ($between === null || ($comma = strpos($between, needle: ',')) === false) {
-                return null;
+                return [];
             }
 
-            if (str_contains(substr($between, $comma + 1), "\n")) {
-                continue;
+            if (!str_contains(substr($between, $comma + 1), "\n")) {
+                $fixes['MultipleArguments:' . $to] = [
+                    TextEdit::replace(new Span($from + $comma + 1, $to), $inner),
+                    ...self::reindent($file, $to, $arguments[$i][1], $newWidth),
+                ];
             }
-
-            $found[] = [
-                'MultipleArguments',
-                'Only one argument is allowed per line in a multi-line function call',
-                $arguments[$i]->span,
-                [
-                    [new Span($from + $comma + 1, $to), $inner],
-                    ...self::reindent($file, $arguments[$i], $newWidth),
-                ],
-            ];
         }
 
-        $last = $arguments[count($arguments) - 1];
-        $tail = self::gap($text, $last->span->end, $close);
+        $tail = self::gap($text, $arguments[$count - 1][1], $closeAt);
         if ($tail === null) {
-            return null;
+            return [];
         }
 
         $comma = strpos($tail, needle: ',');
         $afterComma = $comma === false ? $tail : substr($tail, $comma + 1);
         if (!str_contains($afterComma, "\n")) {
-            $found[] = [
-                'CloseBracketLine',
-                'Closing parenthesis of a multi-line function call must be on a line by itself',
-                new Span($close, $close + 1),
-                [[new Span($last->span->end + ($comma === false ? 0 : $comma + 1), $close), "\n" . $indent]],
+            $fixes['CloseBracketLine'] = [
+                TextEdit::replace(
+                    new Span($arguments[$count - 1][1] + ($comma === false ? 0 : $comma + 1), $closeAt),
+                    "\n" . $indent,
+                ),
             ];
         }
 
-        return $found === [] ? null : $found;
+        return $fixes;
+    }
+
+    /**
+     * The byte range of each argument, from its first to its last token (comments around it not counted).
+     *
+     * @param list<PhpcsToken> $tokens
+     *
+     * @return list<list{int, int}>
+     */
+    private static function arguments(array $tokens, int $open, int $close): array
+    {
+        $arguments = [];
+        $first = null;
+        $last = null;
+        for ($i = $open + 1; $i <= $close; $i++) {
+            $token = $tokens[$i];
+            if ($i === $close || $token->code === 'T_COMMA') {
+                if ($first !== null && $last !== null) {
+                    $arguments[] = [
+                        (int) $tokens[$first]->pos,
+                        (int) ($tokens[$last]->pos + strlen($tokens[$last]->text)),
+                    ];
+                }
+
+                $first = null;
+                $last = null;
+                continue;
+            }
+
+            if (isset(PhpcsTokenStream::EMPTY[$token->code])) {
+                continue;
+            }
+
+            $first ??= $i;
+            if ($token->closer !== null) {
+                $i = $token->closer;
+            }
+
+            $last = $i;
+        }
+
+        return $arguments;
+    }
+
+    /**
+     * The checks that walk the lines between the parentheses: `Indent`, `EmptyLine` and
+     * `MultipleArguments`.
+     *
+     * @param list<PhpcsToken> $tokens
+     * @param array<string, list<TextEdit>> $fixes
+     *
+     * @return list<array{string, string, int, list<TextEdit>}>
+     *
+     * @mago-expect lint:halstead
+     * @mago-expect lint:excessive-parameter-list
+     */
+    private static function lines(
+        array $tokens,
+        string $source,
+        int $open,
+        int $close,
+        int $foundIndent,
+        array $fixes,
+    ): array {
+        $found = [];
+        $first = PhpcsTokenStream::next($tokens, $open);
+        if ($first === null) {
+            return [];
+        }
+
+        $start = $tokens[$first - 1]->code === 'T_WHITESPACE' && !str_ends_with($tokens[$first - 1]->text, "\n")
+            ? $first - 1
+            : $first;
+        $openLine = $tokens[$open]->line;
+        $closeLine = $tokens[$close]->line;
+        $lastLine = $openLine - 1;
+        $argStart = -1;
+        $argEnd = -1;
+        for ($i = $start; $i < $close; $i++) {
+            $token = $tokens[$i];
+            $inArg = $i > $argStart && $i < $argEnd;
+            foreach (self::lineEvents($tokens, $source, $i, $start, $lastLine) as [$line, $kind, $width, $at]) {
+                // The lines of a comment are tokens after the one that opens it.
+                $inArg = ($kind === 'comment' ? $i >= $argStart : $i > $argStart) && $i < $argEnd;
+                $lastLine = $line;
+                if ($kind === 'skip') {
+                    continue;
+                }
+
+                $nextCode = $i;
+                if ($line !== $openLine) {
+                    if ($kind === 'blank') {
+                        if (!$inArg) {
+                            $found[] = [
+                                'EmptyLine',
+                                'Empty lines are not allowed in a multi-line function call',
+                                $at[0],
+                                [TextEdit::delete(new Span($at[0], $at[1]))],
+                            ];
+                        }
+
+                        continue;
+                    }
+
+                    if ($kind === 'indent') {
+                        $nextCode = FunctionTokens::nextNonWhitespace($tokens, $i, $close + 1) ?? $i;
+                    }
+
+                    if ($kind === 'comment' && $width === null) {
+                        // A blank line inside a block comment: nothing to indent.
+                        continue;
+                    }
+
+                    if ($tokens[$nextCode]->line === $closeLine) {
+                        $inArg = false;
+                        $expected = $foundIndent;
+                    } else {
+                        $expected = $foundIndent + self::INDENT;
+                    }
+
+                    $have = $width ?? 0;
+                    if ($have < $expected || !$inArg && $expected !== $have) {
+                        $found[] = [
+                            'Indent',
+                            "Multi-line function call not indented correctly; expected {$expected} spaces but found {$have}",
+                            $at[0],
+                            [
+                                TextEdit::replace(
+                                    new Span($at[0], $at[0] + $at[2]),
+                                    self::indentOf(
+                                        $expected,
+                                        $at[2] > 0 ? substr($source, $at[0], $at[2]) : null,
+                                        $source,
+                                    ),
+                                ),
+                            ],
+                        ];
+                    }
+                }
+
+                if (!$inArg) {
+                    $argStart = $nextCode;
+                    $argEnd = FunctionTokens::endOfStatement($tokens, $nextCode, colonEnds: false);
+                }
+            }
+
+            // Within an argument the commas do not separate arguments.
+            $inArg = $i > $argStart && $i < $argEnd;
+            if ($token->code !== 'T_COMMA' || $inArg) {
+                continue;
+            }
+
+            $next = PhpcsTokenStream::next($tokens, $i, $close);
+            if ($next === null) {
+                continue;
+            }
+
+            if ($token->line === $tokens[$next]->line) {
+                $found[] = [
+                    'MultipleArguments',
+                    'Only one argument is allowed per line in a multi-line function call',
+                    $tokens[$next]->pos,
+                    $fixes['MultipleArguments:' . $tokens[$next]->pos] ?? [],
+                ];
+            }
+
+            $argStart = $next;
+            $argEnd = FunctionTokens::endOfStatement($tokens, $next, colonEnds: false);
+        }
+
+        return $found;
+    }
+
+    /**
+     * The lines that start at a token as phpcs sees them: a physical line's first token. A run of
+     * whitespace gives one event per line it starts (`blank` for a line break alone, `indent` for
+     * indentation), a block or doc comment one per continuation line, a token that starts a new line
+     * itself a `token` event; strings, heredocs and inline HTML are skipped.
+     *
+     * @param list<PhpcsToken> $tokens
+     *
+     * @return list<array{int, string, ?int, array{int, int, int}}> [line, kind, indent width, [offset, end of blank line, indent length]]
+     */
+    private static function lineEvents(array $tokens, string $source, int $i, int $start, int $lastLine): array
+    {
+        $token = $tokens[$i];
+        $code = $token->code;
+        $text = $token->text;
+        if ($code === 'T_WHITESPACE') {
+            $events = [];
+            $newline = strpos($text, "\n");
+            if ($newline === false) {
+                // Whitespace without a line break starts a line only as the call's first token.
+                return (
+                    $i === $start && $token->line !== $lastLine
+                        ? [[
+                            $token->line,
+                            'indent',
+                            FunctionTokens::width($token, $source),
+                            [$token->pos, 0, strlen($text)],
+                        ]]
+                        : []
+                );
+            }
+
+            $offset = $newline + 1;
+            $line = $token->line;
+            while (true) {
+                ++$line;
+                $end = strpos($text, "\n", $offset);
+                if ($end === false) {
+                    $indent = substr($text, $offset);
+                    if ($indent !== '') {
+                        $events[] = [
+                            $line,
+                            'indent',
+                            FunctionTokens::indentWidth($indent),
+                            [$token->pos + $offset, 0, strlen($indent)],
+                        ];
+                    }
+
+                    break;
+                }
+
+                $events[] = [$line, 'blank', null, [$token->pos + $offset, $token->pos + $end + 1, 0]];
+                $offset = $end + 1;
+            }
+
+            // At the start only the last line of the run counts: the one the first argument is on.
+            return $i === $start ? array_slice($events, -1) : $events;
+        }
+
+        $kind = isset(self::SKIPPED[$code]) ? 'skip' : 'token';
+        $events = [];
+        if ($token->line !== $lastLine) {
+            $events[] = [$token->line, $kind, 0, [$token->pos, 0, 0]];
+        }
+
+        if (($code === 'T_COMMENT' || $code === 'T_DOC_COMMENT') && str_contains($text, "\n")) {
+            $offset = 0;
+            $line = $token->line;
+            while (($newline = strpos($text, "\n", $offset)) !== false) {
+                $offset = $newline + 1;
+                ++$line;
+                $length = strspn($text, " \t", $offset);
+                $blank =
+                    ($offset + $length) >= strlen($text)
+                    || $text[$offset + $length] === "\n"
+                    || $text[$offset + $length] === "\r";
+                $events[] = [
+                    $line,
+                    'comment',
+                    $blank ? null : FunctionTokens::indentWidth(substr($text, $offset, $length)),
+                    [$token->pos + $offset, 0, $length],
+                ];
+            }
+        } elseif (str_contains($text, "\n") && isset(self::STRINGS[$code])) {
+            // Lines inside a string: not indentation.
+            $events[] = [FunctionTokens::endLine($token), 'skip', null, [$token->pos, 0, 0]];
+        }
+
+        return $events;
     }
 
     /** The text between two arguments' tokens, or NULL when it holds a comment. */
@@ -235,12 +738,11 @@ final class FunctionCallSignatureRule implements Rule
      *
      * @mago-expect lint:halstead
      *
-     * @return list<array{Span, string}>
+     * @return list<TextEdit>
      */
-    private static function reindent(SourceFile $file, Node $argument, int $newWidth): array
+    private static function reindent(SourceFile $file, int $start, int $end, int $newWidth): array
     {
         $text = $file->contents;
-        $start = $argument->span->start;
         $startLine = self::lineStart($text, $start);
         $oldWidth = self::columns(substr($text, $startLine, self::leading($text, $startLine)));
         $delta = $newWidth - $oldWidth;
@@ -255,7 +757,7 @@ final class FunctionCallSignatureRule implements Rule
         $depth = 0;
         $edits = [];
         $at = strpos($text, needle: "\n", offset: $start);
-        while ($at !== false && $at < $argument->span->end) {
+        while ($at !== false && $at < $end) {
             $lineStart = $at + 1;
             // Only lines inside a bracket the argument opens move with it: an array's or closure's
             // body and its closing line. A continuation of the expression itself keeps its indent.
@@ -276,7 +778,7 @@ final class FunctionCallSignatureRule implements Rule
                     $text,
                 );
                 if ($new !== $current) {
-                    $edits[] = [new Span($lineStart, $lineStart + $leading), $new];
+                    $edits[] = TextEdit::replace(new Span($lineStart, $lineStart + $leading), $new);
                 }
             }
 

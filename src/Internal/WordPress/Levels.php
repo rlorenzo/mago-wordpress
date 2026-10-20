@@ -103,6 +103,16 @@ final class Levels
             'TooLittleSpace' => 'error',
             'TooMuchSpace' => 'error',
         ],
+        'Generic.Functions.FunctionCallArgumentSpacing' => [
+            'NoSpaceAfterComma' => 'error',
+            'SpaceBeforeComma' => 'error',
+            'TooMuchSpaceAfterComma' => 'error',
+        ],
+        'Generic.Functions.OpeningFunctionBraceKernighanRitchie' => [
+            'BraceOnNewLine' => 'error',
+            'ContentAfterBrace' => 'error',
+            'SpaceBeforeBrace' => 'error',
+        ],
         'Generic.NamingConventions.UpperCaseConstantName' => [
             'ClassConstantNotUpperCase' => 'error',
             'ConstantNotUpperCase' => 'error',
@@ -193,6 +203,19 @@ final class Levels
             'UseRequire' => 'warning',
             'UseRequireOnce' => 'warning',
         ],
+        'PEAR.Functions.FunctionCallSignature' => [
+            'CloseBracketLine' => 'error',
+            'ContentAfterOpenBracket' => 'error',
+            'EmptyLine' => 'error',
+            'FirstArgumentPosition' => 'error',
+            'Indent' => 'error',
+            'MultipleArguments' => 'error',
+            'OpeningIndent' => 'error',
+            'SpaceAfterCloseBracket' => 'error',
+            'SpaceAfterOpenBracket' => 'error',
+            'SpaceBeforeCloseBracket' => 'error',
+            'SpaceBeforeOpenBracket' => 'error',
+        ],
         'PEAR.NamingConventions.ValidClassName' => [
             'Invalid' => 'error',
             'StartWithCapital' => 'error',
@@ -203,6 +226,10 @@ final class Levels
             'IncorrectOrder' => 'error',
             'SpacingAfterBlock' => 'error',
             'SpacingInsideBlock' => 'error',
+        ],
+        'PSR12.Functions.ReturnTypeDeclaration' => [
+            'SpaceBeforeColon' => 'error',
+            'SpaceBeforeReturnType' => 'error',
         ],
         'PSR12.Keywords.ShortFormTypeKeywords' => [
             'LongFound' => 'error',
@@ -238,6 +265,9 @@ final class Levels
         'PSR2.Files.EndFileNewline' => [
             'NoneFound' => 'error',
             'TooMany' => 'error',
+        ],
+        'PSR2.Methods.FunctionClosingBrace' => [
+            'SpacingBeforeClose' => 'error',
         ],
         'PSR2.Methods.MethodDeclaration' => [
             'AbstractAfterVisibility' => 'error',
@@ -363,6 +393,27 @@ final class Levels
             'SpaceAfterCloseParenthesis' => 'error',
             'SpaceAfterKeyword' => 'error',
             'SpaceBeforeSemicolon' => 'error',
+        ],
+        'Squiz.Functions.FunctionDeclarationArgumentSpacing' => [
+            'NoSpaceBefore*' => 'error',
+            'SpaceAfterEquals' => 'error',
+            'SpaceBeforeComma' => 'error',
+            'SpaceBeforeEquals' => 'error',
+            'SpacingAfterHint' => 'error',
+            'SpacingAfterOpen' => 'error',
+            'SpacingAfterReadonly' => 'error',
+            'SpacingAfterReference' => 'error',
+            'SpacingAfterSetVisibility' => 'error',
+            'SpacingAfterVariadic' => 'error',
+            'SpacingAfterVisbility' => 'error',
+            'SpacingBefore*' => 'error',
+            'SpacingBeforeClose' => 'error',
+            'SpacingBetween' => 'error',
+        ],
+        'Squiz.Functions.MultiLineFunctionDeclaration' => [
+            '*FirstParamSpacing' => 'error',
+            '*OneParamPerLine' => 'error',
+            'CloseBracketNewLine' => 'error',
         ],
         'Squiz.Operators.IncrementDecrementUsage' => [
             'Found' => 'error',

@@ -154,3 +154,9 @@ generic/unnecessary-final-modifier
 generic/for-loop-should-be-while-loop
 wordpress/array-brace-spacing
 wordpress/array-key-spacing-restrictions
+generic/function-call-argument-spacing
+generic/function-closing-brace
+generic/return-type-declaration
+generic/opening-function-brace-kernighan-ritchie
+generic/multi-line-function-declaration
+generic/function-declaration-argument-spacing

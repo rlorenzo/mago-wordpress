@@ -222,6 +222,13 @@ final class PhpcsRuleset
         'PSR12.Files.FileHeader',
         'PSR12.Keywords.ShortFormTypeKeywords',
         'PEAR.Files.IncludingFile',
+        'Generic.Functions.FunctionCallArgumentSpacing',
+        'Generic.Functions.OpeningFunctionBraceKernighanRitchie',
+        'PSR12.Functions.ReturnTypeDeclaration',
+        'PSR2.Methods.FunctionClosingBrace',
+        'PEAR.Functions.FunctionCallSignature',
+        'Squiz.Functions.FunctionDeclarationArgumentSpacing',
+        'Squiz.Functions.MultiLineFunctionDeclaration',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */
