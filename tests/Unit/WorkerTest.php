@@ -52,7 +52,7 @@ final class WorkerTest extends TestCase
     }
 
     /**
-     * A 380 KB file dense with findings ran the worker out of memory at PHP's default 128M
+     * A 540 KB file dense with findings ran the worker out of memory at PHP's default 128M
      * (two token lists of the whole file, held next to each other and to every issue).
      */
     public function testFindingDenseFileLintsAtTheDefaultMemoryLimit(): void
@@ -68,7 +68,7 @@ final class WorkerTest extends TestCase
             }
 
             PHP;
-        // 2,000 copies of one function make ~380 KB.
+        // 2,000 copies of one function make ~540 KB.
         file_put_contents("{$this->directory}/big.php", "<?php\n" . str_repeat($function, times: 2000));
 
         [$status, $output] = $this->lintWith('{}', 'big.php');

@@ -1134,6 +1134,7 @@ final class PhpcsLayout
         /** @var array<int, int|string> $conditions */
         $conditions = [];
         $lastOpener = null;
+        /** @var array<int, int> $openers */
         $openers = [];
         for ($i = 0; $i < $this->count; $i++) {
             $token = $tokens[$i];
@@ -1183,7 +1184,7 @@ final class PhpcsLayout
                         $lastOpener = null;
                     }
 
-                    $oldCondition = array_pop($conditions);
+                    $oldCondition = (string) array_pop($conditions);
                     $condition = $tokens[$token->scopeCondition]->code;
                     if ($condition !== $oldCondition && !isset(self::SCOPES[$oldCondition]['with'][$condition])) {
                         $badToken = $tokens[(int) $oldOpener]->scopeCondition;
