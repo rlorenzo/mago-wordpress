@@ -62,7 +62,7 @@ final class LanguageConstructSpacingRule implements Rule
             name: 'Language construct spacing',
             description: 'Reports a language construct (`echo`, `return`, `new`, `use`, ...) not followed by exactly one space.',
             defaultLevel: Level::Error,
-            defaultEnabled: false,
+            defaultEnabled: true,
             targets: [NodeKind::Program],
         );
     }
