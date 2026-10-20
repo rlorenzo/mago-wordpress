@@ -44,7 +44,7 @@ final class WordPressExtensionTest extends TestCase
 
         self::assertSame('rlorenzo/mago-wordpress', $extension->identifier);
         self::assertSame('WordPress', $extension->name);
-        self::assertSame('1.4.0', $extension->version);
+        self::assertSame('1.6.1', $extension->version);
         self::assertCount(0, $extension->analyzerPlugins);
         self::assertNull($extension->workerReducer);
     }
