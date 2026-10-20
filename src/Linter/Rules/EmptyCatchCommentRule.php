@@ -11,6 +11,7 @@ use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
+use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -26,9 +27,13 @@ final class EmptyCatchCommentRule implements Rule
 {
     private const SNIFF = 'Squiz.Commenting.EmptyCatchComment';
 
+    private readonly FileGate $gate;
+
     public function __construct(
         private readonly Report $report,
-    ) {}
+    ) {
+        $this->gate = FileGate::forWords(['catch']);
+    }
 
     public function getDefinition(): RuleDefinition
     {
@@ -44,6 +49,10 @@ final class EmptyCatchCommentRule implements Rule
 
     public function lint(LintContext $context): void
     {
+        if (!$this->gate->passes($context->file)) {
+            return;
+        }
+
         $tokens = PhpcsTokens::of($context->file);
         $text = $context->file->contents;
         foreach ($tokens->codes as $index => $code) {
