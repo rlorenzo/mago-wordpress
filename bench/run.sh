@@ -8,7 +8,8 @@
 # a markdown table; paste them into docs/benchmarks.md.
 #
 # Not an apples-to-apples rule comparison: phpcs runs the full WordPress-Extra ruleset
-# (WPCS 3.4.1), while mago only runs this extension's rules.
+# (WPCS 3.4.1), while mago only runs this extension's rules. Both run on PHP with opcache.enable_cli=1
+# (the worker command and phpcs alike), so neither tool pays for compiling its scripts on every run.
 set -euo pipefail
 
 [[ $# -ge 1 ]] || { echo "usage: bench/run.sh <project-dir> [<text-domain>] [<prefix>]" >&2; exit 1; }
@@ -48,7 +49,7 @@ XML);
 # The worker discovers composer.json via getcwd(), so mago must run from $work.
 run_mago() { (cd "$work" && "$mago" --config "$work/mago.toml" lint --only "$codes" --reporting-format code-count); }
 run_phpcs() {
-    "$phpcs" --standard="$work/phpcs.xml" --extensions=php \
+    php -d opcache.enable_cli=1 "$phpcs" --standard="$work/phpcs.xml" --extensions=php \
         --ignore='*/vendor/*,*/vendor_prefixed/*,*/node_modules/*,*/tests/*' \
         --parallel=8 -d memory_limit=2G --report=summary "$project"
 }
