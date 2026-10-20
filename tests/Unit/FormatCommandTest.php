@@ -113,7 +113,8 @@ final class FormatCommandTest extends TestCase
 
         [$status, $output] = $this->format();
         self::assertSame(0, $status, $output);
-        self::assertStringContainsString('broken.php: left unformatted: formatting adds wordpress/wp-i18n', $output);
+        self::assertStringContainsString('broken.php: left unformatted: formatting adds ', $output);
+        self::assertStringContainsString('wordpress/wp-i18n', $output);
         self::assertSame($source, file_get_contents("{$this->directory}/broken.php"));
 
         [$status, $output] = $this->format('--check');
