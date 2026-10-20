@@ -14,6 +14,7 @@ use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use Mago\Sdk\Syntax\TriviaKind;
+use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -25,7 +26,6 @@ use function in_array;
 use function preg_match;
 use function stripos;
 use function strtolower;
-use function substr_count;
 use function usort;
 
 /**
@@ -292,6 +292,6 @@ final class FileHeaderRule implements Rule
 
     private static function line(SourceFile $file, int $offset): int
     {
-        return substr_count($file->contents, needle: "\n", offset: 0, length: $offset) + 1;
+        return LineIndex::of($file, $offset);
     }
 }
