@@ -18,7 +18,9 @@ use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function array_pop;
 use function count;
+use function ctype_space;
 use function explode;
+use function ord;
 use function preg_match;
 use function sprintf;
 use function strlen;
@@ -78,12 +80,16 @@ final class SuperfluousWhitespaceRule implements Rule
     public function lint(LintContext $context): void
     {
         $text = $context->file->contents;
+        // Empty lines are only looked for in a file with an empty line followed by a blank one.
+        $checkEmptyLines = preg_match('/\n\r?\n[ \t]*\r?\n/', $text) === 1;
+        if (!$checkEmptyLines && !self::mayHaveWhitespaceFindings($text)) {
+            return;
+        }
+
         $tokens = FileTokens::raw($context->file);
         $count = count($tokens);
         $this->fileEdges($context, $tokens, $count);
 
-        // Empty lines are only looked for in a file with an empty line followed by a blank one.
-        $checkEmptyLines = preg_match('/\n\r?\n[ \t]*\r?\n/', $text) === 1;
         $stack = [];
         $pending = null;
         $depth = 0;
@@ -144,6 +150,26 @@ final class SuperfluousWhitespaceRule implements Rule
 
             $previousCode = $token;
         }
+    }
+
+    /**
+     * Whether the text can have a finding other than empty lines: whitespace at either end of the file
+     * (a byte of 0x80 or more could start a Unicode space) or a space or tab before a line break or the
+     * end of the file. A file without any of them has nothing to tokenize for.
+     */
+    private static function mayHaveWhitespaceFindings(string $text): bool
+    {
+        if ($text === '') {
+            return false;
+        }
+
+        foreach ([$text[0], $text[strlen($text) - 1]] as $edge) {
+            if (ord($edge) >= 0x80 || ctype_space($edge)) {
+                return true;
+            }
+        }
+
+        return preg_match('/[ \t](?:\r?\n|\z)/', $text) === 1;
     }
 
     /**
