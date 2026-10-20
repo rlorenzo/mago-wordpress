@@ -80,13 +80,13 @@ final class DisallowMultipleStatementsRule implements Rule
                 $ignored = false;
             } elseif ($id === T_COMMENT && Layout::ignoresLine($token->text)) {
                 $ignored = true;
-            } elseif ($token->text === '(') {
+            } elseif ($token->id === 40) {
                 $isFor = $previousSignificant === T_FOR;
                 $parens[] = $isFor;
                 $forDepth += $isFor ? 1 : 0;
-            } elseif ($token->text === ')') {
+            } elseif ($token->id === 41) {
                 $forDepth -= array_pop($parens) === true ? 1 : 0;
-            } elseif ($token->text === ';') {
+            } elseif ($token->id === 59) {
                 $inFor = $forDepth > 0;
                 if ($last !== null && !$inFor && !$lastInFor && $tokens[$last]->line === $token->line) {
                     $this->flag($context, $tokens, $last, $i, $eol, !$ignored);

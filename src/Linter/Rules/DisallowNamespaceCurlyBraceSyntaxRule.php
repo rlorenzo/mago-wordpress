@@ -13,6 +13,8 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
+use function str_starts_with;
+
 /**
  * Ports `Universal.Namespaces.DisallowCurlyBraceSyntax`: a `namespace Foo { ... }` declaration, at
  * its `namespace` keyword (`Forbidden`).
@@ -42,10 +44,8 @@ final class DisallowNamespaceCurlyBraceSyntaxRule implements Rule
         $file = $context->file;
         $namespace = $context->node;
         foreach ($file->getChildren($namespace) as $child) {
-            if (
-                $child->kind !== NodeKind::NamespaceBody
-                || $file->getFirstDescendant($child, NodeKind::Block) === null
-            ) {
+            // A `namespace Foo;` body holds the file's statements: only the braced form starts with `{`.
+            if ($child->kind !== NodeKind::NamespaceBody || !str_starts_with($file->getText($child), '{')) {
                 continue;
             }
 
