@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
 use Rlorenzo\MagoWordPress\Internal\FileCache;
+use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -29,7 +30,6 @@ use function in_array;
 use function rtrim;
 use function strlen;
 use function strtolower;
-use function substr_count;
 use function trim;
 
 /**
@@ -328,6 +328,6 @@ final class NonExecutableCodeRule implements Rule
 
     private static function line(SourceFile $file, int $offset): int
     {
-        return substr_count($file->contents, needle: "\n", offset: 0, length: $offset) + 1;
+        return LineIndex::of($file, $offset);
     }
 }

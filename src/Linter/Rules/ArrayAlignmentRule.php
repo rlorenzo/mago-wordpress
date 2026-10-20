@@ -14,6 +14,7 @@ use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function max;
@@ -24,7 +25,6 @@ use function strlen;
 use function strpos;
 use function strrpos;
 use function substr;
-use function substr_count;
 use function trim;
 
 /**
@@ -261,6 +261,6 @@ final class ArrayAlignmentRule implements Rule
 
     private static function line(SourceFile $file, int $offset): int
     {
-        return substr_count($file->contents, needle: "\n", offset: 0, length: $offset);
+        return LineIndex::of($file, $offset);
     }
 }

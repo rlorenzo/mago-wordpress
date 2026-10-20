@@ -12,12 +12,12 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
+use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function count;
 use function in_array;
-use function substr_count;
 
 /**
  * Ports `Universal.Files.SeparateFunctionsFromOO`: a file that declares both functions and
@@ -128,6 +128,6 @@ final class SeparateFunctionsFromOORule implements Rule
 
     private static function line(SourceFile $file, Node $node): int
     {
-        return substr_count($file->contents, needle: "\n", offset: 0, length: $node->span->start) + 1;
+        return LineIndex::of($file, $node->span->start);
     }
 }
