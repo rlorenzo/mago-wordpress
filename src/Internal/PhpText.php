@@ -8,7 +8,6 @@ use function in_array;
 use function strlen;
 use function strpos;
 use function substr;
-use function substr_count;
 
 /**
  * Scanning over PHP source text without tokenizing it.
@@ -33,12 +32,6 @@ final class PhpText
     public static function skipAttributes(string $text, int $offset): int
     {
         return PhpAttributes::skip($text, $offset);
-    }
-
-    /** The zero-based line of an offset. */
-    public static function line(string $text, int $offset): int
-    {
-        return substr_count($text, "\n", 0, $offset);
     }
 
     /**
