@@ -19,7 +19,7 @@ php-version = "8.2"
 paths = [{$json($project)}]
 excludes = ["**/vendor/**", "**/vendor_prefixed/**", "**/node_modules/**", "**/tests/**"]
 [extension-hosts.wordpress]
-command = ["php", {$json($worker)}]
+command = ["php", "-d", "opcache.enable_cli=1", {$json($worker)}]
 
 TOML);
 file_put_contents("$work/composer.json", json_encode(

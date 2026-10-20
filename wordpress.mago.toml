@@ -159,4 +159,4 @@ preserve-redundant-logical-binary-expression-parentheses = true
 # trailing-comma stays on (Mago's default): WordPress-Core requires one after a multi-line array's last item.
 
 [extension-hosts.wordpress]
-command = ["php", "vendor/rlorenzo/mago-wordpress/resources/worker.php"]
+command = ["php", "-d", "opcache.enable_cli=1", "vendor/rlorenzo/mago-wordpress/resources/worker.php"]
