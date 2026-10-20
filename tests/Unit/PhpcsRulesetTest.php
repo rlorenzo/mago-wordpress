@@ -113,7 +113,7 @@ final class PhpcsRulesetTest extends TestCase
                 <severity>0</severity>
                 <exclude-pattern>/ignored/*</exclude-pattern>
               </rule>
-              <rule ref="Generic.Files.LineEndings"><exclude-pattern>*</exclude-pattern></rule>
+              <rule ref="Generic.Files.LineLength"><exclude-pattern>*</exclude-pattern></rule>
             </ruleset>
             XML;
 
@@ -128,7 +128,7 @@ final class PhpcsRulesetTest extends TestCase
         self::assertArrayNotHasKey('WordPress.PHP.TypeCasts', $patterns);
         self::assertSame(['/tests/*'], $patterns['WordPress.Files.FileName.InvalidClassFileName'] ?? null);
         self::assertSame(['*'], $patterns['WordPress.WP.I18n.MissingTranslatorsComment'] ?? null);
-        self::assertArrayNotHasKey('Generic.Files.LineEndings', $patterns);
+        self::assertArrayNotHasKey('Generic.Files.LineLength', $patterns);
         // The generic/* ports follow the same standard membership.
         self::assertSame(['*'], $patterns['Generic.CodeAnalysis.JumbledIncrementer'] ?? null);
         self::assertArrayNotHasKey('Generic.Files.ByteOrderMark', $patterns);
@@ -141,7 +141,7 @@ final class PhpcsRulesetTest extends TestCase
             <ruleset name="x">
               <rule ref="WordPress-Extra">
                 <exclude name="Generic.CodeAnalysis"/>
-                <exclude name="Generic.WhiteSpace"/>
+                <exclude name="Generic.Arrays"/>
               </rule>
               <rule ref="Squiz.PHP"><exclude-pattern>/legacy/*</exclude-pattern></rule>
               <rule ref="Universal"><severity>0</severity></rule>
@@ -155,7 +155,7 @@ final class PhpcsRulesetTest extends TestCase
         self::assertSame(['/legacy/*'], $patterns['Squiz.PHP'] ?? null);
         self::assertSame(['*'], $patterns['Universal'] ?? null);
         // A category with nothing mapped stays out.
-        self::assertArrayNotHasKey('Generic.WhiteSpace', $patterns);
+        self::assertArrayNotHasKey('Generic.Arrays', $patterns);
     }
 
     public function testBlankExcludePatternIsSkipped(): void

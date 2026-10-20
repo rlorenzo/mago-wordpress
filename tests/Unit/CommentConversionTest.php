@@ -319,9 +319,9 @@ final class CommentConversionTest extends TestCase
             <?php
 
             function f( $a ) {
-                // phpcs:ignore WordPress.Security.EscapeOutput -- Trusted.
-                echo $a, $a;
-                echo $a; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            	// phpcs:ignore WordPress.Security.EscapeOutput -- Trusted.
+            	echo $a, $a;
+            	echo $a; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             }
 
             PHP);
@@ -341,8 +341,8 @@ final class CommentConversionTest extends TestCase
         self::assertSame(0, $status, implode("\n", $output));
         self::assertStringContainsString('converted: 2', implode("\n", $output));
         self::assertStringContainsString(
-            "// @mago-expect lint:wordpress/escape-output(2) -- Trusted.\n    echo \$a, \$a;\n"
-            . "    echo \$a; // @mago-expect lint:wordpress/escape-output\n",
+            "// @mago-expect lint:wordpress/escape-output(2) -- Trusted.\n\techo \$a, \$a;\n"
+            . "\techo \$a; // @mago-expect lint:wordpress/escape-output\n",
             (string) file_get_contents("{$this->directory}/fixture.php"),
         );
     }
@@ -352,7 +352,12 @@ final class CommentConversionTest extends TestCase
         $root = dirname(__DIR__, levels: 2);
         // Without `[source] paths`, `mago list-files` lists nothing; the file must come from it, as it
         // has no issues for the lint run to report.
-        $this->lint('wordpress/escape-output', [], '', linterToml: "[source]\npaths = [\"fixture.php\"]\n");
+        $this->lint(
+            'wordpress/escape-output',
+            [],
+            '',
+            linterToml: "[source]\npaths = [\"fixture.php\"]\nexcludes = [\"vendor/**\"]\n",
+        );
         symlink("{$root}/vendor", "{$this->directory}/vendor");
         file_put_contents("{$this->directory}/fixture.php", <<<'PHP'
             <?php

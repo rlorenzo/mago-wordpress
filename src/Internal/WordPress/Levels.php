@@ -86,6 +86,9 @@ final class Levels
         'Generic.Files.ByteOrderMark' => [
             'Found' => 'error',
         ],
+        'Generic.Files.LineEndings' => [
+            'InvalidEOLChar' => 'error',
+        ],
         'Generic.Files.OneObjectStructurePerFile' => [
             'MultipleFound' => 'error',
         ],
@@ -136,6 +139,15 @@ final class Levels
             'CloserFound' => 'error',
             'DelimiterFound' => 'error',
             'OpenerFound' => 'error',
+        ],
+        'Generic.WhiteSpace.DisallowSpaceIndent' => [
+            'SpacesUsed' => 'error',
+            'SpacesUsedHeredocCloser' => 'error',
+        ],
+        'Generic.WhiteSpace.ScopeIndent' => [
+            '*' => 'error',
+            'Incorrect' => 'error',
+            'IncorrectExact' => 'error',
         ],
         'Modernize.FunctionCalls.Dirname' => [
             'FileConstant' => 'error',
@@ -189,6 +201,10 @@ final class Levels
         ],
         'PSR2.Files.ClosingTag' => [
             'NotAllowed' => 'error',
+        ],
+        'PSR2.Files.EndFileNewline' => [
+            'NoneFound' => 'error',
+            'TooMany' => 'error',
         ],
         'PSR2.Methods.MethodDeclaration' => [
             'AbstractAfterVisibility' => 'error',
@@ -347,6 +363,12 @@ final class Levels
             'ContainsVar' => 'error',
             'NotRequired' => 'error',
         ],
+        'Squiz.WhiteSpace.SuperfluousWhitespace' => [
+            'EmptyLines' => 'error',
+            'EndFile' => 'error',
+            'EndLine' => 'error',
+            'StartFile' => 'error',
+        ],
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
@@ -428,6 +450,9 @@ final class Levels
         ],
         'Universal.WhiteSpace.DisallowInlineTabs' => [
             'NonIndentTabsUsed' => 'error',
+        ],
+        'Universal.WhiteSpace.PrecisionAlignment' => [
+            'Found' => 'warning',
         ],
         'WordPress.CodeAnalysis.AssignmentInTernaryCondition' => [
             'FoundInTernaryCondition' => 'warning',

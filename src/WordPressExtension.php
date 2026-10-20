@@ -44,6 +44,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortArraySyntaxRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortOpenTagRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowShortTernaryRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSizeFunctionsInLoopsRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\DisallowSpaceIndentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DisallowStandalonePostIncrementDecrementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedConstantsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\DiscouragedWpFunctionsRule;
@@ -55,6 +56,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\ElseIfDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyCatchCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyPhpStatementRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EmptyStatementRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\EndFileNewlineRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourceParametersRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EnqueuedResourcesRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\EscapedNotTranslatedRule;
@@ -79,6 +81,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\InlineCommentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\InlineControlStructureRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\JumbledIncrementerRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LanguageConstructSpacingRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\LineEndingsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseClassResolutionKeywordRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercaseConstantRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\LowercasePhpTagRule;
@@ -100,6 +103,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\OperatorSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ParenthesesSpacingRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PluginMenuSlugRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PostsPerPageRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\PrecisionAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PrefixAllGlobalsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PregQuoteDelimiterRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\PreparedSqlPlaceholdersRule;
@@ -109,6 +113,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\PropertyDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RequireExplicitBooleanOperatorPrecedenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\RestrictedPhpFunctionsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SafeRedirectRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\ScopeIndentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SelfMemberReferenceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SeparateFunctionsFromOORule;
 use Rlorenzo\MagoWordPress\Linter\Rules\ShortFormTypeKeywordsRule;
@@ -117,6 +122,7 @@ use Rlorenzo\MagoWordPress\Linter\Rules\StatementAlignmentRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StaticInFinalClassRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictComparisonsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\StrictInArrayRule;
+use Rlorenzo\MagoWordPress\Linter\Rules\SuperfluousWhitespaceRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\SwitchDeclarationRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\TypeCastsRule;
 use Rlorenzo\MagoWordPress\Linter\Rules\UnconditionalIfStatementRule;
@@ -318,6 +324,12 @@ final class WordPressExtension
                 new NoSilencedErrorsRule($report, $settings),
                 new StrictComparisonsRule($report),
                 new DisallowInlineTabsRule($report),
+                new DisallowSpaceIndentRule($report),
+                new PrecisionAlignmentRule($report),
+                new ScopeIndentRule($report),
+                new SuperfluousWhitespaceRule($report),
+                new LineEndingsRule($report),
+                new EndFileNewlineRule($report),
                 new DisallowShortArraySyntaxRule($report),
                 new DisallowShortTernaryRule($report),
                 new ForLoopShouldBeWhileLoopRule($report),
