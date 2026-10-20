@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Benchmarks phpcs (WordPress-Extra) against mago + this extension on a WordPress codebase.
+# Benchmarks phpcs (WordPress) against mago + this extension on a WordPress codebase.
 #
 #   bench/run.sh <project-dir> [<text-domain>] [<prefix>]
 #
@@ -7,9 +7,11 @@
 # in $PHPCS (defaults to vendor/bin/phpcs of this package if installed). Results print as
 # a markdown table; paste them into docs/benchmarks.md.
 #
-# Not an apples-to-apples rule comparison: phpcs runs the full WordPress-Extra ruleset
-# (WPCS 3.4.1), while mago only runs this extension's rules. Both run on PHP with opcache.enable_cli=1
-# (the worker command and phpcs alike), so neither tool pays for compiling its scripts on every run.
+# Rule coverage: phpcs runs the full WordPress standard (WPCS 3.4.1, 186 sniffs), and the mago side
+# runs the extension's default rules, which port 183 of those sniffs. The three left out are
+# Generic.PHP.Syntax (php -l), Generic.Classes.DuplicateClassName and WordPress.Utils.I18nTextDomainFixer.
+# Both run on PHP with opcache.enable_cli=1 (the worker command and phpcs alike), so neither tool
+# pays for compiling its scripts on every run.
 set -euo pipefail
 
 [[ $# -ge 1 ]] || { echo "usage: bench/run.sh <project-dir> [<text-domain>] [<prefix>]" >&2; exit 1; }
@@ -38,7 +40,7 @@ $xml = fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_X
 file_put_contents("$work/phpcs.xml", <<<XML
 <?xml version="1.0"?>
 <ruleset name="bench">
-  <rule ref="WordPress-Extra"/>
+  <rule ref="WordPress"/>
   <rule ref="WordPress.WP.I18n"><properties><property name="text_domain" type="array"><element value="{$xml($domain)}"/></property></properties></rule>
   <rule ref="WordPress.NamingConventions.PrefixAllGlobals"><properties><property name="prefixes" type="array"><element value="{$xml($prefix)}"/></property></properties></rule>
 </ruleset>
@@ -110,5 +112,5 @@ timed() { # label, tool
 }
 echo "| Tool | Mean of 3 runs |"
 echo "|:---|---:|"
-timed "phpcs WordPress-Extra (WPCS 3.4.1, --parallel=8)" phpcs
+timed "phpcs WordPress (WPCS 3.4.1, --parallel=8)" phpcs
 timed "mago + mago-wordpress" mago
