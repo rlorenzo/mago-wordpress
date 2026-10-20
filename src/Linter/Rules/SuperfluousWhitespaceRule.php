@@ -13,6 +13,7 @@ use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function array_pop;
@@ -77,7 +78,7 @@ final class SuperfluousWhitespaceRule implements Rule
     public function lint(LintContext $context): void
     {
         $text = $context->file->contents;
-        $tokens = PhpToken::tokenize($text);
+        $tokens = FileTokens::raw($context->file);
         $count = count($tokens);
         $this->fileEdges($context, $tokens, $count);
 

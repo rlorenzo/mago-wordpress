@@ -13,6 +13,7 @@ use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function explode;
@@ -75,7 +76,7 @@ final class DisallowInlineTabsRule implements Rule
             return;
         }
 
-        foreach (PhpToken::tokenize($text) as $token) {
+        foreach (FileTokens::raw($context->file) as $token) {
             if (!str_contains($token->text, "\t") || $token->id === T_INLINE_HTML) {
                 continue;
             }

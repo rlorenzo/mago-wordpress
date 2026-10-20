@@ -13,6 +13,7 @@ use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\Layout;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
@@ -61,7 +62,7 @@ final class DisallowMultipleStatementsRule implements Rule
     {
         $contents = $context->file->contents;
         /** @var list<PhpToken> $tokens */
-        $tokens = PhpToken::tokenize($contents);
+        $tokens = FileTokens::raw($context->file);
         $newline = strpos($contents, "\n");
         $eol = $newline !== false && $newline > 0 && $contents[$newline - 1] === "\r" ? "\r\n" : "\n";
         $count = count($tokens);

@@ -50,7 +50,7 @@ final class LineIndents
      */
     public static function of(SourceFile $file): array
     {
-        return FileCache::remember($file, 'line-indents', static fn(): array => self::build($file->contents));
+        return FileCache::remember($file, 'line-indents', static fn(): array => self::build($file));
     }
 
     /** The display width of $whitespace starting at column 0, tabs going to the next tab stop. */
@@ -67,10 +67,11 @@ final class LineIndents
     /**
      * @return list<array{start: int, length: int, kind: int, blank: bool, star: bool, tail: int}>
      */
-    private static function build(string $text): array
+    private static function build(SourceFile $file): array
     {
+        $text = $file->contents;
         $found = [];
-        foreach (PhpToken::tokenize($text) as $token) {
+        foreach (FileTokens::raw($file) as $token) {
             $id = $token->id;
             if ($id === T_WHITESPACE) {
                 self::lines($found, $text, $token, self::WHITESPACE, firstLineToo: true);

@@ -15,6 +15,7 @@ use Mago\Sdk\Syntax\NodeKind;
 use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
 use Rlorenzo\MagoWordPress\Internal\FileCache;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\LineIndex;
 use Rlorenzo\MagoWordPress\Internal\NodeIndex;
 use Rlorenzo\MagoWordPress\Internal\Report;
@@ -259,11 +260,7 @@ final class NonExecutableCodeRule implements Rule
      */
     private static function tokens(SourceFile $file): array
     {
-        return FileCache::remember(
-            $file,
-            'non-executable-code-tokens',
-            static fn(): array => PhpToken::tokenize($file->contents),
-        );
+        return FileTokens::raw($file);
     }
 
     /**

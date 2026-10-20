@@ -13,6 +13,7 @@ use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function count;
@@ -92,7 +93,7 @@ final class ClassInstantiationRule implements Rule
         }
 
         /** @var list<PhpToken> $tokens */
-        $tokens = PhpToken::tokenize($contents);
+        $tokens = FileTokens::raw($context->file);
         $count = count($tokens);
         foreach ($tokens as $index => $token) {
             if ($token->id !== T_NEW || $this->isIdentifier($tokens, $index)) {

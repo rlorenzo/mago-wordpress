@@ -12,7 +12,9 @@ use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Reporting\TextEdit;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
+use Mago\Sdk\Syntax\SourceFile;
 use PhpToken;
+use Rlorenzo\MagoWordPress\Internal\FileTokens;
 use Rlorenzo\MagoWordPress\Internal\Report;
 
 use function rtrim;
@@ -66,7 +68,7 @@ final class EndFileNewlineRule implements Rule
             return;
         }
 
-        if (str_contains($text, '?>') && self::hasHtmlAfterOpenTag($text)) {
+        if (str_contains($text, '?>') && self::hasHtmlAfterOpenTag($context->file)) {
             return;
         }
 
@@ -105,10 +107,10 @@ final class EndFileNewlineRule implements Rule
         return $char === ' ' || $char === "\t" || $char === "\r" || $char === "\n";
     }
 
-    private static function hasHtmlAfterOpenTag(string $text): bool
+    private static function hasHtmlAfterOpenTag(SourceFile $file): bool
     {
         $open = false;
-        foreach (PhpToken::tokenize($text) as $token) {
+        foreach (FileTokens::raw($file) as $token) {
             if ($token->id === T_OPEN_TAG || $token->id === T_OPEN_TAG_WITH_ECHO) {
                 $open = true;
             } elseif ($open && $token->id === T_INLINE_HTML) {
