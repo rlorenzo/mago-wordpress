@@ -132,12 +132,8 @@ doesn't map them:
 
 | WPCS sniff | `mago analyze` |
 |:---|:---|
-| `Generic.Classes.DuplicateClassName` | `duplicate-definition` (across the whole codebase) |
-| `Generic.PHP.DeprecatedFunctions` | `deprecated-function` |
-| `Generic.PHP.Syntax` | parse errors |
-| `Squiz.Functions.FunctionDuplicateArgument` | a semantics error |
-| `Universal.Arrays.DuplicateArrayKey` | `duplicate-array-key` |
-| `Universal.CodeAnalysis.ConstructorDestructorReturn` | partly: a semantics error for a return type on `__construct`/`__destruct`, not a `return $value;` inside one |
+| `Generic.Classes.DuplicateClassName` | `duplicate-definition` (across the whole codebase). Not a lint rule: a lint rule sees one file at a time, and the sniff needs every file of the run |
+| `Generic.PHP.Syntax` | parse errors. `mago lint` already reports a file it cannot parse, so there is no rule to port |
 
 Enable these, and any core rule the presets turn off, in `mago.toml`:
 

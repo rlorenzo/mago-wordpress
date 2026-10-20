@@ -16,6 +16,7 @@ use function explode;
 use function gc_mem_caches;
 use function in_array;
 use function preg_match;
+use function str_starts_with;
 use function strlen;
 use function strrpos;
 use function strtolower;
@@ -359,7 +360,7 @@ final class PhpcsTokens
         // Not a method parameter: the innermost parentheses do not belong to a `function`.
         $owner = $nested === [] ? null : $nested[count($nested) - 1] - 1;
         $owner = $this->code((int) $owner) === 'T_STRING' ? (int) $owner - 1 : $owner;
-        $owner = $this->code((int) $owner) === '&' ? (int) $owner - 1 : $owner;
+        $owner = str_starts_with((string) $this->code((int) $owner), 'T_AMPERSAND') ? (int) $owner - 1 : $owner;
 
         return $owner === null || $this->code($owner) !== 'T_FUNCTION';
     }
@@ -667,6 +668,12 @@ final class PhpcsTokens
         }
 
         return $type === '[' && (self::DB_INDEXABLE[$this->type($index - 1) ?? ''] ?? null) === null;
+    }
+
+    /** Whether the token sits directly in a class-like body (`Scopes::validDirectScope()`). */
+    public function isDirectInClassLike(int $index): bool
+    {
+        return ($this->ooDirect[$index] ?? null) !== null;
     }
 
     /** The token's byte offset. */

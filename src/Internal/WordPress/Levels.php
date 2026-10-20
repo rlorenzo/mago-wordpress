@@ -129,6 +129,10 @@ final class Levels
         'Generic.PHP.BacktickOperator' => [
             'Found' => 'error',
         ],
+        'Generic.PHP.DeprecatedFunctions' => [
+            '*' => 'error',
+            'Deprecated' => 'error|warning',
+        ],
         'Generic.PHP.DisallowAlternativePHPTags' => [
             'ASPOpenTagFound' => 'error',
             'ASPShortOpenTagFound' => 'error',
@@ -477,6 +481,9 @@ final class Levels
             'SpacingBeforeClose' => 'error',
             'SpacingBetween' => 'error',
         ],
+        'Squiz.Functions.FunctionDuplicateArgument' => [
+            'Found' => 'error',
+        ],
         'Squiz.Functions.MultiLineFunctionDeclaration' => [
             '*FirstParamSpacing' => 'error',
             '*OneParamPerLine' => 'error',
@@ -551,6 +558,10 @@ final class Levels
         'Universal.Arrays.DisallowShortArraySyntax' => [
             'Found' => 'error',
         ],
+        'Universal.Arrays.DuplicateArrayKey' => [
+            'Found' => 'error',
+            'Found*' => 'error',
+        ],
         'Universal.Attributes.BracketSpacing' => [
             'BlankLineAtEnd' => 'error',
             'BlankLineAtStart' => 'error',
@@ -563,6 +574,10 @@ final class Levels
         ],
         'Universal.Classes.RequireAnonClassParentheses' => [
             'Missing' => 'error',
+        ],
+        'Universal.CodeAnalysis.ConstructorDestructorReturn' => [
+            'ReturnTypeFound' => 'error',
+            'ReturnValueFound' => 'warning',
         ],
         'Universal.CodeAnalysis.ForeachUniqueAssignment' => [
             'NotUnique' => 'error',
