@@ -46,7 +46,7 @@ final class PhpcsMigrationTest extends TestCase
             <properties><property name="customAllowedFunctionsList" type="array"><element value="ftp_connect"/></property></properties>
           </rule>
           <rule ref="Generic.PHP.DiscourageGoto"/>
-          <rule ref="Generic.WhiteSpace.ScopeIndent"/>
+          <rule ref="Generic.Files.LineLength"/>
           <rule ref="Generic.CodeAnalysis.JumbledIncrementer"><exclude-pattern>/legacy/*</exclude-pattern></rule>
           <rule ref="Generic.PHP.BacktickOperator"><severity>0</severity></rule>
           <rule ref="WooCommerce-Core"/>
@@ -117,7 +117,7 @@ final class PhpcsMigrationTest extends TestCase
         self::assertSame(['ftp_connect'], $result['extra']['custom-allowed-functions-list'] ?? null);
         // Generic sniffs map to this package's generic/* rules and Mago core rules.
         self::assertStringNotContainsString('Generic.PHP.DiscourageGoto', $unmapped);
-        self::assertStringContainsString('Generic.WhiteSpace.ScopeIndent', $unmapped);
+        self::assertStringContainsString('Generic.Files.LineLength', $unmapped);
         self::assertStringContainsString('no-shell-execute-string = { enabled = false }', $toml);
         self::assertSame(
             ['/legacy/*'],

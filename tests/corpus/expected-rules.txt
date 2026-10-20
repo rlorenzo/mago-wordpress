@@ -16,6 +16,7 @@ generic/disallow-multiple-assignments
 generic/disallow-inline-tabs
 generic/disallow-namespace-without-name
 generic/disallow-size-functions-in-loops
+generic/disallow-space-indent
 generic/disallow-standalone-post-increment-decrement
 generic/double-quote-usage
 generic/doc-comment-alignment
@@ -24,6 +25,7 @@ generic/else-if-declaration
 generic/empty-catch-comment
 generic/empty-php-statement
 generic/empty-statement
+generic/end-file-newline
 generic/for-loop-with-test-function-call
 generic/class-comment
 generic/file-comment
@@ -32,6 +34,10 @@ generic/forbidden-functions
 generic/foreach-unique-assignment
 generic/function-comment
 generic/function-comment-throw-tag
+generic/line-endings
+generic/precision-alignment
+generic/scope-indent
+generic/superfluous-whitespace
 generic/variable-comment
 generic/git-merge-conflict
 generic/including-file
