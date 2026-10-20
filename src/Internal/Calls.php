@@ -261,7 +261,19 @@ final class Calls
             }
         }
 
-        return self::positionalArguments($file, $call)[$index] ?? null;
+        // The $index-th positional argument, unwrapped alone rather than every argument of the call.
+        $position = 0;
+        foreach ($call->arguments as $argument) {
+            if ($argument->unpacked || $argument->name !== null) {
+                continue;
+            }
+
+            if ($position++ === $index) {
+                return Values::unwrap($file, $argument->value);
+            }
+        }
+
+        return null;
     }
 
     /**
