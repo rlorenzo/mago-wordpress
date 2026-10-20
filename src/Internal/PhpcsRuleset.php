@@ -229,6 +229,13 @@ final class PhpcsRuleset
         'PEAR.Functions.FunctionCallSignature',
         'Squiz.Functions.FunctionDeclarationArgumentSpacing',
         'Squiz.Functions.MultiLineFunctionDeclaration',
+        'Generic.Classes.OpeningBraceSameLine',
+        'Generic.Formatting.DisallowMultipleStatements',
+        'PSR2.Classes.ClassDeclaration',
+        'PSR12.Classes.ClassInstantiation',
+        'PSR12.Traits.UseDeclaration',
+        'Squiz.PHP.EmbeddedPhp',
+        'Universal.Namespaces.DisallowCurlyBraceSyntax',
     ];
 
     /** Message codes WordPress-Core sets to severity 0 and WordPress-Extra restores. */

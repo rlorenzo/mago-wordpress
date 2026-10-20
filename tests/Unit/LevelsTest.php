@@ -31,6 +31,7 @@ final class LevelsTest extends TestCase
      */
     private const MIXED = [
         'generic/closing-declaration-comment' => Level::Error, // Abstract and MissingBrace are warnings, for parse errors the rule does not report
+        'generic/opening-brace-same-line' => Level::Error, // MissingBrace is a warning, for a parse error the rule does not report
         'generic/class-comment' => Level::Error, // TagNotAllowed is a warning, but WordPress-Docs turns it off
         'generic/variable-comment' => Level::Error, // TagNotAllowed is a warning, but WordPress-Docs turns it off
         'generic/disallow-short-open-tag' => Level::Error, // Found and EchoFound are errors; PossibleFound, a warning, is not ported
