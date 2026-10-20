@@ -15,7 +15,7 @@ The layout sniffs of WordPress-Core (indentation, spacing, array and call layout
 ...) are lint rules: `mago lint` reports them as phpcs does, at the same lines, and `mago lint --fix`
 applies the fixes phpcbf would. Each is listed in [Rules](rules.md). Mago's formatter is the other
 way to get the same layout: it rewrites a file in one pass, but on its own it produces code those
-rules then report (it removes the spaces inside parentheses, for one). `mago-wordpress format` is
+rules then report (it removes the spaces inside call, declaration and control-structure parentheses, for one). `mago-wordpress format` is
 the formatter followed by the fixes that put WordPress's layout back, and puts a file back as it was if
 formatting would raise the number of findings of any rule. Use `mago lint` to check, `mago-wordpress format` to rewrite.
 

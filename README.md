@@ -97,7 +97,7 @@ vendor/bin/mago-wordpress format --check  # CI: fail with a diff if anything wou
 ```
 
 The layout sniffs are lint rules too: `mago lint` reports them and `mago lint --fix` fixes them.
-`mago format` alone can't add the spaces WordPress puts inside parentheses, so don't use it (or an
+`mago format` alone can't add the spaces WordPress puts inside call, declaration and control-structure parentheses, so don't use it (or an
 editor's Mago format-on-save) on WordPress code: `mago-wordpress format` runs it and then the fixes
 that restore WordPress's layout, and leaves a file as it was if formatting would raise the number of findings of any rule.
 See [Formatting](docs/formatting.md).
