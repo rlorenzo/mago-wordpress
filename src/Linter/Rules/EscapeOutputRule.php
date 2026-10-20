@@ -15,6 +15,7 @@ use Rlorenzo\MagoWordPress\Internal\FileGate;
 use Rlorenzo\MagoWordPress\Internal\PhpcsToken;
 use Rlorenzo\MagoWordPress\Internal\PhpcsTokenStream;
 use Rlorenzo\MagoWordPress\Internal\Report;
+use Rlorenzo\MagoWordPress\Internal\Spacing;
 use Rlorenzo\MagoWordPress\Internal\Strings;
 use Rlorenzo\MagoWordPress\Internal\WordPress\Lists;
 use Rlorenzo\MagoWordPress\Settings;
@@ -212,7 +213,7 @@ final class EscapeOutputRule implements Rule
         }
 
         $this->context = $context;
-        $this->tokens = PhpcsTokenStream::fromSource($context->file->contents);
+        $this->tokens = Spacing::tokens($context);
         $count = count($this->tokens);
         $ignoreTo = null;
         for ($ptr = 0; $ptr < $count; $ptr++) {
